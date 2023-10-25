@@ -1,0 +1,15 @@
+[package]
+name = "orderly-dashboard-be"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.75"
+ethers = { version = "2.0.10", features = ["abigen"]}
+tokio = { version = "1.33.0", features = ["full"]}
+
+[build-dependencies]
+ethers = { version = "2.0.10", features = ["abigen"]}
+

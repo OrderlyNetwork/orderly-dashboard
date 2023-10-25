@@ -1,0 +1,739 @@
+[
+  {
+    "inputs": [],
+    "name": "AccountIdInvalid",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AddressZero",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint128",
+        "name": "balance",
+        "type": "uint128"
+      },
+      {
+        "internalType": "int128",
+        "name": "amount",
+        "type": "int128"
+      }
+    ],
+    "name": "BalanceNotEnough",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "batchId",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "futuresUploadBatchId",
+        "type": "uint64"
+      }
+    ],
+    "name": "BatchIdNotMatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BrokerNotAllowed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "length",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "name": "CountNotMatch",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "int128",
+        "name": "adlPositionQtyTransfer",
+        "type": "int128"
+      },
+      {
+        "internalType": "int128",
+        "name": "userPositionQty",
+        "type": "int128"
+      }
+    ],
+    "name": "InsurancePositionQtyInvalid",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint128",
+        "name": "balance",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "insuranceTransferAmount",
+        "type": "uint128"
+      },
+      {
+        "internalType": "int128",
+        "name": "settledAmount",
+        "type": "int128"
+      }
+    ],
+    "name": "InsuranceTransferAmountInvalid",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsuranceTransferToSelf",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "bizType",
+        "type": "uint8"
+      }
+    ],
+    "name": "InvalidBizType",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyCrossChainManagerCanCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyOperatorCanCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SignatureNotMatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SymbolNotAllowed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "tokenHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      }
+    ],
+    "name": "TokenNotAllowed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "int128",
+        "name": "amount",
+        "type": "int128"
+      }
+    ],
+    "name": "TotalSettleAmountNotMatch",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "accountId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "symbolHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UserPerpPositionQtyZero",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint8",
+        "name": "types",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "ChangeCefiUpload",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "ChangeLedger",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "ChangeMarketManager",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint8",
+        "name": "types",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "ChangeOperator",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "batchId",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "blocktime",
+        "type": "uint256"
+      }
+    ],
+    "name": "EventUpload",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "batchId",
+        "type": "uint64"
+      }
+    ],
+    "name": "EventUpload",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "batchId",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "blocktime",
+        "type": "uint256"
+      }
+    ],
+    "name": "FuturesTradeUpload",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "batchId",
+        "type": "uint64"
+      }
+    ],
+    "name": "FuturesTradeUpload",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "checkCefiDown",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint8",
+                "name": "bizType",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint64",
+                "name": "eventId",
+                "type": "uint64"
+              },
+              {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+              }
+            ],
+            "internalType": "struct EventTypes.EventUploadData[]",
+            "name": "events",
+            "type": "tuple[]"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "count",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "batchId",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct EventTypes.EventUpload",
+        "name": "data",
+        "type": "tuple"
+      }
+    ],
+    "name": "eventUpload",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "batchId",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint8",
+            "name": "count",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "accountId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "symbolHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "feeAssetHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "int128",
+                "name": "tradeQty",
+                "type": "int128"
+              },
+              {
+                "internalType": "int128",
+                "name": "notional",
+                "type": "int128"
+              },
+              {
+                "internalType": "uint128",
+                "name": "executedPrice",
+                "type": "uint128"
+              },
+              {
+                "internalType": "uint128",
+                "name": "fee",
+                "type": "uint128"
+              },
+              {
+                "internalType": "int128",
+                "name": "sumUnitaryFundings",
+                "type": "int128"
+              },
+              {
+                "internalType": "uint64",
+                "name": "tradeId",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "matchId",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+              },
+              {
+                "internalType": "bool",
+                "name": "side",
+                "type": "bool"
+              }
+            ],
+            "internalType": "struct PerpTypes.FuturesTradeUpload[]",
+            "name": "trades",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct PerpTypes.FuturesTradeUploadData",
+        "name": "data",
+        "type": "tuple"
+      }
+    ],
+    "name": "futuresTradeUpload",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "operatorPing",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maxTimestamp",
+            "type": "uint64"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "symbolHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint128",
+                "name": "indexPrice",
+                "type": "uint128"
+              },
+              {
+                "internalType": "uint128",
+                "name": "markPrice",
+                "type": "uint128"
+              },
+              {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+              }
+            ],
+            "internalType": "struct MarketTypes.PerpPrice[]",
+            "name": "perpPrices",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct MarketTypes.UploadPerpPrice",
+        "name": "data",
+        "type": "tuple"
+      }
+    ],
+    "name": "perpPriceUpload",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_cefiEventUploadAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setCefiEventUploadAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_cefiMarketUploadAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setCefiMarketUploadAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_cefiPerpTradeUploadAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setCefiPerpTradeUploadAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_cefiSpotTradeUploadAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setCefiSpotTradeUploadAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ledger",
+        "type": "address"
+      }
+    ],
+    "name": "setLedger",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_marketManagerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setMarketManager",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_operatorAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setOperator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maxTimestamp",
+            "type": "uint64"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "symbolHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "int128",
+                "name": "sumUnitaryFunding",
+                "type": "int128"
+              },
+              {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+              }
+            ],
+            "internalType": "struct MarketTypes.SumUnitaryFunding[]",
+            "name": "sumUnitaryFundings",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct MarketTypes.UploadSumUnitaryFundings",
+        "name": "data",
+        "type": "tuple"
+      }
+    ],
+    "name": "sumUnitaryFundingsUpload",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
