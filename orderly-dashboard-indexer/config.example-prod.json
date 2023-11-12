@@ -1,0 +1,30 @@
+{
+  "l2_config": {
+    "rpc_url": "https://rpc.orderly.network",
+    "rpc_url_fallback": "https://rpc.orderly.network",
+    "is_use_ws": false,
+    "ws_url": "wss://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
+    "pull_check_interval": 1,
+    "ledger_address": "0x6F7a338F2aA472838dEFD3283eB360d4Dff5D203",
+    "operator_manager_address": "0x7CC5B6433eb33164c88F6512f56C566CFC3420BF",
+    "user_ledger_abi_path": "./abis/user_ledger.json",
+    "operator_manager_abi_path": "./abis/operator_manager.json",
+    "market_manager_address": "0x9281CBc1e37d3bcDB8BAddFa4302B6eb5DAd2672",
+    "market_manager_abi_path": "./abis/market_manager.json",
+    "confirm_block_num": 20,
+    "contract_deploy_height": 537464,
+    "explorer_url": "https://explorer.orderly.network"
+  },
+  "cefi_server": {
+    "server_address": "https://dev-api.orderly.network",
+    "private_key": "MFMCAQEwBQYDK2VwBCIEICYNtNE9Lm3k9rupXgU8zxp8ykrVmXbNAA63zZAt2X7QoSMDIQDtiBcj3Y6NGSQfvozalvhQwHxVRLqPPESUoqiGRqnzlQ=="
+  },
+  "indexer_server": {
+    "indexer_address": "0.0.0.0:8016",
+    "public_key": "7YgXI92OjRkkH76M2pb4UMB8VUS6jzxElKKohkap85U="
+  },
+  "layerzero": {
+    "scan_url": "https://api-mainnet.layerzero-scan.com",
+    "graphql_url": "https://qtrhqncfi4.execute-api.us-east-1.amazonaws.com/prod/graphql"
+  }
+}
