@@ -7,17 +7,23 @@ use crate::eth_rpc::{get_block_with_txs, get_tx_receipt};
 use ethers::prelude::{Address, Block, Transaction, TransactionReceipt, H160};
 use futures::future::try_join_all;
 use once_cell::sync::OnceCell;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::str::FromStr;
 pub(crate) const HANDLE_LOG: &str = "handle_log";
+pub(crate) const OPERATOR_MANAGER_SC: &str = "operator_manager_sc";
+pub(crate) const LEDGER_SC: &str = "ledger_sc";
 
-pub(crate) static ADDR_SET: OnceCell<HashSet<Address>> = OnceCell::new();
+pub(crate) static ADDR_MAP: OnceCell<BTreeMap<Address, &str>> = OnceCell::new();
 
 pub(crate) fn init_addr_set() -> anyhow::Result<()> {
-    let mut addr_set = HashSet::new();
+    let mut addr_map = BTreeMap::new();
     let config = &unsafe { COMMON_CONFIGS.get_unchecked() }.l2_config;
-    addr_set.insert(H160::from_str(&config.operator_manager_address)?);
-    if ADDR_SET.set(addr_set).is_err() {
+    addr_map.insert(
+        H160::from_str(&config.operator_manager_address)?,
+        OPERATOR_MANAGER_SC,
+    );
+    addr_map.insert(H160::from_str(&config.ledger_address)?, LEDGER_SC);
+    if ADDR_MAP.set(addr_map).is_err() {
         tracing::warn!(target: crate::ORDERLY_DASHBOARD_INDEXER, "ADDR_SET already inited");
     }
     Ok(())

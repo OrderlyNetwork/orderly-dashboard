@@ -1,7 +1,12 @@
+use crate::bindings::operator_manager;
+use crate::bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
+use crate::bindings::user_ledger::{self, user_ledgerEvents};
 use crate::client::HttpClient;
-use crate::contract::{ADDR_SET, HANDLE_LOG};
+use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC};
 use anyhow::Result;
-use ethers::prelude::{Block, Log, Transaction, TransactionReceipt};
+use ethers::abi::RawLog;
+use ethers::core::abi::AbiDecode;
+use ethers::prelude::{Block, EthLogDecode, Log, Transaction, TransactionReceipt};
 
 pub(crate) async fn consume_logs_from_tx_receipts(
     block: Block<Transaction>,
@@ -12,10 +17,6 @@ pub(crate) async fn consume_logs_from_tx_receipts(
         let (tx, receipt) = &tx_receipt;
         // 1 (success)
         if receipt.status.unwrap_or_default().as_u64() == 1 {
-            if let Err(err) =
-                handle_tx_params(tx, http_client.clone(), Some(block.timestamp.as_u64())).await
-            {
-            }
             for log in &receipt.logs {
                 if let Err(err) = handle_log(
                     log.clone(),
@@ -27,6 +28,10 @@ pub(crate) async fn consume_logs_from_tx_receipts(
                     tracing::warn!(target: HANDLE_LOG, "handle_log meet err:{:?}", err);
                 }
             }
+            if let Err(err) =
+                handle_tx_params(tx, http_client.clone(), Some(block.timestamp.as_u64())).await
+            {
+            }
         }
     }
     Ok(())
@@ -37,9 +42,19 @@ pub(crate) async fn handle_tx_params(
     http_client: HttpClient,
     block_t: Option<u64>,
 ) -> Result<()> {
-    let addr_set = unsafe { ADDR_SET.get_unchecked() };
-    if !addr_set.contains(&tx.to.clone().unwrap_or_default()) {
+    let addr_set = unsafe { ADDR_MAP.get_unchecked() };
+    if addr_set.get(&tx.to.clone().unwrap_or_default()).is_none() {
         return Ok(());
+    }
+
+    // block_number, transaction_index, log index
+    let call_data = operator_manager::operator_managerCalls::decode(&tx.input)?;
+    match call_data {
+        operator_managerCalls::FuturesTradeUpload(futures_upload) => {
+            let batch_id = futures_upload.data.batch_id;
+            let trades = futures_upload.data.trades;
+        }
+        _ => {}
     }
     Ok(())
 }
@@ -49,28 +64,42 @@ pub(crate) async fn handle_log(
     http_client: HttpClient,
     block_t: Option<u64>,
 ) -> Result<()> {
-    let addr_set = unsafe { ADDR_SET.get_unchecked() };
-    if !addr_set.contains(&log.address) {
+    let addr_map = unsafe { ADDR_MAP.get_unchecked() };
+    if let Some(sc_name) = addr_map.get(&log.address) {
+        match *sc_name {
+            OPERATOR_MANAGER_SC => {
+                let event =
+                    operator_manager::operator_managerEvents::decode_log(&RawLog::from(log))?;
+                match event {
+                    operator_managerEvents::EventUpload1Filter(event_upload) => {}
+                    operator_managerEvents::EventUpload2Filter(event_upload) => {}
+                    operator_managerEvents::FuturesTradeUpload1Filter(event_upload) => {}
+                    operator_managerEvents::FuturesTradeUpload2Filter(event_upload) => {}
+                    _ => {}
+                }
+            }
+            LEDGER_SC => {
+                let event = user_ledgerEvents::decode_log(&RawLog::from(log))?;
+                match event {
+                    user_ledgerEvents::AccountDeposit1Filter(_) => {}
+                    user_ledgerEvents::AccountDeposit2Filter(_) => {}
+                    user_ledgerEvents::AccountWithdrawApprove1Filter(_) => {}
+                    user_ledgerEvents::AccountWithdrawApprove2Filter(_) => {}
+                    user_ledgerEvents::AccountWithdrawFail1Filter(_) => {}
+                    user_ledgerEvents::AccountWithdrawFail2Filter(_) => {}
+                    user_ledgerEvents::AccountWithdrawFinish1Filter(_) => {}
+                    user_ledgerEvents::AccountWithdrawFinish2Filter(_) => {}
+                    user_ledgerEvents::AdlResultFilter(_) => {}
+                    user_ledgerEvents::LiquidationResultFilter(_) => {}
+                    user_ledgerEvents::ProcessValidatedFuturesFilter(_) => {}
+                    user_ledgerEvents::SettlementResultFilter(_) => {}
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    } else {
         return Ok(());
     }
-
-    // provider.get_block_with_txs().await?;
-    // let hash = H256::from_str("0x515864ece6ad21577f7b559eb78bb939b4b8d24f57ea01126335a956706f5076")
-    //     .unwrap();
-    // let tx = provider.get_transaction(hash).await.unwrap();
-    // if let Some(tx) = tx {
-    //     let operator_call = operator_managerCalls::decode(tx.input).unwrap();
-    //     // let futures_upload_data: FuturesTradeUploadData = FuturesTradeUploadData::decode(tx.input).unwrap();
-    //     println!("operator_call:{:?}", operator_call);
-    // } else {
-    //     println!("tx not found");
-    // }
-    // let receipt = provider.get_transaction_receipt(hash).await.unwrap();
-    // if let Some(receipt) = receipt {
-    //     for log in receipt.logs {
-    //         let event = operator_managerEvents::decode_log(&RawLog::from(log)).unwrap();
-    //         println!("operator_managerEvents:{:?}", event);
-    //     }
-    // }
     Ok(())
 }

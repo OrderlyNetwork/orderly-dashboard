@@ -1,3 +1,4 @@
+pub mod executed_trades;
 pub mod settings;
 
 use actix_diesel::Database;
