@@ -24,5 +24,5 @@ create table executed_trades
         primary key(block_number, transaction_index, log_index)
 );
 
-create index account_id_index
+create index trades_account_id_index
     on executed_trades (account_id);
