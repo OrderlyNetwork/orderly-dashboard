@@ -1,3 +1,4 @@
+pub mod trading_events;
 use anyhow::Context;
 use bigdecimal::ToPrimitive;
 use chrono::NaiveDateTime;
