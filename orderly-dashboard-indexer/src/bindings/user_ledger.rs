@@ -1918,6 +1918,85 @@ pub mod user_ledger {
                     ],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("LiquidationTransfer"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Event {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "LiquidationTransfer",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned(
+                                        "liquidationTransferId",
+                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                    indexed: true,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned(
+                                        "liquidatorAccountId",
+                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: true,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("symbolHash"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: true,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned(
+                                        "positionQtyTransfer",
+                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned(
+                                        "costPositionTransfer",
+                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("liquidatorFee"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("insuranceFee"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("liquidationFee"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("markPrice"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        128usize,
+                                    ),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned(
+                                        "sumUnitaryFundings",
+                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                            ],
+                            anonymous: false,
+                        },
+                    ],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("OwnershipTransferred"),
                     ::std::vec![
                         ::ethers::core::abi::ethabi::Event {
@@ -2018,6 +2097,45 @@ pub mod user_ledger {
                                 ::ethers::core::abi::ethabi::EventParam {
                                     name: ::std::borrow::ToOwned::to_owned("side"),
                                     kind: ::ethers::core::abi::ethabi::ParamType::Bool,
+                                    indexed: false,
+                                },
+                            ],
+                            anonymous: false,
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("SettlementExecution"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Event {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "SettlementExecution",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("symbolHash"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: true,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("markPrice"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        128usize,
+                                    ),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned(
+                                        "sumUnitaryFundings",
+                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("settledAmount"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
                                     indexed: false,
                                 },
                             ],
@@ -2881,6 +2999,16 @@ pub mod user_ledger {
         > {
             self.0.event()
         }
+        ///Gets the contract's `LiquidationTransfer` event
+        pub fn liquidation_transfer_filter(
+            &self,
+        ) -> ::ethers::contract::builders::Event<
+            ::std::sync::Arc<M>,
+            M,
+            LiquidationTransferFilter,
+        > {
+            self.0.event()
+        }
         ///Gets the contract's `OwnershipTransferred` event
         pub fn ownership_transferred_filter(
             &self,
@@ -2898,6 +3026,16 @@ pub mod user_ledger {
             ::std::sync::Arc<M>,
             M,
             ProcessValidatedFuturesFilter,
+        > {
+            self.0.event()
+        }
+        ///Gets the contract's `SettlementExecution` event
+        pub fn settlement_execution_filter(
+            &self,
+        ) -> ::ethers::contract::builders::Event<
+            ::std::sync::Arc<M>,
+            M,
+            SettlementExecutionFilter,
         > {
             self.0.event()
         }
@@ -3976,6 +4114,35 @@ pub mod user_ledger {
         Hash
     )]
     #[ethevent(
+        name = "LiquidationTransfer",
+        abi = "LiquidationTransfer(uint64,bytes32,bytes32,int128,int128,int128,int128,int128,uint128,int128)"
+    )]
+    pub struct LiquidationTransferFilter {
+        #[ethevent(indexed)]
+        pub liquidation_transfer_id: u64,
+        #[ethevent(indexed)]
+        pub liquidator_account_id: [u8; 32],
+        #[ethevent(indexed)]
+        pub symbol_hash: [u8; 32],
+        pub position_qty_transfer: i128,
+        pub cost_position_transfer: i128,
+        pub liquidator_fee: i128,
+        pub insurance_fee: i128,
+        pub liquidation_fee: i128,
+        pub mark_price: u128,
+        pub sum_unitary_fundings: i128,
+    }
+    #[derive(
+        Clone,
+        ::ethers::contract::EthEvent,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash
+    )]
+    #[ethevent(
         name = "OwnershipTransferred",
         abi = "OwnershipTransferred(address,address)"
     )]
@@ -4026,6 +4193,27 @@ pub mod user_ledger {
         Hash
     )]
     #[ethevent(
+        name = "SettlementExecution",
+        abi = "SettlementExecution(bytes32,uint128,int128,int128)"
+    )]
+    pub struct SettlementExecutionFilter {
+        #[ethevent(indexed)]
+        pub symbol_hash: [u8; 32],
+        pub mark_price: u128,
+        pub sum_unitary_fundings: i128,
+        pub settled_amount: i128,
+    }
+    #[derive(
+        Clone,
+        ::ethers::contract::EthEvent,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash
+    )]
+    #[ethevent(
         name = "SettlementResult",
         abi = "SettlementResult(uint64,bytes32,int128,bytes32,bytes32,uint128,uint64,uint64)"
     )]
@@ -4062,8 +4250,10 @@ pub mod user_ledger {
         ChangeVaultManagerFilter(ChangeVaultManagerFilter),
         InitializedFilter(InitializedFilter),
         LiquidationResultFilter(LiquidationResultFilter),
+        LiquidationTransferFilter(LiquidationTransferFilter),
         OwnershipTransferredFilter(OwnershipTransferredFilter),
         ProcessValidatedFuturesFilter(ProcessValidatedFuturesFilter),
+        SettlementExecutionFilter(SettlementExecutionFilter),
         SettlementResultFilter(SettlementResultFilter),
     }
     impl ::ethers::contract::EthLogDecode for user_ledgerEvents {
@@ -4124,11 +4314,17 @@ pub mod user_ledger {
             if let Ok(decoded) = LiquidationResultFilter::decode_log(log) {
                 return Ok(user_ledgerEvents::LiquidationResultFilter(decoded));
             }
+            if let Ok(decoded) = LiquidationTransferFilter::decode_log(log) {
+                return Ok(user_ledgerEvents::LiquidationTransferFilter(decoded));
+            }
             if let Ok(decoded) = OwnershipTransferredFilter::decode_log(log) {
                 return Ok(user_ledgerEvents::OwnershipTransferredFilter(decoded));
             }
             if let Ok(decoded) = ProcessValidatedFuturesFilter::decode_log(log) {
                 return Ok(user_ledgerEvents::ProcessValidatedFuturesFilter(decoded));
+            }
+            if let Ok(decoded) = SettlementExecutionFilter::decode_log(log) {
+                return Ok(user_ledgerEvents::SettlementExecutionFilter(decoded));
             }
             if let Ok(decoded) = SettlementResultFilter::decode_log(log) {
                 return Ok(user_ledgerEvents::SettlementResultFilter(decoded));
@@ -4189,10 +4385,16 @@ pub mod user_ledger {
                 Self::LiquidationResultFilter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
+                Self::LiquidationTransferFilter(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
                 Self::OwnershipTransferredFilter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::ProcessValidatedFuturesFilter(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
+                Self::SettlementExecutionFilter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::SettlementResultFilter(element) => {
@@ -4291,6 +4493,11 @@ pub mod user_ledger {
             Self::LiquidationResultFilter(value)
         }
     }
+    impl ::core::convert::From<LiquidationTransferFilter> for user_ledgerEvents {
+        fn from(value: LiquidationTransferFilter) -> Self {
+            Self::LiquidationTransferFilter(value)
+        }
+    }
     impl ::core::convert::From<OwnershipTransferredFilter> for user_ledgerEvents {
         fn from(value: OwnershipTransferredFilter) -> Self {
             Self::OwnershipTransferredFilter(value)
@@ -4299,6 +4506,11 @@ pub mod user_ledger {
     impl ::core::convert::From<ProcessValidatedFuturesFilter> for user_ledgerEvents {
         fn from(value: ProcessValidatedFuturesFilter) -> Self {
             Self::ProcessValidatedFuturesFilter(value)
+        }
+    }
+    impl ::core::convert::From<SettlementExecutionFilter> for user_ledgerEvents {
+        fn from(value: SettlementExecutionFilter) -> Self {
+            Self::SettlementExecutionFilter(value)
         }
     }
     impl ::core::convert::From<SettlementResultFilter> for user_ledgerEvents {

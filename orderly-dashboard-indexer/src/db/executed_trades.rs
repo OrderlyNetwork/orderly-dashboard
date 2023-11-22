@@ -30,6 +30,30 @@ pub struct DbexecutedTrades {
     pub timestamp: BigDecimal,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum TradeType {
+    PerpTrade = 1,
+    SpotTrade = 2,
+}
+
+impl TradeType {
+    pub fn value(self) -> i16 {
+        self as i16
+    }
+}
+
+impl TryFrom<i16> for TradeType {
+    type Error = anyhow::Error;
+
+    fn try_from(value: i16) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(Self::PerpTrade),
+            2 => Ok(Self::SpotTrade),
+            _ => Err(anyhow::anyhow!("cannot convert integer to TradeType")),
+        }
+    }
+}
+
 pub(crate) async fn create_executed_trades(trades: Vec<DbexecutedTrades>) -> Result<usize> {
     use crate::schema::executed_trades::dsl::*;
 

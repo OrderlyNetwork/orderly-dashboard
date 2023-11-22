@@ -983,6 +983,73 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "uint64",
+        "name": "liquidationTransferId",
+        "type": "uint64"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "liquidatorAccountId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "symbolHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "positionQtyTransfer",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "costPositionTransfer",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "liquidatorFee",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "insuranceFee",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "liquidationFee",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "markPrice",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "sumUnitaryFundings",
+        "type": "int128"
+      }
+    ],
+    "name": "LiquidationTransfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
         "type": "address"
@@ -1074,6 +1141,37 @@
       }
     ],
     "name": "ProcessValidatedFutures",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "symbolHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "markPrice",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "sumUnitaryFundings",
+        "type": "int128"
+      },
+      {
+        "indexed": false,
+        "internalType": "int128",
+        "name": "settledAmount",
+        "type": "int128"
+      }
+    ],
+    "name": "SettlementExecution",
     "type": "event"
   },
   {

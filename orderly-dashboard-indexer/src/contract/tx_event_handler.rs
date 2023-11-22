@@ -3,7 +3,10 @@ use crate::bindings::operator_manager::{operator_managerCalls, operator_managerE
 use crate::bindings::user_ledger::{self, user_ledgerEvents};
 use crate::client::HttpClient;
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC};
+use crate::db::executed_trades::{create_executed_trades, DbexecutedTrades, TradeType};
+use crate::utils::{convert_token, to_hex_format};
 use anyhow::Result;
+use bigdecimal::{BigDecimal, FromPrimitive};
 use ethers::abi::RawLog;
 use ethers::core::abi::AbiDecode;
 use ethers::prelude::{Block, EthLogDecode, Log, Transaction, TransactionReceipt};
@@ -53,7 +56,31 @@ pub(crate) async fn handle_tx_params(
         operator_managerCalls::FuturesTradeUpload(futures_upload) => {
             let batch_id = futures_upload.data.batch_id;
             let trades = futures_upload.data.trades;
+            let db_trades = trades
+                .iter()
+                .map(|trade| DbexecutedTrades {
+                    block_number: tx.block_number.unwrap_or_default().as_u64() as i64,
+                    transaction_index: tx.transaction_index.unwrap_or_default().as_u64() as i32,
+                    log_index: 0,
+                    batch_id: BigDecimal::from_u64(batch_id).unwrap_or_default(),
+                    typ: TradeType::PerpTrade.value(),
+                    account_id: to_hex_format(&trade.account_id),
+                    symbol_hash: to_hex_format(&trade.symbol_hash),
+                    fee_asset_hash: to_hex_format(&trade.fee_asset_hash),
+                    trade_qty: convert_token(trade.trade_qty as u128).unwrap_or_default(),
+                    notional: convert_token(trade.notional as u128).unwrap_or_default(),
+                    executed_price: convert_token(trade.executed_price).unwrap_or_default(),
+                    fee: convert_token(trade.fee).unwrap_or_default(),
+                    sum_unitary_fundings: convert_token(trade.sum_unitary_fundings as u128)
+                        .unwrap_or_default(),
+                    trade_id: BigDecimal::from_u64(trade.trade_id).unwrap_or_default(),
+                    match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
+                    timestamp: BigDecimal::from_u64(trade.timestamp).unwrap_or_default(),
+                })
+                .collect::<Vec<_>>();
+            create_executed_trades(db_trades).await?;
         }
+        operator_managerCalls::EventUpload(event_upload) => {}
         _ => {}
     }
     Ok(())
@@ -81,7 +108,7 @@ pub(crate) async fn handle_log(
             LEDGER_SC => {
                 let event = user_ledgerEvents::decode_log(&RawLog::from(log))?;
                 match event {
-                    user_ledgerEvents::AccountDeposit1Filter(_) => {}
+                    user_ledgerEvents::AccountDeposit1Filter(deposit_event) => {}
                     user_ledgerEvents::AccountDeposit2Filter(_) => {}
                     user_ledgerEvents::AccountWithdrawApprove1Filter(_) => {}
                     user_ledgerEvents::AccountWithdrawApprove2Filter(_) => {}
@@ -93,6 +120,8 @@ pub(crate) async fn handle_log(
                     user_ledgerEvents::LiquidationResultFilter(_) => {}
                     user_ledgerEvents::ProcessValidatedFuturesFilter(_) => {}
                     user_ledgerEvents::SettlementResultFilter(_) => {}
+                    user_ledgerEvents::SettlementExecutionFilter(_) => {}
+                    user_ledgerEvents::LiquidationTransferFilter(_) => {}
                     _ => {}
                 }
             }

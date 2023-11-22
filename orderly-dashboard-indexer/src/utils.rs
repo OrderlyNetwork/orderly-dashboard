@@ -1,3 +1,6 @@
+use bigdecimal::{BigDecimal, FromPrimitive};
+use std::str::FromStr;
+
 #[macro_export]
 macro_rules! await_retry_or_error {
     ($query: expr, $number_of_retries: expr, $error_message: expr) => {{
@@ -30,4 +33,20 @@ macro_rules! await_retry_or_error {
             }
         }
     }};
+}
+
+pub fn to_hex_format(bytes: &[u8]) -> String {
+    "0x".to_string() + &hex::encode(bytes)
+}
+
+pub(crate) fn convert_token(amount: u128) -> anyhow::Result<BigDecimal> {
+    let converted = match BigDecimal::from_u128(amount) {
+        Some(converted) => converted,
+        None => {
+            let amount_str = amount.to_string();
+            BigDecimal::from_str(&amount_str)?
+        }
+    };
+
+    Ok(converted)
 }
