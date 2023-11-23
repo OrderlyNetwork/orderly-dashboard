@@ -5,7 +5,7 @@ create table liquidation_transfer
     transaction_index             integer  not null,
     log_index                     integer  not null,
     transaction_id                text     not null,
-    liquidation_transfer_id       integer  not null,
+    liquidation_transfer_id       numeric  not null,
     liquidator_account_id         text     not null,
     symbol_hash                   text     not null,
     position_qty_transfer         numeric  not null,

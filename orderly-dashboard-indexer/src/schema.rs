@@ -59,7 +59,7 @@ diesel::table! {
         transaction_index -> Int4,
         log_index -> Int4,
         transaction_id -> Text,
-        liquidation_transfer_id -> Int4,
+        liquidation_transfer_id -> Numeric,
         liquidator_account_id -> Text,
         symbol_hash -> Text,
         position_qty_transfer -> Numeric,
@@ -74,11 +74,13 @@ diesel::table! {
 
 diesel::table! {
     serial_batches (batch_id, event_type) {
-        batch_id -> Int8,
-        transaction_id -> Text,
-        event_type -> Int4,
-        block_time -> Numeric,
         block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        transaction_id -> Text,
+        block_time -> Numeric,
+        batch_id -> Int8,
+        event_type -> Int2,
     }
 }
 
@@ -107,14 +109,14 @@ diesel::table! {
         block_number -> Int8,
         transaction_index -> Int4,
         log_index -> Int4,
-        account_id -> Text,
         transaction_id -> Text,
+        block_time -> Numeric,
+        account_id -> Text,
         settled_amount -> Numeric,
         settled_asset_hash -> Text,
         insurance_account_id -> Text,
         insurance_transfer_amount -> Numeric,
         settlement_executions_count -> Numeric,
-        last_engine_event_id -> Numeric,
     }
 }
 
