@@ -43,7 +43,7 @@ execute sql in database by diesel
 ```shell
 diesel migration run
 ```
-At this point, we can build the workspace by running cargo build. The files in your add directory should look like this:
+At this point, we can build the workspace by running `cargo build --release` command. The files in your add directory should look like this:
 ```text
 ├── Cargo.lock
 ├── Cargo.toml
@@ -51,7 +51,7 @@ At this point, we can build the workspace by running cargo build. The files in y
 ├── orderly-dashboard-indexer
 └── target
 ```
-The executable binary is here in target/release directory:
+The executable binary are here in target/release directory:
 ```text
 tree target/release -L 1
 target/release
