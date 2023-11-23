@@ -1,13 +1,13 @@
-# orderly-dashboard-backend
-1. indexing orderly tx and deserialize tx params, indexing events and deserialize events
-2. data analysis from tx and events
+# orderly-dashboard-indexer
+1. indexing orderly tx and decode tx params, indexing events and decode events,save those data to database
+2. provide api to query blockchain data
 ## build
 ```shell
 cargo build --release
 ```
 ## run
 ```shell
-cargo build --release
+cargo run --release
 ```
 * output
 ```text
