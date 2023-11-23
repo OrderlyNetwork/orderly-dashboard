@@ -1,12 +1,13 @@
 use crate::bindings::operator_manager;
 use crate::bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
-use crate::bindings::user_ledger::{self, user_ledgerEvents};
+use crate::bindings::user_ledger::{self, user_ledgerEvents, Liquidation, Settlement};
 use crate::client::HttpClient;
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC};
 use crate::db::executed_trades::{create_executed_trades, DbexecutedTrades, TradeType};
 use crate::utils::{convert_token, to_hex_format};
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
+use ethers::abi;
 use ethers::abi::RawLog;
 use ethers::core::abi::AbiDecode;
 use ethers::prelude::{Block, EthLogDecode, Log, Transaction, TransactionReceipt};
@@ -80,7 +81,17 @@ pub(crate) async fn handle_tx_params(
                 .collect::<Vec<_>>();
             create_executed_trades(db_trades).await?;
         }
-        operator_managerCalls::EventUpload(event_upload) => {}
+        operator_managerCalls::EventUpload(event_upload) => {
+            for event in event_upload.data.events {
+                if event.biz_type == 2 {
+                    // settlement
+                    let settlement = Settlement::decode(event.data)?;
+                } else if event.biz_type == 4 {
+                    // liquidation
+                    let liquidation = Liquidation::decode(event.data)?;
+                }
+            }
+        }
         _ => {}
     }
     Ok(())
@@ -110,10 +121,6 @@ pub(crate) async fn handle_log(
                 match event {
                     user_ledgerEvents::AccountDeposit1Filter(deposit_event) => {}
                     user_ledgerEvents::AccountDeposit2Filter(_) => {}
-                    user_ledgerEvents::AccountWithdrawApprove1Filter(_) => {}
-                    user_ledgerEvents::AccountWithdrawApprove2Filter(_) => {}
-                    user_ledgerEvents::AccountWithdrawFail1Filter(_) => {}
-                    user_ledgerEvents::AccountWithdrawFail2Filter(_) => {}
                     user_ledgerEvents::AccountWithdrawFinish1Filter(_) => {}
                     user_ledgerEvents::AccountWithdrawFinish2Filter(_) => {}
                     user_ledgerEvents::AdlResultFilter(_) => {}

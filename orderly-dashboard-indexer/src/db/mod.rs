@@ -1,5 +1,11 @@
+pub mod adl_result;
 pub mod executed_trades;
+pub mod liquidation_result;
+pub mod liquidation_transfer;
+pub mod serial_batches;
 pub mod settings;
+pub mod settlement_execution;
+pub mod settlement_result;
 
 use actix_diesel::Database;
 use diesel::PgConnection;

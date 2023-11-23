@@ -5,11 +5,11 @@ create table liquidation_result
     transaction_index             integer  not null,
     log_index                     integer  not null,
     transaction_id                text     not null,
+    block_time                    numeric  not null,
     liquidated_account_id         text     not null,
-    insurance_account_id          numeric  not null,
-    liquidated_asset_hash            text     not null,
+    insurance_account_id          text     not null,
+    liquidated_asset_hash         text     not null,
     insurance_transfer_amount     numeric  not null,
-    last_engine_event_id          numeric  not null,
     constraint liquidation_result_uq
         primary key(block_number, transaction_index, log_index)
 );
