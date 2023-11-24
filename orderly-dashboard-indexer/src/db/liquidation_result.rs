@@ -23,11 +23,13 @@ pub struct DbLiquidationResult {
     pub insurance_transfer_amount: BigDecimal,
 }
 
-pub(crate) async fn create_liquidation_results(adls: Vec<DbLiquidationResult>) -> Result<usize> {
+pub(crate) async fn create_liquidation_results(
+    liquidations: Vec<DbLiquidationResult>,
+) -> Result<usize> {
     use crate::schema::liquidation_result::dsl::*;
 
     let num_rows = diesel::insert_into(liquidation_result)
-        .values(adls)
+        .values(liquidations)
         .on_conflict_do_nothing()
         .execute_async(&POOL)
         .await?;

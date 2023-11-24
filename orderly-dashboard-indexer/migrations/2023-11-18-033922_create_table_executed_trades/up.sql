@@ -4,7 +4,6 @@ create table executed_trades
     block_number         bigint   not null,
     transaction_index    integer  not null,
     log_index            integer  not null,
-    batch_id             numeric  not null,
     -- 1: perp trade
     typ                  smallint not null,
     account_id           text     not null,

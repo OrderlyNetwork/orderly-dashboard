@@ -22,7 +22,6 @@ diesel::table! {
         block_number -> Int8,
         transaction_index -> Int4,
         log_index -> Int4,
-        batch_id -> Numeric,
         typ -> Int2,
         account_id -> Text,
         symbol_hash -> Text,
@@ -116,17 +115,19 @@ diesel::table! {
         settled_asset_hash -> Text,
         insurance_account_id -> Text,
         insurance_transfer_amount -> Numeric,
-        settlement_executions_count -> Numeric,
     }
 }
 
 diesel::table! {
-    transaction_events (event_id) {
-        event_id -> Int8,
+    transaction_events (block_number, transaction_index, log_index) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        transaction_id -> Text,
+        block_time -> Numeric,
         account_id -> Text,
         sender -> Nullable<Text>,
         receiver -> Text,
-        transaction_id -> Text,
         token_hash -> Text,
         broker_hash -> Text,
         chain_id -> Numeric,
@@ -134,11 +135,8 @@ diesel::table! {
         amount -> Numeric,
         fee -> Numeric,
         status -> Int2,
-        block_time -> Numeric,
         withdraw_nonce -> Nullable<Int8>,
         fail_reason -> Nullable<Int2>,
-        created_time -> Timestamp,
-        updated_time -> Timestamp,
     }
 }
 

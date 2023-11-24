@@ -5801,7 +5801,7 @@ pub mod user_ledger {
         Eq,
         Hash
     )]
-    pub struct Settlement {
+pub struct Settlement {
         pub account_id: [u8; 32],
         pub settled_asset_hash: [u8; 32],
         pub insurance_account_id: [u8; 32],

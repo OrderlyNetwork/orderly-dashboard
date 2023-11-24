@@ -6,6 +6,7 @@ pub mod serial_batches;
 pub mod settings;
 pub mod settlement_execution;
 pub mod settlement_result;
+pub mod transaction_events;
 
 use actix_diesel::Database;
 use diesel::PgConnection;

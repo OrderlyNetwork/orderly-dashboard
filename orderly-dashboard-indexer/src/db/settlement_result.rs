@@ -22,14 +22,15 @@ pub struct DbSettlementResult {
     pub settled_asset_hash: String,
     pub insurance_account_id: String,
     pub insurance_transfer_amount: BigDecimal,
-    pub settlement_executions_count: BigDecimal,
 }
 
-pub(crate) async fn create_settlement_results(adls: Vec<DbSettlementResult>) -> Result<usize> {
+pub(crate) async fn create_settlement_results(
+    settlment_reses: Vec<DbSettlementResult>,
+) -> Result<usize> {
     use crate::schema::settlement_result::dsl::*;
 
     let num_rows = diesel::insert_into(settlement_result)
-        .values(adls)
+        .values(settlment_reses)
         .on_conflict_do_nothing()
         .execute_async(&POOL)
         .await?;

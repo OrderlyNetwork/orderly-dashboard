@@ -1,4 +1,5 @@
 use bigdecimal::{BigDecimal, FromPrimitive};
+use ethers::types::{H160, H256};
 use std::str::FromStr;
 
 #[macro_export]
@@ -39,8 +40,8 @@ pub fn to_hex_format(bytes: &[u8]) -> String {
     "0x".to_string() + &hex::encode(bytes)
 }
 
-pub(crate) fn convert_token(amount: u128) -> anyhow::Result<BigDecimal> {
-    let converted = match BigDecimal::from_u128(amount) {
+pub fn convert_amount(amount: i128) -> anyhow::Result<BigDecimal> {
+    let converted = match BigDecimal::from_i128(amount) {
         Some(converted) => converted,
         None => {
             let amount_str = amount.to_string();
@@ -49,4 +50,12 @@ pub(crate) fn convert_token(amount: u128) -> anyhow::Result<BigDecimal> {
     };
 
     Ok(converted)
+}
+
+pub fn format_hash(hash: H256) -> String {
+    format!("{:?}", hash)
+}
+
+pub fn format_hash_160(hash: H160) -> String {
+    format!("{:?}", hash)
 }

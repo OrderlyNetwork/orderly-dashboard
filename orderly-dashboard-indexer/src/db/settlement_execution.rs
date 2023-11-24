@@ -22,12 +22,14 @@ pub struct DbSettlementExecution {
 }
 
 pub(crate) async fn create_settlement_executions(
-    adls: Vec<DbSettlementExecution>,
+    settlement_execs: Vec<DbSettlementExecution>,
 ) -> Result<usize> {
     use crate::schema::settlement_execution::dsl::*;
-
+    if settlement_execs.is_empty() {
+        return Ok(0);
+    }
     let num_rows = diesel::insert_into(settlement_execution)
-        .values(adls)
+        .values(settlement_execs)
         .on_conflict_do_nothing()
         .execute_async(&POOL)
         .await?;

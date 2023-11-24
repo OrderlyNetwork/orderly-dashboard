@@ -32,13 +32,6 @@ pub struct DbSerialBatches {
     pub batch_id: i64,
     pub event_type: i16,
 }
-//     block_number      bigint                not null,
-//     transaction_index integer               not null,
-//     log_index         integer               not null,
-//     transaction_id    text                  not null,
-//     block_time        numeric               not null,
-//     batch_id          bigint                not null,
-//     event_type        smallint              not null,
 
 pub(crate) async fn create_serial_batchess(batches: Vec<DbSerialBatches>) -> Result<usize> {
     use crate::schema::serial_batches::dsl::*;

@@ -15,7 +15,6 @@ pub struct DbexecutedTrades {
     pub block_number: i64,
     pub transaction_index: i32,
     pub log_index: i32,
-    pub batch_id: BigDecimal,
     pub typ: i16,
     pub account_id: String,
     pub symbol_hash: String,
