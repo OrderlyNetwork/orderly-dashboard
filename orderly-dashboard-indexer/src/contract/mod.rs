@@ -84,3 +84,23 @@ pub async fn query_and_filter_block_data_info(
 
     Ok((block, tx_receipt_vec))
 }
+
+#[cfg(test)]
+mod tests {
+    use ethers::prelude::BlockNumber;
+    use ethers::providers::{Http, Middleware, Provider};
+
+    #[ignore]
+    #[tokio::test]
+    async fn test_fetch_block_receipts() {
+        let provider = Provider::<Http>::try_from(
+            "https://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
+        )
+        .unwrap();
+        let receipts = provider
+            .get_block_receipts(BlockNumber::Number(4777281.into()))
+            .await
+            .unwrap();
+        println!("receipts: {:?}", receipts);
+    }
+}
