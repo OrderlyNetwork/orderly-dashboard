@@ -1,8 +1,18 @@
+use crate::db::adl_result::DbAdlResult;
+use crate::db::executed_trades::DbExecutedTrades;
+use crate::db::liquidation_result::DbLiquidationResult;
+use crate::db::liquidation_transfer::DbLiquidationTransfer;
+use crate::db::serial_batches::DbSerialBatches;
+use crate::db::settlement_execution::DbSettlementExecution;
+use crate::db::settlement_result::DbSettlementResult;
+use crate::db::transaction_events::DbTransactionEvent;
 use anyhow::Context;
 use bigdecimal::ToPrimitive;
 use chrono::NaiveDateTime;
+use serde::de::value;
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
+use std::cmp::Ordering;
 use std::str::FromStr;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
@@ -19,6 +29,157 @@ pub struct TradingEvent {
     pub transaction_id: String,
     pub block_timestamp: u64,
     pub data: TradingEventInnerData,
+}
+
+impl Eq for TradingEvent {}
+
+impl PartialEq<Self> for TradingEvent {
+    fn eq(&self, other: &Self) -> bool {
+        self.block_number == other.block_number
+            && self.transaction_index == other.transaction_index
+            && self.log_index == other.log_index
+    }
+}
+
+impl PartialOrd<Self> for TradingEvent {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let block_order = self.block_number.cmp(&other.block_number);
+        if block_order != Ordering::Equal {
+            return Some(block_order);
+        }
+        let tx_order = self.transaction_index.cmp(&other.transaction_index);
+        if tx_order != Ordering::Equal {
+            return Some(tx_order);
+        }
+        Some(self.log_index.cmp(&other.log_index))
+    }
+}
+
+impl Ord for TradingEvent {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let block_order = self.block_number.cmp(&other.block_number);
+        if block_order != Ordering::Equal {
+            return block_order;
+        }
+        let tx_order = self.transaction_index.cmp(&other.transaction_index);
+        if tx_order != Ordering::Equal {
+            return tx_order;
+        }
+        self.log_index.cmp(&other.log_index)
+    }
+}
+
+impl TradingEvent {
+    pub fn from_serial_batch_and_trades(
+        value: DbSerialBatches,
+        trades: Vec<DbExecutedTrades>,
+    ) -> TradingEvent {
+        let trades: Vec<Trade> = trades.into_iter().map(Into::into).collect::<Vec<_>>();
+        TradingEvent {
+            block_number: value.block_number as u64,
+            transaction_index: value.transaction_index as u32,
+            log_index: value.log_index as u32,
+            transaction_id: value.transaction_id.clone(),
+            block_timestamp: value.block_time.to_u64().unwrap_or_default(),
+            data: TradingEventInnerData::ProcessedTrades {
+                batch_id: value.batch_id as u64,
+                trades,
+            },
+        }
+    }
+
+    pub fn from_balance_transaction(value: DbTransactionEvent) -> TradingEvent {
+        TradingEvent {
+            block_number: value.block_number as u64,
+            transaction_index: value.transaction_index as u32,
+            log_index: value.log_index as u32,
+            transaction_id: value.transaction_id,
+            block_timestamp: value.block_time.to_u64().unwrap_or_default(),
+            data: TradingEventInnerData::Transaction {
+                account_id: value.account_id,
+                sender: value.sender,
+                receiver: value.receiver,
+                token_hash: value.token_hash,
+                broker_hash: value.broker_hash,
+                chain_id: value.chain_id.to_string(),
+                side: TransactionSide::try_from(value.side).unwrap_or(TransactionSide::Deposit),
+                token_amount: value.amount.to_string(),
+                withdraw_nonce: value.withdraw_nonce,
+                status: TransactionStatus::try_from(value.status)
+                    .unwrap_or(TransactionStatus::Succeed),
+                fail_reason: value.fail_reason,
+                fee: value.fee.to_string(),
+            },
+        }
+    }
+
+    pub fn from_settlement(
+        settlement_res: DbSettlementResult,
+        executions: Vec<DbSettlementExecution>,
+    ) -> TradingEvent {
+        let settlement_executions = executions
+            .into_iter()
+            .map(SettlementExecution::from)
+            .collect::<Vec<_>>();
+        TradingEvent {
+            block_number: settlement_res.block_number as u64,
+            transaction_index: settlement_res.transaction_index as u32,
+            log_index: settlement_res.log_index as u32,
+            transaction_id: settlement_res.transaction_id,
+            block_timestamp: settlement_res.block_time.to_u64().unwrap(),
+            data: TradingEventInnerData::SettlementResult {
+                account_id: settlement_res.account_id,
+                settled_amount: settlement_res.settled_amount.to_string(),
+                settled_asset_hash: settlement_res.settled_asset_hash,
+                insurance_account_id: settlement_res.insurance_account_id,
+                insurance_transfer_amount: settlement_res.insurance_transfer_amount.to_string(),
+                settlement_executions,
+            },
+        }
+    }
+
+    pub fn from_liquidation(
+        liquidation_res: DbLiquidationResult,
+        transfers: Vec<DbLiquidationTransfer>,
+    ) -> TradingEvent {
+        let liquidation_transfers = transfers
+            .into_iter()
+            .map(LiquidationTransfer::from)
+            .collect::<Vec<_>>();
+        TradingEvent {
+            block_number: liquidation_res.block_number as u64,
+            transaction_index: liquidation_res.transaction_index as u32,
+            log_index: liquidation_res.log_index as u32,
+            transaction_id: liquidation_res.transaction_id,
+            block_timestamp: liquidation_res.block_time.to_u64().unwrap(),
+            data: TradingEventInnerData::LiquidationResult {
+                liquidated_account_id: "".to_string(),
+                insurance_account_id: "".to_string(),
+                liquidated_asset_hash: "".to_string(),
+                insurance_transfer_amount: "".to_string(),
+                liquidation_transfers,
+            },
+        }
+    }
+
+    pub fn from_adl_result(adl: DbAdlResult) -> TradingEvent {
+        TradingEvent {
+            block_number: adl.block_number as u64,
+            transaction_index: adl.transaction_index as u32,
+            log_index: adl.log_index as u32,
+            transaction_id: adl.transaction_id,
+            block_timestamp: adl.block_time.to_u64().unwrap(),
+            data: TradingEventInnerData::AdlResult {
+                account_id: adl.account_id,
+                insurance_account_id: adl.insurance_account_id,
+                symbol_hash: adl.symbol_hash,
+                position_qty_transfer: adl.position_qty_transfer.to_string(),
+                cost_position_transfer: adl.cost_position_transfer.to_string(),
+                adl_price: adl.adl_price.to_string(),
+                sum_unitary_fundings: adl.sum_unitary_fundings.to_string(),
+            },
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -79,7 +240,31 @@ pub struct Trade {
     pub trade_id: u64,
     pub match_id: u64,
     pub timestamp: u64,
+    // buy (false) or sell (true)
     pub side: PurchaseSide,
+}
+
+impl From<DbExecutedTrades> for Trade {
+    fn from(value: DbExecutedTrades) -> Self {
+        Trade {
+            account_id: value.account_id,
+            symbol_hash: value.symbol_hash,
+            fee_asset_hash: value.fee_asset_hash,
+            trade_qty: value.trade_qty.to_string(),
+            notional: value.notional.to_string(),
+            executed_price: value.executed_price.to_string(),
+            fee: value.fee.to_string(),
+            sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
+            trade_id: value.trade_id.to_u64().unwrap_or_default(),
+            match_id: value.match_id.to_u64().unwrap_or_default(),
+            timestamp: value.timestamp.to_u64().unwrap_or_default(),
+            side: if value.side {
+                PurchaseSide::Sell
+            } else {
+                PurchaseSide::Buy
+            },
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -88,6 +273,17 @@ pub struct SettlementExecution {
     pub mark_price: String,
     pub sum_unitary_fundings: String,
     pub settled_amount: String,
+}
+
+impl From<DbSettlementExecution> for SettlementExecution {
+    fn from(value: DbSettlementExecution) -> Self {
+        SettlementExecution {
+            symbol_hash: value.symbol_hash,
+            mark_price: value.mark_price.to_string(),
+            sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
+            settled_amount: value.settled_amount.to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -102,6 +298,23 @@ pub struct LiquidationTransfer {
     pub liquidation_fee: String,
     pub mark_price: String,
     pub sum_unitary_fundings: String,
+}
+
+impl From<DbLiquidationTransfer> for LiquidationTransfer {
+    fn from(value: DbLiquidationTransfer) -> Self {
+        LiquidationTransfer {
+            liquidation_transfer_id: value.liquidation_transfer_id.to_string(),
+            liquidator_account_id: value.liquidator_account_id,
+            symbol_hash: value.symbol_hash,
+            position_qty_transfer: value.position_qty_transfer.to_string(),
+            cost_position_transfer: value.cost_position_transfer.to_string(),
+            liquidator_fee: value.liquidator_fee.to_string(),
+            insurance_fee: value.insurance_fee.to_string(),
+            liquidation_fee: value.liquidation_fee.to_string(),
+            mark_price: value.mark_price.to_string(),
+            sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

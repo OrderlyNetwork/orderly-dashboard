@@ -1,4 +1,4 @@
-use crate::db::POOL;
+use crate::db::{DB_CONTEXT, POOL};
 use crate::schema::transaction_events;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
@@ -8,6 +8,7 @@ use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use std::time::Instant;
 
 #[derive(Debug, Copy, Clone)]
 pub enum DbTransactionSide {
@@ -19,6 +20,22 @@ pub enum DbTransactionSide {
 impl DbTransactionSide {
     pub fn value(&self) -> i16 {
         *self as i16
+    }
+}
+
+impl TryFrom<i16> for DbTransactionSide {
+    type Error = anyhow::Error;
+
+    fn try_from(value: i16) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(Self::Deposit),
+            2 => Ok(Self::Withdraw),
+            3 => Ok(Self::WithdrawApprove),
+            _ => Err(anyhow::anyhow!(
+                "cannot convert integer:{} to DbTransactionSide",
+                value
+            )),
+        }
     }
 }
 
@@ -69,4 +86,56 @@ pub(crate) async fn create_balance_transaction_executions(
         .execute_async(&POOL)
         .await?;
     Ok(num_rows)
+}
+
+pub(crate) async fn query_balance_transaction_executions(
+    from_block: i64,
+    to_block: i64,
+) -> Result<Vec<DbTransactionEvent>> {
+    use crate::schema::transaction_events::dsl::*;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_balance_transaction_executions start",
+    );
+    let start_time = Instant::now();
+
+    let result = transaction_events
+        .filter(block_number.ge(from_block))
+        .filter(block_number.le(to_block))
+        .load_async::<DbTransactionEvent>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_balance_transaction_executions success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_balance_transaction_executions success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_balance_transaction_executions fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
 }

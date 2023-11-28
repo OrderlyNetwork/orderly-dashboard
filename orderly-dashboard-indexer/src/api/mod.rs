@@ -1,3 +1,4 @@
+pub mod pull_perp_trading_events;
 pub mod recovery;
 use crate::formats_external::{Response, SuccessResponse};
 use anyhow::Result;

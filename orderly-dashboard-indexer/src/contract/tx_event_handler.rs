@@ -5,11 +5,11 @@ use crate::client::HttpClient;
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC};
 use std::str::FromStr;
 
-use crate::db::executed_trades::{create_executed_trades, DbexecutedTrades, TradeType};
+use crate::db::executed_trades::{create_executed_trades, DbExecutedTrades, TradeType};
 
-use crate::db::liquidation_transfer::{create_liquidation_trasfers, DbLiquidationTransfer};
+use crate::db::liquidation_transfer::{create_liquidation_transfers, DbLiquidationTransfer};
 
-use crate::db::serial_batches::{create_serial_batchess, DbSerialBatches, SerialBatchType};
+use crate::db::serial_batches::{create_serial_batches, DbSerialBatches, SerialBatchType};
 use crate::db::{
     adl_result::{create_adl_results, DbAdlResult},
     liquidation_result::{create_liquidation_results, DbLiquidationResult},
@@ -76,7 +76,7 @@ pub(crate) async fn handle_tx_params(
             let db_trades = trades
                 .iter()
                 .enumerate()
-                .map(|(index, trade)| DbexecutedTrades {
+                .map(|(index, trade)| DbExecutedTrades {
                     block_number: tx.block_number.unwrap_or_default().as_u64() as i64,
                     transaction_index: tx.transaction_index.unwrap_or_default().as_u64() as i32,
                     log_index: index as i32,
@@ -94,6 +94,7 @@ pub(crate) async fn handle_tx_params(
                     trade_id: BigDecimal::from_u64(trade.trade_id).unwrap_or_default(),
                     match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
                     timestamp: BigDecimal::from_u64(trade.timestamp).unwrap_or_default(),
+                    side: trade.side,
                 })
                 .collect::<Vec<_>>();
             create_executed_trades(db_trades).await?;
@@ -168,7 +169,7 @@ pub(crate) async fn handle_tx_params(
                 create_settlement_executions(settlement_execs).await?;
             }
             if !liquidation_transfers.is_empty() {
-                create_liquidation_trasfers(liquidation_transfers).await?;
+                create_liquidation_transfers(liquidation_transfers).await?;
             }
         }
         _ => {}
@@ -190,7 +191,7 @@ pub(crate) async fn handle_log(
                 ))?;
                 match event {
                     operator_managerEvents::EventUpload1Filter(event_upload) => {
-                        create_serial_batchess(vec![DbSerialBatches {
+                        create_serial_batches(vec![DbSerialBatches {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
@@ -203,7 +204,7 @@ pub(crate) async fn handle_log(
                         .await?;
                     }
                     operator_managerEvents::EventUpload2Filter(event_upload) => {
-                        create_serial_batchess(vec![DbSerialBatches {
+                        create_serial_batches(vec![DbSerialBatches {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
@@ -216,7 +217,7 @@ pub(crate) async fn handle_log(
                         .await?;
                     }
                     operator_managerEvents::FuturesTradeUpload1Filter(futures_upload) => {
-                        create_serial_batchess(vec![DbSerialBatches {
+                        create_serial_batches(vec![DbSerialBatches {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
@@ -229,7 +230,7 @@ pub(crate) async fn handle_log(
                         .await?;
                     }
                     operator_managerEvents::FuturesTradeUpload2Filter(futures_upload) => {
-                        create_serial_batchess(vec![DbSerialBatches {
+                        create_serial_batches(vec![DbSerialBatches {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
@@ -389,7 +390,7 @@ pub(crate) async fn handle_log(
                         .await?;
                     }
                     user_ledgerEvents::ProcessValidatedFuturesFilter(trade) => {
-                        let db_trade = DbexecutedTrades {
+                        let db_trade = DbExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
@@ -408,6 +409,7 @@ pub(crate) async fn handle_log(
                             trade_id: BigDecimal::from_u64(trade.trade_id).unwrap_or_default(),
                             match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
                             timestamp: BigDecimal::from_u64(trade.timestamp).unwrap_or_default(),
+                            side: trade.side,
                         };
                         create_executed_trades(vec![db_trade]).await?;
                     }
@@ -451,7 +453,7 @@ pub(crate) async fn handle_log(
                         .await?;
                     }
                     user_ledgerEvents::LiquidationTransferFilter(liquidation_transfer) => {
-                        create_liquidation_trasfers(vec![DbLiquidationTransfer {
+                        create_liquidation_transfers(vec![DbLiquidationTransfer {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
