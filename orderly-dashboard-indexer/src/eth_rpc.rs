@@ -74,6 +74,7 @@ pub async fn get_block_with_txs(block_num: u64) -> Result<Block<Transaction>> {
     }
 }
 
+#[allow(dead_code)]
 pub async fn get_tx_receipt(tx_hash: H256) -> Result<TransactionReceipt> {
     let provider = unsafe { PROVIDER.get_unchecked() };
 
@@ -98,6 +99,32 @@ pub async fn get_tx_receipt(tx_hash: H256) -> Result<TransactionReceipt> {
                 err
             );
             return Err(anyhow::anyhow!("get_tx_receipt query err:{}", err));
+        }
+    }
+}
+
+pub async fn get_block_receipts(block_num: u64) -> Result<Vec<TransactionReceipt>> {
+    let provider = unsafe { PROVIDER.get_unchecked() };
+
+    let result = timeout(
+        Duration::from_secs(8),
+        provider.get_block_receipts(BlockNumber::Number(block_num.into())),
+    )
+    .await;
+    match result {
+        Err(_) => {
+            return Err(anyhow::anyhow!("get_block_receipts request elapsed"));
+        }
+        Ok(Ok(receipts)) => {
+            return Ok(receipts);
+        }
+        Ok(Err(err)) => {
+            tracing::warn!(
+                target: crate::ORDERLY_DASHBOARD_INDEXER,
+                "get_block_receipts query err: {}",
+                err
+            );
+            return Err(anyhow::anyhow!("get_block_receipts query err:{}", err));
         }
     }
 }

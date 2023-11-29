@@ -1,4 +1,3 @@
-use crate::client::HttpClient;
 use crate::formats_external::{FailureResponse, RecoveryBlockRequest, Response};
 use crate::pull_target_block;
 use crate::tasks::pull_log::pull_consume_log_task;
@@ -17,10 +16,7 @@ impl Drop for RecoverGuard {
     }
 }
 
-pub(crate) async fn recovery_block(
-    http_client: HttpClient,
-    request: RecoveryBlockRequest,
-) -> Result<Response<()>> {
+pub(crate) async fn recovery_block(request: RecoveryBlockRequest) -> Result<Response<()>> {
     if IS_RECOVER_FLIGHT.swap(true, Ordering::Relaxed) {
         tracing::warn!(
             target: RECOVERY,
@@ -40,9 +36,7 @@ pub(crate) async fn recovery_block(
         request.start_block_height,
         end_block
     );
-    if let Err(err) =
-        pull_consume_log_task(http_client, request.start_block_height, end_block).await
-    {
+    if let Err(err) = pull_consume_log_task(request.start_block_height, end_block).await {
         tracing::warn!(target: RECOVERY, "recovery_block with error: {:?}", err);
         return Ok(Response::Failure(FailureResponse::new(
             0,

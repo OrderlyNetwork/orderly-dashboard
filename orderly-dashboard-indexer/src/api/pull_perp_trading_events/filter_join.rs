@@ -2,7 +2,7 @@ use crate::db::adl_result::query_adl_results;
 use crate::db::executed_trades::{query_executed_trades, DbExecutedTrades};
 use crate::db::liquidation_result::query_liquidation_results;
 use crate::db::liquidation_transfer::{query_liquidation_transfers, DbLiquidationTransfer};
-use crate::db::serial_batches::{query_serial_batches_with_type, DbSerialBatches, SerialBatchType};
+use crate::db::serial_batches::{query_serial_batches_with_type, SerialBatchType};
 use crate::db::settings::get_last_rpc_processed_height;
 use crate::db::settlement_execution::{query_settlement_executions, DbSettlementExecution};
 use crate::db::settlement_result::query_settlement_results;

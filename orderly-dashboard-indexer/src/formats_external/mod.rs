@@ -1,10 +1,6 @@
 pub mod trading_events;
-use anyhow::Context;
-use bigdecimal::ToPrimitive;
-use chrono::NaiveDateTime;
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
-use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
 pub enum Response<T> {
@@ -107,10 +103,12 @@ impl<T> SuccessResponse<T> {
         Self { data: Some(data) }
     }
 
+    #[allow(dead_code)]
     pub fn into_data(self) -> Option<T> {
         self.data
     }
 
+    #[allow(dead_code)]
     pub fn as_data(&self) -> Option<&T> {
         self.data.as_ref()
     }
@@ -127,20 +125,7 @@ impl FailureResponse {
         Self { code, message }
     }
 
-    pub fn no_such_near_account() -> Self {
-        Self {
-            code: -1000,
-            message: "There is no such near account".to_owned(),
-        }
-    }
-
-    pub fn no_such_public_key_bind_to_the_near_account() -> Self {
-        Self {
-            code: -1001,
-            message: "There is no such public key bind to the near account".to_owned(),
-        }
-    }
-
+    #[allow(dead_code)]
     pub fn batch_ids_too_long() -> Self {
         Self {
             code: -1103,
@@ -148,6 +133,7 @@ impl FailureResponse {
         }
     }
 
+    #[allow(dead_code)]
     pub fn err_code(&self) -> i32 {
         self.code
     }

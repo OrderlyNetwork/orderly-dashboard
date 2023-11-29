@@ -1,4 +1,3 @@
-use crate::await_retry_or_error;
 use crate::config::{CefiServerConfig, COMMON_CONFIGS};
 use anyhow::Result;
 use async_trait::async_trait;

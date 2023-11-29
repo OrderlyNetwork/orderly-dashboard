@@ -28,7 +28,7 @@ impl DbSettlementExecution {
     }
 }
 
-pub(crate) async fn create_settlement_executions(
+pub async fn create_settlement_executions(
     settlement_execs: Vec<DbSettlementExecution>,
 ) -> Result<usize> {
     use crate::schema::settlement_execution::dsl::*;
@@ -43,7 +43,7 @@ pub(crate) async fn create_settlement_executions(
     Ok(num_rows)
 }
 
-pub(crate) async fn query_settlement_executions(
+pub async fn query_settlement_executions(
     from_block: i64,
     to_block: i64,
 ) -> Result<Vec<DbSettlementExecution>> {

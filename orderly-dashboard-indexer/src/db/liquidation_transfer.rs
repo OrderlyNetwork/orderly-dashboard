@@ -35,7 +35,7 @@ impl DbLiquidationTransfer {
     }
 }
 
-pub(crate) async fn create_liquidation_transfers(
+pub async fn create_liquidation_transfers(
     liquidation_transfers: Vec<DbLiquidationTransfer>,
 ) -> Result<usize> {
     use crate::schema::liquidation_transfer::dsl::*;
@@ -50,7 +50,7 @@ pub(crate) async fn create_liquidation_transfers(
     Ok(num_rows)
 }
 
-pub(crate) async fn query_liquidation_transfers(
+pub async fn query_liquidation_transfers(
     from_block: i64,
     to_block: i64,
 ) -> Result<Vec<DbLiquidationTransfer>> {

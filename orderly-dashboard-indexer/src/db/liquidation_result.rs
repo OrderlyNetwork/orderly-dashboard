@@ -31,9 +31,7 @@ impl DbLiquidationResult {
     }
 }
 
-pub(crate) async fn create_liquidation_results(
-    liquidations: Vec<DbLiquidationResult>,
-) -> Result<usize> {
+pub async fn create_liquidation_results(liquidations: Vec<DbLiquidationResult>) -> Result<usize> {
     use crate::schema::liquidation_result::dsl::*;
 
     let num_rows = diesel::insert_into(liquidation_result)
@@ -44,7 +42,7 @@ pub(crate) async fn create_liquidation_results(
     Ok(num_rows)
 }
 
-pub(crate) async fn query_liquidation_results(
+pub async fn query_liquidation_results(
     from_block: i64,
     to_block: i64,
 ) -> Result<Vec<DbLiquidationResult>> {

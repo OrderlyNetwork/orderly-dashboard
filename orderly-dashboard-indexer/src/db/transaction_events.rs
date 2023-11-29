@@ -42,6 +42,7 @@ impl TryFrom<i16> for DbTransactionSide {
 #[derive(Debug, Copy, Clone)]
 pub enum DbTransactionStatus {
     Succeed = 1,
+    #[allow(dead_code)]
     Failed = 2,
 }
 
@@ -73,7 +74,7 @@ pub struct DbTransactionEvent {
     pub fail_reason: Option<i16>,
 }
 
-pub(crate) async fn create_balance_transaction_executions(
+pub async fn create_balance_transaction_executions(
     balance_transactions: Vec<DbTransactionEvent>,
 ) -> Result<usize> {
     use crate::schema::transaction_events::dsl::*;
@@ -88,7 +89,7 @@ pub(crate) async fn create_balance_transaction_executions(
     Ok(num_rows)
 }
 
-pub(crate) async fn query_balance_transaction_executions(
+pub async fn query_balance_transaction_executions(
     from_block: i64,
     to_block: i64,
 ) -> Result<Vec<DbTransactionEvent>> {

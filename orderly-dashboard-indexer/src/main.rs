@@ -1,5 +1,6 @@
 mod api;
 mod bindings;
+#[allow(dead_code)]
 mod client;
 mod config;
 mod contract;
@@ -15,7 +16,6 @@ mod tasks;
 pub mod utils;
 #[macro_use]
 extern crate diesel;
-use crate::client::{get_default_client, HttpClient};
 use crate::config::{CommonConfigs, Opts, COMMON_CONFIGS};
 use crate::contract::consume_data_on_block;
 use crate::db::settings::{get_last_rpc_processed_height, update_last_rpc_processed_height};
@@ -23,14 +23,7 @@ use crate::eth_rpc::get_latest_block_num;
 use crate::init::init_handler;
 use crate::server::webserver;
 use anyhow::Result;
-use bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
 use clap::Parser;
-use ethers::core::abi::{AbiDecode, RawLog};
-use ethers::prelude::*;
-use ethers::providers::{Http, Middleware, Provider};
-use ethers::types::H256;
-use std::convert::TryFrom;
-use std::str::FromStr;
 use std::time::Duration;
 
 const ORDERLY_DASHBOARD_INDEXER: &str = "orderly_dashboard_indexer";
@@ -43,16 +36,13 @@ async fn main() -> Result<()> {
     let config: CommonConfigs =
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     init_handler(&config)?;
-    let provider = Provider::<Http>::try_from(config.l2_config.rpc_url.clone())
-        .expect("could not instantiate HTTP Provider");
 
-    let http_client = get_default_client()?;
     let system = actix::System::new();
     system.block_on(async move {
         tokio::spawn(webserver(config.clone()));
         tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "Orderly Dashboard Indexer started!");
 
-        if let Err(err) = consume_data_task(provider, http_client).await {
+        if let Err(err) = consume_data_task().await {
             tracing::warn!(
                 target: ORDERLY_DASHBOARD_INDEXER,
                 "consume_data_task err: {:?}",
@@ -68,7 +58,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-pub(crate) async fn consume_data_task(provider: Provider<Http>, client: HttpClient) -> Result<()> {
+pub(crate) async fn consume_data_task() -> Result<()> {
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "start consume_data_task");
     let deploy_height = {
         let config = unsafe { &COMMON_CONFIGS.get_unchecked().l2_config };
@@ -119,7 +109,6 @@ async fn consume_data_inner(mut start_height: u64, mut target_block: u64) -> Res
         "enter update_gas_cost_inner loop,start block:{}",
         start_height
     );
-    let http_client = get_default_client()?;
     loop {
         if start_height == target_block {
             match pull_target_block().await {
@@ -147,7 +136,7 @@ async fn consume_data_inner(mut start_height: u64, mut target_block: u64) -> Res
                 }
             }
         }
-        if let Err(err) = consume_data_on_block(start_height, http_client.clone()).await {
+        if let Err(err) = consume_data_on_block(start_height).await {
             tracing::warn!(
                 target: ORDERLY_DASHBOARD_INDEXER,
                 "consume_data_on_block failed with err: {}",

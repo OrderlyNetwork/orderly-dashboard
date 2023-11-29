@@ -31,9 +31,7 @@ impl DbSettlementResult {
     }
 }
 
-pub(crate) async fn create_settlement_results(
-    settlement_reses: Vec<DbSettlementResult>,
-) -> Result<usize> {
+pub async fn create_settlement_results(settlement_reses: Vec<DbSettlementResult>) -> Result<usize> {
     use crate::schema::settlement_result::dsl::*;
 
     let num_rows = diesel::insert_into(settlement_result)
@@ -44,7 +42,7 @@ pub(crate) async fn create_settlement_results(
     Ok(num_rows)
 }
 
-pub(crate) async fn query_settlement_results(
+pub async fn query_settlement_results(
     from_block: i64,
     to_block: i64,
 ) -> Result<Vec<DbSettlementResult>> {

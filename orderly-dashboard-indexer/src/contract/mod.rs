@@ -1,13 +1,11 @@
 mod tx_event_handler;
 
-use crate::client::HttpClient;
 use crate::config::COMMON_CONFIGS;
 use crate::contract::tx_event_handler::consume_logs_from_tx_receipts;
-use crate::eth_rpc::{get_block_with_txs, get_tx_receipt};
+use crate::eth_rpc::{get_block_receipts, get_block_with_txs};
 use ethers::prelude::{Address, Block, Transaction, TransactionReceipt, H160};
-use futures::future::try_join_all;
 use once_cell::sync::OnceCell;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::str::FromStr;
 pub(crate) const HANDLE_LOG: &str = "handle_log";
 pub(crate) const OPERATOR_MANAGER_SC: &str = "operator_manager_sc";
@@ -28,17 +26,14 @@ pub(crate) fn init_addr_set() -> anyhow::Result<()> {
     }
     Ok(())
 }
-pub(crate) async fn consume_data_on_block(
-    block_height: u64,
-    http_client: HttpClient,
-) -> anyhow::Result<()> {
+pub(crate) async fn consume_data_on_block(block_height: u64) -> anyhow::Result<()> {
     tracing::info!(
         target: HANDLE_LOG,
         "consume_data_on_block block_height: {}",
         block_height
     );
     let (block, tx_receipt_vec) = query_and_filter_block_data_info(block_height).await?;
-    consume_logs_from_tx_receipts(block.clone(), &tx_receipt_vec, http_client).await?;
+    consume_logs_from_tx_receipts(block.clone(), &tx_receipt_vec).await?;
 
     Ok(())
 }
@@ -71,15 +66,23 @@ pub async fn query_and_filter_block_data_info(
     if target_txs.is_empty() {
         return Ok((block, vec![]));
     }
-    let mut futs = Vec::with_capacity(target_txs.len());
-    for tx in &target_txs {
-        futs.push(get_tx_receipt(tx.hash));
-    }
-    let receipts = try_join_all(futs).await?;
+    let mut receipt_map = get_block_receipts(block_height)
+        .await?
+        .into_iter()
+        .map(|receipt| (receipt.transaction_hash, receipt))
+        .collect::<BTreeMap<_, _>>();
     let len = target_txs.len();
     let mut tx_receipt_vec: Vec<(Transaction, TransactionReceipt)> = Vec::with_capacity(len);
-    (0..len).for_each(|i| {
-        tx_receipt_vec.push((target_txs[i].clone(), receipts[i].clone()));
+    block.transactions.iter().for_each(|tx| {
+        if let Some(receipt) = receipt_map.remove(&tx.hash) {
+            tx_receipt_vec.push((tx.clone(), receipt));
+        } else {
+            tracing::info!(
+                target: HANDLE_LOG,
+                "can not find receipt for tx: {:?}",
+                tx.hash,
+            );
+        }
     });
 
     Ok((block, tx_receipt_vec))

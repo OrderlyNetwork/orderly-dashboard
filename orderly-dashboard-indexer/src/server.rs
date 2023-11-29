@@ -25,6 +25,7 @@ enum Either<T1, T2> {
     Right(T2),
 }
 pub(crate) struct Service {
+    #[allow(dead_code)]
     http_client: HttpClient,
     peer_public_key: UnparsedPublicKey<Vec<u8>>,
 }
@@ -59,6 +60,10 @@ impl Service {
                 Ok(internal_server_error)
             }
         };
+        let elapse = timer.elapsed().as_secs();
+        if elapse > 3 {
+            tracing::warn!(target: API_SERVER, "query url {} spent {} s which is slow", uri_path, elapse);
+        }
         resp
     }
 
@@ -105,6 +110,12 @@ impl Service {
         }
 
         let json = match req.uri().path() {
+            "/pull_perp_trading_events" => match get_query_params(&req) {
+                Either::Left(params) => {
+                    serde_json::to_string(&api::pull_perp_trading_events(&params).await?)
+                }
+                Either::Right(response) => return Ok(response),
+            },
             "/status" => serde_json::to_string(&api::get_status().await?),
             _ => {
                 let mut not_found = Response::default();
@@ -164,8 +175,7 @@ impl Service {
                     serde_json::from_str(&body_as_string)?;
 
                 let recovery_block_response =
-                    api::recovery::recovery_block(self.http_client.clone(), recovery_block_request)
-                        .await?;
+                    api::recovery::recovery_block(recovery_block_request).await?;
                 serde_json::to_string(&recovery_block_response)
             }
             _ => {

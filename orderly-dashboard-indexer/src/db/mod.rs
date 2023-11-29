@@ -13,7 +13,7 @@ use diesel::PgConnection;
 use dotenv::dotenv;
 use once_cell::sync::Lazy;
 use std::env;
-pub(crate) const DB_CONTEXT: &str = "db_context";
+pub const DB_CONTEXT: &str = "db_context";
 
 pub static POOL: Lazy<Database<PgConnection>> = Lazy::new(|| establish_connection());
 

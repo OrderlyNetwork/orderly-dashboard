@@ -62,7 +62,7 @@ impl TryFrom<i16> for TradeType {
     }
 }
 
-pub(crate) async fn create_executed_trades(trades: Vec<DbExecutedTrades>) -> Result<usize> {
+pub async fn create_executed_trades(trades: Vec<DbExecutedTrades>) -> Result<usize> {
     use crate::schema::executed_trades::dsl::*;
 
     let num_rows = diesel::insert_into(executed_trades)
@@ -73,7 +73,7 @@ pub(crate) async fn create_executed_trades(trades: Vec<DbExecutedTrades>) -> Res
     Ok(num_rows)
 }
 
-pub(crate) async fn query_executed_trades(
+pub async fn query_executed_trades(
     from_block: i64,
     to_block: i64,
 ) -> Result<Vec<DbExecutedTrades>> {

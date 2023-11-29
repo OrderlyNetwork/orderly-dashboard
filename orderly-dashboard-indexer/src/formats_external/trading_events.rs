@@ -6,14 +6,9 @@ use crate::db::serial_batches::DbSerialBatches;
 use crate::db::settlement_execution::DbSettlementExecution;
 use crate::db::settlement_result::DbSettlementResult;
 use crate::db::transaction_events::DbTransactionEvent;
-use anyhow::Context;
 use bigdecimal::ToPrimitive;
-use chrono::NaiveDateTime;
-use serde::de::value;
-use serde::{de, Deserialize, Deserializer, Serialize};
-use serde_json::{Map, Value};
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::str::FromStr;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct TradingEventsResponse {

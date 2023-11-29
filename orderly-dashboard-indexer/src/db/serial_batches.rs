@@ -40,7 +40,7 @@ impl DbSerialBatches {
     }
 }
 
-pub(crate) async fn create_serial_batches(batches: Vec<DbSerialBatches>) -> Result<usize> {
+pub async fn create_serial_batches(batches: Vec<DbSerialBatches>) -> Result<usize> {
     use crate::schema::serial_batches::dsl::*;
 
     let num_rows = diesel::insert_into(serial_batches)
@@ -51,59 +51,7 @@ pub(crate) async fn create_serial_batches(batches: Vec<DbSerialBatches>) -> Resu
     Ok(num_rows)
 }
 
-pub(crate) async fn query_serial_batches(
-    from_block: i64,
-    to_block: i64,
-) -> Result<Vec<DbSerialBatches>> {
-    use crate::schema::serial_batches::dsl::*;
-    tracing::info!(
-        target: DB_CONTEXT,
-        "query_serial_batches start",
-    );
-    let start_time = Instant::now();
-
-    let result = serial_batches
-        .filter(block_number.ge(from_block))
-        .filter(block_number.le(to_block))
-        .load_async::<DbSerialBatches>(&POOL)
-        .await;
-    let dur_ms = (Instant::now() - start_time).as_millis();
-
-    let events = match result {
-        Ok(events) => {
-            tracing::info!(
-                target: DB_CONTEXT,
-                "query_serial_batches success. length:{}, used time:{} ms",
-                events.len(),
-                dur_ms
-            );
-            events
-        }
-        Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
-                tracing::info!(
-                    target: DB_CONTEXT,
-                    "query_serial_batches success. length:0, used time:{} ms",
-                    dur_ms
-                );
-                vec![]
-            }
-            _ => {
-                tracing::warn!(
-                    target: DB_CONTEXT,
-                    "query_serial_batches fail. err:{:?}, used time:{} ms",
-                    error,
-                    dur_ms
-                );
-                Err(error)?
-            }
-        },
-    };
-
-    Ok(events)
-}
-
-pub(crate) async fn query_serial_batches_with_type(
+pub async fn query_serial_batches_with_type(
     from_block: i64,
     to_block: i64,
     serial_typ: SerialBatchType,

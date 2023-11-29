@@ -28,7 +28,7 @@ pub struct DbAdlResult {
     pub sum_unitary_fundings: BigDecimal,
 }
 
-pub(crate) async fn create_adl_results(adls: Vec<DbAdlResult>) -> Result<usize> {
+pub async fn create_adl_results(adls: Vec<DbAdlResult>) -> Result<usize> {
     use crate::schema::adl_result::dsl::*;
 
     let num_rows = diesel::insert_into(adl_result)
@@ -39,7 +39,7 @@ pub(crate) async fn create_adl_results(adls: Vec<DbAdlResult>) -> Result<usize> 
     Ok(num_rows)
 }
 
-pub(crate) async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbAdlResult>> {
+pub async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbAdlResult>> {
     use crate::schema::adl_result::dsl::*;
     tracing::info!(
         target: DB_CONTEXT,

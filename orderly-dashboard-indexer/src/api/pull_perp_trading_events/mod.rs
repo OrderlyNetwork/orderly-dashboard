@@ -1,7 +1,5 @@
 mod filter_join;
-use crate::formats_external::{
-    trading_events::TradingEventsResponse, FailureResponse, Response, SuccessResponse,
-};
+use crate::formats_external::{trading_events::TradingEventsResponse, Response, SuccessResponse};
 use anyhow::{Context, Result};
 use std::collections::HashMap;
 
