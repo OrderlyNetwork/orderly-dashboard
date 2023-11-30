@@ -26,7 +26,9 @@ pub fn init_config(config: CommonConfigs) {
 pub(crate) struct Opts {
     #[clap(short, long)]
     pub config_path: std::path::PathBuf,
+    #[clap(short, long)]
     pub start_block: Option<u64>,
+    #[clap(short, long)]
     pub end_block: Option<u64>,
 }
 

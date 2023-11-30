@@ -32,7 +32,7 @@ const ORDERLY_DASHBOARD_INDEXER: &str = "orderly_dashboard_indexer";
 async fn main() -> Result<()> {
     let opts = Opts::parse();
     let raw_common_config =
-        std::fs::read_to_string(opts.config_path).expect("missing_common_config_file");
+        std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");
     let config: CommonConfigs =
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     init_handler(&config)?;

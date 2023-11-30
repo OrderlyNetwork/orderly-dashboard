@@ -5,9 +5,34 @@
 ```shell
 cargo build --release
 ```
-## run
+## help
 ```shell
-cargo run --release
+../target/release/orderly-dashboard-indexer --help
+```
+```text
+Usage: orderly-dashboard-indexer [OPTIONS] --config-path <CONFIG_PATH>
+
+Options:
+  -c, --config-path <CONFIG_PATH>
+          
+  -s, --start-block <START_BLOCK>
+          
+  -e, --end-block <END_BLOCK>
+          
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+```
+## run
+### local run for test
+We can set `start-block` and `end-block` as params to pull blocks in this range
+```shell
+../target/release/orderly-dashboard-indexer -c config.example-staging.json -s 670373 -e 1572982
+```
+### online run
+```shell
+../target/release/orderly-dashboard-indexer -c config.example-staging.json
 ```
 * output
 ```text
