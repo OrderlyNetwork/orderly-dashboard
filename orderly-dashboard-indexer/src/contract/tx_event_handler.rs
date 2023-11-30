@@ -58,6 +58,7 @@ pub(crate) async fn handle_tx_params(
 
     // block_number, transaction_index, log index
     let call_data = operator_manager::operator_managerCalls::decode(&tx.input)?;
+    let offset = 1000_000;
     match call_data {
         operator_managerCalls::FuturesTradeUpload(futures_upload) => {
             let _batch_id = futures_upload.data.batch_id;
@@ -68,7 +69,7 @@ pub(crate) async fn handle_tx_params(
                 .map(|(index, trade)| DbExecutedTrades {
                     block_number: tx.block_number.unwrap_or_default().as_u64() as i64,
                     transaction_index: tx.transaction_index.unwrap_or_default().as_u64() as i32,
-                    log_index: index as i32,
+                    log_index: offset + (index as i32),
                     typ: TradeType::PerpTrade.value(),
                     account_id: to_hex_format(&trade.account_id),
                     symbol_hash: to_hex_format(&trade.symbol_hash),

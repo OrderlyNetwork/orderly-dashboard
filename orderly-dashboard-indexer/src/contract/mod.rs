@@ -10,6 +10,7 @@ use std::str::FromStr;
 pub(crate) const HANDLE_LOG: &str = "handle_log";
 pub(crate) const OPERATOR_MANAGER_SC: &str = "operator_manager_sc";
 pub(crate) const LEDGER_SC: &str = "ledger_sc";
+pub(crate) const VAULT_SC: &str = "vault_sc";
 
 pub(crate) static ADDR_MAP: OnceCell<BTreeMap<Address, &str>> = OnceCell::new();
 
@@ -21,6 +22,7 @@ pub(crate) fn init_addr_set() -> anyhow::Result<()> {
         OPERATOR_MANAGER_SC,
     );
     addr_map.insert(H160::from_str(&config.ledger_address)?, LEDGER_SC);
+    addr_map.insert(H160::from_str(&config.vault_manager_address)?, VAULT_SC);
     if ADDR_MAP.set(addr_map).is_err() {
         tracing::warn!(target: crate::ORDERLY_DASHBOARD_INDEXER, "ADDR_SET already inited");
     }
@@ -42,14 +44,6 @@ pub async fn query_and_filter_block_data_info(
     block_height: u64,
 ) -> anyhow::Result<(Block<Transaction>, Vec<(Transaction, TransactionReceipt)>)> {
     let block = get_block_with_txs(block_height).await?;
-    tracing::info!(
-        target: HANDLE_LOG,
-        "block tx length: {:?},block hash: {:?}",
-        block.transactions.len(),
-        block.hash.unwrap_or_default(),
-    );
-    // todo: global variable
-    // let receivers = unsafe { ADDR_SET.get_unchecked() };
     let target_txs = block
         .transactions
         .iter()
@@ -84,6 +78,14 @@ pub async fn query_and_filter_block_data_info(
             );
         }
     });
+    tracing::info!(
+        target: HANDLE_LOG,
+        "block_height: {}, block tx length {}, receipt length: {},block hash: {:?}",
+        block_height,
+        block.transactions.len(),
+        tx_receipt_vec.len(),
+        block.hash.unwrap_or_default(),
+    );
 
     Ok((block, tx_receipt_vec))
 }

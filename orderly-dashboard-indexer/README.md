@@ -26,9 +26,9 @@ Options:
 ```
 ## run
 ### local run for test
-We can set `start-block` and `end-block` as params to pull blocks in this range
+We can set `start-block` and `end-block` as params to pull blocks in this range, in fact we just need to set `end-block` because we have init `start-block` in config file
 ```shell
-../target/release/orderly-dashboard-indexer -c config.example-staging.json -s 670373 -e 1572982
+../target/release/orderly-dashboard-indexer -c config.example-staging.json -e 1572982
 ```
 ### online run
 ```shell

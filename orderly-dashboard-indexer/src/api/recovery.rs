@@ -1,6 +1,5 @@
 use crate::formats_external::{FailureResponse, RecoveryBlockRequest, Response};
-use crate::pull_target_block;
-use crate::tasks::pull_log::pull_consume_log_task;
+use crate::{consume_data_inner, pull_target_block};
 use anyhow::Result;
 use std::cmp::min;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -36,7 +35,14 @@ pub(crate) async fn recovery_block(request: RecoveryBlockRequest) -> Result<Resp
         request.start_block_height,
         end_block
     );
-    if let Err(err) = pull_consume_log_task(request.start_block_height, end_block).await {
+    if let Err(err) = consume_data_inner(
+        request.start_block_height,
+        end_block,
+        Some(end_block),
+        false,
+    )
+    .await
+    {
         tracing::warn!(target: RECOVERY, "recovery_block with error: {:?}", err);
         return Ok(Response::Failure(FailureResponse::new(
             0,

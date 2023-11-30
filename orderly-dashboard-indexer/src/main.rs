@@ -12,7 +12,6 @@ mod schema;
 mod server;
 mod service_base;
 mod settings;
-mod tasks;
 pub mod utils;
 #[macro_use]
 extern crate diesel;
@@ -28,8 +27,7 @@ use std::time::Duration;
 
 const ORDERLY_DASHBOARD_INDEXER: &str = "orderly_dashboard_indexer";
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let opts = Opts::parse();
     let raw_common_config =
         std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");
@@ -41,23 +39,21 @@ async fn main() -> Result<()> {
     system.block_on(async move {
         tokio::spawn(webserver(config.clone()));
         tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "Orderly Dashboard Indexer started! with opts:{:?}", opts);
-        if let Some(end_block) = opts.end_block {
-            if let Some(start_block) = opts.start_block {
-                if end_block < start_block {
-                    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "end_block: {} < start_block: {} , not need to consume data, exit", end_block, start_block);
-                } else {
-                    if let Err(err) = consume_data_task(opts.start_block, opts.end_block).await {
-                        tracing::warn!(
-                            target: ORDERLY_DASHBOARD_INDEXER,
-                            "consume_data_task err: {:?}",
-                            err
-                        );
-                    }
-                }
+        let early_stop = opts.end_block.is_some() && opts.start_block.is_none() && opts.end_block.unwrap_or_default() < opts.start_block.unwrap_or_default();
+        if early_stop {
+            tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "end_block: {:?} < start_block: {:?} , not need to consume data", opts.end_block, opts.start_block);
+        } else {
+            if let Err(err) = consume_data_task(opts.start_block, opts.end_block).await {
+                tracing::warn!(
+                    target: ORDERLY_DASHBOARD_INDEXER,
+                    "consume_data_task err: {:?}",
+                    err
+                );
             }
         }
 
-        tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "Orderly Dashboard Indexer end! with opts:{:?}", opts);
+        tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "Orderly Dashboard Indexer blocked! with opts:{:?}", opts);
+        std::thread::park();
         actix::System::current().stop();
     });
 
@@ -87,6 +83,7 @@ pub(crate) async fn consume_data_task(
         start_block.ok_or_else(|| anyhow::anyhow!("start block should not be empty"))? as u64,
         target_block,
         end_block,
+        true,
     )
     .await?;
 
@@ -104,10 +101,11 @@ pub async fn pull_target_block() -> Result<u64> {
         } as u64)
 }
 
-async fn consume_data_inner(
+pub async fn consume_data_inner(
     mut start_height: u64,
     mut target_block: u64,
     end_block: Option<u64>,
+    update_cursor: bool,
 ) -> Result<()> {
     if start_height == 0 {
         tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "start_height 0 un normal, return",);
@@ -124,7 +122,7 @@ async fn consume_data_inner(
     }
     tracing::info!(
         target: ORDERLY_DASHBOARD_INDEXER,
-        "enter update_gas_cost_inner loop,start block:{}",
+        "enter consume_data_inner loop,start block:{}",
         start_height
     );
     loop {
@@ -162,10 +160,10 @@ async fn consume_data_inner(
             );
             tokio::time::sleep(Duration::from_secs(1)).await;
         } else {
-            if start_height % 30 == 0 {
+            if update_cursor && start_height % 30 == 0 {
                 tracing::info!(
                     target: ORDERLY_DASHBOARD_INDEXER,
-                    "update_gas_cost_inner will checked block: {}",
+                    "consume_data_inner checked block: {}",
                     start_height
                 );
                 if let Err(err) = update_last_rpc_processed_height(start_height).await {
@@ -183,9 +181,11 @@ async fn consume_data_inner(
                         "reach end_block height: {}, exit consume block",
                         end_block
                     );
+                    break;
                 }
             }
             start_height += 1;
         }
     }
+    Ok(())
 }

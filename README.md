@@ -59,3 +59,21 @@ target/release
 ├── orderly-dashboard-indexer
 └── ...
 ```
+## Public API
+### recover and consume block
+```shell
+curl --request POST \
+    --url http://127.0.0.1:8018/recovery/block \
+    --header 'Content-Type: application/json' \
+    --data '{ "start_block_height": 1145079, "end_block_height": 1145179}'
+```
+This will process the blocks between `1145079` and `1145179`.
+### pull trading events
+this api is described [here](https://wootraders.atlassian.net/wiki/spaces/ORDER/pages/406487066/Dashboard+indexer+-+Analyzer+api#pull-perp-trading-event)
+```shell
+curl 'http://127.0.0.1:8018/pull_perp_trading_events?from_block=670373&to_block=670573'
+```
+response example:
+```json
+{"success":true,"data":{"events":[],"last_block":674670}}
+```

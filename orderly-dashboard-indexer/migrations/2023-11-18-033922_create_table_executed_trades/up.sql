@@ -25,3 +25,5 @@ create table executed_trades
 
 create index trades_account_id_index
     on executed_trades (account_id);
+
+create unique index trade_id_channel on executed_trades (trade_id, typ);

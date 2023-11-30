@@ -5,22 +5,24 @@
     "is_use_ws": false,
     "ws_url": "wss://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
     "pull_check_interval": 1,
-    "ledger_address": "0x8794E7260517B1766fc7b55cAfcd56e6bf08600e",
-    "operator_manager_address": "0xe34614EB781C5838C78B7f913b89A05e7a5b97e2",
+    "ledger_address": "0x1826B75e2ef249173FC735149AE4B8e9ea10abff",
+    "operator_manager_address": "0x1A46be28AB241F5A64F82ddFc384911520E3d557",
     "user_ledger_abi_path": "./abis/user_ledger.json",
     "operator_manager_abi_path": "./abis/operator_manager.json",
-    "market_manager_address": "0x3ac2Ba11Ca2f9f109d50fb1a46d4C23fCadbbef6",
+    "market_manager_address": "0x523Ab490B15803d6Ba60dC95F1579536F95edD4e",
     "market_manager_abi_path": "./abis/market_manager.json",
     "confirm_block_num": 3,
-    "contract_deploy_height": 670373,
-    "explorer_url": "https://testnet-explorer.orderly.org"
+    "contract_deploy_height": 965813,
+    "explorer_url": "https://testnet-explorer.orderly.org",
+    "vault_manager_address": "0x873c120b42C80D528389d85cEA9d4dC0197974aD",
+    "vault_manager_abi_path": "./abis/vault_manager.json"
   },
   "cefi_server": {
     "server_address": "https://dev-api.orderly.network",
     "private_key": "MFMCAQEwBQYDK2VwBCIEICYNtNE9Lm3k9rupXgU8zxp8ykrVmXbNAA63zZAt2X7QoSMDIQDtiBcj3Y6NGSQfvozalvhQwHxVRLqPPESUoqiGRqnzlQ=="
   },
   "indexer_server": {
-    "indexer_address": "0.0.0.0:8016",
+    "indexer_address": "0.0.0.0:8018",
     "public_key": "7YgXI92OjRkkH76M2pb4UMB8VUS6jzxElKKohkap85U="
   },
   "layerzero": {

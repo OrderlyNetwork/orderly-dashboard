@@ -13,14 +13,16 @@
     "market_manager_abi_path": "./abis/market_manager.json",
     "confirm_block_num": 20,
     "contract_deploy_height": 537464,
-    "explorer_url": "https://explorer.orderly.network"
+    "explorer_url": "https://explorer.orderly.network",
+    "vault_manager_address": "0x14a6342A8C1Ef9856898F510FcCE377e46668F33",
+    "vault_manager_abi_path": "./abis/vault_manager.json"
   },
   "cefi_server": {
     "server_address": "https://dev-api.orderly.network",
     "private_key": "MFMCAQEwBQYDK2VwBCIEICYNtNE9Lm3k9rupXgU8zxp8ykrVmXbNAA63zZAt2X7QoSMDIQDtiBcj3Y6NGSQfvozalvhQwHxVRLqPPESUoqiGRqnzlQ=="
   },
   "indexer_server": {
-    "indexer_address": "0.0.0.0:8016",
+    "indexer_address": "0.0.0.0:8018",
     "public_key": "7YgXI92OjRkkH76M2pb4UMB8VUS6jzxElKKohkap85U="
   },
   "layerzero": {

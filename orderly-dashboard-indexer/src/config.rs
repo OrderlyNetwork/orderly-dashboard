@@ -48,6 +48,8 @@ pub struct SubnetConfig {
     pub confirm_block_num: Option<u32>,
     pub contract_deploy_height: Option<u64>,
     pub explorer_url: String,
+    pub vault_manager_address: String,
+    pub vault_manager_abi_path: String,
 }
 
 #[derive(Clone, Deserialize, Default)]
