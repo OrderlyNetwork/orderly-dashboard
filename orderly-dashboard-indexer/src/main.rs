@@ -40,16 +40,24 @@ async fn main() -> Result<()> {
     let system = actix::System::new();
     system.block_on(async move {
         tokio::spawn(webserver(config.clone()));
-        tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "Orderly Dashboard Indexer started!");
-
-        if let Err(err) = consume_data_task().await {
-            tracing::warn!(
-                target: ORDERLY_DASHBOARD_INDEXER,
-                "consume_data_task err: {:?}",
-                err
-            );
+        tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "Orderly Dashboard Indexer started! with opts:{:?}", opts);
+        if let Some(end_block) = opts.end_block {
+            if let Some(start_block) = opts.start_block {
+                if end_block < start_block {
+                    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "end_block: {} < start_block: {} , not need to consume data, exit", end_block, start_block);
+                } else {
+                    if let Err(err) = consume_data_task(opts.start_block, opts.end_block).await {
+                        tracing::warn!(
+                            target: ORDERLY_DASHBOARD_INDEXER,
+                            "consume_data_task err: {:?}",
+                            err
+                        );
+                    }
+                }
+            }
         }
 
+        tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "Orderly Dashboard Indexer end! with opts:{:?}", opts);
         actix::System::current().stop();
     });
 
@@ -58,21 +66,27 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-pub(crate) async fn consume_data_task() -> Result<()> {
+pub(crate) async fn consume_data_task(
+    mut start_block: Option<u64>,
+    end_block: Option<u64>,
+) -> Result<()> {
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "start consume_data_task");
-    let deploy_height = {
-        let config = unsafe { &COMMON_CONFIGS.get_unchecked().l2_config };
-        config.contract_deploy_height
-    };
-    let mut start_block = get_last_rpc_processed_height().await?;
-    if start_block.is_none() && deploy_height.is_some() {
-        start_block = deploy_height;
+    if start_block.is_none() {
+        let deploy_height = {
+            let config = unsafe { &COMMON_CONFIGS.get_unchecked().l2_config };
+            config.contract_deploy_height
+        };
+        start_block = get_last_rpc_processed_height().await?;
+        if start_block.is_none() && deploy_height.is_some() {
+            start_block = deploy_height;
+        }
     }
 
     let target_block = pull_target_block().await?;
     consume_data_inner(
         start_block.ok_or_else(|| anyhow::anyhow!("start block should not be empty"))? as u64,
         target_block,
+        end_block,
     )
     .await?;
 
@@ -90,7 +104,11 @@ pub async fn pull_target_block() -> Result<u64> {
         } as u64)
 }
 
-async fn consume_data_inner(mut start_height: u64, mut target_block: u64) -> Result<()> {
+async fn consume_data_inner(
+    mut start_height: u64,
+    mut target_block: u64,
+    end_block: Option<u64>,
+) -> Result<()> {
     if start_height == 0 {
         tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "start_height 0 un normal, return",);
         return Ok(());
@@ -155,6 +173,15 @@ async fn consume_data_inner(mut start_height: u64, mut target_block: u64) -> Res
                         target: ORDERLY_DASHBOARD_INDEXER,
                         "update_last_rpc_processed_height failed with err: {}",
                         err
+                    );
+                }
+            }
+            if let Some(end_block) = end_block {
+                if start_height > end_block {
+                    tracing::info!(
+                        target: ORDERLY_DASHBOARD_INDEXER,
+                        "reach end_block height: {}, exit consume block",
+                        end_block
                     );
                 }
             }
