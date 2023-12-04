@@ -67,8 +67,9 @@ impl Ord for TradingEvent {
 impl TradingEvent {
     pub fn from_serial_batch_and_trades(
         value: DbSerialBatches,
-        trades: Vec<DbExecutedTrades>,
+        mut trades: Vec<DbExecutedTrades>,
     ) -> TradingEvent {
+        trades.sort_by(|a, b|a.log_index.cmp(&b.log_index));
         let trades: Vec<Trade> = trades.into_iter().map(Into::into).collect::<Vec<_>>();
         TradingEvent {
             block_number: value.block_number as u64,
