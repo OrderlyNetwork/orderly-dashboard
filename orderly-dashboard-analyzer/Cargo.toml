@@ -1,0 +1,11 @@
+[package]
+name = "orderly-dashboard-analyzer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+actix-web = "4"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"]}
+orderly-dashboard-indexer = { git = "https://orderly-dashboard-read:sqxjE1xsuzPv2rRssZeP@gitlab.com/orderlynetwork/orderly-v2/orderly-dashboard.git", tag = "v0.0.2-alpha"}

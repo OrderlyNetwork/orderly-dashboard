@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./orderly-dashboard-analyzer/Cargo.toml"
+    ]
+}
