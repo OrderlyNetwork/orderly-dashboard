@@ -24,6 +24,5 @@ pub fn establish_connection() -> Database<PgConnection> {
 
 fn get_database_credentials() -> String {
     dotenv().ok();
-
     env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file")
 }

@@ -1,4 +1,5 @@
 [workspace]
 members = [
+    "orderly-dashboard-analyzer",
     "orderly-dashboard-indexer",
 ]
