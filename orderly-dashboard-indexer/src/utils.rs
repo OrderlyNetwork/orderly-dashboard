@@ -1,5 +1,5 @@
 use bigdecimal::{BigDecimal, FromPrimitive};
-use ethers::types::{H160, H256};
+use ethers::types::{H160, H256, I256, U256};
 use std::str::FromStr;
 
 #[macro_export]
@@ -58,4 +58,8 @@ pub fn format_hash(hash: H256) -> String {
 
 pub fn format_hash_160(hash: H160) -> String {
     format!("{:?}", hash)
+}
+
+pub fn u256_to_i128(n: U256) -> i128 {
+    I256::from_raw(n).as_i128()
 }
