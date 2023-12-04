@@ -1,6 +1,6 @@
 use crate::bindings::operator_manager;
 use crate::bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
-use crate::bindings::user_ledger::{user_ledgerEvents, Liquidation, Settlement};
+use crate::bindings::user_ledger::{user_ledgerEvents, LiquidationTransfer, SettlementExecution};
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC};
 use std::str::FromStr;
 
@@ -19,11 +19,11 @@ use crate::db::{
         DbTransactionStatus,
     },
 };
-use crate::utils::{convert_amount, format_hash, format_hash_160, to_hex_format};
+use crate::utils::{convert_amount, format_hash, format_hash_160, to_hex_format, u256_to_i128};
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
-use ethers::abi::RawLog;
-use ethers::core::abi::AbiDecode;
+use ethers::abi::{ParamType, RawLog};
+use ethers::core::abi::{self, AbiDecode};
 use ethers::prelude::{Block, EthLogDecode, Log, Transaction, TransactionReceipt};
 
 pub(crate) async fn consume_logs_from_tx_receipts(
@@ -40,7 +40,7 @@ pub(crate) async fn consume_logs_from_tx_receipts(
                 }
             }
             if let Err(err) = handle_tx_params(tx, Some(block.timestamp.as_u64())).await {
-                tracing::warn!(target: HANDLE_LOG, "handle_tx_params meet err:{:?}", err);
+                tracing::warn!(target: HANDLE_LOG, "handle_tx_params meet err:{:?}, block: {}", err, block.number.unwrap_or_default().as_u64());
             }
         }
     }
@@ -92,39 +92,175 @@ pub(crate) async fn handle_tx_params(
         operator_managerCalls::EventUpload(event_upload) => {
             let mut settlement_execs: Vec<DbSettlementExecution> =
                 Vec::with_capacity(event_upload.data.events.len());
-            let mut liquidation_transfers: Vec<DbLiquidationTransfer> =
+            let mut liquidation_trans: Vec<DbLiquidationTransfer> =
                 Vec::with_capacity(event_upload.data.events.len());
             for event in event_upload.data.events {
                 if event.biz_type == 2 {
                     // settlement
-                    if let Ok(settlement) = Settlement::decode(event.data) {
-                        for (index, settlement_exec) in
-                            settlement.settlement_executions.iter().enumerate()
-                        {
-                            settlement_execs.push(DbSettlementExecution {
-                                block_number: tx.block_number.unwrap_or_default().as_u64() as i64,
-                                transaction_index: tx.transaction_index.unwrap_or_default().as_u64()
-                                    as i32,
-                                log_index: index as i32,
-                                transaction_id: format_hash(tx.hash),
-                                symbol_hash: to_hex_format(&settlement_exec.symbol_hash),
-                                sum_unitary_fundings: convert_amount(
-                                    settlement_exec.sum_unitary_fundings,
-                                )
-                                .unwrap_or_default(),
-                                mark_price: convert_amount(settlement_exec.mark_price as i128)?,
-                                settled_amount: convert_amount(settlement_exec.settled_amount)?,
-                            });
-                        }
-                    } else {
+                    let calldata_types = vec![ParamType::Tuple(vec![
+                        ParamType::FixedBytes(32),
+                        ParamType::FixedBytes(32),
+                        ParamType::FixedBytes(32),
+                        ParamType::Int(128),
+                        ParamType::Uint(128),
+                        ParamType::Uint(64),
+                        ParamType::Array(Box::new(ParamType::Tuple(vec![
+                            ParamType::FixedBytes(32),
+                            ParamType::Uint(128),
+                            ParamType::Int(128),
+                            ParamType::Int(128),
+                        ]))),
+                    ])];
+                    let decoded = abi::decode(&calldata_types, &event.data)?;
+                    let decoded = decoded[0].clone().into_tuple().unwrap();
+                    let mut settlement_executions = Vec::new();
+                    for e in decoded[6].clone().into_array().unwrap() {
+                        let symbol_hash: [u8; 32] = e.clone().into_tuple().unwrap()[0]
+                            .clone()
+                            .into_fixed_bytes()
+                            .unwrap()
+                            .try_into()
+                            .unwrap();
+                        let mark_price = e.clone().into_tuple().unwrap()[1]
+                            .clone()
+                            .into_uint()
+                            .unwrap()
+                            .as_u128();
+                        let sum_unitary_fundings = u256_to_i128(
+                            e.clone().into_tuple().unwrap()[2]
+                                .clone()
+                                .into_int()
+                                .unwrap(),
+                        );
+                        let settled_amount = u256_to_i128(
+                            e.clone().into_tuple().unwrap()[3]
+                                .clone()
+                                .into_int()
+                                .unwrap(),
+                        );
+                        settlement_executions.push(SettlementExecution {
+                            symbol_hash,
+                            mark_price,
+                            sum_unitary_fundings,
+                            settled_amount,
+                        });
+                    }
+
+                    for (index, settlement_exec) in settlement_executions.iter().enumerate() {
+                        settlement_execs.push(DbSettlementExecution {
+                            block_number: tx.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: tx.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: index as i32,
+                            transaction_id: format_hash(tx.hash),
+                            symbol_hash: to_hex_format(&settlement_exec.symbol_hash),
+                            sum_unitary_fundings: convert_amount(
+                                settlement_exec.sum_unitary_fundings,
+                            )
+                            .unwrap_or_default(),
+                            mark_price: convert_amount(settlement_exec.mark_price as i128)?,
+                            settled_amount: convert_amount(settlement_exec.settled_amount)?,
+                        });
                     }
                 } else if event.biz_type == 4 {
                     // liquidation
-                    let liquidation = Liquidation::decode(event.data)?;
-                    for (index, liquidation_transfer) in
-                        liquidation.liquidation_transfers.iter().enumerate()
-                    {
-                        liquidation_transfers.push(DbLiquidationTransfer {
+                    let calldata_types = vec![ParamType::Tuple(vec![
+                        ParamType::FixedBytes(32),
+                        ParamType::FixedBytes(32),
+                        ParamType::FixedBytes(32),
+                        ParamType::Uint(128),
+                        ParamType::Uint(64),
+                        ParamType::Array(Box::new(ParamType::Tuple(vec![
+                            ParamType::FixedBytes(32),
+                            ParamType::FixedBytes(32),
+                            ParamType::Int(128),
+                            ParamType::Int(128),
+                            ParamType::Int(128),
+                            ParamType::Int(128),
+                            ParamType::Int(128),
+                            ParamType::Uint(128),
+                            ParamType::Int(128),
+                            ParamType::Uint(64),
+                        ]))),
+                    ])];
+                    let decoded = abi::decode(&calldata_types, &event.data)?;
+                    let decoded = decoded[0].clone().into_tuple().unwrap();
+                    let mut liquidation_transfers = Vec::new();
+                    for l in decoded[5].clone().into_array().unwrap() {
+                        let liquidator_account_id: [u8; 32] = l.clone().into_tuple().unwrap()[0]
+                            .clone()
+                            .into_fixed_bytes()
+                            .unwrap()
+                            .try_into()
+                            .unwrap();
+                        let symbol_hash = l.clone().into_tuple().unwrap()[1]
+                            .clone()
+                            .into_fixed_bytes()
+                            .unwrap()
+                            .try_into()
+                            .unwrap();
+                        let position_qty_transfer = u256_to_i128(
+                            l.clone().into_tuple().unwrap()[2]
+                                .clone()
+                                .into_int()
+                                .unwrap(),
+                        );
+                        let cost_position_transfer = u256_to_i128(
+                            l.clone().into_tuple().unwrap()[3]
+                                .clone()
+                                .into_int()
+                                .unwrap(),
+                        );
+                        let liquidator_fee = u256_to_i128(
+                            l.clone().into_tuple().unwrap()[4]
+                                .clone()
+                                .into_int()
+                                .unwrap(),
+                        );
+                        let insurance_fee = u256_to_i128(
+                            l.clone().into_tuple().unwrap()[5]
+                                .clone()
+                                .into_int()
+                                .unwrap(),
+                        );
+                        let liquidation_fee = u256_to_i128(
+                            l.clone().into_tuple().unwrap()[6]
+                                .clone()
+                                .into_int()
+                                .unwrap(),
+                        );
+                        let mark_price = l.clone().into_tuple().unwrap()[7]
+                            .clone()
+                            .into_uint()
+                            .unwrap()
+                            .as_u128();
+                        let sum_unitary_fundings = u256_to_i128(
+                            l.clone().into_tuple().unwrap()[8]
+                                .clone()
+                                .into_int()
+                                .unwrap(),
+                        );
+                        let liquidation_transfer_id = l.clone().into_tuple().unwrap()[9]
+                            .clone()
+                            .into_uint()
+                            .unwrap()
+                            .as_u64();
+                        liquidation_transfers.push(LiquidationTransfer {
+                            liquidation_transfer_id,
+                            liquidator_account_id,
+                            symbol_hash,
+                            position_qty_transfer,
+                            cost_position_transfer,
+                            liquidator_fee,
+                            insurance_fee,
+                            liquidation_fee,
+                            mark_price,
+                            sum_unitary_fundings,
+                        });
+                    }
+
+                    for (index, liquidation_transfer) in liquidation_transfers.iter().enumerate() {
+                        liquidation_trans.push(DbLiquidationTransfer {
                             block_number: tx.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: tx.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
@@ -156,10 +292,12 @@ pub(crate) async fn handle_tx_params(
                 }
             }
             if !settlement_execs.is_empty() {
+                tracing::info!(target: HANDLE_LOG, "insert settlement_execs with length: {}", settlement_execs.len());
                 create_settlement_executions(settlement_execs).await?;
             }
-            if !liquidation_transfers.is_empty() {
-                create_liquidation_transfers(liquidation_transfers).await?;
+            if !liquidation_trans.is_empty() {
+                tracing::info!(target: HANDLE_LOG, "insert liquidation_transfers with length: {}", liquidation_trans.len());
+                create_liquidation_transfers(liquidation_trans).await?;
             }
         }
         _ => {}
