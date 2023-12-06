@@ -8,6 +8,7 @@ mod indexer;
 mod config;
 mod analyzer;
 mod db;
+mod schema;
 
 async fn pull_block_timer(puller: &dyn IndexerClient, analyzer: &dyn BlockEventAnalyzer) {
     loop {

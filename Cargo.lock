@@ -2506,9 +2506,14 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 name = "orderly-dashboard-analyzer"
 version = "0.1.0"
 dependencies = [
+ "actix-diesel",
  "actix-web",
+ "diesel",
+ "dotenv",
  "orderly-dashboard-indexer 0.1.0 (git+https://orderly-dashboard-read:sqxjE1xsuzPv2rRssZeP@gitlab.com/orderlynetwork/orderly-v2/orderly-dashboard.git?tag=v0.0.2-alpha)",
  "reqwest",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
