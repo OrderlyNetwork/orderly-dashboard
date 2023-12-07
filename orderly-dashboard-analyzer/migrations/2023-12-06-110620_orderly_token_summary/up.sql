@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS orderly_token_summary
     total_withdraw_amount  numeric not null,
     total_deposit_amount   numeric not null,
     pulled_block_height    numeric not null,
-    pulled_block_timestamp timestamp with time zone not null,
-    created_time           timestamp with time zone not null,
-    updated_time           timestamp with time zone not null
+    pulled_block_timestamp numeric not null,
+    created_time           numeric not null,
+    updated_time           numeric not null
 );

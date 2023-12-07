@@ -1,15 +1,6 @@
 // @generated automatically by Diesel CLI.
 
-pub mod sql_types {
-    #[derive(diesel::query_builder::QueryId, diesel::sql_types::SqlType)]
-    #[diesel(postgres_type(name = "timetz", schema = "pg_catalog"))]
-    pub struct Timetz;
-}
-
 diesel::table! {
-    use diesel::sql_types::*;
-    use super::sql_types::Timetz;
-
     block_summary (id) {
         id -> Int8,
         pulled_block_height -> Int8,
@@ -18,8 +9,8 @@ diesel::table! {
         pulled_event_id -> Int8,
         pulled_spot_trade_id -> Int8,
         pulled_perp_trade_id -> Int8,
-        created_time -> Timetz,
-        updated_time -> Timetz,
+        created_time -> Numeric,
+        updated_time -> Numeric,
     }
 }
 
@@ -34,8 +25,26 @@ diesel::table! {
         deposit_amount -> Numeric,
         pulled_block_height -> Numeric,
         pulled_block_timestamp -> Numeric,
-        created_time -> Timestamptz,
-        updated_time -> Timestamptz,
+        created_time -> Numeric,
+        updated_time -> Numeric,
+    }
+}
+
+diesel::table! {
+    hourly_orderly_perp (id) {
+        id -> Int4,
+        symbol -> Text,
+        chain_hour -> Int8,
+        trading_fee -> Numeric,
+        trading_volume -> Numeric,
+        trading_count -> Numeric,
+        opening_count -> Numeric,
+        liquidation_amount -> Numeric,
+        liquidation_count -> Numeric,
+        pulled_block_height -> Int8,
+        pulled_block_timestamp -> Int8,
+        created_time -> Numeric,
+        updated_time -> Numeric,
     }
 }
 
@@ -51,8 +60,8 @@ diesel::table! {
         liquidation_count -> Numeric,
         pulled_block_height -> Int8,
         pulled_block_timestamp -> Int8,
-        created_time -> Nullable<Timestamptz>,
-        updated_time -> Nullable<Timestamptz>,
+        created_time -> Numeric,
+        updated_time -> Numeric,
     }
 }
 
@@ -68,8 +77,25 @@ diesel::table! {
         deposit_amount -> Numeric,
         pulled_block_height -> Numeric,
         pulled_block_timestamp -> Numeric,
-        created_time -> Nullable<Timestamptz>,
-        updated_time -> Nullable<Timestamptz>,
+        created_time -> Numeric,
+        updated_time -> Numeric,
+    }
+}
+
+diesel::table! {
+    orderly_perp_summary (id) {
+        id -> Int4,
+        symbol -> Text,
+        open_interest -> Numeric,
+        total_trading_volume -> Numeric,
+        total_trading_count -> Numeric,
+        total_trading_user_count -> Numeric,
+        total_liquidation_amount -> Numeric,
+        total_liquidation_count -> Numeric,
+        pulled_block_height -> Int8,
+        pulled_block_timestamp -> Int8,
+        created_timestamp -> Numeric,
+        updated_timestamp -> Numeric,
     }
 }
 
@@ -83,25 +109,26 @@ diesel::table! {
         total_withdraw_amount -> Numeric,
         total_deposit_amount -> Numeric,
         pulled_block_height -> Numeric,
-        pulled_block_timestamp -> Timestamptz,
-        created_time -> Timestamptz,
-        updated_time -> Timestamptz,
+        pulled_block_timestamp -> Numeric,
+        created_time -> Numeric,
+        updated_time -> Numeric,
     }
 }
 
 diesel::table! {
     user_perp_summary (id) {
         id -> Int4,
+        account_id -> Text,
         symbol -> Text,
-        open_interest -> Numeric,
+        holding -> Numeric,
         total_trading_volume -> Numeric,
         total_trading_count -> Numeric,
         total_liquidation_amount -> Numeric,
         total_liquidation_count -> Numeric,
         pulled_block_height -> Int8,
         pulled_block_timestamp -> Int8,
-        created_timestamp -> Nullable<Timestamptz>,
-        updated_timestamp -> Nullable<Timestamptz>,
+        created_timestamp -> Numeric,
+        updated_timestamp -> Numeric,
     }
 }
 
@@ -116,17 +143,19 @@ diesel::table! {
         total_withdraw_amount -> Numeric,
         total_deposit_amount -> Numeric,
         pulled_block_height -> Numeric,
-        pulled_block_timestamp -> Timestamptz,
-        created_time -> Timestamptz,
-        updated_time -> Timestamptz,
+        pulled_block_timestamp -> Numeric,
+        created_time -> Numeric,
+        updated_time -> Numeric,
     }
 }
 
 diesel::allow_tables_to_appear_in_same_query!(
     block_summary,
     hourly_order_token,
+    hourly_orderly_perp,
     hourly_user_perp,
     hourly_user_token,
+    orderly_perp_summary,
     orderly_token_summary,
     user_perp_summary,
     user_token_summary,

@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS hourly_user_perp
     liquidation_count      numeric not null,
     pulled_block_height    bigint not null,
     pulled_block_timestamp bigint not null,
-    created_time           timestamp with time zone,
-    updated_time           timestamp with time zone
+    created_time           numeric not null ,
+    updated_time          numeric not null
 );
 
 create index user_perp_chain_hour_index on hourly_user_perp (chain_hour);
