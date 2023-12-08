@@ -3,7 +3,6 @@ extern crate diesel;
 
 use actix_web::{App, get, HttpResponse, HttpServer, Responder};
 use orderly_dashboard_indexer::formats_external::Response;
-use orderly_dashboard_indexer::formats_external::trading_events::TradingEventsResponse;
 use tokio::time::{Duration, sleep};
 
 use crate::analyzer::block_event_analyzer::BlockEventAnalyzer;

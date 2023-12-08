@@ -1,21 +1,19 @@
 -- Your SQL goes here
-CREATE TABLE IF NOT EXISTS hourly_order_token
+CREATE TABLE IF NOT EXISTS hourly_orderly_token
 (
-    id                     SERIAL PRIMARY KEY,
-    token                  text    not null,
-    chain_hour             bigint  not null,
-    chain_id               text    not null,
-    token_address          text    not null,
+    token               text    not null,
+    block_hour          bigint  not null,
 
-    withdraw_amount        numeric not null,
-    withdraw_count         numeric not null ,
-    deposit_amount         numeric not null,
-    deposit_count          numeric not null ,
+    chain_id            text    not null,
+    token_address       text    not null,
 
-    pulled_block_height    numeric not null,
-    pulled_block_timestamp numeric not null,
-    created_time           numeric not null,
-    updated_time           numeric not null
+    withdraw_amount     numeric not null,
+    withdraw_count      bigint  not null,
+    deposit_amount      numeric not null,
+    deposit_count       bigint  not null,
+
+    pulled_block_height bigint  not null,
+    pulled_block_time   bigint  not null,
+    constraint hourly_orderly_token_uq primary key (token, block_hour)
 );
-
-create index orderly_token_chain_hour_index on hourly_order_token (chain_hour);
+create index orderly_token_chain_hour_index on hourly_orderly_token (block_hour);

@@ -1,18 +1,22 @@
 use bigdecimal::BigDecimal;
 
-pub struct HourlyUserPerp {
-    id: i64,
-    account_id:  String,
-    token:  String,
-    chain_hour: i64,
-    chain_id:  String,
-    token_address: String,
+use diesel::prelude::*;
+
+use crate::schema::hourly_user_token;
+
+#[derive(Queryable, Insertable, Debug)]
+#[table_name = "hourly_user_token"]
+pub struct HourlyUserToken {
+    account_id: String,
+    token: String,
+    block_hour: i64,
+    chain_id: String,
+
     withdraw_amount: BigDecimal,
     withdraw_count: i64,
     deposit_amount: BigDecimal,
     deposit_count: i64,
+
     pulled_block_height: i64,
-    pulled_block_timestamp: i64,
-    created_time: i64,
-    updated_time: i64,
+    pulled_block_time: i64,
 }

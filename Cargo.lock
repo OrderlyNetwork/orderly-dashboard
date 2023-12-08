@@ -494,19 +494,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bigdecimal"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c06619be423ea5bb86c95f087d5707942791a08a85530df0db2209a3ecfb8bc9"
-dependencies = [
- "autocfg",
- "libm",
- "num-bigint 0.4.4",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
 name = "bit-set"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1012,7 +999,7 @@ version = "1.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b28135ecf6b7d446b43e27e225622a038cc4e2930a1022f51cdb97ada19b8e4d"
 dependencies = [
- "bigdecimal 0.1.2",
+ "bigdecimal",
  "bitflags 1.3.2",
  "byteorder",
  "chrono",
@@ -2521,15 +2508,19 @@ version = "0.1.0"
 dependencies = [
  "actix-diesel",
  "actix-web",
- "bigdecimal 0.4.2",
+ "bigdecimal",
  "chrono",
  "diesel",
  "dotenv",
  "futures",
+ "hex",
+ "hex-literal",
+ "hyper",
  "lazy_static",
  "once_cell",
  "orderly-dashboard-indexer 0.1.0 (git+https://orderly-dashboard-read:sqxjE1xsuzPv2rRssZeP@gitlab.com/orderlynetwork/orderly-v2/orderly-dashboard.git?tag=v0.0.2-alpha)",
  "reqwest",
+ "ring 0.16.20",
  "serde",
  "serde_json",
  "tokio",
@@ -2546,7 +2537,7 @@ dependencies = [
  "async-trait",
  "base64 0.13.1",
  "base64-url",
- "bigdecimal 0.1.2",
+ "bigdecimal",
  "chrono",
  "clap",
  "diesel",
@@ -2583,7 +2574,7 @@ dependencies = [
  "async-trait",
  "base64 0.13.1",
  "base64-url",
- "bigdecimal 0.1.2",
+ "bigdecimal",
  "chrono",
  "clap",
  "diesel",
