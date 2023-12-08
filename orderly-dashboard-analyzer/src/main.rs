@@ -1,4 +1,9 @@
+#[macro_use]
+extern crate diesel;
+
 use actix_web::{App, get, HttpResponse, HttpServer, Responder};
+use orderly_dashboard_indexer::formats_external::Response;
+use orderly_dashboard_indexer::formats_external::trading_events::TradingEventsResponse;
 use tokio::time::{Duration, sleep};
 
 use crate::analyzer::block_event_analyzer::BlockEventAnalyzer;
@@ -14,13 +19,10 @@ async fn pull_block_timer(puller: &dyn IndexerClient, analyzer: &dyn BlockEventA
     loop {
         let result = puller.pull_block(1i64, 20i64);
         match result {
-            Ok(result) => {
-                analyzer.analyzer_event(result.as_data());
-                //TODO update block summary
+            Response::Success(success_response) => {
+                analyzer.analyzer_event(success_response.as_data());
             }
-            Err(_) => {
-                //TODO log warning
-            }
+            Response::Failure(_) => {}
         }
 
         sleep(Duration::from_secs(5)).await; // 设置定时任务间隔为5秒

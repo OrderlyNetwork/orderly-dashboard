@@ -1,22 +1,19 @@
 use bigdecimal::BigDecimal;
-use diesel::{Insertable, Queryable};
-use diesel::prelude::*;
 
-#[derive(Queryable, Insertable, Debug)]
-#[diesel(table_name = "user_perp_summary")]
-pub struct UserPerpSummary<'a> {
+pub struct UserPerpSummary {
     id: i64,
-    account_id: &'a String,
-    symbol: &'a String,
-    holding: &'a BigDecimal,
-    opening_cost: &'a BigDecimal,
+    account_id: String,
+    symbol: String,
+    holding: BigDecimal,
+    opening_cost: BigDecimal,
+    cost_position: BigDecimal,
 
-    total_trading_fee: &'a BigDecimal,
-    total_trading_volume: &'a BigDecimal,
+    total_trading_fee: BigDecimal,
+    total_trading_volume: BigDecimal,
     total_trading_count: i64,
 
-    total_realized_pnl: &'a BigDecimal,
-    total_liquidation_amount: &'a BigDecimal,
+    total_realized_pnl: BigDecimal,
+    total_liquidation_amount: BigDecimal,
     total_liquidation_count: i64,
 
     pulled_block_height: i64,

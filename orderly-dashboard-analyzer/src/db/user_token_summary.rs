@@ -1,19 +1,15 @@
 use bigdecimal::BigDecimal;
-use diesel::{Insertable, Queryable};
-use diesel::prelude::*;
 
-#[derive(Queryable, Insertable, Debug)]
-#[diesel(table_name = "user_token_summary")]
-pub struct UserTokenSummary<'a> {
+pub struct UserTokenSummary {
     id: i64,
-    account_id: &'a String,
-    token: &'a String,
-    chain_id: &'a String,
-    token_address: &'a String,
-    balance:&'a BigDecimal,
+    account_id: String,
+    token: String,
+    chain_id: String,
+    token_address: String,
+    balance: BigDecimal,
 
-    total_withdraw_amount:&'a BigDecimal,
-    total_deposit_amount:&'a BigDecimal,
+    total_withdraw_amount: BigDecimal,
+    total_deposit_amount: BigDecimal,
     total_withdraw_count: i64,
     total_deposit_count: i64,
 

@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS hourly_orderly_perp
     trading_fee            numeric not null,
     trading_volume         numeric not null,
     trading_count          numeric not null,
+    trading_user_count     numeric not null,
     opening_count          numeric not null,
+
     liquidation_amount     numeric not null,
     liquidation_count      numeric not null,
     pulled_block_height    bigint  not null,

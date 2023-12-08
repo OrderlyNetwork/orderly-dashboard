@@ -2525,6 +2525,7 @@ dependencies = [
  "chrono",
  "diesel",
  "dotenv",
+ "futures",
  "lazy_static",
  "once_cell",
  "orderly-dashboard-indexer 0.1.0 (git+https://orderly-dashboard-read:sqxjE1xsuzPv2rRssZeP@gitlab.com/orderlynetwork/orderly-v2/orderly-dashboard.git?tag=v0.0.2-alpha)",

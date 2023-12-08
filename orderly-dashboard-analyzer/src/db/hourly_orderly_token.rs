@@ -1,20 +1,16 @@
 use bigdecimal::BigDecimal;
-use diesel::{Insertable, Queryable};
-use diesel::prelude::*;
 
-#[derive(Queryable, Insertable, Debug)]
-#[diesel(table_name = "hourly_orderly_token")]
-pub struct HourlyOrderlyToken<'a> {
+pub struct HourlyOrderlyToken {
     id: i64,
-    token: &'a String,
+    token: String,
     chain_hour: i64,
 
-    chain_id: &'a String,
-    token_address: &'a String,
+    chain_id: String,
+    token_address: String,
 
-    withdraw_amount:&'a BigDecimal,
+    withdraw_amount: BigDecimal,
     withdraw_count: i64,
-    deposit_amount:&'a BigDecimal,
+    deposit_amount: BigDecimal,
     deposit_count: i64,
 
     pulled_block_height: i64,
