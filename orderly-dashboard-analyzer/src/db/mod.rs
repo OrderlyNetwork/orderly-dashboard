@@ -14,7 +14,7 @@ use dotenv::dotenv;
 use once_cell::sync::Lazy;
 use std::env;
 
-pub const DB_CONTEXT: &str = "db_context";
+pub const DB_CONTEXT: &str = "DB_operation";
 
 pub static POOL: Lazy<Database<PgConnection>> = Lazy::new(|| establish_connection());
 
