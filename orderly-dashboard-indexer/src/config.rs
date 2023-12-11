@@ -50,6 +50,7 @@ pub struct SubnetConfig {
     pub explorer_url: String,
     pub vault_manager_address: String,
     pub vault_manager_abi_path: String,
+    pub upgrade_height: u64,
 }
 
 #[derive(Clone, Deserialize, Default)]

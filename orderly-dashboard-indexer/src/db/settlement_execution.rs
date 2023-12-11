@@ -9,12 +9,13 @@ use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
 use std::time::Instant;
-#[derive(Insertable, Queryable, Debug)]
+#[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "settlement_execution"]
 pub struct DbSettlementExecution {
     pub block_number: i64,
     pub transaction_index: i32,
     pub log_index: i32,
+    pub settlement_result_log_idx: i32,
     pub transaction_id: String,
     pub symbol_hash: String,
     pub sum_unitary_fundings: BigDecimal,
@@ -24,7 +25,11 @@ pub struct DbSettlementExecution {
 
 impl DbSettlementExecution {
     pub fn get_batch_key(&self) -> (i64, i32) {
-        (self.block_number, self.transaction_index)
+        (self.block_number, self.settlement_result_log_idx)
+    }
+
+    pub fn is_result_log_set(&self) -> bool {
+        self.settlement_result_log_idx >= 0
     }
 }
 

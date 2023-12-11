@@ -10,12 +10,13 @@ use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
 use std::time::Instant;
 
-#[derive(Insertable, Queryable, Debug)]
+#[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "liquidation_transfer"]
 pub struct DbLiquidationTransfer {
     pub block_number: i64,
     pub transaction_index: i32,
     pub log_index: i32,
+    pub liquidation_result_log_idx: i32,
     pub transaction_id: String,
     pub liquidation_transfer_id: BigDecimal,
     pub liquidator_account_id: String,
@@ -31,7 +32,11 @@ pub struct DbLiquidationTransfer {
 
 impl DbLiquidationTransfer {
     pub fn get_batch_key(&self) -> (i64, i32) {
-        (self.block_number, self.transaction_index)
+        (self.block_number, self.liquidation_result_log_idx)
+    }
+
+    pub fn is_result_log_set(&self) -> bool {
+        self.liquidation_result_log_idx >= 0
     }
 }
 

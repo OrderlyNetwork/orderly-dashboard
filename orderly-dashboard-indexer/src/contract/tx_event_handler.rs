@@ -1,8 +1,9 @@
 use crate::bindings::operator_manager;
 use crate::bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
 use crate::bindings::user_ledger::{user_ledgerEvents, LiquidationTransfer, SettlementExecution};
+use crate::config::COMMON_CONFIGS;
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC};
-use std::str::FromStr;
+use std::{collections::VecDeque, str::FromStr};
 
 use crate::db::executed_trades::{create_executed_trades, DbExecutedTrades, TradeType};
 
@@ -32,22 +33,52 @@ pub(crate) async fn consume_logs_from_tx_receipts(
 ) -> Result<()> {
     for tx_receipt in tx_receipts.iter() {
         let (tx, receipt) = &tx_receipt;
+        // cache
+        let mut liquidation_result_log_index_queue: VecDeque<i32> = VecDeque::new();
+        let mut settlement_result_log_index_queue: VecDeque<i32> = VecDeque::new();
+        let mut liquidation_trasfers_cache: Vec<DbLiquidationTransfer> = Vec::new();
+        let mut settlement_exectutions_cahce: Vec<DbSettlementExecution> = Vec::new();
         // 1 (success)
         if receipt.status.unwrap_or_default().as_u64() == 1 {
             for log in &receipt.logs {
-                if let Err(err) = handle_log(log.clone(), Some(block.timestamp.as_u64())).await {
+                if let Err(err) = handle_log(
+                    &mut liquidation_result_log_index_queue,
+                    &mut settlement_result_log_index_queue,
+                    &mut liquidation_trasfers_cache,
+                    &mut settlement_exectutions_cahce,
+                    log.clone(),
+                    Some(block.timestamp.as_u64()),
+                )
+                .await
+                {
                     tracing::warn!(target: HANDLE_LOG, "handle_log meet err:{:?}", err);
                 }
             }
-            if let Err(err) = handle_tx_params(tx, Some(block.timestamp.as_u64())).await {
-                tracing::warn!(target: HANDLE_LOG, "handle_tx_params meet err:{:?}, block: {}", err, block.number.unwrap_or_default().as_u64());
+            if block.number.unwrap_or_default().as_u64()
+                < unsafe { COMMON_CONFIGS.get_unchecked().l2_config.upgrade_height }
+            {
+                if let Err(err) = handle_tx_params(
+                    &mut liquidation_result_log_index_queue,
+                    &mut settlement_result_log_index_queue,
+                    tx,
+                    Some(block.timestamp.as_u64()),
+                )
+                .await
+                {
+                    tracing::warn!(target: HANDLE_LOG, "handle_tx_params meet err:{:?}, block: {}", err, block.number.unwrap_or_default().as_u64());
+                }
             }
         }
+        // excute
+        // clean cache
+        liquidation_result_log_index_queue.clear();
     }
     Ok(())
 }
 
 pub(crate) async fn handle_tx_params(
+    liquidation_result_log_index_queue: &mut VecDeque<i32>,
+    settlement_result_log_index_queue: &mut VecDeque<i32>,
     tx: &Transaction,
     #[allow(unused_variables)] block_t: Option<u64>,
 ) -> Result<()> {
@@ -94,9 +125,12 @@ pub(crate) async fn handle_tx_params(
                 Vec::with_capacity(event_upload.data.events.len());
             let mut liquidation_trans: Vec<DbLiquidationTransfer> =
                 Vec::with_capacity(event_upload.data.events.len());
-            for event in event_upload.data.events {
+            for (event_idx, event) in event_upload.data.events.into_iter().enumerate() {
                 if event.biz_type == 2 {
                     // settlement
+                    let settlement_result_log_idx = settlement_result_log_index_queue
+                        .pop_front()
+                        .unwrap_or_default();
                     let calldata_types = vec![ParamType::Tuple(vec![
                         ParamType::FixedBytes(32),
                         ParamType::FixedBytes(32),
@@ -151,7 +185,8 @@ pub(crate) async fn handle_tx_params(
                             block_number: tx.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: tx.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
-                            log_index: index as i32,
+                            log_index: (event_idx * 10000 + index) as i32,
+                            settlement_result_log_idx,
                             transaction_id: format_hash(tx.hash),
                             symbol_hash: to_hex_format(&settlement_exec.symbol_hash),
                             sum_unitary_fundings: convert_amount(
@@ -163,7 +198,31 @@ pub(crate) async fn handle_tx_params(
                         });
                     }
                 } else if event.biz_type == 4 {
+                    let liquidation_result_log_idx = liquidation_result_log_index_queue
+                        .pop_front()
+                        .unwrap_or_default();
                     // liquidation
+                    // struct Liquidation {
+                    //     bytes32 liquidatedAccountId;
+                    //     bytes32 insuranceAccountId;
+                    //     bytes32 liquidatedAssetHash;
+                    //     uint128 insuranceTransferAmount;
+                    //     uint64 timestamp;
+                    //     LiquidationTransfer[] liquidationTransfers;
+                    // }
+
+                    // struct LiquidationTransfer {
+                    //     bytes32 liquidatorAccountId;
+                    //     bytes32 symbolHash;
+                    //     int128 positionQtyTransfer;
+                    //     int128 costPositionTransfer;
+                    //     int128 liquidatorFee;
+                    //     int128 insuranceFee;
+                    //     int128 liquidationFee;
+                    //     uint128 markPrice;
+                    //     int128 sumUnitaryFundings;
+                    //     uint64 liquidationTransferId;
+                    // }
                     let calldata_types = vec![ParamType::Tuple(vec![
                         ParamType::FixedBytes(32),
                         ParamType::FixedBytes(32),
@@ -186,6 +245,7 @@ pub(crate) async fn handle_tx_params(
                     let decoded = abi::decode(&calldata_types, &event.data)?;
                     let decoded = decoded[0].clone().into_tuple().unwrap();
                     let mut liquidation_transfers = Vec::new();
+                    // liquidation_transfers
                     for l in decoded[5].clone().into_array().unwrap() {
                         let liquidator_account_id: [u8; 32] = l.clone().into_tuple().unwrap()[0]
                             .clone()
@@ -264,7 +324,8 @@ pub(crate) async fn handle_tx_params(
                             block_number: tx.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: tx.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
-                            log_index: index as i32,
+                            log_index: (event_idx * 10000 + index) as i32,
+                            liquidation_result_log_idx,
                             transaction_id: format_hash(tx.hash),
                             liquidation_transfer_id: BigDecimal::from_u64(
                                 liquidation_transfer.liquidation_transfer_id,
@@ -296,7 +357,7 @@ pub(crate) async fn handle_tx_params(
                 create_settlement_executions(settlement_execs).await?;
             }
             if !liquidation_trans.is_empty() {
-                tracing::info!(target: HANDLE_LOG, "insert liquidation_transfers with length: {}", liquidation_trans.len());
+                tracing::info!(target: HANDLE_LOG, "insert liquidation_transfers with length: {:?}", liquidation_trans.len());
                 create_liquidation_transfers(liquidation_trans).await?;
             }
         }
@@ -305,7 +366,14 @@ pub(crate) async fn handle_tx_params(
     Ok(())
 }
 
-pub(crate) async fn handle_log(log: Log, block_t: Option<u64>) -> Result<()> {
+pub(crate) async fn handle_log(
+    liquidation_result_log_index_queue: &mut VecDeque<i32>,
+    settlement_result_log_index_queue: &mut VecDeque<i32>,
+    liquidation_trasfers: &mut Vec<DbLiquidationTransfer>,
+    settlement_exectutions: &mut Vec<DbSettlementExecution>,
+    log: Log,
+    block_t: Option<u64>,
+) -> Result<()> {
     let addr_map = unsafe { ADDR_MAP.get_unchecked() };
     if let Some(sc_name) = addr_map.get(&log.address) {
         match *sc_name {
@@ -491,11 +559,13 @@ pub(crate) async fn handle_log(log: Log, block_t: Option<u64>) -> Result<()> {
                         .await?;
                     }
                     user_ledgerEvents::LiquidationResultFilter(liquidation_result_event) => {
+                        let log_index = log.log_index.unwrap_or_default().as_u64() as i32;
+                        liquidation_result_log_index_queue.push_back(log_index);
                         create_liquidation_results(vec![DbLiquidationResult {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
-                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            log_index,
                             transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
                             block_time: (block_t.unwrap_or_default() as i64).into(),
                             liquidated_account_id: to_hex_format(
@@ -512,6 +582,15 @@ pub(crate) async fn handle_log(log: Log, block_t: Option<u64>) -> Result<()> {
                             )?,
                         }])
                         .await?;
+                        if !liquidation_trasfers.is_empty() {
+                            liquidation_trasfers
+                                .iter_mut()
+                                .for_each(|v| v.liquidation_result_log_idx = log_index);
+                            let mut data: Vec<_> = Vec::with_capacity(liquidation_trasfers.len());
+                            data.clone_from_slice(liquidation_trasfers);
+                            create_liquidation_transfers(data).await?;
+                            liquidation_trasfers.clear();
+                        }
                     }
                     user_ledgerEvents::ProcessValidatedFuturesFilter(trade) => {
                         let db_trade = DbExecutedTrades {
@@ -538,11 +617,13 @@ pub(crate) async fn handle_log(log: Log, block_t: Option<u64>) -> Result<()> {
                         create_executed_trades(vec![db_trade]).await?;
                     }
                     user_ledgerEvents::SettlementResultFilter(settlement_res_event) => {
+                        let log_index = log.log_index.unwrap_or_default().as_u64() as i32;
+                        settlement_result_log_index_queue.push_back(log_index);
                         create_settlement_results(vec![DbSettlementResult {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
-                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            log_index,
                             transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
                             block_time: (block_t.unwrap_or_default() as i64).into(),
                             account_id: to_hex_format(&settlement_res_event.account_id),
@@ -558,13 +639,23 @@ pub(crate) async fn handle_log(log: Log, block_t: Option<u64>) -> Result<()> {
                             )?,
                         }])
                         .await?;
+                        if !settlement_exectutions.is_empty() {
+                            settlement_exectutions
+                                .iter_mut()
+                                .for_each(|v| v.settlement_result_log_idx = log_index);
+                            let mut data: Vec<_> = Vec::with_capacity(settlement_exectutions.len());
+                            data.clone_from_slice(settlement_exectutions);
+                            create_settlement_executions(data).await?;
+                            settlement_exectutions.clear();
+                        }
                     }
                     user_ledgerEvents::SettlementExecutionFilter(settlement_exec) => {
-                        create_settlement_executions(vec![DbSettlementExecution {
+                        settlement_exectutions.push(DbSettlementExecution {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
                             log_index: log.transaction_index.unwrap_or_default().as_u64() as i32,
+                            settlement_result_log_idx: -1,
                             transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
                             symbol_hash: to_hex_format(&settlement_exec.symbol_hash),
                             sum_unitary_fundings: convert_amount(
@@ -573,15 +664,15 @@ pub(crate) async fn handle_log(log: Log, block_t: Option<u64>) -> Result<()> {
                             .unwrap_or_default(),
                             mark_price: convert_amount(settlement_exec.mark_price as i128)?,
                             settled_amount: convert_amount(settlement_exec.settled_amount)?,
-                        }])
-                        .await?;
+                        });
                     }
                     user_ledgerEvents::LiquidationTransferFilter(liquidation_transfer) => {
-                        create_liquidation_transfers(vec![DbLiquidationTransfer {
+                        liquidation_trasfers.push(DbLiquidationTransfer {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
                             log_index: log.transaction_index.unwrap_or_default().as_u64() as i32,
+                            liquidation_result_log_idx: -1,
                             transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
                             liquidation_transfer_id: BigDecimal::from_u64(
                                 liquidation_transfer.liquidation_transfer_id,
@@ -604,8 +695,7 @@ pub(crate) async fn handle_log(log: Log, block_t: Option<u64>) -> Result<()> {
                                 liquidation_transfer.sum_unitary_fundings,
                             )?,
                             liquidation_fee: convert_amount(liquidation_transfer.liquidation_fee)?,
-                        }])
-                        .await?;
+                        });
                     }
                     _ => {}
                 }

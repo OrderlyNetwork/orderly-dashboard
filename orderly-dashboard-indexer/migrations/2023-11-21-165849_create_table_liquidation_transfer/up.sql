@@ -4,6 +4,7 @@ create table liquidation_transfer
     block_number                  bigint   not null,
     transaction_index             integer  not null,
     log_index                     integer  not null,
+    liquidation_result_log_idx    integer  not null,
     transaction_id                text     not null,
     liquidation_transfer_id       numeric  not null,
     liquidator_account_id         text     not null,

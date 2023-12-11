@@ -12,11 +12,26 @@ curl --request POST \
     --header 'Content-Type: application/json' \
     --data '{ "start_block_height": 1144102, "end_block_height": 1144102}'
 
-echo "start sync some deposit and withdraw events from block 1145079 #########"
+echo "start sync some withdraw events from block 1145079 #########"
 curl --request POST \
     --url http://127.0.0.1:8018/recovery/block \
     --header 'Content-Type: application/json' \
     --data '{ "start_block_height": 1145079, "end_block_height": 1145079}'
 
-# echo " settlement executions 0x41f6d4bd678af00991064b9c50ec77866f3ac6fc9fd395339d341e4999df56c1"
+# echo " settlement executions 0x4f57effc9d8096e29f597f808ddd8466f7ad49fa1aca45975a28f1bf48595823"
+echo "start sync some settlement from block 1182731  #########"
+curl --request POST \
+    --url http://127.0.0.1:8018/recovery/block \
+    --header 'Content-Type: application/json' \
+    --data '{ "start_block_height": 1182731, "end_block_height": 1182731}'
+
+# 0x2bf6e03c8564648aab39987a6d8f64f252d353755474e3a83a4d052cc8fb3213
+echo "start sync some liquidation from block 2608634  #########"
+curl --request POST \
+    --url http://127.0.0.1:8018/recovery/block \
+    --header 'Content-Type: application/json' \
+    --data '{ "start_block_height": 2608634, "end_block_height": 2608634}'
+
+echo "pull all those events"
+curl 'http://127.0.0.1:8018/pull_perp_trading_events?from_block=1143269&to_block=2608634'
 

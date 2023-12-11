@@ -15,7 +15,8 @@
     "contract_deploy_height": 965813,
     "explorer_url": "https://testnet-explorer.orderly.org",
     "vault_manager_address": "0x873c120b42C80D528389d85cEA9d4dC0197974aD",
-    "vault_manager_abi_path": "./abis/vault_manager.json"
+    "vault_manager_abi_path": "./abis/vault_manager.json",
+    "upgrade_height": 4810062
   },
   "cefi_server": {
     "server_address": "https://dev-api.orderly.network",

@@ -4,6 +4,7 @@ create table settlement_execution
     block_number                  bigint   not null,
     transaction_index             integer  not null,
     log_index                     integer  not null,
+    settlement_result_log_idx     integer  not null,
     transaction_id                text     not null,
     symbol_hash                   text     not null,
     sum_unitary_fundings          numeric  not null,
