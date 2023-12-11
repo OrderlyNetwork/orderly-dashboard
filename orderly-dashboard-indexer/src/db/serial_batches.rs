@@ -36,7 +36,7 @@ pub struct DbSerialBatches {
 
 impl DbSerialBatches {
     pub fn get_batch_key(&self) -> (i64, i32) {
-        (self.block_number, self.log_index)
+        (self.block_number, self.transaction_index)
     }
 }
 
