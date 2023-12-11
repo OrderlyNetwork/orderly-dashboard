@@ -2510,6 +2510,7 @@ dependencies = [
  "actix-web",
  "bigdecimal",
  "chrono",
+ "clap",
  "diesel",
  "dotenv",
  "futures",
@@ -2524,6 +2525,8 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
