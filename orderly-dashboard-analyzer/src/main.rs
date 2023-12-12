@@ -7,16 +7,15 @@ use std::fmt::Debug;
 use std::str::FromStr;
 
 use actix_web::{App, get, HttpResponse, HttpServer, Responder};
-use bigdecimal::BigDecimal;
-use chrono::{TimeZone, Utc,DateTime};
+use chrono::{TimeZone, Utc};
 use clap::Parser;
 use orderly_dashboard_indexer::formats_external::{Response, trading_events::*};
 use reqwest;
 
 use crate::analyzer::block_event_analyzer::BlockEventAnalyzer;
-use crate::db::user_token_summary::{create_user_token, DBException, select_user_token_summary, update_user_token, UserTokenSummary};
+use crate::analyzer::perp_analyzer::analyzer_perp_trade;
+use crate::analyzer::transaction_analyzer::analyzer_transaction;
 use crate::indexer::indexer_client::IndexerClient;
-use crate::db::hourly_user_token::{select_by_key, HourlyUserToken, create_or_update_hourly_data};
 
 mod indexer;
 mod config;
@@ -38,7 +37,6 @@ fn init_log() {
 
 fn convert_block_hour(block_timestamp: i64) -> i64 {
     let date_time = Utc.timestamp_opt(block_timestamp, 0).unwrap();
-    println!("{}", date_time);
     let time_str = date_time.format("%Y%m%d%H").to_string();
     time_str.parse::<i64>().unwrap()
 }
@@ -53,14 +51,16 @@ async fn health() -> impl Responder {
 async fn main() -> std::io::Result<()> {
     init_log();
 
-    let indexer_url = "http://localhost:8018/pull_perp_trading_events?from_block=1143269&to_block=1145079";
+    let indexer_url = "http://localhost:8018/pull_perp_trading_events?from_block=1145079&to_block=1148065";
     let response = reqwest::get(indexer_url);
     // 获取响应的字符串内容
     let body = response.await;
     let ss = body.unwrap().text().await;
 
+
     match ss {
         Ok(res_text) => {
+            println!("{}", res_text.clone());
             let rs_clone = res_text.clone();
             let result: Result<Response<TradingEventsResponse>, serde_json::Error> = serde_json::from_str(&*rs_clone);
             match result {
@@ -71,115 +71,19 @@ async fn main() -> std::io::Result<()> {
                             let events = trading_event.events;
                             for event in events {
                                 let block_hour = convert_block_hour(event.block_timestamp as i64);
+                                let block_num = event.block_number as i64;
+                                let block_time = event.block_timestamp as i64;
                                 let event_data = event.data;
                                 match event_data {
-                                    TradingEventInnerData::Transaction {
-                                        account_id,
-                                        sender,
-                                        receiver, // receiver address
-                                        token_hash,
-                                        broker_hash,
-                                        chain_id,
-                                        side, // “deposit｜withdraw"
-                                        token_amount,
-                                        withdraw_nonce, // optional
-                                        status,   // "succeed|failed"
-                                        fail_reason,    // optional
-                                        fee
-                                    } => {
-                                        let ori = select_user_token_summary(account_id.clone(), token_hash.clone(), chain_id.clone()).await;
-                                        let hour_ori = select_by_key(account_id.clone(), token_hash.clone(), block_hour, chain_id.clone()).await;
-                                        let mut hourly_data;
-                                        match hour_ori {
-                                            Ok(ori) => {
-                                                match ori {
-                                                    None => {
-                                                        hourly_data = HourlyUserToken {
-                                                            account_id: account_id.clone(),
-                                                            token: token_hash.clone(),
-                                                            block_hour: block_hour,
-                                                            chain_id: chain_id.clone(),
-                                                            withdraw_amount: Default::default(),
-                                                            withdraw_count: 0,
-                                                            deposit_amount: Default::default(),
-                                                            deposit_count: 0,
-                                                            pulled_block_height: 0,
-                                                            pulled_block_time: 0,
-                                                        }
-                                                    }
-                                                    Some(ori_data) => {
-                                                        hourly_data = ori_data;
-                                                    }
-                                                }
-                                            }
-                                            Err(error) => {
-                                                println!("{:?}", error);
-                                                panic!()
-                                            }
-                                        }
-
-                                        match ori {
-                                            None => {
-                                                let mut insert_sum = UserTokenSummary {
-                                                    account_id: account_id.clone(),
-                                                    token: token_hash.clone(),
-                                                    chain_id: chain_id.clone(),
-                                                    balance: Default::default(),
-                                                    total_withdraw_amount: Default::default(),
-                                                    total_deposit_amount: Default::default(),
-                                                    total_withdraw_count: 0,
-                                                    total_deposit_count: 0,
-                                                    pulled_block_height: event.block_number as i64,
-                                                    pulled_block_time: event.block_timestamp as i64,
-                                                };
-                                                match side {
-                                                    TransactionSide::Deposit => {
-                                                        insert_sum.balance = BigDecimal::from_str(token_amount.as_str()).unwrap();
-                                                        insert_sum.total_deposit_count = 1;
-                                                        insert_sum.total_deposit_amount = BigDecimal::from(1);
-                                                    }
-                                                    TransactionSide::Withdraw => {}
-                                                }
-                                                create_user_token(vec![insert_sum]).await.expect("TODO: panic message");
-                                            }
-                                            Some(mut saved_summary) => {
-                                                match side {
-                                                    TransactionSide::Deposit => {
-                                                        saved_summary.balance = saved_summary.balance + BigDecimal::from_str(token_amount.as_str()).unwrap();
-                                                        saved_summary.total_deposit_count += 1;
-                                                        saved_summary.total_deposit_amount = saved_summary.total_deposit_amount + BigDecimal::from_str(token_amount.as_str()).unwrap();
-
-                                                        hourly_data.deposit_count += 1;
-                                                        hourly_data.deposit_amount = hourly_data.deposit_amount + BigDecimal::from_str(token_amount.as_str()).unwrap();
-                                                    }
-                                                    TransactionSide::Withdraw => {
-                                                        saved_summary.balance = saved_summary.balance - BigDecimal::from_str(token_amount.as_str()).unwrap();
-                                                        saved_summary.total_withdraw_count += 1;
-                                                        saved_summary.total_withdraw_amount = saved_summary.total_withdraw_amount + BigDecimal::from_str(token_amount.as_str()).unwrap();
-
-
-                                                        hourly_data.withdraw_count += 1;
-                                                        hourly_data.withdraw_amount = hourly_data.withdraw_amount + BigDecimal::from_str(token_amount.as_str()).unwrap();
-                                                    }
-                                                }
-                                                update_user_token(vec![saved_summary]).await.expect("TODO: panic message");
-                                            }
-                                        }
-
-                                        create_or_update_hourly_data(vec![hourly_data]).await.expect("TODO: panic message");
+                                    TradingEventInnerData::Transaction { account_id, sender, receiver, token_hash, broker_hash, chain_id, side, token_amount, withdraw_nonce, status, fail_reason, fee } => {
+                                        analyzer_transaction(account_id, token_hash, chain_id, side, token_amount, &block_hour, &block_num, block_time).await;
                                     }
-                                    TradingEventInnerData::ProcessedTrades { .. } => {
-                                        println!("2")
+                                    TradingEventInnerData::ProcessedTrades { batch_id, trades } => {
+                                        analyzer_perp_trade(trades, block_hour, block_time, block_num).await;
                                     }
-                                    TradingEventInnerData::SettlementResult { .. } => {
-                                        println!("3")
-                                    }
-                                    TradingEventInnerData::LiquidationResult { .. } => {
-                                        println!("4")
-                                    }
-                                    TradingEventInnerData::AdlResult { .. } => {
-                                        println!("5")
-                                    }
+                                    TradingEventInnerData::SettlementResult { account_id, settled_amount, settled_asset_hash, insurance_account_id, insurance_transfer_amount, settlement_executions } => {}
+                                    TradingEventInnerData::LiquidationResult { .. } => {}
+                                    TradingEventInnerData::AdlResult { .. } => {}
                                 }
                             }
                         }

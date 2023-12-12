@@ -3,9 +3,7 @@ CREATE TABLE IF NOT EXISTS hourly_orderly_token
 (
     token               text    not null,
     block_hour          bigint  not null,
-
     chain_id            text    not null,
-    token_address       text    not null,
 
     withdraw_amount     numeric not null,
     withdraw_count      bigint  not null,

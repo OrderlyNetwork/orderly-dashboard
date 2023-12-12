@@ -33,7 +33,6 @@ diesel::table! {
         token -> Text,
         block_hour -> Int8,
         chain_id -> Text,
-        token_address -> Text,
         withdraw_amount -> Numeric,
         withdraw_count -> Int8,
         deposit_amount -> Numeric,

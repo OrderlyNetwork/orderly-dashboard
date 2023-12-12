@@ -5,11 +5,12 @@ use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::db::DB_CONTEXT;
+use crate::db::{DB_CONTEXT, PrimaryKey};
 use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
 use crate::schema::hourly_user_token;
+use crate::schema::hourly_user_token::{chain_id, deposit_amount};
 
 #[derive(Queryable, Insertable, Debug, Clone)]
 #[table_name = "hourly_user_token"]
@@ -28,23 +29,58 @@ pub struct HourlyUserToken {
     pub pulled_block_time: i64,
 }
 
-pub async fn select_by_key(ori_account_id: String, ori_token: String, ori_block_hour: i64, ori_chain_id: String) -> Result<Option<HourlyUserToken>, DBException> {
+impl HourlyUserToken {
+    pub fn deposit(&mut self, p_deposit_amount: BigDecimal) {
+        self.deposit_amount += p_deposit_amount;
+        self.deposit_count += 1;
+    }
+
+    pub fn withdraw(&mut self, p_withdraw_amount: BigDecimal) {
+        self.withdraw_amount += p_withdraw_amount;
+        self.deposit_count += 1;
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct HourlyUserTokenKey {
+    pub account_id: String,
+    pub token: String,
+    pub block_hour: i64,
+    pub chain_id: String,
+}
+
+impl PrimaryKey for HourlyUserTokenKey {}
+
+
+pub async fn find_hourly_user_token(ori_account_id: String, ori_token: String, ori_block_hour: i64, ori_chain_id: String) -> Result<HourlyUserToken, DBException> {
     use crate::schema::hourly_user_token::dsl::*;
     let result = hourly_user_token
-        .filter(account_id.eq(ori_account_id))
-        .filter(token.eq(ori_token))
-        .filter(block_hour.eq(ori_block_hour))
-        .filter(chain_id.eq(ori_chain_id))
+        .filter(account_id.eq(ori_account_id.clone()))
+        .filter(token.eq(ori_token.clone()))
+        .filter(block_hour.eq(ori_block_hour.clone()))
+        .filter(chain_id.eq(ori_chain_id.clone()))
         .first_async::<HourlyUserToken>(&POOL)
         .await;
 
     match result {
         Ok(res) => {
-            Ok(Some(res))
+            Ok(res)
         }
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
-                Ok(None)
+                let hourly_data = HourlyUserToken {
+                    account_id: ori_account_id.clone(),
+                    token: ori_token.clone(),
+                    block_hour: ori_block_hour.clone(),
+                    chain_id: ori_chain_id.clone(),
+                    withdraw_amount: Default::default(),
+                    withdraw_count: 0,
+                    deposit_amount: Default::default(),
+                    deposit_count: 0,
+                    pulled_block_height: 0,
+                    pulled_block_time: 0,
+                };
+                Ok(hourly_data)
             }
             _ => {
                 Err(QueryError)
@@ -53,7 +89,7 @@ pub async fn select_by_key(ori_account_id: String, ori_token: String, ori_block_
     }
 }
 
-pub async fn create_or_update_hourly_data(hourly_data_vec: Vec<HourlyUserToken>) -> Result<usize, DBException> {
+pub async fn create_or_update_hourly_user_token(hourly_data_vec: Vec<HourlyUserToken>) -> Result<usize, DBException> {
     use crate::schema::hourly_user_token::dsl::*;
 
     let mut row_nums = 0;
@@ -63,12 +99,12 @@ pub async fn create_or_update_hourly_data(hourly_data_vec: Vec<HourlyUserToken>)
             .on_conflict(on_constraint("hourly_user_token_uq"))
             .do_update()
             .set((
-                withdraw_amount.eq(hourly_data.withdraw_amount),
-                withdraw_count.eq(hourly_data.withdraw_count),
-                deposit_amount.eq(hourly_data.deposit_amount),
-                deposit_count.eq(hourly_data.deposit_count),
-                pulled_block_height.eq(hourly_data.pulled_block_height),
-                pulled_block_time.eq(hourly_data.pulled_block_time)
+                withdraw_amount.eq(hourly_data.withdraw_amount.clone()),
+                withdraw_count.eq(hourly_data.withdraw_count.clone()),
+                deposit_amount.eq(hourly_data.deposit_amount.clone()),
+                deposit_count.eq(hourly_data.deposit_count.clone()),
+                pulled_block_height.eq(hourly_data.pulled_block_height.clone()),
+                pulled_block_time.eq(hourly_data.pulled_block_time.clone())
             ))
             .execute_async(&POOL)
             .await;
