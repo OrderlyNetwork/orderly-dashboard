@@ -34,8 +34,16 @@ pub struct HourlyOrderlyPerp {
     pub pulled_block_time: i64,
 }
 
+impl HourlyOrderlyPerp {
+    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal) {
+        self.trading_fee += fee;
+        self.trading_volume += amount;
+        self.trading_count += 1;
+    }
+}
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+
+#[derive(Debug, PartialEq, Eq, Hash,Clone)]
 pub struct HourlyOrderlyPerpKey {
     pub symbol: String,
     pub block_hour: i64,
