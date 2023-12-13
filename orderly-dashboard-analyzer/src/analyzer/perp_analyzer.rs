@@ -1,4 +1,6 @@
+use std::cmp::max;
 use std::collections::HashMap;
+
 use orderly_dashboard_indexer::formats_external::trading_events::Trade;
 
 use crate::db::hourly_orderly_perp::{create_or_update_hourly_perp, find_hourly_orderly_perp, HourlyOrderlyPerp, HourlyOrderlyPerpKey};
@@ -6,13 +8,15 @@ use crate::db::hourly_user_perp::{create_or_update_hourly_user_perp, find_hourly
 use crate::db::orderly_perp_summary::{create_or_update_orderly_perp_summary, find_orderly_perp_summary, OrderlyPerpSummary};
 use crate::db::user_perp_summary::{create_or_update_user_perp_summary, find_user_perp_summary, UserPerpSummary, UserPerpSummaryKey};
 
-pub async fn analyzer_perp_trade(trades: Vec<Trade>, block_hour: i64, pulled_block_time: i64, pulled_block_height: i64) {
+pub async fn analyzer_perp_trade(trades: Vec<Trade>, block_hour: i64, pulled_block_time: i64, pulled_block_height: i64) -> i64 {
     let mut map: HashMap<HourlyOrderlyPerpKey, HourlyOrderlyPerp> = HashMap::new();
     let mut user_map: HashMap<HourlyUserPerpKey, HourlyUserPerp> = HashMap::new();
     let mut orderly_summary_map: HashMap<String, OrderlyPerpSummary> = HashMap::new();
     let mut user_summary_map: HashMap<UserPerpSummaryKey, UserPerpSummary> = HashMap::new();
 
+    let mut max_perp_trade_id = 0i64;
     for perp_trade in trades {
+        max_perp_trade_id = max(max_perp_trade_id, perp_trade.trade_id as i64);
 
         // hourly_orderly
         let perp_key = HourlyOrderlyPerpKey { symbol: perp_trade.symbol_hash.clone(), block_hour: block_hour.clone() };
@@ -92,5 +96,7 @@ pub async fn analyzer_perp_trade(trades: Vec<Trade>, block_hour: i64, pulled_blo
     create_or_update_hourly_perp(Vec::from_iter(map.values().into_iter())).await.unwrap();
     create_or_update_orderly_perp_summary(Vec::from_iter(orderly_summary_map.values().into_iter())).await.unwrap();
     create_or_update_user_perp_summary(Vec::from_iter(user_summary_map.values().into_iter())).await.unwrap();
+
+    return max_perp_trade_id
 }
 

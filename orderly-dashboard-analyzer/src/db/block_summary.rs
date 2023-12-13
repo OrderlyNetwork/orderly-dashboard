@@ -15,17 +15,17 @@ use crate::schema::block_summary::id;
 #[table_name = "block_summary"]
 pub struct BlockSummary {
     id: i32,
-    latest_block_height: i64,
+    pub latest_block_height: i64,
 
-    pulled_block_height: i64,
-    pulled_block_time: i64,
+    pub pulled_block_height: i64,
+    pub pulled_block_time: i64,
 
-    pulled_event_id: i64,
-    pulled_spot_trade_id: i64,
-    pulled_perp_trade_id: i64,
+    pub pulled_event_id: i64,
+    pub pulled_spot_trade_id: i64,
+    pub pulled_perp_trade_id: i64,
 }
 
-pub async fn get_block_summary() -> Result<BlockSummary, DBException> {
+pub async fn find_block_summary() -> Result<BlockSummary, DBException> {
     use crate::schema::block_summary::dsl::*;
     let select_result = block_summary
         .filter(id.eq(1i32))
