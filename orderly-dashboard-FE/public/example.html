@@ -28,6 +28,14 @@
             <canvas id="chart2"></canvas>
         </div>
     </div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart3"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart4"></canvas>
+        </div>
+    </div>
 </div>
 
 <script src="./javascripts/chart.js@4.4.1.min.js"></script>
@@ -61,6 +69,32 @@
                 data: [{x: '2023-12-06', y: 20}, {x: '2023-12-07', y: 22}, {x: '2023-12-08', y: 24}, {x: '2023-12-09', y: 20}, {x: '2023-12-10', y: 21}, {x: '2023-12-11', y: 18}, {x: '2023-12-12', y: 25}]
             }]
         }
+    });
+
+    const data = {
+        labels: [
+            'Red',
+            'Blue',
+            'Yellow'
+        ],
+        datasets: [{
+            label: 'My First Dataset',
+            data: [300, 50, 100],
+            backgroundColor: [
+                'rgb(255, 99, 132)',
+                'rgb(54, 162, 235)',
+                'rgb(255, 205, 86)'
+            ],
+            hoverOffset: 4
+        }]
+    };
+
+
+    const ctx3 = document.getElementById('chart3');
+    // https://www.chartjs.org/docs/latest/charts/doughnut.html
+    new Chart(ctx3, {
+        type: 'doughnut',
+        data: data,
     });
 </script>
 </body>
