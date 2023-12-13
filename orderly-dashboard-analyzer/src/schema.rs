@@ -87,6 +87,8 @@ diesel::table! {
         total_liquidation_count -> Int8,
         pulled_block_height -> Int8,
         pulled_block_time -> Int8,
+        buy_amount -> Numeric,
+        sell_amount -> Numeric,
     }
 }
 

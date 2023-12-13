@@ -35,15 +35,25 @@ pub struct HourlyOrderlyPerp {
 }
 
 impl HourlyOrderlyPerp {
-    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal) {
+    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64, pulled_block_time: i64) {
         self.trading_fee += fee;
-        self.trading_volume += amount;
+        self.trading_volume += amount.abs();
         self.trading_count += 1;
+        self.pulled_block_height = pulled_block_height;
+        self.pulled_block_time = pulled_block_time;
+    }
+
+    pub fn new_opening(&mut self) {
+        self.opening_count += 1;
+    }
+
+    pub fn new_user(&mut self) {
+        self.trading_user_count += 1;
     }
 }
 
 
-#[derive(Debug, PartialEq, Eq, Hash,Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct HourlyOrderlyPerpKey {
     pub symbol: String,
     pub block_hour: i64,

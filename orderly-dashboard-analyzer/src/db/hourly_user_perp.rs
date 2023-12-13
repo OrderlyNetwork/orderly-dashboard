@@ -34,9 +34,22 @@ pub struct HourlyUserPerp {
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct HourlyUserPerpKey {
-    account_id: String,
-    symbol: String,
-    block_hour: i64,
+    pub account_id: String,
+    pub symbol: String,
+    pub block_hour: i64,
+}
+
+impl HourlyUserPerp {
+    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64, pulled_block_time: i64) -> bool {
+        let new_hourly_user = self.trading_count == 0;
+
+        self.trading_fee += fee;
+        self.trading_volume += amount.abs();
+        self.trading_count += 1;
+        self.pulled_block_height = pulled_block_height;
+        self.pulled_block_time = pulled_block_time;
+        new_hourly_user
+    }
 }
 
 impl PrimaryKey for HourlyUserPerpKey {}
@@ -82,7 +95,7 @@ pub async fn find_hourly_user_perp(p_account_id: String, p_symbol: String, p_blo
     }
 }
 
-pub async fn create_or_update_hourly_user_perp(p_hourly_user_perp_vec: Vec<HourlyUserPerp>) -> Result<usize, DBException> {
+pub async fn create_or_update_hourly_user_perp(p_hourly_user_perp_vec: Vec<&HourlyUserPerp>) -> Result<usize, DBException> {
     use crate::schema::hourly_user_perp::dsl::*;
 
     let mut row_nums = 0;

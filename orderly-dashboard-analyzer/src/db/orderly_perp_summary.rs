@@ -1,15 +1,18 @@
+use std::cmp::max;
+
 use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::BigDecimal;
 use diesel::prelude::*;
 use diesel::result::Error;
+use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;
 
 use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
 use crate::schema::orderly_perp_summary;
 
-#[derive(Queryable, Insertable, Debug,Clone)]
+#[derive(Queryable, Insertable, Debug, Clone)]
 #[table_name = "orderly_perp_summary"]
 pub struct OrderlyPerpSummary {
     symbol: String,
@@ -25,10 +28,38 @@ pub struct OrderlyPerpSummary {
 
     pulled_block_height: i64,
     pulled_block_time: i64,
+
+    buy_amount: BigDecimal,
+    sell_amount: BigDecimal,
+}
+
+impl OrderlyPerpSummary {
+    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64, pulled_block_time: i64, side: PurchaseSide) {
+        self.total_trading_fee += fee;
+        self.total_trading_volume += amount.clone().abs();
+        self.total_trading_count += 1;
+        self.pulled_block_height = pulled_block_height;
+        self.pulled_block_time = pulled_block_time;
+
+        match side {
+            PurchaseSide::Buy => {
+                self.buy_amount += amount.clone();
+            }
+            PurchaseSide::Sell => {
+                self.sell_amount += amount.clone();
+            }
+        }
+
+        self.open_interest = max(self.buy_amount.clone(), self.sell_amount.clone());
+    }
+
+    pub fn new_user(&mut self) {
+        self.total_trading_user_count += 1;
+    }
 }
 
 
-pub async fn find_hourly_user_perp(p_symbol: String) -> Result<OrderlyPerpSummary, DBException> {
+pub async fn find_orderly_perp_summary(p_symbol: String) -> Result<OrderlyPerpSummary, DBException> {
     use crate::schema::orderly_perp_summary::dsl::*;
     let select_result = orderly_perp_summary
         .filter(symbol.eq(p_symbol.clone()))
@@ -52,6 +83,8 @@ pub async fn find_hourly_user_perp(p_symbol: String) -> Result<OrderlyPerpSummar
                     total_liquidation_count: 0,
                     pulled_block_height: 0,
                     pulled_block_time: 0,
+                    buy_amount: Default::default(),
+                    sell_amount: Default::default(),
                 };
 
                 Ok(new_perp)
@@ -63,7 +96,7 @@ pub async fn find_hourly_user_perp(p_symbol: String) -> Result<OrderlyPerpSummar
     }
 }
 
-pub async fn create_or_update_hourly_user_perp(p_orderly_perp_summary_vec: Vec<OrderlyPerpSummary>) -> Result<usize, DBException> {
+pub async fn create_or_update_orderly_perp_summary(p_orderly_perp_summary_vec: Vec<&OrderlyPerpSummary>) -> Result<usize, DBException> {
     use crate::schema::orderly_perp_summary::dsl::*;
 
     let mut row_nums = 0;
@@ -81,7 +114,9 @@ pub async fn create_or_update_hourly_user_perp(p_orderly_perp_summary_vec: Vec<O
                 total_liquidation_amount.eq(summary.total_liquidation_amount.clone()),
                 total_liquidation_count.eq(summary.total_liquidation_count.clone()),
                 pulled_block_height.eq(summary.pulled_block_height.clone()),
-                pulled_block_time.eq(summary.pulled_block_time.clone())
+                pulled_block_time.eq(summary.pulled_block_time.clone()),
+                buy_amount.eq(summary.buy_amount.clone()),
+                sell_amount.eq(summary.sell_amount.clone())
             ))
             .execute_async(&POOL)
             .await;

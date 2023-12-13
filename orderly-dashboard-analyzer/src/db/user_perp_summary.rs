@@ -10,7 +10,7 @@ use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
 use crate::schema::user_perp_summary;
 
-#[derive(Queryable, Insertable, Debug,Clone)]
+#[derive(Queryable, Insertable, Debug, Clone)]
 #[table_name = "user_perp_summary"]
 pub struct UserPerpSummary {
     account_id: String,
@@ -34,11 +34,30 @@ pub struct UserPerpSummary {
     pulled_block_time: i64,
 }
 
+impl UserPerpSummary {
+    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64, pulled_block_time: i64) -> (bool, bool) {
+        let is_opening = self.holding.clone() == Default::default()
+            || (self.holding.clone().sign() != amount.clone().sign()
+            && amount.clone().abs() > self.holding.clone().abs()
+        );
+
+        let is_new_user = self.total_trading_count == 0;
+        self.total_trading_fee += fee;
+        self.total_trading_volume += amount.clone().abs();
+        self.total_trading_count += 1;
+        self.pulled_block_height = pulled_block_height;
+        self.pulled_block_time = pulled_block_time;
+        self.holding += amount;
+
+        (is_opening, is_new_user)
+    }
+}
+
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct UserPerpSummaryKey {
-    account_id: String,
-    symbol: String,
+    pub account_id: String,
+    pub symbol: String,
 }
 
 impl PrimaryKey for UserPerpSummaryKey {}
@@ -84,7 +103,7 @@ pub async fn find_user_perp_summary(p_account_id: String, p_symbol: String) -> R
     }
 }
 
-pub async fn create_or_update_user_perp_summary(p_user_perp_summary_vec: Vec<UserPerpSummary>) -> Result<usize, DBException> {
+pub async fn create_or_update_user_perp_summary(p_user_perp_summary_vec: Vec<&UserPerpSummary>) -> Result<usize, DBException> {
     use crate::schema::user_perp_summary::dsl::*;
 
     let mut row_nums = 0;
