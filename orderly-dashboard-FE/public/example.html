@@ -96,6 +96,17 @@
         type: 'doughnut',
         data: data,
     });
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'http://localhost:8088');
+    xhr.send();
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            alert(xhr.responseText);
+        }
+        console.log(xhr.responseText);
+    };
 </script>
 </body>
 </html>
