@@ -9,6 +9,5 @@ CREATE TABLE IF NOT EXISTS block_summary
     pulled_block_time    bigint not null,
 
     pulled_event_id      bigint not null,
-    pulled_spot_trade_id bigint not null,
     pulled_perp_trade_id bigint not null
 );

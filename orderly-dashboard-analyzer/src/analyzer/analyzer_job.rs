@@ -11,13 +11,17 @@ use crate::analyzer::perp_analyzer::analyzer_perp_trade;
 use crate::analyzer::transaction_analyzer::analyzer_transaction;
 use crate::db::block_summary::{create_or_update_block_summary, find_block_summary};
 
+const ANALYZER_CONTEXT: &str = "Analyzer-Job";
+
 pub fn start_analyzer_job(interval_seconds: u64, base_url: String, start_block: i64) {
-    tokio::spawn( async move{
+    tokio::spawn(async move {
         loop {
             let mut block_summary = find_block_summary().await.unwrap();
             let from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
             let to_block = min(from_block + 50, block_summary.latest_block_height);
 
+            let timestamp = Utc::now().timestamp_millis();
+            tracing::info!(target: ANALYZER_CONTEXT,"start pull block from {} to {}.",from_block,to_block);
             let response_str = get_indexer_data(from_block, to_block, base_url.clone()).await;
             match response_str {
                 Ok(json_str) => {
@@ -31,6 +35,7 @@ pub fn start_analyzer_job(interval_seconds: u64, base_url: String, start_block: 
                 }
                 Err(_) => {}
             }
+            tracing::info!(target: ANALYZER_CONTEXT,"end pull block from {} to {}. cost:{}",from_block,to_block,Utc::now().timestamp_millis()-timestamp);
             time::sleep(Duration::from_secs(interval_seconds.clone())).await;
         }
     });

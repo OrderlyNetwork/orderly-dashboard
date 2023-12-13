@@ -38,8 +38,6 @@ async fn health() -> impl Responder {
 async fn main() -> std::io::Result<()> {
     init_log();
     start_analyzer_job(20, "http://localhost:8018".to_string(), 1145079);
-
-
     HttpServer::new(|| {
         App::new()
             .service(health)

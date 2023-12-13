@@ -7,7 +7,6 @@ diesel::table! {
         pulled_block_height -> Int8,
         pulled_block_time -> Int8,
         pulled_event_id -> Int8,
-        pulled_spot_trade_id -> Int8,
         pulled_perp_trade_id -> Int8,
     }
 }
