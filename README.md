@@ -6,6 +6,8 @@ Orderly Dashboard is aim to be a web-based data analyze platform that will prese
 * [Orderly dashboard analyzer](./orderly-dashboard-analyzer)
 * [Orderly dashboard FE](./orderly-dashboard-FE)
   * A web front end for query and present data from orderly dashboard indexer or analyzer
+* [Orderly dashboard query service](./orderly-dashboard-query-service)
+  * Provide query api for orderly dashboard FE, source data generate by [Orderly dashboard analyzer](./orderly-dashboard-analyzer) or [Orderly dashboard indexer](./orderly-dashboard-indexer)
 ## Repository structure
 This Repository is organized by rust [cargo workspace](https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html)
 It will start with a [workspace] section that will allow us to add members to the workspace by specifying the path to the package with our binary crate; in this case, that path is adder:  

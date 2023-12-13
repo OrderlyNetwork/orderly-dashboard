@@ -2,4 +2,5 @@
 members = [
     "orderly-dashboard-analyzer",
     "orderly-dashboard-indexer",
+    "orderly-dashboard-query-service",
 ]
