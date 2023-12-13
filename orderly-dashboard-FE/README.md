@@ -13,7 +13,7 @@ Window
 set DEBUG=myapp:* & npm start
 ```
 Visit on explorer  
-http://localhost:3000/dashboard.html
+http://localhost:3000/example.html
 
 ## Chart getting started
 * [Create a Chart](https://www.chartjs.org/docs/latest/getting-started/#create-a-chart)
