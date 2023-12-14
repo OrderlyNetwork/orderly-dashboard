@@ -18,7 +18,7 @@ pub fn start_analyzer_job(interval_seconds: u64, base_url: String, start_block: 
         loop {
             let mut block_summary = find_block_summary().await.unwrap();
             let from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
-            let to_block = min(from_block + 50, block_summary.latest_block_height);
+            let to_block = min(from_block + 500, block_summary.latest_block_height);
 
             let timestamp = Utc::now().timestamp_millis();
             tracing::info!(target: ANALYZER_CONTEXT,"start pull block from {} to {}.",from_block,to_block);

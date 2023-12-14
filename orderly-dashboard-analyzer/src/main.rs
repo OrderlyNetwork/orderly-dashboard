@@ -13,10 +13,10 @@ use reqwest;
 
 use crate::analyzer::analyzer_job::start_analyzer_job;
 
-mod config;
 mod analyzer;
 mod db;
 mod schema;
+mod config;
 
 const ORDERLY_DASHBOARD_ANALYZER: &str = "orderly-dashboard-analyzer";
 
@@ -36,8 +36,9 @@ async fn health() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+
     init_log();
-    start_analyzer_job(20, "http://localhost:8018".to_string(), 1145079);
+    start_analyzer_job(5, "http://localhost:8018".to_string(), 1145079);
     HttpServer::new(|| {
         App::new()
             .service(health)
