@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS hourly_user_perp
 (
     account_id                 text    not null,
     symbol                     text    not null,
-    block_hour                 bigint  not null,
+    block_hour                 timestamp  not null,
 
     trading_fee                numeric not null,
     trading_volume             numeric not null,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS hourly_user_perp
     liquidation_count          bigint  not null,
 
     pulled_block_height        bigint  not null,
-    pulled_block_time          bigint  not null,
+    pulled_block_time          timestamp  not null,
 
     constraint hourly_user_perp_uq primary key (account_id, symbol, block_hour)
 );

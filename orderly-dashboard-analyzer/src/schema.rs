@@ -5,7 +5,7 @@ diesel::table! {
         id -> Int4,
         latest_block_height -> Int8,
         pulled_block_height -> Int8,
-        pulled_block_time -> Int8,
+        pulled_block_time -> Timestamp,
         pulled_event_id -> Int8,
         pulled_perp_trade_id -> Int8,
     }
@@ -14,7 +14,7 @@ diesel::table! {
 diesel::table! {
     hourly_orderly_perp (symbol, block_hour) {
         symbol -> Text,
-        block_hour -> Int8,
+        block_hour -> Timestamp,
         trading_fee -> Numeric,
         trading_volume -> Numeric,
         trading_count -> Int8,
@@ -23,21 +23,21 @@ diesel::table! {
         liquidation_amount -> Numeric,
         liquidation_count -> Int8,
         pulled_block_height -> Int8,
-        pulled_block_time -> Int8,
+        pulled_block_time -> Timestamp,
     }
 }
 
 diesel::table! {
     hourly_orderly_token (token, block_hour) {
         token -> Text,
-        block_hour -> Int8,
+        block_hour -> Timestamp,
         chain_id -> Text,
         withdraw_amount -> Numeric,
         withdraw_count -> Int8,
         deposit_amount -> Numeric,
         deposit_count -> Int8,
         pulled_block_height -> Int8,
-        pulled_block_time -> Int8,
+        pulled_block_time -> Timestamp,
     }
 }
 
@@ -45,7 +45,7 @@ diesel::table! {
     hourly_user_perp (account_id, symbol, block_hour) {
         account_id -> Text,
         symbol -> Text,
-        block_hour -> Int8,
+        block_hour -> Timestamp,
         trading_fee -> Numeric,
         trading_volume -> Numeric,
         trading_count -> Int8,
@@ -55,7 +55,7 @@ diesel::table! {
         liquidation_amount -> Numeric,
         liquidation_count -> Int8,
         pulled_block_height -> Int8,
-        pulled_block_time -> Int8,
+        pulled_block_time -> Timestamp,
     }
 }
 
@@ -63,14 +63,14 @@ diesel::table! {
     hourly_user_token (account_id, block_hour, token, chain_id) {
         account_id -> Text,
         token -> Text,
-        block_hour -> Int8,
+        block_hour -> Timestamp,
         chain_id -> Text,
         withdraw_amount -> Numeric,
         withdraw_count -> Int8,
         deposit_amount -> Numeric,
         deposit_count -> Int8,
         pulled_block_height -> Int8,
-        pulled_block_time -> Int8,
+        pulled_block_time -> Timestamp,
     }
 }
 
@@ -85,7 +85,7 @@ diesel::table! {
         total_liquidation_amount -> Numeric,
         total_liquidation_count -> Int8,
         pulled_block_height -> Int8,
-        pulled_block_time -> Int8,
+        pulled_block_time -> Timestamp,
         buy_amount -> Numeric,
         sell_amount -> Numeric,
     }
@@ -101,7 +101,7 @@ diesel::table! {
         total_deposit_amount -> Numeric,
         total_deposit_count -> Int8,
         pulled_block_height -> Int8,
-        pulled_block_time -> Int8,
+        pulled_block_time -> Timestamp,
     }
 }
 
@@ -120,7 +120,7 @@ diesel::table! {
         total_liquidation_amount -> Numeric,
         total_liquidation_count -> Int8,
         pulled_block_height -> Int8,
-        pulled_block_time -> Int8,
+        pulled_block_time -> Timestamp,
     }
 }
 
@@ -135,7 +135,7 @@ diesel::table! {
         total_withdraw_count -> Int8,
         total_deposit_count -> Int8,
         pulled_block_height -> Int8,
-        pulled_block_time -> Int8,
+        pulled_block_time -> Timestamp,
     }
 }
 

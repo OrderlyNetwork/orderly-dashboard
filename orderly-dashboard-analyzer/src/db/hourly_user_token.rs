@@ -1,14 +1,15 @@
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
+use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::db::{DB_CONTEXT, PrimaryKey};
-use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
+use crate::db::POOL;
+use crate::db::{PrimaryKey, DB_CONTEXT};
 use crate::schema::hourly_user_token;
 use crate::schema::hourly_user_token::{chain_id, deposit_amount};
 
@@ -17,7 +18,7 @@ use crate::schema::hourly_user_token::{chain_id, deposit_amount};
 pub struct HourlyUserToken {
     pub account_id: String,
     pub token: String,
-    pub block_hour: i64,
+    pub block_hour: NaiveDateTime,
     pub chain_id: String,
 
     pub withdraw_amount: BigDecimal,
@@ -26,18 +27,32 @@ pub struct HourlyUserToken {
     pub deposit_count: i64,
 
     pub pulled_block_height: i64,
-    pub pulled_block_time: i64,
+    pub pulled_block_time: NaiveDateTime,
 }
 
 impl HourlyUserToken {
-    pub fn deposit(&mut self, p_deposit_amount: BigDecimal) {
+    pub fn deposit(
+        &mut self,
+        p_deposit_amount: BigDecimal,
+        p_block_height: i64,
+        p_block_time: NaiveDateTime,
+    ) {
         self.deposit_amount += p_deposit_amount;
         self.deposit_count += 1;
+        self.pulled_block_time = p_block_time;
+        self.pulled_block_height = p_block_height;
     }
 
-    pub fn withdraw(&mut self, p_withdraw_amount: BigDecimal) {
+    pub fn withdraw(
+        &mut self,
+        p_withdraw_amount: BigDecimal,
+        p_block_height: i64,
+        p_block_time: NaiveDateTime,
+    ) {
         self.withdraw_amount += p_withdraw_amount;
         self.deposit_count += 1;
+        self.pulled_block_time = p_block_time;
+        self.pulled_block_height = p_block_height;
     }
 }
 
@@ -45,14 +60,18 @@ impl HourlyUserToken {
 pub struct HourlyUserTokenKey {
     pub account_id: String,
     pub token: String,
-    pub block_hour: i64,
+    pub block_hour: NaiveDateTime,
     pub chain_id: String,
 }
 
 impl PrimaryKey for HourlyUserTokenKey {}
 
-
-pub async fn find_hourly_user_token(ori_account_id: String, ori_token: String, ori_block_hour: i64, ori_chain_id: String) -> Result<HourlyUserToken, DBException> {
+pub async fn find_hourly_user_token(
+    ori_account_id: String,
+    ori_token: String,
+    ori_block_hour: NaiveDateTime,
+    ori_chain_id: String,
+) -> Result<HourlyUserToken, DBException> {
     use crate::schema::hourly_user_token::dsl::*;
     let result = hourly_user_token
         .filter(account_id.eq(ori_account_id.clone()))
@@ -63,9 +82,7 @@ pub async fn find_hourly_user_token(ori_account_id: String, ori_token: String, o
         .await;
 
     match result {
-        Ok(res) => {
-            Ok(res)
-        }
+        Ok(res) => Ok(res),
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
                 let hourly_data = HourlyUserToken {
@@ -78,18 +95,18 @@ pub async fn find_hourly_user_token(ori_account_id: String, ori_token: String, o
                     deposit_amount: Default::default(),
                     deposit_count: 0,
                     pulled_block_height: 0,
-                    pulled_block_time: 0,
+                    pulled_block_time: Default::default(),
                 };
                 Ok(hourly_data)
             }
-            _ => {
-                Err(QueryError)
-            }
-        }
+            _ => Err(QueryError),
+        },
     }
 }
 
-pub async fn create_or_update_hourly_user_token(hourly_data_vec: Vec<HourlyUserToken>) -> Result<usize, DBException> {
+pub async fn create_or_update_hourly_user_token(
+    hourly_data_vec: Vec<HourlyUserToken>,
+) -> Result<usize, DBException> {
     use crate::schema::hourly_user_token::dsl::*;
 
     let mut row_nums = 0;
@@ -104,13 +121,13 @@ pub async fn create_or_update_hourly_user_token(hourly_data_vec: Vec<HourlyUserT
                 deposit_amount.eq(hourly_data.deposit_amount.clone()),
                 deposit_count.eq(hourly_data.deposit_count.clone()),
                 pulled_block_height.eq(hourly_data.pulled_block_height.clone()),
-                pulled_block_time.eq(hourly_data.pulled_block_time.clone())
+                pulled_block_time.eq(hourly_data.pulled_block_time.clone()),
             ))
             .execute_async(&POOL)
             .await;
 
         match result {
-            Ok(_) => { row_nums += 1 }
+            Ok(_) => row_nums += 1,
             Err(error) => {
                 tracing::warn!(target: DB_CONTEXT,"create_or_update_hourly_data error. err:{:?}",error);
                 return Err(InsertError);

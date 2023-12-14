@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS block_summary
     latest_block_height  bigint not null,
 
     pulled_block_height  bigint not null,
-    pulled_block_time    bigint not null,
+    pulled_block_time    timestamp not null,
 
     pulled_event_id      bigint not null,
     pulled_perp_trade_id bigint not null

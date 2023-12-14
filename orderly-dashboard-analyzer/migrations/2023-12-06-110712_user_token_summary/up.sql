@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS user_token_summary
     total_deposit_count   bigint  not null,
 
     pulled_block_height   bigint  not null,
-    pulled_block_time     bigint  not null,
+    pulled_block_time     timestamp  not null,
 
     constraint user_token_summary_uq primary key (account_id, token, chain_id)
 );

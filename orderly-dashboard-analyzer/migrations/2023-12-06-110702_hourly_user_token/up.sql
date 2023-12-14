@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS hourly_user_token
 (
     account_id          text    not null,
     token               text    not null,
-    block_hour          bigint  not null,
+    block_hour          timestamp  not null,
     chain_id            text    not null,
 
     withdraw_amount     numeric not null,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS hourly_user_token
     deposit_count       bigint  not null,
 
     pulled_block_height bigint  not null,
-    pulled_block_time   bigint  not null,
+    pulled_block_time   timestamp  not null,
 
     constraint hourly_user_token_uq primary key (account_id, block_hour, token, chain_id)
 );

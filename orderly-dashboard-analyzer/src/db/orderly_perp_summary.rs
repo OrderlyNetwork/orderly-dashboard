@@ -1,15 +1,16 @@
 use std::cmp::max;
 
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
+use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::prelude::*;
 use diesel::result::Error;
 use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;
 
-use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
+use crate::db::POOL;
 use crate::schema::orderly_perp_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
@@ -27,14 +28,21 @@ pub struct OrderlyPerpSummary {
     total_liquidation_count: i64,
 
     pulled_block_height: i64,
-    pulled_block_time: i64,
+    pulled_block_time: NaiveDateTime,
 
     buy_amount: BigDecimal,
     sell_amount: BigDecimal,
 }
 
 impl OrderlyPerpSummary {
-    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64, pulled_block_time: i64, side: PurchaseSide) {
+    pub fn new_trade(
+        &mut self,
+        fee: BigDecimal,
+        amount: BigDecimal,
+        pulled_block_height: i64,
+        pulled_block_time: NaiveDateTime,
+        side: PurchaseSide,
+    ) {
         self.total_trading_fee += fee;
         self.total_trading_volume += amount.clone().abs();
         self.total_trading_count += 1;
@@ -58,8 +66,9 @@ impl OrderlyPerpSummary {
     }
 }
 
-
-pub async fn find_orderly_perp_summary(p_symbol: String) -> Result<OrderlyPerpSummary, DBException> {
+pub async fn find_orderly_perp_summary(
+    p_symbol: String,
+) -> Result<OrderlyPerpSummary, DBException> {
     use crate::schema::orderly_perp_summary::dsl::*;
     let select_result = orderly_perp_summary
         .filter(symbol.eq(p_symbol.clone()))
@@ -67,9 +76,7 @@ pub async fn find_orderly_perp_summary(p_symbol: String) -> Result<OrderlyPerpSu
         .await;
 
     match select_result {
-        Ok(perp_data) => {
-            Ok(perp_data)
-        }
+        Ok(perp_data) => Ok(perp_data),
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
                 let new_perp = OrderlyPerpSummary {
@@ -82,21 +89,21 @@ pub async fn find_orderly_perp_summary(p_symbol: String) -> Result<OrderlyPerpSu
                     total_liquidation_amount: Default::default(),
                     total_liquidation_count: 0,
                     pulled_block_height: 0,
-                    pulled_block_time: 0,
+                    pulled_block_time: Default::default(),
                     buy_amount: Default::default(),
                     sell_amount: Default::default(),
                 };
 
                 Ok(new_perp)
             }
-            _ => {
-                Err(QueryError)
-            }
-        }
+            _ => Err(QueryError),
+        },
     }
 }
 
-pub async fn create_or_update_orderly_perp_summary(p_orderly_perp_summary_vec: Vec<&OrderlyPerpSummary>) -> Result<usize, DBException> {
+pub async fn create_or_update_orderly_perp_summary(
+    p_orderly_perp_summary_vec: Vec<&OrderlyPerpSummary>,
+) -> Result<usize, DBException> {
     use crate::schema::orderly_perp_summary::dsl::*;
 
     let mut row_nums = 0;
@@ -116,7 +123,7 @@ pub async fn create_or_update_orderly_perp_summary(p_orderly_perp_summary_vec: V
                 pulled_block_height.eq(summary.pulled_block_height.clone()),
                 pulled_block_time.eq(summary.pulled_block_time.clone()),
                 buy_amount.eq(summary.buy_amount.clone()),
-                sell_amount.eq(summary.sell_amount.clone())
+                sell_amount.eq(summary.sell_amount.clone()),
             ))
             .execute_async(&POOL)
             .await;

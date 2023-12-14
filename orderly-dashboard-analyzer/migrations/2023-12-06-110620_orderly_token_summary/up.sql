@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS orderly_token_summary
     total_deposit_count   bigint  not null,
 
     pulled_block_height   bigint  not null,
-    pulled_block_time     bigint  not null,
+    pulled_block_time     timestamp  not null,
 
     constraint orderly_token_summary_uq primary key (token, chain_id)
 );

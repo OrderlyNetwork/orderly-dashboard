@@ -1,13 +1,14 @@
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
-use diesel::{Insertable, Queryable};
+use actix_diesel::AsyncError;
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::prelude::*;
 use diesel::result::Error;
+use diesel::{Insertable, Queryable};
 
-use crate::db::DB_CONTEXT;
-use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
+use crate::db::DB_CONTEXT;
+use crate::db::POOL;
 use crate::schema::block_summary;
 use crate::schema::block_summary::id;
 
@@ -18,7 +19,7 @@ pub struct BlockSummary {
     pub latest_block_height: i64,
 
     pub pulled_block_height: i64,
-    pub pulled_block_time: i64,
+    pub pulled_block_time: NaiveDateTime,
 
     pub pulled_event_id: i64,
     pub pulled_perp_trade_id: i64,
@@ -32,16 +33,14 @@ pub async fn find_block_summary() -> Result<BlockSummary, DBException> {
         .await;
 
     match select_result {
-        Ok(result) => {
-            Ok(result)
-        }
+        Ok(result) => Ok(result),
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
                 let result = BlockSummary {
                     id: 1i32,
                     latest_block_height: 1143278,
                     pulled_block_height: 1143268,
-                    pulled_block_time: 0,
+                    pulled_block_time: Default::default(),
                     pulled_event_id: 0,
                     pulled_perp_trade_id: 0,
                 };
@@ -51,7 +50,7 @@ pub async fn find_block_summary() -> Result<BlockSummary, DBException> {
                 tracing::warn!(target: DB_CONTEXT,"get_block_summary error. err:{:?}",error);
                 Err(QueryError)
             }
-        }
+        },
     }
 }
 
@@ -66,7 +65,7 @@ pub async fn create_or_update_block_summary(summary: BlockSummary) {
             pulled_block_height.eq(summary.pulled_block_height.clone()),
             pulled_block_time.eq(summary.pulled_block_time.clone()),
             pulled_event_id.eq(summary.pulled_event_id.clone()),
-            pulled_perp_trade_id.eq(summary.pulled_perp_trade_id.clone())
+            pulled_perp_trade_id.eq(summary.pulled_perp_trade_id.clone()),
         ))
         .execute_async(&POOL)
         .await;

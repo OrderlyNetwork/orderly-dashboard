@@ -1,5 +1,5 @@
 {
-  "indexer_address": "http://localhost:8082",
-  "init_block": 300,
-  "pull_interval": 300
+  "indexer_address": "http://localhost:8018",
+  "start_block": 1145079,
+  "pull_interval": 5
 }

@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS hourly_orderly_perp
 (
     symbol              text    not null,
-    block_hour          bigint  not null,
+    block_hour          timestamp  not null,
 
     trading_fee         numeric not null,
     trading_volume      numeric not null,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS hourly_orderly_perp
     liquidation_count   bigint  not null,
 
     pulled_block_height bigint  not null,
-    pulled_block_time   bigint  not null,
+    pulled_block_time   timestamp  not null,
     constraint hourly_orderly_perp_uq primary key (symbol, block_hour)
 );
 

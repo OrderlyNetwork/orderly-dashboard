@@ -9,13 +9,13 @@ use once_cell::sync::Lazy;
 
 pub mod block_summary;
 pub mod hourly_orderly_perp;
-pub mod orderly_perp_summary;
 pub mod hourly_orderly_token;
 pub mod hourly_user_perp;
-pub mod orderly_token_summary;
-pub mod user_token_summary;
-pub mod user_perp_summary;
 pub mod hourly_user_token;
+pub mod orderly_perp_summary;
+pub mod orderly_token_summary;
+pub mod user_perp_summary;
+pub mod user_token_summary;
 
 pub const DB_CONTEXT: &str = "DB_operation";
 

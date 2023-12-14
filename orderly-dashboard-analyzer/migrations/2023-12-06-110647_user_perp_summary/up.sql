@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS user_perp_summary
     total_liquidation_count  bigint  not null,
 
     pulled_block_height      bigint  not null,
-    pulled_block_time        bigint  not null,
+    pulled_block_time        timestamp  not null,
     constraint user_perp_summary_uq primary key (account_id, symbol)
 );
 

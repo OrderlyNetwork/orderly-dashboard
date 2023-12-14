@@ -1,21 +1,22 @@
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
+use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
-use diesel::{Insertable, Queryable};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
+use diesel::{Insertable, Queryable};
 
-use crate::db::{POOL, PrimaryKey};
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
+use crate::db::{PrimaryKey, POOL};
 use crate::schema::hourly_orderly_token;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "hourly_orderly_token"]
 pub struct HourlyOrderlyToken {
     pub token: String,
-    pub block_hour: i64,
+    pub block_hour: NaiveDateTime,
     pub chain_id: String,
 
     pub withdraw_amount: BigDecimal,
@@ -24,32 +25,49 @@ pub struct HourlyOrderlyToken {
     pub deposit_count: i64,
 
     pub pulled_block_height: i64,
-    pub pulled_block_time: i64,
+    pub pulled_block_time: NaiveDateTime,
 }
 
-impl HourlyOrderlyToken{
-    pub fn deposit(&mut self, p_deposit_amount: BigDecimal) {
+impl HourlyOrderlyToken {
+    pub fn deposit(
+        &mut self,
+        p_deposit_amount: BigDecimal,
+        p_block_height: i64,
+        p_block_time: NaiveDateTime,
+    ) {
         self.deposit_amount += p_deposit_amount;
         self.deposit_count += 1;
+        self.pulled_block_time = p_block_time;
+        self.pulled_block_height = p_block_height;
     }
 
-    pub fn withdraw(&mut self, p_withdraw_amount: BigDecimal) {
+    pub fn withdraw(
+        &mut self,
+        p_withdraw_amount: BigDecimal,
+        p_block_height: i64,
+        p_block_time: NaiveDateTime,
+    ) {
         self.withdraw_amount += p_withdraw_amount;
         self.deposit_count += 1;
+        self.pulled_block_time = p_block_time;
+        self.pulled_block_height = p_block_height;
     }
 }
-
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct HourlyOrderlyTokenKey {
     pub token: String,
-    pub block_hour: i64,
+    pub block_hour: NaiveDateTime,
     pub chain_id: String,
 }
 
 impl PrimaryKey for HourlyOrderlyTokenKey {}
 
-pub async fn find_hourly_orderly_token(p_token: String, p_block_hour: i64, p_chain_id: String) -> Result<HourlyOrderlyToken, DBException> {
+pub async fn find_hourly_orderly_token(
+    p_token: String,
+    p_block_hour: NaiveDateTime,
+    p_chain_id: String,
+) -> Result<HourlyOrderlyToken, DBException> {
     use crate::schema::hourly_orderly_token::dsl::*;
 
     let select_result = hourly_orderly_token
@@ -60,9 +78,7 @@ pub async fn find_hourly_orderly_token(p_token: String, p_block_hour: i64, p_cha
         .await;
 
     match select_result {
-        Ok(hourly_data) => {
-            Ok(hourly_data)
-        }
+        Ok(hourly_data) => Ok(hourly_data),
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
                 let hourly_data = HourlyOrderlyToken {
@@ -74,18 +90,18 @@ pub async fn find_hourly_orderly_token(p_token: String, p_block_hour: i64, p_cha
                     deposit_amount: Default::default(),
                     deposit_count: 0,
                     pulled_block_height: 0,
-                    pulled_block_time: 0,
+                    pulled_block_time: Default::default(),
                 };
                 Ok(hourly_data)
             }
-            _ => {
-                Err(QueryError)
-            }
-        }
+            _ => Err(QueryError),
+        },
     }
 }
 
-pub async fn create_or_update_hourly_orderly_token(p_hourly_data_vec: Vec<HourlyOrderlyToken>) -> Result<usize, DBException> {
+pub async fn create_or_update_hourly_orderly_token(
+    p_hourly_data_vec: Vec<HourlyOrderlyToken>,
+) -> Result<usize, DBException> {
     use crate::schema::hourly_orderly_token::dsl::*;
     let mut row_nums = 0;
     for hourly_data in p_hourly_data_vec {
@@ -115,7 +131,3 @@ pub async fn create_or_update_hourly_orderly_token(p_hourly_data_vec: Vec<Hourly
     }
     return Ok(row_nums);
 }
-
-
-
-

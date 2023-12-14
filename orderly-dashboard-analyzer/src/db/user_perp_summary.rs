@@ -1,13 +1,14 @@
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
+use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::db::{POOL, PrimaryKey};
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
+use crate::db::{PrimaryKey, POOL};
 use crate::schema::user_perp_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
@@ -31,15 +32,20 @@ pub struct UserPerpSummary {
     total_liquidation_count: i64,
 
     pulled_block_height: i64,
-    pulled_block_time: i64,
+    pulled_block_time: NaiveDateTime,
 }
 
 impl UserPerpSummary {
-    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64, pulled_block_time: i64) -> (bool, bool) {
+    pub fn new_trade(
+        &mut self,
+        fee: BigDecimal,
+        amount: BigDecimal,
+        pulled_block_height: i64,
+        pulled_block_time: NaiveDateTime,
+    ) -> (bool, bool) {
         let is_opening = self.holding.clone() == Default::default()
             || (self.holding.clone().sign() != amount.clone().sign()
-            && amount.clone().abs() > self.holding.clone().abs()
-        );
+                && amount.clone().abs() > self.holding.clone().abs());
 
         let is_new_user = self.total_trading_count == 0;
         self.total_trading_fee += fee;
@@ -53,7 +59,6 @@ impl UserPerpSummary {
     }
 }
 
-
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct UserPerpSummaryKey {
     pub account_id: String,
@@ -62,8 +67,10 @@ pub struct UserPerpSummaryKey {
 
 impl PrimaryKey for UserPerpSummaryKey {}
 
-
-pub async fn find_user_perp_summary(p_account_id: String, p_symbol: String) -> Result<UserPerpSummary, DBException> {
+pub async fn find_user_perp_summary(
+    p_account_id: String,
+    p_symbol: String,
+) -> Result<UserPerpSummary, DBException> {
     use crate::schema::user_perp_summary::dsl::*;
     let select_result = user_perp_summary
         .filter(account_id.eq(p_account_id.clone()))
@@ -72,9 +79,7 @@ pub async fn find_user_perp_summary(p_account_id: String, p_symbol: String) -> R
         .await;
 
     match select_result {
-        Ok(perp_data) => {
-            Ok(perp_data)
-        }
+        Ok(perp_data) => Ok(perp_data),
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
                 let new_perp = UserPerpSummary {
@@ -91,19 +96,19 @@ pub async fn find_user_perp_summary(p_account_id: String, p_symbol: String) -> R
                     total_liquidation_amount: Default::default(),
                     total_liquidation_count: 0,
                     pulled_block_height: 0,
-                    pulled_block_time: 0,
+                    pulled_block_time: Default::default(),
                 };
 
                 Ok(new_perp)
             }
-            _ => {
-                Err(QueryError)
-            }
-        }
+            _ => Err(QueryError),
+        },
     }
 }
 
-pub async fn create_or_update_user_perp_summary(p_user_perp_summary_vec: Vec<&UserPerpSummary>) -> Result<usize, DBException> {
+pub async fn create_or_update_user_perp_summary(
+    p_user_perp_summary_vec: Vec<&UserPerpSummary>,
+) -> Result<usize, DBException> {
     use crate::schema::user_perp_summary::dsl::*;
 
     let mut row_nums = 0;
@@ -124,7 +129,7 @@ pub async fn create_or_update_user_perp_summary(p_user_perp_summary_vec: Vec<&Us
                 total_liquidation_amount.eq(summary.total_liquidation_amount.clone()),
                 total_liquidation_count.eq(summary.total_liquidation_count.clone()),
                 pulled_block_height.eq(summary.pulled_block_height.clone()),
-                pulled_block_time.eq(summary.pulled_block_time.clone())
+                pulled_block_time.eq(summary.pulled_block_time.clone()),
             ))
             .execute_async(&POOL)
             .await;

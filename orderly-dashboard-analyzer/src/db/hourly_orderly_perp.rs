@@ -1,24 +1,24 @@
 use std::hash::Hash;
 
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
+use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
-use diesel::{Insertable, Queryable};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
+use diesel::{Insertable, Queryable};
 
-use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError, Timeout};
+use crate::db::POOL;
 use crate::schema::hourly_orderly_perp;
 
-#[derive(Insertable, Queryable,
-Debug, Clone)]
+#[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "hourly_orderly_perp"]
 pub struct HourlyOrderlyPerp {
     pub symbol: String,
-    pub block_hour: i64,
+    pub block_hour: NaiveDateTime,
 
     pub trading_fee: BigDecimal,
     pub trading_volume: BigDecimal,
@@ -31,11 +31,17 @@ pub struct HourlyOrderlyPerp {
     pub liquidation_count: i64,
 
     pub pulled_block_height: i64,
-    pub pulled_block_time: i64,
+    pub pulled_block_time: NaiveDateTime,
 }
 
 impl HourlyOrderlyPerp {
-    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64, pulled_block_time: i64) {
+    pub fn new_trade(
+        &mut self,
+        fee: BigDecimal,
+        amount: BigDecimal,
+        pulled_block_height: i64,
+        pulled_block_time: NaiveDateTime,
+    ) {
         self.trading_fee += fee;
         self.trading_volume += amount.abs();
         self.trading_count += 1;
@@ -52,15 +58,16 @@ impl HourlyOrderlyPerp {
     }
 }
 
-
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct HourlyOrderlyPerpKey {
     pub symbol: String,
-    pub block_hour: i64,
+    pub block_hour: NaiveDateTime,
 }
 
-
-pub async fn find_hourly_orderly_perp(p_symbol: String, p_block_hour: i64) -> Result<HourlyOrderlyPerp, DBException> {
+pub async fn find_hourly_orderly_perp(
+    p_symbol: String,
+    p_block_hour: NaiveDateTime,
+) -> Result<HourlyOrderlyPerp, DBException> {
     use crate::schema::hourly_orderly_perp::dsl::*;
     let select_result = hourly_orderly_perp
         .filter(symbol.eq(p_symbol.clone()))
@@ -69,17 +76,13 @@ pub async fn find_hourly_orderly_perp(p_symbol: String, p_block_hour: i64) -> Re
         .await;
 
     match select_result {
-        Ok(hourly_data) => {
-            Ok(hourly_data)
-        }
+        Ok(hourly_data) => Ok(hourly_data),
         Err(error) => match error {
-            AsyncError::Timeout(_) => {
-                Err(Timeout)
-            }
+            AsyncError::Timeout(_) => Err(Timeout),
             AsyncError::Execute(Error::NotFound) => {
                 let new_hourly_data = HourlyOrderlyPerp {
                     symbol: p_symbol.clone(),
-                    block_hour: p_block_hour.clone(),
+                    block_hour: p_block_hour,
                     trading_fee: Default::default(),
                     trading_volume: Default::default(),
                     trading_count: 0,
@@ -88,18 +91,18 @@ pub async fn find_hourly_orderly_perp(p_symbol: String, p_block_hour: i64) -> Re
                     liquidation_amount: Default::default(),
                     liquidation_count: 0,
                     pulled_block_height: 0,
-                    pulled_block_time: 0,
+                    pulled_block_time: Default::default(),
                 };
                 Ok(new_hourly_data)
             }
-            _ => {
-                Err(QueryError)
-            }
-        }
+            _ => Err(QueryError),
+        },
     }
 }
 
-pub async fn create_or_update_hourly_perp(p_hourly_data_vec: Vec<&HourlyOrderlyPerp>) -> Result<usize, DBException> {
+pub async fn create_or_update_hourly_perp(
+    p_hourly_data_vec: Vec<&HourlyOrderlyPerp>,
+) -> Result<usize, DBException> {
     use crate::schema::hourly_orderly_perp::dsl::*;
     let mut row_nums = 0;
     for hourly_data in p_hourly_data_vec {

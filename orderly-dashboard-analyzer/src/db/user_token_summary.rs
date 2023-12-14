@@ -1,14 +1,15 @@
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
+use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
+use chrono::NaiveDateTime;
 use diesel::associations::HasTable;
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::db::{DB_CONTEXT, PrimaryKey};
-use crate::db::POOL;
 use crate::db::user_token_summary::DBException::{InsertError, UpdateError};
+use crate::db::POOL;
+use crate::db::{PrimaryKey, DB_CONTEXT};
 use crate::schema::user_token_summary;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
@@ -26,23 +27,36 @@ pub struct UserTokenSummary {
     pub total_deposit_count: i64,
 
     pub pulled_block_height: i64,
-    pub pulled_block_time: i64,
+    pub pulled_block_time: NaiveDateTime,
 }
 
 impl UserTokenSummary {
-    pub fn deposit(&mut self, p_deposit_amount: BigDecimal) {
+    pub fn deposit(
+        &mut self,
+        p_deposit_amount: BigDecimal,
+        p_block_height: i64,
+        p_block_time: NaiveDateTime,
+    ) {
         self.total_deposit_amount += p_deposit_amount.clone();
         self.total_deposit_count += 1;
         self.balance += p_deposit_amount.clone();
+        self.pulled_block_height = p_block_height;
+        self.pulled_block_time = p_block_time;
     }
 
-    pub fn withdraw(&mut self, p_withdraw_amount: BigDecimal) {
+    pub fn withdraw(
+        &mut self,
+        p_withdraw_amount: BigDecimal,
+        p_block_height: i64,
+        p_block_time: NaiveDateTime,
+    ) {
         self.total_withdraw_amount += p_withdraw_amount.clone();
         self.total_withdraw_count += 1;
         self.balance -= p_withdraw_amount.clone();
+        self.pulled_block_height = p_block_height;
+        self.pulled_block_time = p_block_time;
     }
 }
-
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct UserTokenSummaryKey {
@@ -53,7 +67,6 @@ pub struct UserTokenSummaryKey {
 
 impl PrimaryKey for UserTokenSummaryKey {}
 
-
 #[derive(Debug)]
 pub enum DBException {
     InsertError,
@@ -62,7 +75,11 @@ pub enum DBException {
     Timeout,
 }
 
-pub async fn find_user_token_summary(ori_account_id: String, ori_token: String, ori_chain_id: String) -> Option<UserTokenSummary> {
+pub async fn find_user_token_summary(
+    ori_account_id: String,
+    ori_token: String,
+    ori_chain_id: String,
+) -> Option<UserTokenSummary> {
     use crate::schema::user_token_summary::dsl::*;
     let result = user_token_summary
         .filter(account_id.eq(ori_account_id.clone()))
@@ -72,9 +89,7 @@ pub async fn find_user_token_summary(ori_account_id: String, ori_token: String, 
         .await;
 
     match result {
-        Ok(summary) => {
-            Some(summary)
-        }
+        Ok(summary) => Some(summary),
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
                 let insert_sum = UserTokenSummary {
@@ -87,7 +102,7 @@ pub async fn find_user_token_summary(ori_account_id: String, ori_token: String, 
                     total_withdraw_count: 0,
                     total_deposit_count: 0,
                     pulled_block_height: 0,
-                    pulled_block_time: 0,
+                    pulled_block_time: Default::default(),
                 };
                 return Some(insert_sum);
             }
@@ -95,11 +110,13 @@ pub async fn find_user_token_summary(ori_account_id: String, ori_token: String, 
                 tracing::warn!(target: DB_CONTEXT,"select_user_token_summary fail. err:{:?}",error);
                 None
             }
-        }
+        },
     }
 }
 
-pub async fn create_user_token(user_token_summary_vec: Vec<UserTokenSummary>) -> Result<usize, DBException> {
+pub async fn create_user_token(
+    user_token_summary_vec: Vec<UserTokenSummary>,
+) -> Result<usize, DBException> {
     use crate::schema::user_token_summary::dsl::*;
     let insert_result = diesel::insert_into(user_token_summary)
         .values(user_token_summary_vec)
@@ -108,18 +125,18 @@ pub async fn create_user_token(user_token_summary_vec: Vec<UserTokenSummary>) ->
         .await;
 
     match insert_result {
-        Ok(row_nums) => {
-            Ok(row_nums)
-        }
+        Ok(row_nums) => Ok(row_nums),
         Err(err) => match err {
             _ => {
                 return Err(InsertError);
             }
-        }
+        },
     }
 }
 
-pub async fn create_or_update_user_token_summary(user_token_summary_vec: Vec<UserTokenSummary>) -> Result<usize, DBException> {
+pub async fn create_or_update_user_token_summary(
+    user_token_summary_vec: Vec<UserTokenSummary>,
+) -> Result<usize, DBException> {
     use crate::schema::user_token_summary::dsl::*;
     let mut row_nums = 0;
 
@@ -135,7 +152,7 @@ pub async fn create_or_update_user_token_summary(user_token_summary_vec: Vec<Use
                 total_deposit_amount.eq(summary.total_deposit_amount.clone()),
                 total_deposit_count.eq(summary.total_deposit_count.clone()),
                 pulled_block_height.eq(summary.pulled_block_height.clone()),
-                pulled_block_time.eq(summary.pulled_block_time.clone())
+                pulled_block_time.eq(summary.pulled_block_time.clone()),
             ))
             .execute_async(&POOL)
             .await;
