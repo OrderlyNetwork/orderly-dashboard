@@ -4,8 +4,8 @@ use actix_web::http::header;
 use actix_web::http::header::HeaderValue;
 use actix_web::{get, options, post, web, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
+use config::{CommonConfig, Opts};
 use serde_json::json;
-use config::{Opts, CommonConfig};
 
 #[get("/")]
 async fn hello() -> impl Responder {
