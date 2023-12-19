@@ -98,17 +98,31 @@
         data: data,
     });
 
-    var xhr = new XMLHttpRequest();
-    console.log("port=", process.env.PORT);
-    xhr.open('GET', 'http://localhost:8088');
-    xhr.send();
+    var apiConfig;
+    var xhr1 = new XMLHttpRequest();
+    xhr1.open('GET', 'http://localhost:3000/api'+ '?t='+ (new Date()).getTime().toString());
+    xhr1.send();
 
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            alert(xhr.responseText);
+    xhr1.onreadystatechange = function() {
+        if (xhr1.readyState == 4 && xhr1.status == 200) {
+            console.log(xhr1.responseText);
+            apiConfig = JSON.parse(xhr1.responseText);
+            apiConfigCallback(apiConfig);
         }
-        console.log(xhr.responseText);
     };
+
+    function apiConfigCallback(apiConfig) {
+        var xhr2 = new XMLHttpRequest();
+        console.log("apiConfig.analyzer_api=", apiConfig["analyzer_api"]);
+        xhr2.open('GET', apiConfig["analyzer_api"]);
+        xhr2.send();
+
+        xhr2.onreadystatechange = function() {
+            if (xhr2.readyState == 4 && xhr2.status == 200) {
+                console.log(xhr2.responseText);
+            }
+        };
+    }
 </script>
 </body>
 </html>
