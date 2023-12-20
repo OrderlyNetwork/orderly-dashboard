@@ -68,7 +68,15 @@ fn init_log() {
 /// extract path info using serde
 #[get("/daily_volume")] // <- define path parameters
 async fn daily_volume() -> impl Responder {
-    let mut resp = HttpResponse::Ok().json(json!({"a": 100, "b": 200}));
+    let mut resp = HttpResponse::Ok().json(json!({
+        "success": true,
+        "err_code": 0,
+        "err_msg": null,
+        "data": {
+            "daytime": ["20231213", "20231214", "20231215", "20231216", "20231217", "20231218", "20231219"],
+            "volume": [1950000, 2120000, 2240000, 2170000, 1110000, 2030000, 2080000]
+        }
+    }));
     resp.headers_mut().insert(
         header::ACCESS_CONTROL_ALLOW_ORIGIN,
         HeaderValue::from_static("*"),
