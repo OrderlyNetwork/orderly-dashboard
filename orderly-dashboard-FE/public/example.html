@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link href="./stylesheets/bootstrap@5.3.2.min.css" rel="stylesheet" crossorigin="anonymous">
-<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">-->
 </head>
 <body>
 <div class="container text-center">
     <div class="row">
         <div class="col">
-            Column
+            <div>Column</div>
         </div>
         <div class="col">
             Column
@@ -21,6 +20,7 @@
     </div>
 </div>
 <div class="container">
+    <div>Trading Metrics</div>
     <div class="row">
         <div class="col">
             <canvas id="chart1"></canvas>
@@ -35,6 +35,74 @@
         </div>
         <div class="col">
             <canvas id="chart4"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart5"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart6"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart7"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart8"></canvas>
+        </div>
+    </div>
+    <div>User’s Metrics</div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart9"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart10"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart11"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart12"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart13"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart14"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        Token’s Metrics
+    </div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart15"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart16"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart17"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart18"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart1000"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart1001"></canvas>
         </div>
     </div>
 </div>
@@ -73,11 +141,270 @@
         type: 'line',
         data: {
             datasets: [{
+                label: 'trading fee',
                 data: [{x: '2023-12-06', y: 20}, {x: '2023-12-07', y: 22}, {x: '2023-12-08', y: 24}, {x: '2023-12-09', y: 20}, {x: '2023-12-10', y: 21}, {x: '2023-12-11', y: 18}, {x: '2023-12-12', y: 25}]
             }]
         }
     });
 
+    const ctx3 = document.getElementById('chart3');
+    new Chart(ctx3, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'trading count',
+                data: [{x: '2023-12-06', y: 20}, {x: '2023-12-07', y: 22}, {x: '2023-12-08', y: 24}, {x: '2023-12-09', y: 20}, {x: '2023-12-10', y: 21}, {x: '2023-12-11', y: 18}, {x: '2023-12-12', y: 25}]
+            }]
+        }
+    });
+
+    const ctx4 = document.getElementById('chart4');
+    new Chart(ctx4, {
+        type: 'line',
+        data: {
+            datasets: [{
+                borderColor: '#FF6384',
+                backgroundColor: '#FF6384',
+                label: 'trading user count',
+                data: [{x: '2023-12-06', y: 20}, {x: '2023-12-07', y: 22}, {x: '2023-12-08', y: 24}, {x: '2023-12-09', y: 20}, {x: '2023-12-10', y: 21}, {x: '2023-12-11', y: 18}, {x: '2023-12-12', y: 25}]
+            }]
+        }
+    });
+
+    const ctx5 = document.getElementById('chart5');
+    new Chart(ctx5, {
+        type: 'bar',
+        data: {
+            labels: ['Past 24hours','Past 7Days', 'Past 30Days'],
+            datasets: [{
+                label: 'Average Trading Count In Past 24 Hours/7Days/30Days',
+                data: [37000, 34000, 28000],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const ctx6 = document.getElementById('chart6');
+    new Chart(ctx6, {
+        type: 'bar',
+        data: {
+            labels: ['Past 24hours', 'Past 7Days', 'Past 30Days'],
+            datasets: [{
+                borderColor: '#ff9a63',
+                backgroundColor: '#ff9a63',
+                label: 'Average Trading Fee In Past 24 Hours/7Days/30Days',
+                data: [108000, 96000, 90000],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const ctx7 = document.getElementById('chart7');
+    new Chart(ctx7, {
+        type: 'bar',
+        data: {
+            labels: ['Past 24hours', 'Past 7Days', 'Past 30Days'],
+            datasets: [{
+                borderColor: '#ff9a63',
+                backgroundColor: '#ff9a63',
+                label: 'Average Daily Trading Volume In Past 7 Days/30 Days',
+                data: [108000000, 96000000, 90000000],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    // ===== User metrics ====================
+    const ctx9 = document.getElementById('chart9');
+    new Chart(ctx9, {
+        type: 'bar',
+        data: {
+            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
+            datasets: [{
+                label: 'User’s Daily Trading Volume Ranking In Past 24h',
+                data: [1080000, 960000, 900000, 880000, 860000, 840000, 800000, 600000, 500000, 430000],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const ctx10 = document.getElementById('chart10');
+    new Chart(ctx10, {
+        type: 'bar',
+        data: {
+            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
+            datasets: [{
+                label: 'User’s Daily Trading Volume Ranking In Past 7Days',
+                data: [10800000, 7600000, 7000000, 6800000, 6600000, 6400000, 6000000, 4000000, 3000000, 2300000],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const ctx11 = document.getElementById('chart11');
+    new Chart(ctx11, {
+        type: 'bar',
+        data: {
+            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
+            datasets: [{
+                label: 'User’s Holding Ranking',
+                data: [1080000, 760000, 700000, 680000, 660000, 640000, 600000, 400000, 300000, 230000],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const ctx12 = document.getElementById('chart12');
+    new Chart(ctx12, {
+        type: 'bar',
+        data: {
+            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
+            datasets: [{
+                borderColor: '#ff9a63',
+                backgroundColor: '#ff9a63',
+                label: 'User’s Pnl Ranking In Past 24h',
+                data: [368000.00, 358000.00, 348000.00, 308000.00, 268000.00, 248000.00, 218000.00, 208000.00, 178000.00, 158000.00],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const ctx13 = document.getElementById('chart13');
+    new Chart(ctx13, {
+        type: 'bar',
+        data: {
+            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
+            datasets: [{
+                borderColor: '#ff9a63',
+                backgroundColor: '#ff9a63',
+                label: 'User’s Pnl Ranking In Past 7Days',
+                data: [3680000.50, 3580000.60, 3480000.00, 3080000.00, 2680000.80, 2480000.90, 2180000.88, 2080000.96, 1780000.32, 1580000.58],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    // ===== Token’s Metrics ====================
+    const ctx15 = document.getElementById('chart15');
+    new Chart(ctx15, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Daily Deposit Amount In Orderly',
+                data: [{x: '2023-12-06', y: 10000000.0}, {x: '2023-12-07', y: 11000000.0}, {x: '2023-12-08', y: 12500000.0}, {x: '2023-12-09', y: 15000000.0}, {x: '2023-12-10', y: 19000000.0}, {x: '2023-12-11', y: 21500000.0}, {x: '2023-12-12', y: 26500000.0}]
+            }]
+        }
+    });
+
+    const ctx16 = document.getElementById('chart16');
+    new Chart(ctx16, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Daily Withdraw Amount In Orderly',
+                data: [{x: '2023-12-06', y: 1000000.0}, {x: '2023-12-07', y: 1100000.0}, {x: '2023-12-08', y: 1150000.0}, {x: '2023-12-09', y: 1200000.0}, {x: '2023-12-10', y: 1100000.0}, {x: '2023-12-11', y: 1150000.0}, {x: '2023-12-12', y: 1060000.0}]
+            }]
+        }
+    });
+
+    const ctx17 = document.getElementById('chart17');
+    new Chart(ctx17, {
+        type: 'bar',
+        data: {
+            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
+            datasets: [{
+                borderColor: '#ff9a63',
+                backgroundColor: '#ff9a63',
+                label: 'Daily Deposit Amount Ranking In Past 24h',
+                data: [368000.50, 358000.60, 348000.00, 308000.00, 268000.80, 248000.90, 218000.88, 208000.96, 178000.32, 158000.58],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    const ctx18 = document.getElementById('chart18');
+    new Chart(ctx18, {
+        type: 'bar',
+        data: {
+            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
+            datasets: [{
+                borderColor: '#ff9a63',
+                backgroundColor: '#ff9a63',
+                label: 'Daily Deposit Amount Ranking In Past 7Days',
+                data: [668000.50, 658000.60, 634800.00, 608000.00, 528000.80, 488000.90, 428000.88, 408000.96, 348000.32, 308000.58],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    // =======================================
     const data = {
         labels: [
             'Red',
@@ -97,9 +424,9 @@
     };
 
 
-    const ctx3 = document.getElementById('chart3');
+    const ctx1000 = document.getElementById('chart1000');
     // https://www.chartjs.org/docs/latest/charts/doughnut.html
-    new Chart(ctx3, {
+    new Chart(ctx1000, {
         type: 'doughnut',
         data: data,
     });
