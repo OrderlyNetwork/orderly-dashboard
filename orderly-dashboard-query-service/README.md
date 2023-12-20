@@ -23,6 +23,16 @@ Response format
     "success": true
 }
 ```
+response rust data format is:
+```rust
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
+pub struct Response<T> {
+    pub success: bool,
+    pub err_code: i32,
+    pub err_msg: Option<String>,
+    pub data: Option<T>,
+}
+```
 ### Daily volume
 ```
 GET http://baseUrl/daily_volume
@@ -30,28 +40,48 @@ GET http://baseUrl/daily_volume
 Response
 ```json
 {
-    "data": {
-        "daytime": [
-            "20231213",
-            "20231214",
-            "20231215",
-            "20231216",
-            "20231217",
-            "20231218",
-            "20231219"
-        ],
-        "volume": [
-            1950000,
-            2120000,
-            2240000,
-            2170000,
-            1110000,
-            2030000,
-            2080000
-        ]
-    },
-    "err_code": 0,
-    "err_msg": null,
-    "success": true
+  "success": true,
+  "err_code": 0,
+  "err_msg": null,
+  "data": {
+    "daytime": [
+      "20231213",
+      "20231214",
+      "20231215",
+      "20231216",
+      "20231217",
+      "20231218",
+      "20231219"
+    ],
+    "volume": [
+      1950000.0,
+      2120000.0,
+      2240000.0,
+      2170000.0,
+      1110000.0,
+      2030000.0,
+      2080000.0
+    ]
+  }
+}
+```
+the data format is:
+```rust
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
+pub struct DailyVolumeExtern {
+    pub daytime: Vec<String>,
+    pub volume: Vec<f64>,
+}
+```
+### Daily volume
+```
+GET http://baseUrl/daily_trading_fee
+```
+Response of the data format is:
+```rust
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
+pub struct DailyTradingFeeExtern {
+    pub daytime: Vec<String>,
+    pub fee_amount: Vec<f64>,
 }
 ```

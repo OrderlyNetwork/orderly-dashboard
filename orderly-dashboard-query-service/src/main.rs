@@ -1,16 +1,15 @@
 mod config;
+mod format_extern;
+mod trading_metrics;
 use actix_cors::Cors;
 use actix_web::http::header;
 use actix_web::http::header::HeaderValue;
 use actix_web::{get, options, post, web, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
 use config::{CommonConfig, Opts};
-use serde_json::json;
+use trading_metrics::{daily_trading_fee, daily_volume};
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    println!("request /");
-    let mut resp = HttpResponse::Ok().body("data from query service");
+fn add_base_header(resp: &mut HttpResponse) {
     resp.headers_mut().insert(
         header::ACCESS_CONTROL_ALLOW_ORIGIN,
         HeaderValue::from_static("*"),
@@ -23,6 +22,13 @@ async fn hello() -> impl Responder {
         header::ACCESS_CONTROL_ALLOW_HEADERS,
         HeaderValue::from_static("*"),
     );
+}
+
+#[get("/")]
+async fn hello() -> impl Responder {
+    println!("request /");
+    let mut resp = HttpResponse::Ok().body("data from query service");
+    add_base_header(&mut resp);
 
     resp
 }
@@ -31,18 +37,7 @@ async fn hello() -> impl Responder {
 async fn hello2() -> impl Responder {
     println!("request options");
     let mut resp = HttpResponse::Ok().body("");
-    resp.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_ORIGIN,
-        HeaderValue::from_static("*"),
-    );
-    resp.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_METHODS,
-        HeaderValue::from_static("*"),
-    );
-    resp.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_HEADERS,
-        HeaderValue::from_static("*"),
-    );
+    add_base_header(&mut resp);
 
     resp
 }
@@ -63,34 +58,6 @@ fn init_log() {
         .with_thread_ids(true)
         .with_thread_names(true)
         .init();
-}
-
-/// extract path info using serde
-#[get("/daily_volume")] // <- define path parameters
-async fn daily_volume() -> impl Responder {
-    let mut resp = HttpResponse::Ok().json(json!({
-        "success": true,
-        "err_code": 0,
-        "err_msg": null,
-        "data": {
-            "daytime": ["20231213", "20231214", "20231215", "20231216", "20231217", "20231218", "20231219"],
-            "volume": [1950000, 2120000, 2240000, 2170000, 1110000, 2030000, 2080000]
-        }
-    }));
-    resp.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_ORIGIN,
-        HeaderValue::from_static("*"),
-    );
-    resp.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_METHODS,
-        HeaderValue::from_static("*"),
-    );
-    resp.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_HEADERS,
-        HeaderValue::from_static("*"),
-    );
-
-    resp
 }
 
 #[actix_web::main]
@@ -119,6 +86,7 @@ async fn main() -> std::io::Result<()> {
             .service(echo)
             .service(hello2)
             .service(daily_volume)
+            .service(daily_trading_fee)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind(("127.0.0.1", config.port))?
