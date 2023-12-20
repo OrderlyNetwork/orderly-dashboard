@@ -1,4 +1,5 @@
 mod config;
+mod db;
 mod format_extern;
 mod trading_metrics;
 use actix_cors::Cors;

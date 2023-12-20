@@ -2620,9 +2620,16 @@ name = "orderly-dashboard-query-service"
 version = "0.1.0"
 dependencies = [
  "actix-cors",
+ "actix-diesel",
  "actix-web",
  "anyhow",
+ "bigdecimal",
  "clap",
+ "diesel",
+ "dotenv",
+ "lazy_static",
+ "once_cell",
+ "orderly-dashboard-analyzer",
  "serde",
  "serde_json",
  "tracing",
