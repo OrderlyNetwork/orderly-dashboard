@@ -6,7 +6,7 @@ cargo build --release -p orderly-dashboard-query-service
 ```
 ## run
 ```shell
-./target/release/orderly-dashboard-query-service
+../target/release/orderly-dashboard-query-service -c config.example-staging.json
 ```
 ## APIs
 Response format
@@ -34,8 +34,17 @@ pub struct Response<T> {
 }
 ```
 ### Daily volume
+request format
 ```
-GET http://baseUrl/daily_volume
+GET http://localhost:8089/daily_volume
+```
+result data format is
+```rust
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
+pub struct DailyVolumeExtern {
+    pub daytime: Vec<String>,
+    pub volume: Vec<f64>,
+}
 ```
 Response
 ```json
