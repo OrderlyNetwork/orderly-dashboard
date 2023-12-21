@@ -5,7 +5,7 @@ use std::hash::Hash;
 use actix_diesel::Database;
 use diesel::PgConnection;
 use dotenv::dotenv;
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 
 pub mod block_summary;
 pub mod hourly_orderly_perp;
@@ -20,6 +20,10 @@ pub mod user_token_summary;
 pub const DB_CONTEXT: &str = "DB_operation";
 
 pub static POOL: Lazy<Database<PgConnection>> = Lazy::new(|| establish_connection());
+pub static INITED_DATABASE_URL: OnceCell<String> = OnceCell::new();
+pub fn init_database_url(database_url: String) {
+    INITED_DATABASE_URL.set(database_url).ok();
+}
 
 pub fn establish_connection() -> Database<PgConnection> {
     let database_url = get_database_credentials();
@@ -27,6 +31,9 @@ pub fn establish_connection() -> Database<PgConnection> {
 }
 
 fn get_database_credentials() -> String {
+    if let Some(db_url) = INITED_DATABASE_URL.get() {
+        return db_url.to_string();
+    }
     dotenv().ok();
     env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file")
 }

@@ -1,20 +1,13 @@
 pub mod trading_metrics;
-use actix_diesel::Database;
-use diesel::PgConnection;
 use dotenv::dotenv;
-use once_cell::sync::Lazy;
+use orderly_dashboard_analyzer::db::init_database_url as init_analyzer_database_url;
 use std::env;
 
 #[allow(dead_code)]
 pub const DB_CONTEXT: &str = "DB_operation";
 
-#[allow(dead_code)]
-pub static ANALYZER_POOL: Lazy<Database<PgConnection>> = Lazy::new(|| establish_connection());
-
-#[allow(dead_code)]
-pub fn establish_connection() -> Database<PgConnection> {
-    let database_url = get_database_credentials();
-    Database::builder().pool_max_size(30).open(&database_url)
+pub fn init_analyzer_db_url() {
+    init_analyzer_database_url(get_database_credentials())
 }
 
 fn get_database_credentials() -> String {

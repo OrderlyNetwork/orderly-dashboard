@@ -2,6 +2,7 @@ mod config;
 mod db;
 mod format_extern;
 mod trading_metrics;
+use crate::db::init_analyzer_db_url;
 use actix_cors::Cors;
 use actix_web::http::header;
 use actix_web::http::header::HeaderValue;
@@ -61,9 +62,13 @@ fn init_log() {
         .init();
 }
 
+fn init() {
+    init_log();
+    init_analyzer_db_url();
+}
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    init_log();
+    init();
     let opts = Opts::parse();
     let raw_common_config =
         std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");
