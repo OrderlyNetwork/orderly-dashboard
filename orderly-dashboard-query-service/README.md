@@ -5,6 +5,11 @@ provide query api for orderly dashboard FE
 cargo build --release -p orderly-dashboard-query-service
 ```
 ## run
+### set database url
+```shell
+echo ANALYZER_DATABASE_URL=postgres://username:password@localhost/diesel_demo > .env
+```
+### start run
 ```shell
 ../target/release/orderly-dashboard-query-service -c config.example-staging.json
 ```

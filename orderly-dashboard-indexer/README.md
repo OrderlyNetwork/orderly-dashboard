@@ -25,6 +25,14 @@ Options:
           Print version
 ```
 ## run
+### set database url
+```shell
+echo DATABASE_URL=postgres://username:password@localhost/diesel_demo > .env
+```
+### update schema if sql changed
+```shell
+diesel migration run
+```
 ### local run for test
 We can set `start-block` and `end-block` as params to pull blocks in this range, in fact we just need to set `end-block` because we have init `start-block` in config file
 ```shell
