@@ -15,6 +15,7 @@ mod settings;
 pub mod utils;
 #[macro_use]
 extern crate diesel;
+
 use crate::config::{CommonConfigs, Opts, COMMON_CONFIGS};
 use crate::contract::consume_data_on_block;
 use crate::db::settings::{get_last_rpc_processed_height, update_last_rpc_processed_height};
@@ -78,7 +79,7 @@ pub(crate) async fn consume_data_task(
         }
     }
 
-    let target_block = pull_target_block().await?;
+    let target_block = pull_target_block_until_success().await;
     consume_data_inner(
         start_block.ok_or_else(|| anyhow::anyhow!("start block should not be empty"))? as u64,
         target_block,
@@ -99,6 +100,18 @@ pub async fn pull_target_block() -> Result<u64> {
                 .confirm_block_num
                 .unwrap_or_default()
         } as u64)
+}
+
+pub async fn pull_target_block_until_success() -> u64 {
+    loop {
+        match pull_target_block().await {
+            Ok(block_height) => return block_height,
+            Err(err) => {
+                tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "pull_target_block inner pull_target_block_util_success err: {}", err);
+                tokio::time::sleep(Duration::from_secs(2)).await;
+            }
+        }
+    }
 }
 
 pub async fn consume_data_inner(
