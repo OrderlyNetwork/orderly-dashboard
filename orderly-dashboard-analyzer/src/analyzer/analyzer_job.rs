@@ -1,6 +1,7 @@
 use std::cmp::{max, min};
 use std::time::Duration;
 
+use crate::analyzer::adl_analyzer::analyzer_adl;
 use chrono::{NaiveDateTime, TimeZone, Timelike, Utc};
 use orderly_dashboard_indexer::formats_external::trading_events::{
     TradingEventInnerData, TradingEventsResponse,
@@ -9,7 +10,9 @@ use orderly_dashboard_indexer::formats_external::Response;
 use tokio::time;
 
 use crate::analyzer::analyzer_job::HTTPException::Timeout;
+use crate::analyzer::liquidation_analyzer::analyzer_liquidation;
 use crate::analyzer::perp_analyzer::analyzer_perp_trade;
+use crate::analyzer::settlement_analyzer::analyzer_settlement;
 use crate::analyzer::transaction_analyzer::analyzer_transaction;
 use crate::db::block_summary::{create_or_update_block_summary, find_block_summary};
 
@@ -92,7 +95,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             token_amount,
                             &block_hour,
                             block_num,
-                            block_time,
+                            block_time.clone(),
                         )
                         .await;
                     }
@@ -108,9 +111,62 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         insurance_account_id,
                         insurance_transfer_amount,
                         settlement_executions,
-                    } => {}
-                    TradingEventInnerData::LiquidationResult { .. } => {}
-                    TradingEventInnerData::AdlResult { .. } => {}
+                    } => {
+                        analyzer_settlement(
+                            account_id,
+                            settled_amount,
+                            settled_asset_hash,
+                            insurance_account_id,
+                            insurance_transfer_amount,
+                            settlement_executions,
+                            block_hour,
+                            block_num,
+                            block_time.clone(),
+                        )
+                        .await
+                    }
+                    TradingEventInnerData::LiquidationResult {
+                        liquidated_account_id,
+                        insurance_account_id,
+                        liquidated_asset_hash,
+                        insurance_transfer_amount,
+                        liquidation_transfers,
+                    } => {
+                        analyzer_liquidation(
+                            liquidated_account_id,
+                            insurance_account_id,
+                            liquidated_asset_hash,
+                            insurance_transfer_amount,
+                            liquidation_transfers,
+                            block_num.clone(),
+                            block_time.clone(),
+                            block_hour,
+                        )
+                        .await
+                    }
+                    TradingEventInnerData::AdlResult {
+                        account_id,
+                        insurance_account_id,
+                        symbol_hash,
+                        position_qty_transfer,
+                        cost_position_transfer,
+                        adl_price,
+                        sum_unitary_fundings,
+                    } => {
+                        analyzer_adl(
+                            account_id,
+                            insurance_account_id,
+                            symbol_hash,
+                            position_qty_transfer,
+                            cost_position_transfer,
+                            adl_price,
+                            sum_unitary_fundings,
+                            block_hour,
+                            block_time.clone(),
+                            block_num,
+                        )
+                        .await;
+                    }
                 }
             }
         }

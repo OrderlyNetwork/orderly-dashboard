@@ -3,7 +3,7 @@ use std::hash::Hash;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::NaiveDateTime;
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -32,6 +32,21 @@ pub struct HourlyOrderlyPerp {
 
     pub pulled_block_height: i64,
     pub pulled_block_time: NaiveDateTime,
+}
+
+impl HourlyOrderlyPerp {
+    pub fn new_adl(
+        &mut self,
+        adl_qty: BigDecimal,
+        adl_price: BigDecimal,
+        block_num: i64,
+        block_time: NaiveDateTime,
+    ) {
+        self.liquidation_count += 1;
+        self.liquidation_amount += adl_qty * adl_price;
+        self.pulled_block_time = block_time;
+        self.pulled_block_height = block_num;
+    }
 }
 
 impl HourlyOrderlyPerp {
@@ -100,7 +115,7 @@ pub async fn find_hourly_orderly_perp(
     }
 }
 
-pub async fn create_or_update_hourly_perp(
+pub async fn create_or_update_hourly_orderly_perp(
     p_hourly_data_vec: Vec<&HourlyOrderlyPerp>,
 ) -> Result<usize, DBException> {
     use crate::schema::hourly_orderly_perp::dsl::*;

@@ -57,6 +57,19 @@ impl HourlyUserPerp {
         self.pulled_block_time = pulled_block_time;
         new_hourly_user
     }
+
+    pub fn new_adl(
+        &mut self,
+        adl_qty: BigDecimal,
+        adl_price: BigDecimal,
+        block_num: i64,
+        block_time: NaiveDateTime,
+    ) {
+        self.liquidation_count += 1;
+        self.liquidation_amount += adl_qty * adl_price;
+        self.pulled_block_time = block_time;
+        self.pulled_block_height = block_num;
+    }
 }
 
 impl PrimaryKey for HourlyUserPerpKey {}

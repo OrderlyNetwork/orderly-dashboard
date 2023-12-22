@@ -56,6 +56,17 @@ impl UserTokenSummary {
         self.pulled_block_height = p_block_height;
         self.pulled_block_time = p_block_time;
     }
+
+    pub fn new_settlement(
+        &mut self,
+        p_settle_amount: BigDecimal,
+        block_num: i64,
+        p_block_time: NaiveDateTime,
+    ) {
+        self.balance += p_settle_amount;
+        self.pulled_block_time = p_block_time;
+        self.pulled_block_height = block_num;
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -81,12 +92,13 @@ pub async fn find_user_token_summary(
     ori_chain_id: String,
 ) -> Option<UserTokenSummary> {
     use crate::schema::user_token_summary::dsl::*;
-    let result = user_token_summary
+
+    let mut filter = user_token_summary
         .filter(account_id.eq(ori_account_id.clone()))
         .filter(token.eq(ori_token.clone()))
-        .filter(chain_id.eq(ori_chain_id.clone()))
-        .first_async::<UserTokenSummary>(&POOL)
-        .await;
+        .filter(chain_id.eq(ori_chain_id.clone()));
+
+    let result = filter.first_async::<UserTokenSummary>(&POOL).await;
 
     match result {
         Ok(summary) => Some(summary),

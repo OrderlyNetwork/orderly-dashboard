@@ -5,7 +5,8 @@ use chrono::NaiveDateTime;
 use orderly_dashboard_indexer::formats_external::trading_events::Trade;
 
 use crate::db::hourly_orderly_perp::{
-    create_or_update_hourly_perp, find_hourly_orderly_perp, HourlyOrderlyPerp, HourlyOrderlyPerpKey,
+    create_or_update_hourly_orderly_perp, find_hourly_orderly_perp, HourlyOrderlyPerp,
+    HourlyOrderlyPerpKey,
 };
 use crate::db::hourly_user_perp::{
     create_or_update_hourly_user_perp, find_hourly_user_perp, HourlyUserPerp, HourlyUserPerpKey,
@@ -153,7 +154,7 @@ pub async fn analyzer_perp_trade(
     create_or_update_hourly_user_perp(Vec::from_iter(user_map.values().into_iter()))
         .await
         .unwrap();
-    create_or_update_hourly_perp(Vec::from_iter(map.values().into_iter()))
+    create_or_update_hourly_orderly_perp(Vec::from_iter(map.values().into_iter()))
         .await
         .unwrap();
     create_or_update_orderly_perp_summary(Vec::from_iter(orderly_summary_map.values().into_iter()))

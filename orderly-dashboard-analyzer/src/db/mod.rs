@@ -14,6 +14,7 @@ pub mod hourly_user_perp;
 pub mod hourly_user_token;
 pub mod orderly_perp_summary;
 pub mod orderly_token_summary;
+pub mod symbols;
 pub mod user_perp_summary;
 pub mod user_token_summary;
 
