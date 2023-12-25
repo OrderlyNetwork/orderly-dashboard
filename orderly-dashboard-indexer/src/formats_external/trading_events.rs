@@ -149,10 +149,10 @@ impl TradingEvent {
             transaction_id: liquidation_res.transaction_id,
             block_timestamp: liquidation_res.block_time.to_u64().unwrap(),
             data: TradingEventInnerData::LiquidationResult {
-                liquidated_account_id: "".to_string(),
-                insurance_account_id: "".to_string(),
-                liquidated_asset_hash: "".to_string(),
-                insurance_transfer_amount: "".to_string(),
+                liquidated_account_id: liquidation_res.liquidated_account_id,
+                insurance_account_id: liquidation_res.insurance_account_id,
+                liquidated_asset_hash: liquidation_res.liquidated_asset_hash,
+                insurance_transfer_amount: liquidation_res.insurance_transfer_amount.to_string(),
                 liquidation_transfers,
             },
         }

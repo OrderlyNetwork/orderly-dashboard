@@ -75,3 +75,38 @@ response example:
 ```json
 {"success":true,"data":{"events":[],"last_block":674670}}
 ```
+### get_symbols_data
+this api will pull `mark_price`,`sum_unitary_fundings` and other data from smart contract
+```shell
+curl http://127.0.0.1:8018/get_symbols_data
+```
+response example:
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "symbol": "PERP_BTC_USDC",
+            "symbol_hash": "0x5a8133e52befca724670dbf2cade550c522c2410dd5b1189df675e99388f509d",
+            "base_maintenance_margin": null,
+            "base_initial_margin": null,
+            "mark_price": "4318460000000",
+            "index_price_orderly": "4315847000000",
+            "sum_unitary_fundings": "1304200000000000000",
+            "last_mark_price_updated": "1703498398000",
+            "last_funding_updated": "1703498034943"
+        },
+        {
+            "symbol": "PERP_ETH_USDC",
+            "symbol_hash": "0x7e83089239db756ee233fa8972addfea16ae653db0f692e4851aed546b21caeb",
+            "base_maintenance_margin": null,
+            "base_initial_margin": null,
+            "mark_price": "227618000000",
+            "index_price_orderly": "227394000000",
+            "sum_unitary_fundings": "18740000000000000",
+            "last_mark_price_updated": "1703498398000",
+            "last_funding_updated": "1703498066981"
+        }
+    ]
+}
+```

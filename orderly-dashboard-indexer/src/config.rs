@@ -77,6 +77,7 @@ pub struct CommonConfigs {
     pub cefi_server: CefiServerConfig,
     pub indexer_server: IndexerServerConfig,
     pub layerzero: LayerzeroConfig,
+    pub perp_symbols_config: Vec<String>,
 }
 
 impl Display for CommonConfigs {
@@ -105,6 +106,7 @@ impl Display for CommonConfigs {
             f,
             "layerzero_config:[scan_url:{}].",
             layerzero_config.scan_url,
-        )
+        )?;
+        write!(f, "perp_symbols:{:?}.", self.perp_symbols_config,)
     }
 }

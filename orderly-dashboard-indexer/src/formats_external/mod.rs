@@ -1,3 +1,4 @@
+pub mod symbols_config;
 pub mod trading_events;
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};

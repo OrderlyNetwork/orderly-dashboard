@@ -1,6 +1,7 @@
 use crate::config::{init_config, CommonConfigs};
 use crate::contract::init_addr_set;
 use crate::eth_rpc::init_provider;
+use crate::handler::sync_perp_config::init_sync_perp_config_task;
 use crate::service_base::runtime::init_pool_workers_num;
 
 pub(crate) fn init_log() {
@@ -18,5 +19,6 @@ pub fn init_handler(config: &CommonConfigs) -> anyhow::Result<()> {
     init_config(config.clone());
     init_addr_set()?;
     init_provider()?;
+    init_sync_perp_config_task()?;
     Ok(())
 }

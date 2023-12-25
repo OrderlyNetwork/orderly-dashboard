@@ -7,11 +7,13 @@ mod contract;
 mod db;
 mod eth_rpc;
 mod formats_external;
+mod handler;
 mod init;
 mod schema;
 mod server;
 mod service_base;
 mod settings;
+pub mod transform;
 pub mod utils;
 #[macro_use]
 extern crate diesel;

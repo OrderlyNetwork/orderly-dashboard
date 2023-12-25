@@ -14,6 +14,10 @@ pub(crate) fn init_provider() -> Result<()> {
     Ok(())
 }
 
+pub(crate) fn clone_provider() -> Provider<Http> {
+    unsafe { PROVIDER.get_unchecked() }.clone()
+}
+
 pub async fn get_latest_block_num() -> Result<u64> {
     Ok(get_block_with_id(BlockId::Number(BlockNumber::Latest))
         .await?

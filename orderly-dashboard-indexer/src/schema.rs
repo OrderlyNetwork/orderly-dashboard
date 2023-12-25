@@ -121,6 +121,20 @@ diesel::table! {
 }
 
 diesel::table! {
+    symbols_config (symbol) {
+        symbol -> Text,
+        symbol_hash -> Text,
+        base_maintenance_margin -> Nullable<Int4>,
+        base_initial_margin -> Nullable<Int4>,
+        mark_price -> Nullable<Numeric>,
+        index_price_orderly -> Nullable<Numeric>,
+        sum_unitary_fundings -> Nullable<Numeric>,
+        last_mark_price_updated -> Nullable<Numeric>,
+        last_funding_updated -> Nullable<Numeric>,
+    }
+}
+
+diesel::table! {
     transaction_events (block_number, transaction_index, log_index) {
         block_number -> Int8,
         transaction_index -> Int4,
@@ -151,5 +165,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     settings,
     settlement_execution,
     settlement_result,
+    symbols_config,
     transaction_events,
 );

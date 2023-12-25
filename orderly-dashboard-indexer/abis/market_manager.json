@@ -1,0 +1,545 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "LedgerAddressZero",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyLedgerCanCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OnlyOperatorManagerCanCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OperatorManagerAddressZero",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "ChangeLedger",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "oldAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "ChangeOperatorManager",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "maxTimestamp",
+        "type": "uint64"
+      }
+    ],
+    "name": "FundingData",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "maxTimestamp",
+        "type": "uint64"
+      }
+    ],
+    "name": "MarketData",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_pairSymbol",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getPerpMarketCfg",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "baseMaintenanceMargin",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "baseInitialMargin",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint128",
+            "name": "liquidationFeeMax",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "markPrice",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "indexPriceOrderly",
+            "type": "uint128"
+          },
+          {
+            "internalType": "int128",
+            "name": "sumUnitaryFundings",
+            "type": "int128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastMarkPriceUpdated",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastFundingUpdated",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct MarketTypes.PerpMarketCfg",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ledgerAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "operatorManagerAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "perpMarketCfg",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "baseMaintenanceMargin",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "baseInitialMargin",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint128",
+        "name": "liquidationFeeMax",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "markPrice",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "indexPriceOrderly",
+        "type": "uint128"
+      },
+      {
+        "internalType": "int128",
+        "name": "sumUnitaryFundings",
+        "type": "int128"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastMarkPriceUpdated",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastFundingUpdated",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_pairSymbol",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "_lastFundingUpdated",
+        "type": "uint64"
+      }
+    ],
+    "name": "setLastFundingUpdated",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_pairSymbol",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "_lastMarkPriceUpdated",
+        "type": "uint64"
+      }
+    ],
+    "name": "setLastMarkPriceUpdated",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_ledgerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setLedgerAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_operatorManagerAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setOperatorManagerAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_symbolHash",
+        "type": "bytes32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "baseMaintenanceMargin",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "baseInitialMargin",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint128",
+            "name": "liquidationFeeMax",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "markPrice",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "indexPriceOrderly",
+            "type": "uint128"
+          },
+          {
+            "internalType": "int128",
+            "name": "sumUnitaryFundings",
+            "type": "int128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastMarkPriceUpdated",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastFundingUpdated",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct MarketTypes.PerpMarketCfg",
+        "name": "_perpMarketCfg",
+        "type": "tuple"
+      }
+    ],
+    "name": "setPerpMarketCfg",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maxTimestamp",
+            "type": "uint64"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "symbolHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "int128",
+                "name": "sumUnitaryFunding",
+                "type": "int128"
+              },
+              {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+              }
+            ],
+            "internalType": "struct MarketTypes.SumUnitaryFunding[]",
+            "name": "sumUnitaryFundings",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct MarketTypes.UploadSumUnitaryFundings",
+        "name": "data",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateMarketUpload",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "r",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "s",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "v",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maxTimestamp",
+            "type": "uint64"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "symbolHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint128",
+                "name": "indexPrice",
+                "type": "uint128"
+              },
+              {
+                "internalType": "uint128",
+                "name": "markPrice",
+                "type": "uint128"
+              },
+              {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+              }
+            ],
+            "internalType": "struct MarketTypes.PerpPrice[]",
+            "name": "perpPrices",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct MarketTypes.UploadPerpPrice",
+        "name": "data",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateMarketUpload",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

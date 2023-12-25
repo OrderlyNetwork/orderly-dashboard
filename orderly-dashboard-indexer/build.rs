@@ -12,6 +12,7 @@ fn bindgen(contract_name: &str) -> Result<(), Box<dyn std::error::Error>> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     bindgen("operator_manager")?;
     bindgen("user_ledger")?;
+    bindgen("market_manager")?;
 
     Ok(())
 }
