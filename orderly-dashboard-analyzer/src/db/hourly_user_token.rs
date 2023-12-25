@@ -1,7 +1,7 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::NaiveDateTime;
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -11,7 +11,6 @@ use crate::db::user_token_summary::DBException::{InsertError, QueryError};
 use crate::db::POOL;
 use crate::db::{PrimaryKey, DB_CONTEXT};
 use crate::schema::hourly_user_token;
-use crate::schema::hourly_user_token::{chain_id, deposit_amount};
 
 #[derive(Queryable, Insertable, Debug, Clone)]
 #[table_name = "hourly_user_token"]
@@ -31,6 +30,7 @@ pub struct HourlyUserToken {
 }
 
 impl HourlyUserToken {
+    #[allow(duplicate_macro_attributes)]
     pub fn deposit(
         &mut self,
         p_deposit_amount: BigDecimal,
@@ -42,7 +42,7 @@ impl HourlyUserToken {
         self.pulled_block_time = p_block_time;
         self.pulled_block_height = p_block_height;
     }
-
+    #[allow(duplicate_macro_attributes)]
     pub fn withdraw(
         &mut self,
         p_withdraw_amount: BigDecimal,

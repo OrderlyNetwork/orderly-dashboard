@@ -2,12 +2,11 @@ use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::associations::HasTable;
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::db::user_token_summary::DBException::{InsertError, UpdateError};
+use crate::db::user_token_summary::DBException::UpdateError;
 use crate::db::POOL;
 use crate::db::{PrimaryKey, DB_CONTEXT};
 use crate::schema::user_token_summary;
@@ -93,7 +92,7 @@ pub async fn find_user_token_summary(
 ) -> Option<UserTokenSummary> {
     use crate::schema::user_token_summary::dsl::*;
 
-    let mut filter = user_token_summary
+    let filter = user_token_summary
         .filter(account_id.eq(ori_account_id.clone()))
         .filter(token.eq(ori_token.clone()))
         .filter(chain_id.eq(ori_chain_id.clone()));
@@ -126,26 +125,6 @@ pub async fn find_user_token_summary(
     }
 }
 
-pub async fn create_user_token(
-    user_token_summary_vec: Vec<UserTokenSummary>,
-) -> Result<usize, DBException> {
-    use crate::schema::user_token_summary::dsl::*;
-    let insert_result = diesel::insert_into(user_token_summary)
-        .values(user_token_summary_vec)
-        .on_conflict_do_nothing()
-        .execute_async(&POOL)
-        .await;
-
-    match insert_result {
-        Ok(row_nums) => Ok(row_nums),
-        Err(err) => match err {
-            _ => {
-                return Err(InsertError);
-            }
-        },
-    }
-}
-
 pub async fn create_or_update_user_token_summary(
     user_token_summary_vec: Vec<UserTokenSummary>,
 ) -> Result<usize, DBException> {
@@ -173,7 +152,7 @@ pub async fn create_or_update_user_token_summary(
             Ok(affected) => {
                 row_nums += affected;
             }
-            Err(err) => {
+            Err(_) => {
                 return Err(UpdateError);
             }
         }

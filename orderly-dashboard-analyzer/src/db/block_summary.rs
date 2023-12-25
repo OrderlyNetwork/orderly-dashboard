@@ -1,6 +1,6 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::{Insertable, Queryable};
@@ -10,7 +10,6 @@ use crate::db::user_token_summary::DBException::QueryError;
 use crate::db::DB_CONTEXT;
 use crate::db::POOL;
 use crate::schema::block_summary;
-use crate::schema::block_summary::id;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "block_summary"]

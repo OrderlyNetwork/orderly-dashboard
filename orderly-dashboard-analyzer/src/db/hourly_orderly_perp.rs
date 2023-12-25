@@ -14,7 +14,7 @@ use crate::db::user_token_summary::DBException::{InsertError, QueryError, Timeou
 use crate::db::POOL;
 use crate::schema::hourly_orderly_perp;
 
-#[derive(Insertable, Queryable, Debug, Clone)]
+#[derive(Insertable, Queryable, QueryableByName, Debug, Clone)]
 #[table_name = "hourly_orderly_perp"]
 pub struct HourlyOrderlyPerp {
     pub symbol: String,

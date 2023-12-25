@@ -2,7 +2,7 @@ use std::cmp::{max, min};
 use std::time::Duration;
 
 use crate::analyzer::adl_analyzer::analyzer_adl;
-use chrono::{NaiveDateTime, TimeZone, Timelike, Utc};
+use chrono::{NaiveDateTime, Timelike, Utc};
 use orderly_dashboard_indexer::formats_external::trading_events::{
     TradingEventInnerData, TradingEventsResponse,
 };
@@ -75,17 +75,17 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                 match event_data {
                     TradingEventInnerData::Transaction {
                         account_id,
-                        sender,
-                        receiver,
+                        sender: _,
+                        receiver: _,
                         token_hash,
-                        broker_hash,
+                        broker_hash: _,
                         chain_id,
                         side,
                         token_amount,
-                        withdraw_nonce,
-                        status,
-                        fail_reason,
-                        fee,
+                        withdraw_nonce: _,
+                        status: _,
+                        fail_reason: _,
+                        fee: _,
                     } => {
                         analyzer_transaction(
                             account_id,
@@ -99,7 +99,10 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         )
                         .await;
                     }
-                    TradingEventInnerData::ProcessedTrades { batch_id, trades } => {
+                    TradingEventInnerData::ProcessedTrades {
+                        batch_id: _,
+                        trades,
+                    } => {
                         let trade_id =
                             analyzer_perp_trade(trades, block_hour, block_time, block_num).await;
                         latest_perp_trade_id = max(latest_perp_trade_id, trade_id);

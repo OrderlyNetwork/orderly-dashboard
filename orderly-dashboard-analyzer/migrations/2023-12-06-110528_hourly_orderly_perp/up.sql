@@ -4,14 +4,14 @@ CREATE TABLE IF NOT EXISTS hourly_orderly_perp
     symbol              text    not null,
     block_hour          timestamp  not null,
 
-    trading_fee         numeric not null,
-    trading_volume      numeric not null,
+    trading_fee         numeric(32,8) not null,
+    trading_volume      numeric(32,8) not null,
 
     trading_count       bigint  not null,
     trading_user_count  bigint  not null,
     opening_count       bigint  not null,
 
-    liquidation_amount  numeric not null,
+    liquidation_amount  numeric(32,8) not null,
     liquidation_count   bigint  not null,
 
     pulled_block_height bigint  not null,

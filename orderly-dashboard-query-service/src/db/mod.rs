@@ -1,5 +1,6 @@
 pub mod trading_metrics;
 use dotenv::dotenv;
+#[allow(unused_imports, dead_code)]
 use orderly_dashboard_analyzer::db::init_database_url as init_analyzer_database_url;
 use std::env;
 

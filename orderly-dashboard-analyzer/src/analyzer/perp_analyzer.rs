@@ -38,7 +38,7 @@ pub async fn analyzer_perp_trade(
             symbol: perp_trade.symbol_hash.clone(),
             block_hour: block_hour.clone(),
         };
-        let mut hourly_orderly_perp_op = map.get_mut(&perp_key.clone());
+        let hourly_orderly_perp_op = map.get_mut(&perp_key.clone());
         match hourly_orderly_perp_op {
             None => {
                 let perp_key_clone = perp_key.clone();
@@ -51,7 +51,7 @@ pub async fn analyzer_perp_trade(
             Some(_) => {}
         }
 
-        let mut hourly_orderly_perp = map.get_mut(&perp_key.clone()).unwrap();
+        let hourly_orderly_perp = map.get_mut(&perp_key.clone()).unwrap();
         hourly_orderly_perp.new_trade(
             perp_trade.fee.parse().unwrap(),
             perp_trade.trade_qty.parse().unwrap(),
@@ -66,7 +66,7 @@ pub async fn analyzer_perp_trade(
             block_hour: block_hour.clone(),
         };
 
-        let mut hourly_user_perp_op = user_map.get_mut(&hourly_user_perp_key.clone());
+        let hourly_user_perp_op = user_map.get_mut(&hourly_user_perp_key.clone());
         match hourly_user_perp_op {
             None => {
                 let perp_key_clone = hourly_user_perp_key.clone();
@@ -82,7 +82,7 @@ pub async fn analyzer_perp_trade(
             Some(_) => {}
         }
 
-        let mut hourly_user_perp = user_map.get_mut(&hourly_user_perp_key.clone()).unwrap();
+        let hourly_user_perp = user_map.get_mut(&hourly_user_perp_key.clone()).unwrap();
         let new_hourly_user = hourly_user_perp.new_trade(
             perp_trade.fee.parse().unwrap(),
             perp_trade.trade_qty.parse().unwrap(),
@@ -95,7 +95,7 @@ pub async fn analyzer_perp_trade(
 
         //orderly_summary
         let perp_symbol = perp_trade.symbol_hash.clone();
-        let mut orderly_perp_summary_op = orderly_summary_map.get_mut(&perp_symbol.clone());
+        let orderly_perp_summary_op = orderly_summary_map.get_mut(&perp_symbol.clone());
         match orderly_perp_summary_op {
             None => {
                 let saved_summary = find_orderly_perp_summary(perp_symbol.clone())
@@ -106,7 +106,7 @@ pub async fn analyzer_perp_trade(
             Some(_) => {}
         }
 
-        let mut orderly_perp_summary = orderly_summary_map.get_mut(&perp_symbol.clone()).unwrap();
+        let orderly_perp_summary = orderly_summary_map.get_mut(&perp_symbol.clone()).unwrap();
         orderly_perp_summary.new_trade(
             perp_trade.fee.parse().unwrap(),
             perp_trade.trade_qty.parse().unwrap(),
@@ -120,7 +120,7 @@ pub async fn analyzer_perp_trade(
             account_id: perp_trade.account_id.clone(),
             symbol: perp_symbol.clone(),
         };
-        let mut user_perp_summary_op = user_summary_map.get_mut(&user_perp_summary_key.clone());
+        let user_perp_summary_op = user_summary_map.get_mut(&user_perp_summary_key.clone());
         match user_perp_summary_op {
             None => {
                 let saved_summary = find_user_perp_summary(
@@ -134,7 +134,7 @@ pub async fn analyzer_perp_trade(
             Some(_) => {}
         }
 
-        let mut user_perp_summary = user_summary_map
+        let user_perp_summary = user_summary_map
             .get_mut(&user_perp_summary_key.clone())
             .unwrap();
         let (opening, new_user) = user_perp_summary.new_trade(

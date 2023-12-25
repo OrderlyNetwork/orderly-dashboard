@@ -58,6 +58,7 @@ impl HourlyUserPerp {
         new_hourly_user
     }
 
+    #[allow(duplicate_macro_attributes)]
     pub fn new_adl(
         &mut self,
         adl_qty: BigDecimal,

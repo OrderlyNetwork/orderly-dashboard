@@ -8,11 +8,11 @@ use crate::db::user_token_summary::{create_or_update_user_token_summary, find_us
 pub async fn analyzer_settlement(
     account_id: String,
     settled_amount: String,
-    settled_asset_hash: String,
+    _settled_asset_hash: String,
     insurance_account_id: String,
     insurance_transfer_amount: String,
-    settlement_executions: Vec<SettlementExecution>,
-    block_hour: NaiveDateTime,
+    _settlement_executions: Vec<SettlementExecution>,
+    _block_hour: NaiveDateTime,
     pulled_block_height: i64,
     pulled_block_time: NaiveDateTime,
 ) {

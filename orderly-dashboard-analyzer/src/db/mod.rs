@@ -1,5 +1,4 @@
 use std::env;
-use std::fmt::Debug;
 use std::hash::Hash;
 
 use actix_diesel::Database;
@@ -22,6 +21,7 @@ pub const DB_CONTEXT: &str = "DB_operation";
 
 pub static POOL: Lazy<Database<PgConnection>> = Lazy::new(|| establish_connection());
 pub static INITED_DATABASE_URL: OnceCell<String> = OnceCell::new();
+
 pub fn init_database_url(database_url: String) {
     INITED_DATABASE_URL.set(database_url).ok();
 }

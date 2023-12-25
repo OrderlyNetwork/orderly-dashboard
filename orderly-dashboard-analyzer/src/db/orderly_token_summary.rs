@@ -1,7 +1,7 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::NaiveDateTime;
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
@@ -29,6 +29,7 @@ pub struct OrderlyTokenSummary {
 }
 
 impl OrderlyTokenSummary {
+    #[allow(duplicate_macro_attributes)]
     pub fn deposit(
         &mut self,
         p_deposit_amount: BigDecimal,
@@ -42,6 +43,7 @@ impl OrderlyTokenSummary {
         self.pulled_block_time = p_block_time;
     }
 
+    #[allow(duplicate_macro_attributes)]
     pub fn withdraw(
         &mut self,
         p_withdraw_amount: BigDecimal,
@@ -108,6 +110,7 @@ pub async fn create_or_update_orderly_token_summary(
             .on_conflict(on_constraint("orderly_token_summary_uq"))
             .do_update()
             .set((
+                #[allow(duplicate_macro_attributes)]
                 balance.eq(summary_data.balance.clone()),
                 total_withdraw_amount.eq(summary_data.total_withdraw_amount.clone()),
                 total_withdraw_count.eq(summary_data.total_withdraw_count.clone()),

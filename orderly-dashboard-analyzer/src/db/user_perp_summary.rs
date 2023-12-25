@@ -1,3 +1,6 @@
+use std::ops::Neg;
+use std::str::FromStr;
+
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
@@ -5,8 +8,6 @@ use chrono::NaiveDateTime;
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
-use std::ops::Neg;
-use std::str::FromStr;
 
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
@@ -27,7 +28,9 @@ pub struct UserPerpSummary {
     total_trading_count: i64,
     total_trading_fee: BigDecimal,
 
+    #[allow(dead_code)]
     total_realized_pnl: BigDecimal,
+    #[allow(dead_code)]
     total_un_realized_pnl: BigDecimal,
 
     total_liquidation_amount: BigDecimal,
@@ -45,7 +48,7 @@ impl UserPerpSummary {
         block_num: i64,
         block_time: NaiveDateTime,
         cost_position_transfer: String,
-        sum_unitary_funding: String,
+        _sum_unitary_funding: String,
     ) {
         self.holding -= qty.clone();
         self.cost_position += BigDecimal::from_str(&*cost_position_transfer)

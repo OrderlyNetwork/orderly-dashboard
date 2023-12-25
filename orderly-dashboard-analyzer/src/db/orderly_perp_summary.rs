@@ -3,7 +3,7 @@ use std::cmp::max;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::result::Error;
 use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;

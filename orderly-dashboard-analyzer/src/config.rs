@@ -1,6 +1,7 @@
 use clap::Parser;
 use serde::Deserialize;
 
+#[allow(duplicate_macro_attributes)]
 #[derive(Parser, Debug)]
 #[clap(
     version,
@@ -21,4 +22,5 @@ pub struct AnalyzerConfig {
     pub indexer_address: String,
     pub start_block: i64,
     pub pull_interval: u64,
+    pub database_url: String,
 }

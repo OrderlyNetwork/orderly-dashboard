@@ -1,5 +1,6 @@
 {
   "indexer_address": "http://localhost:8018",
   "start_block": 1145079,
-  "pull_interval": 5
+  "pull_interval": 5,
+  "database_url": "postgres://postgres:12345678@localhost/postgres"
 }
