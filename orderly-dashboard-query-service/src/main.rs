@@ -9,7 +9,8 @@ use trading_metrics::{average_trading_count, daily_trading_fee, daily_volume};
 
 use crate::db::init_analyzer_db_url;
 use crate::trading_metrics::{
-    average_trading_fee, average_trading_volume, get_perp_holding_rank, get_trading_volume_rank,
+    average_opening_count, average_trading_fee, average_trading_volume, get_perp_holding_rank,
+    get_trading_volume_rank,
 };
 
 mod config;
@@ -105,6 +106,7 @@ async fn main() -> std::io::Result<()> {
             .service(average_trading_volume)
             .service(get_trading_volume_rank)
             .service(get_perp_holding_rank)
+            .service(average_opening_count)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind(("127.0.0.1", config.port))?

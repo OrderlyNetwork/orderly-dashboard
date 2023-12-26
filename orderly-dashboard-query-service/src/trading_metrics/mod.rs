@@ -90,6 +90,11 @@ pub async fn average_trading_volume() -> Result<impl Responder> {
     Ok(write_response(get_average("trading_volume").await))
 }
 
+#[get("/average_opening_count")]
+pub async fn average_opening_count() -> Result<impl Responder> {
+    Ok(write_response(get_average("opening_count").await))
+}
+
 #[get("/ranking/trading_volume")]
 pub async fn get_trading_volume_rank(
     param: web::Query<VolumeRankingRequest>,

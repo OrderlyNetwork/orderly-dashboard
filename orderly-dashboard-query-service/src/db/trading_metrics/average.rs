@@ -1,6 +1,6 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
-use chrono::{Duration, Local};
+use chrono::{Duration, Local, NaiveDateTime};
 use diesel::sql_types::*;
 use diesel::QueryableByName;
 
@@ -25,36 +25,29 @@ pub async fn get_average(field: &str) -> CountAverageExtern {
     let current_week_start = now.clone() - Duration::days(7);
     let current_month_start = now.clone() - Duration::days(30);
 
-    let current_day = diesel::sql_query(format!(
-        "select sum({})/1 as count from hourly_orderly_perp where block_hour>=$1",
-        field
-    ))
-    .bind::<Timestamp, _>(current_day_start)
-    .get_result_async::<CountWrapper>(&POOL)
-    .await
-    .unwrap();
-
-    let current_week = diesel::sql_query(format!(
-        "select sum({})/7 as count from hourly_orderly_perp where block_hour>=$1",
-        field
-    ))
-    .bind::<Timestamp, _>(current_week_start)
-    .get_result_async::<CountWrapper>(&POOL)
-    .await
-    .unwrap();
-
-    let current_month = diesel::sql_query(format!(
-        "select sum({})/30 as count from hourly_orderly_perp where block_hour>=$1",
-        field
-    ))
-    .bind::<Timestamp, _>(current_month_start)
-    .get_result_async::<CountWrapper>(&POOL)
-    .await
-    .unwrap();
-
+    let current_day = load_average_metric(field, 1, current_day_start).await;
+    let current_week = load_average_metric(field, 7, current_week_start).await;
+    let current_month = load_average_metric(field, 30, current_month_start).await;
     CountAverageExtern {
         latest_day_metric: current_day.count.with_scale(2).to_f64().unwrap(),
         latest_week_metric: current_week.count.with_scale(2).to_f64().unwrap(),
         latest_month_metric: current_month.count.with_scale(2).to_f64().unwrap(),
+    }
+}
+
+async fn load_average_metric(field: &str, days: i32, start_time: NaiveDateTime) -> CountWrapper {
+    let select_result = diesel::sql_query(format!(
+        "select sum({})/{} as count from hourly_orderly_perp where block_hour>=$1",
+        field, days
+    ))
+    .bind::<Timestamp, _>(start_time)
+    .get_result_async::<CountWrapper>(&POOL)
+    .await;
+
+    match select_result {
+        Ok(select_data) => select_data,
+        Err(_) => CountWrapper {
+            count: BigDecimal::from(0),
+        },
     }
 }
