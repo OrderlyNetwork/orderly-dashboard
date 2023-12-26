@@ -6,7 +6,7 @@ use clap::Parser;
 
 use crate::analyzer::analyzer_job::start_analyzer_job;
 use crate::config::{AnalyzerConfig, Opts};
-use crate::db::init_database_url;
+use crate::db::{get_database_credentials, init_database_url};
 
 mod analyzer;
 mod config;
@@ -39,7 +39,7 @@ async fn main() -> std::io::Result<()> {
         std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");
     let config: AnalyzerConfig =
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
-    init_database_url(config.database_url);
+    init_database_url(get_database_credentials());
 
     start_analyzer_job(
         config.pull_interval,
