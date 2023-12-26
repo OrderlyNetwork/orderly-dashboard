@@ -1,5 +1,5 @@
 use actix_web::{get, web, HttpResponse, Responder, Result};
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use serde_derive::Deserialize;
 
@@ -12,19 +12,46 @@ use crate::{add_base_header, format_extern::Response};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct DailyRequest {
+    #[serde(default = "default_past")]
     from_day: String,
+    #[serde(default = "default_now")]
     end_day: String,
+}
+
+fn default_now() -> String {
+    Local::now().naive_utc().format("%Y-%m-%d").to_string()
+}
+
+fn default_past() -> String {
+    let past = Local::now().naive_utc() - Duration::days(30);
+    past.format("%Y-%m-%d").to_string()
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct VolumeRankingRequest {
+    #[serde(default = "default_days")]
     days: i32,
+    #[serde(default = "default_size")]
     size: i32,
+}
+
+fn default_days() -> i32 {
+    30
+}
+
+fn default_size() -> i32 {
+    10
+}
+
+fn test_symbol() -> String {
+    "test".to_string()
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct PerpHoldingRankingRequest {
+    #[serde(default = "test_symbol")]
     symbol: String,
+    #[serde(default = "default_size")]
     size: i32,
 }
 
