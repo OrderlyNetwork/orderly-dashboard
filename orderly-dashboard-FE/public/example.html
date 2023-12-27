@@ -136,16 +136,26 @@
         });
     }
 
-    const ctx2 = document.getElementById('chart2');
-    new Chart(ctx2, {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: 'trading fee',
-                data: [{x: '2023-12-06', y: 20}, {x: '2023-12-07', y: 22}, {x: '2023-12-08', y: 24}, {x: '2023-12-09', y: 20}, {x: '2023-12-10', y: 21}, {x: '2023-12-11', y: 18}, {x: '2023-12-12', y: 25}]
-            }]
+    function tradingFeeCallBack(respData) {
+        console.log("tradingFeeCallBack respData: ", respData);
+        const chartData = respData["data"];
+        const daytime = chartData["daytime"];
+        const fee_amount = chartData["fee_amount"];
+        let data = [];
+        for (index = 0; index < daytime.length; index++) {
+            data.push({x: daytime[index], y: fee_amount[index]});
         }
-    });
+        const ctx2 = document.getElementById('chart2');
+        new Chart(ctx2, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'daily trading fee',
+                    data: data
+                }]
+            }
+        });
+    }
 
     const ctx3 = document.getElementById('chart3');
     new Chart(ctx3, {
@@ -171,129 +181,161 @@
         }
     });
 
-    const ctx5 = document.getElementById('chart5');
-    new Chart(ctx5, {
-        type: 'bar',
-        data: {
-            labels: ['Past 24hours','Past 7Days', 'Past 30Days'],
-            datasets: [{
-                label: 'Average Trading Count In Past 24 Hours/7Days/30Days',
-                data: [37000, 34000, 28000],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    function averageTradingCountCallBack(respData) {
+        console.log("averageTradingCountCallBack respData: ", respData);
+        const chartData = respData["data"];
 
-    const ctx6 = document.getElementById('chart6');
-    new Chart(ctx6, {
-        type: 'bar',
-        data: {
-            labels: ['Past 24hours', 'Past 7Days', 'Past 30Days'],
-            datasets: [{
-                borderColor: '#ff9a63',
-                backgroundColor: '#ff9a63',
-                label: 'Average Trading Fee In Past 24 Hours/7Days/30Days',
-                data: [108000, 96000, 90000],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+        const ctx5 = document.getElementById('chart5');
+        new Chart(ctx5, {
+            type: 'bar',
+            data: {
+                labels: ['Past 24hours','Past 7Days', 'Past 30Days'],
+                datasets: [{
+                    label: 'Average Trading Count In Past 24 Hours/7Days/30Days',
+                    data: [chartData["latest_day_metric"], chartData["latest_week_metric"], chartData["latest_month_metric"]],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
-    const ctx7 = document.getElementById('chart7');
-    new Chart(ctx7, {
-        type: 'bar',
-        data: {
-            labels: ['Past 24hours', 'Past 7Days', 'Past 30Days'],
-            datasets: [{
-                borderColor: '#ff9a63',
-                backgroundColor: '#ff9a63',
-                label: 'Average Daily Trading Volume In Past 7 Days/30 Days',
-                data: [108000000, 96000000, 90000000],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+
+    function averageTradingFeeCallBack(respData) {
+        console.log("averageTradingFeeCallBack respData: ", respData);
+        const chartData = respData["data"];
+
+        const ctx6 = document.getElementById('chart6');
+        new Chart(ctx6, {
+            type: 'bar',
+            data: {
+                labels: ['Past 24hours','Past 7Days', 'Past 30Days'],
+                datasets: [{
+                    borderColor: '#ff9a63',
+                    backgroundColor: '#ff9a63',
+                    label: 'Average Trading Fee In Past 24 Hours/7Days/30Days',
+                    data: [chartData["latest_day_metric"], chartData["latest_week_metric"], chartData["latest_month_metric"]],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+
+    function averageTradingVolumeCallBack(respData) {
+        console.log("averageTradingVolumeCallBack respData: ", respData);
+        const chartData = respData["data"];
+
+        const ctx7 = document.getElementById('chart7');
+        new Chart(ctx7, {
+            type: 'bar',
+            data: {
+                labels: ['Past 24hours','Past 7Days', 'Past 30Days'],
+                datasets: [{
+                    borderColor: '#ff9a63',
+                    backgroundColor: '#ff9a63',
+                    label: 'Average Trading Fee In Past 24 Hours/7Days/30Days',
+                    data: [chartData["latest_day_metric"], chartData["latest_week_metric"], chartData["latest_month_metric"]],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
     // ===== User metrics ====================
-    const ctx9 = document.getElementById('chart9');
-    new Chart(ctx9, {
-        type: 'bar',
-        data: {
-            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
-            datasets: [{
-                label: 'User’s Daily Trading Volume Ranking In Past 24h',
-                data: [1080000, 960000, 900000, 880000, 860000, 840000, 800000, 600000, 500000, 430000],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    function rankTradingVolume24hCallBack(respData) {
+        console.log("averageTradingVolumeCallBack respData: ", respData);
+        const chartData = respData["data"];
 
-    const ctx10 = document.getElementById('chart10');
-    new Chart(ctx10, {
-        type: 'bar',
-        data: {
-            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
-            datasets: [{
-                label: 'User’s Daily Trading Volume Ranking In Past 7Days',
-                data: [10800000, 7600000, 7000000, 6800000, 6600000, 6400000, 6000000, 4000000, 3000000, 2300000],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+        const ctx9 = document.getElementById('chart9');
+        new Chart(ctx9, {
+            type: 'bar',
+            data: {
+                labels: chartData["account_ids"],
+                datasets: [{
+                    label: 'User’s Daily Trading Volume Ranking In Past 24h',
+                    data: chartData["volume"],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
-    const ctx11 = document.getElementById('chart11');
-    new Chart(ctx11, {
-        type: 'bar',
-        data: {
-            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
-            datasets: [{
-                label: 'User’s Holding Ranking',
-                data: [1080000, 760000, 700000, 680000, 660000, 640000, 600000, 400000, 300000, 230000],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+    function rankTradingVolume7dayCallBack(respData) {
+        console.log("rankTradingVolume7dayCallBack respData: ", respData);
+        const chartData = respData["data"];
+
+        const ctx10 = document.getElementById('chart10');
+        new Chart(ctx10, {
+            type: 'bar',
+            data: {
+                labels: chartData["account_ids"],
+                datasets: [{
+                    label: 'User’s Daily Trading Volume Ranking In Past 7Days',
+                    data: chartData["volume"],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+
+    function rankUserPerpHoldingCallBack(respData) {
+        console.log("rankUserPerpHoldingCallBack respData: ", respData);
+        const chartData = respData["data"];
+
+        const ctx11 = document.getElementById('chart11');
+        new Chart(ctx11, {
+            type: 'bar',
+            data: {
+                labels: chartData["account_ids"],
+                datasets: [{
+                    label: 'User’s Holding Ranking',
+                    data: chartData["holding"],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
 
     const ctx12 = document.getElementById('chart12');
     new Chart(ctx12, {
@@ -441,20 +483,124 @@
             console.log(xhr1.responseText);
             apiConfig = JSON.parse(xhr1.responseText);
             apiConfigCallback(apiConfig);
+        } else {
+            console.warn("xhr1 response: ", xhr1.responseText);
         }
     };
 
     function apiConfigCallback(apiConfig) {
+        let baseUrl = apiConfig["analyzer_api"];
+        let dailyVolume = baseUrl+"/daily_volume";
+        console.log("apiConfig.analyzer_api/dailyVolume=", dailyVolume);
         var xhr2 = new XMLHttpRequest();
-        let dailyVolume = apiConfig["analyzer_api"]+"/daily_volume";
-        console.log("apiConfig.analyzer_api=", dailyVolume);
         xhr2.open('GET', dailyVolume);
         xhr2.send();
-
         xhr2.onreadystatechange = function() {
             if (xhr2.readyState == 4 && xhr2.status == 200) {
                 dailyVolumeCallBack(JSON.parse(xhr2.responseText));
                 console.log(xhr2.responseText);
+            } else {
+                console.warn("xhr2 response: ", xhr2.responseText);
+            }
+        };
+
+        let tradingFeeApi = baseUrl +"/daily_trading_fee";
+        console.log("apiConfig.analyzer_api/tradingFeeApi=", tradingFeeApi);
+        var xhr3 = new XMLHttpRequest();
+        xhr3.open('GET', tradingFeeApi);
+        xhr3.send();
+        xhr3.onreadystatechange = function() {
+            if (xhr3.readyState == 4 && xhr3.status == 200) {
+                tradingFeeCallBack(JSON.parse(xhr3.responseText));
+                console.log(xhr3.responseText);
+            } else {
+                console.warn("xhr3 response: ", xhr3.responseText);
+            }
+        };
+
+        let averageTradingCountApi = baseUrl +"/average_trading_count";
+        console.log("apiConfig.analyzer_api/averageTradingCountApi=", averageTradingCountApi);
+        var xhr4 = new XMLHttpRequest();
+        xhr4.open('GET', averageTradingCountApi);
+        xhr4.send();
+        xhr4.onreadystatechange = function() {
+            if (xhr4.readyState == 4 && xhr4.status == 200) {
+                averageTradingCountCallBack(JSON.parse(xhr4.responseText));
+                console.log(xhr4.responseText);
+            } else {
+                console.warn("xhr4 response: ", xhr4.responseText);
+            }
+        };
+
+        let averageTradingFeeApi = baseUrl +"/average_trading_fee";
+        console.log("apiConfig.analyzer_api/averageTradingFeeApi=", averageTradingFeeApi);
+        var xhr5 = new XMLHttpRequest();
+        xhr5.open('GET', averageTradingFeeApi);
+        xhr5.send();
+        xhr5.onreadystatechange = function() {
+            if (xhr5.readyState == 4 && xhr5.status == 200) {
+                averageTradingFeeCallBack(JSON.parse(xhr5.responseText));
+                console.log(xhr5.responseText);
+            } else {
+                console.warn("xhr5 response: ", xhr5.responseText);
+            }
+        };
+
+        let averageTradingVolumeApi = baseUrl +"/average_trading_volume";
+        console.log("apiConfig.analyzer_api/averageTradingVolumeApi=", averageTradingVolumeApi);
+        var xhr6 = new XMLHttpRequest();
+        xhr6.open('GET', averageTradingFeeApi);
+        xhr6.send();
+        xhr6.onreadystatechange = function() {
+            if (xhr6.readyState == 4 && xhr6.status == 200) {
+                averageTradingVolumeCallBack(JSON.parse(xhr6.responseText));
+                console.log(xhr6.responseText);
+            } else {
+                console.warn("xhr6 response: ", xhr6.responseText);
+            }
+        };
+
+        // user's metrics
+        let rankTradingVolumeApi24h = baseUrl +"/ranking/trading_volume" + "?days=1";
+        console.log("apiConfig.analyzer_api/rankTradingVolumeApi24h=", rankTradingVolumeApi24h);
+        var xhr7 = new XMLHttpRequest();
+        xhr7.open('GET', rankTradingVolumeApi24h);
+        xhr7.send();
+        xhr7.onreadystatechange = function() {
+            if (xhr7.readyState == 4 && xhr7.status == 200) {
+                rankTradingVolume24hCallBack(JSON.parse(xhr7.responseText));
+                console.log(xhr7.responseText);
+            } else {
+                console.warn("xhr7 response: ", xhr7.responseText);
+            }
+        };
+
+        let rankTradingVolumeApi27day = baseUrl +"/ranking/trading_volume" + "?days=7";
+        console.log("apiConfig.analyzer_api/rankTradingVolumeApi27day=", rankTradingVolumeApi27day);
+        var xhr8 = new XMLHttpRequest();
+        xhr8.open('GET', rankTradingVolumeApi27day);
+        xhr8.send();
+        xhr8.onreadystatechange = function() {
+            if (xhr8.readyState == 4 && xhr8.status == 200) {
+                rankTradingVolume7dayCallBack(JSON.parse(xhr8.responseText));
+                console.log(xhr8.responseText);
+            } else {
+                console.warn("xhr8 response: ", xhr8.responseText);
+            }
+        };
+
+        // ranking/perp_holding
+        let rankPerpHoldingApi = baseUrl +"/ranking/perp_holding";
+        console.log("apiConfig.analyzer_api/rankPerpHoldingApi=", rankPerpHoldingApi);
+        var xhr9 = new XMLHttpRequest();
+        xhr9.open('GET', rankPerpHoldingApi);
+        xhr9.send();
+        xhr9.onreadystatechange = function() {
+            if (xhr9.readyState == 4 && xhr9.status == 200) {
+                rankUserPerpHoldingCallBack(JSON.parse(xhr9.responseText));
+                console.log(xhr9.responseText);
+            } else {
+                console.warn("xhr9 response: ", xhr8.responseText);
             }
         };
     }
