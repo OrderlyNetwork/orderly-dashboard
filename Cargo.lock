@@ -2539,6 +2539,7 @@ dependencies = [
  "ring 0.16.20",
  "serde",
  "serde_json",
+ "tiny-keccak",
  "tokio",
  "tracing",
  "tracing-subscriber",

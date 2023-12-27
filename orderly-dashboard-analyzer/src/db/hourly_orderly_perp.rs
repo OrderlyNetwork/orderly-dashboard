@@ -79,6 +79,12 @@ pub struct HourlyOrderlyPerpKey {
     pub block_hour: NaiveDateTime,
 }
 
+impl HourlyOrderlyPerpKey {
+    pub fn new_key(symbol: String, block_hour: NaiveDateTime) -> Self {
+        HourlyOrderlyPerpKey { symbol, block_hour }
+    }
+}
+
 pub async fn find_hourly_orderly_perp(
     p_symbol: String,
     p_block_hour: NaiveDateTime,

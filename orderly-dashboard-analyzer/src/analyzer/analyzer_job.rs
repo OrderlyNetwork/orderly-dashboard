@@ -1,7 +1,6 @@
 use std::cmp::{max, min};
 use std::time::Duration;
 
-use crate::analyzer::adl_analyzer::analyzer_adl;
 use chrono::{NaiveDateTime, Timelike, Utc};
 use orderly_dashboard_indexer::formats_external::trading_events::{
     TradingEventInnerData, TradingEventsResponse,
@@ -9,6 +8,8 @@ use orderly_dashboard_indexer::formats_external::trading_events::{
 use orderly_dashboard_indexer::formats_external::Response;
 use tokio::time;
 
+use crate::analyzer::adl_analyzer::analyzer_adl;
+use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::analyzer_job::HTTPException::Timeout;
 use crate::analyzer::liquidation_analyzer::analyzer_liquidation;
 use crate::analyzer::perp_analyzer::analyzer_perp_trade;
@@ -57,6 +58,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
     let mut pulled_block_time = 0i64;
     let mut latest_block_height = 0i64;
     let mut latest_perp_trade_id = 0i64;
+    let mut context = AnalyzeContext::new_context();
 
     match response {
         Response::Success(success_event) => {
@@ -96,6 +98,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             &block_hour,
                             block_num,
                             block_time.clone(),
+                            &mut context,
                         )
                         .await;
                     }
@@ -103,8 +106,14 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         batch_id: _,
                         trades,
                     } => {
-                        let trade_id =
-                            analyzer_perp_trade(trades, block_hour, block_time, block_num).await;
+                        let trade_id = analyzer_perp_trade(
+                            trades,
+                            block_hour,
+                            block_time,
+                            block_num,
+                            &mut context,
+                        )
+                        .await;
                         latest_perp_trade_id = max(latest_perp_trade_id, trade_id);
                     }
                     TradingEventInnerData::SettlementResult {
@@ -125,6 +134,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_hour,
                             block_num,
                             block_time.clone(),
+                            &mut context,
                         )
                         .await
                     }
@@ -144,6 +154,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_num.clone(),
                             block_time.clone(),
                             block_hour,
+                            &mut context,
                         )
                         .await
                     }
@@ -167,6 +178,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_hour,
                             block_time.clone(),
                             block_num,
+                            &mut context,
                         )
                         .await;
                     }
@@ -176,6 +188,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
         Response::Failure(_) => {}
     }
 
+    context.save_analyze_result().await;
     (pulled_block_time, latest_block_height, latest_perp_trade_id)
 }
 

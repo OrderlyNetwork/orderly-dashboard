@@ -100,7 +100,7 @@ pub async fn find_orderly_token_summary(
 }
 
 pub async fn create_or_update_orderly_token_summary(
-    p_hourly_data_vec: Vec<OrderlyTokenSummary>,
+    p_hourly_data_vec: Vec<&OrderlyTokenSummary>,
 ) -> Result<usize, DBException> {
     use crate::schema::orderly_token_summary::dsl::*;
     let mut row_nums = 0;

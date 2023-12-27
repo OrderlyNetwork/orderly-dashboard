@@ -30,6 +30,12 @@ pub struct UserTokenSummary {
 }
 
 impl UserTokenSummary {
+    pub fn add_amount(&mut self, add_amount: BigDecimal) {
+        self.balance += add_amount;
+    }
+}
+
+impl UserTokenSummary {
     pub fn deposit(
         &mut self,
         p_deposit_amount: BigDecimal,
@@ -126,7 +132,7 @@ pub async fn find_user_token_summary(
 }
 
 pub async fn create_or_update_user_token_summary(
-    user_token_summary_vec: Vec<UserTokenSummary>,
+    user_token_summary_vec: Vec<&UserTokenSummary>,
 ) -> Result<usize, DBException> {
     use crate::schema::user_token_summary::dsl::*;
     let mut row_nums = 0;

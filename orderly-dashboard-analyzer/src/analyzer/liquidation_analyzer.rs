@@ -1,14 +1,144 @@
+use std::ops::Neg;
+
+use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use orderly_dashboard_indexer::formats_external::trading_events::LiquidationTransfer;
 
+use crate::analyzer::analyzer_context::AnalyzeContext;
+use crate::analyzer::calc::pnl_calc::RealizedPnl;
+use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
+use crate::db::hourly_user_perp::HourlyUserPerpKey;
+use crate::db::user_perp_summary::UserPerpSummaryKey;
+use crate::db::user_token_summary::UserTokenSummaryKey;
+
+const LIQUIDATION_ANALYZER: &str = "liquidation-analyzer";
+
 pub async fn analyzer_liquidation(
-    _liquidated_account_id: String,
-    _insurance_account_id: String,
+    liquidated_account_id: String,
+    insurance_account_id: String,
     _liquidated_asset_hash: String,
-    _insurance_transfer_amount: String,
-    _liquidation_transfers: Vec<LiquidationTransfer>,
-    _block_num: i64,
-    _block_hour: NaiveDateTime,
-    _block_time: NaiveDateTime,
+    insurance_transfer_amount: String,
+    liquidation_transfers: Vec<LiquidationTransfer>,
+    block_num: i64,
+    block_hour: NaiveDateTime,
+    block_time: NaiveDateTime,
+    context: &mut AnalyzeContext,
 ) {
+    tracing::info!(target:LIQUIDATION_ANALYZER,"receive liquidation account:{}",liquidated_account_id.clone());
+    let need_transfer_amount: BigDecimal = insurance_transfer_amount
+        .parse()
+        .unwrap_or(BigDecimal::from(0));
+    if need_transfer_amount != BigDecimal::from(0) {
+        {
+            transfer_amount(
+                liquidated_account_id.clone(),
+                context,
+                need_transfer_amount.clone(),
+            )
+            .await;
+        }
+        {
+            transfer_amount(
+                insurance_account_id.clone(),
+                context,
+                need_transfer_amount.clone().neg(),
+            )
+            .await;
+        }
+    }
+    for liquidation in liquidation_transfers {
+        let liquidation_qty: BigDecimal = liquidation.position_qty_transfer.parse().unwrap();
+        let cost_position_transfer: BigDecimal =
+            liquidation.cost_position_transfer.clone().parse().unwrap();
+        let liquidator_fee: BigDecimal = liquidation.liquidator_fee.parse().unwrap();
+        let insurance_fee: BigDecimal = liquidation.insurance_fee.parse().unwrap();
+        let mark_price: BigDecimal = liquidation.mark_price.parse().unwrap();
+
+        let key = UserPerpSummaryKey::new_key(
+            liquidated_account_id.clone(),
+            liquidation.symbol_hash.clone(),
+        );
+        let (mut open_cost_diff, mut pnl_diff) = (Default::default(), Default::default());
+        {
+            let user_perp = context.get_user_perp(&key.clone()).await;
+            let user_perp_snap = user_perp.clone();
+            (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
+                liquidation_qty.clone().neg(),
+                cost_position_transfer.clone() - (liquidator_fee.clone() + insurance_fee.clone()),
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            );
+        }
+
+        {
+            let user_perp = context.get_user_perp(&key.clone()).await;
+            user_perp.new_liquidation(
+                liquidation_qty.clone(),
+                mark_price.clone(),
+                block_num.clone(),
+                block_time.clone(),
+                liquidation.cost_position_transfer.clone(),
+                liquidation.sum_unitary_fundings.clone(),
+                open_cost_diff.clone(),
+            );
+        }
+
+        {
+            let h_perp_key = HourlyUserPerpKey::new_key(
+                liquidated_account_id.clone(),
+                liquidation.symbol_hash.clone(),
+                block_hour.clone(),
+            );
+            let h_user_perp = context.get_hourly_user_perp(&h_perp_key).await;
+            h_user_perp.new_liquidation(
+                liquidation_qty.clone() * mark_price.clone(),
+                block_num,
+                block_time.clone(),
+                pnl_diff.clone(),
+            );
+        }
+
+        let liquidator_key = UserPerpSummaryKey::new_key(
+            liquidation.liquidator_account_id.clone(),
+            liquidation.symbol_hash.clone(),
+        );
+
+        let (mut liquidator_open_cost_diff, mut liquidator_pnl_diff) =
+            (Default::default(), Default::default());
+        {
+            let user_perp = context.get_user_perp(&liquidator_key.clone()).await;
+            let user_perp_snap = user_perp.clone();
+            (liquidator_open_cost_diff, liquidator_pnl_diff) = RealizedPnl::calc_realized_pnl(
+                liquidation_qty.clone(),
+                -(cost_position_transfer.clone() - liquidator_fee.clone()),
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            );
+        }
+
+        {
+            let user_perp = context.get_user_perp(&liquidator_key.clone()).await;
+            user_perp.new_liquidator(liquidation_qty.clone(), liquidator_open_cost_diff.clone());
+        }
+        {
+            let h_perp_key = HourlyUserPerpKey::new_key(
+                liquidation.liquidator_account_id.clone(),
+                liquidation.symbol_hash.clone(),
+                block_hour.clone(),
+            );
+            let h_user_perp = context.get_hourly_user_perp(&h_perp_key).await;
+            h_user_perp.new_realized_pnl(liquidator_pnl_diff.clone());
+        }
+    }
+}
+
+async fn transfer_amount(account_id: String, context: &mut AnalyzeContext, amount: BigDecimal) {
+    let key = UserTokenSummaryKey {
+        account_id: account_id.clone(),
+        token: String::from(USDC_HASH),
+        chain_id: String::from(USDC_CHAIN_ID),
+    };
+
+    let user_token = context.get_user_token(&key).await;
+    user_token.add_amount(amount);
 }

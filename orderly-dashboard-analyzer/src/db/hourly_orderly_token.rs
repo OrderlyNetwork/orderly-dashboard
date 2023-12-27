@@ -100,7 +100,7 @@ pub async fn find_hourly_orderly_token(
 }
 
 pub async fn create_or_update_hourly_orderly_token(
-    p_hourly_data_vec: Vec<HourlyOrderlyToken>,
+    p_hourly_data_vec: Vec<&HourlyOrderlyToken>,
 ) -> Result<usize, DBException> {
     use crate::schema::hourly_orderly_token::dsl::*;
     let mut row_nums = 0;

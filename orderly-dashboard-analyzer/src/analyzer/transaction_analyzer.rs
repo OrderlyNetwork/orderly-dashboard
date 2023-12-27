@@ -1,17 +1,14 @@
-use std::str::FromStr;
-
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use orderly_dashboard_indexer::formats_external::trading_events::*;
 
-use crate::db::hourly_orderly_token::{
-    create_or_update_hourly_orderly_token, find_hourly_orderly_token,
-};
-use crate::db::hourly_user_token::{create_or_update_hourly_user_token, find_hourly_user_token};
-use crate::db::orderly_token_summary::{
-    create_or_update_orderly_token_summary, find_orderly_token_summary,
-};
-use crate::db::user_token_summary::{create_or_update_user_token_summary, find_user_token_summary};
+use crate::analyzer::analyzer_context::AnalyzeContext;
+use crate::db::hourly_orderly_token::HourlyOrderlyTokenKey;
+use crate::db::hourly_user_token::HourlyUserTokenKey;
+use crate::db::orderly_token_summary::OrderlyTokenSummaryKey;
+use crate::db::user_token_summary::UserTokenSummaryKey;
+
+const TRANSACTION_ANALYZER: &str = "transaction-analyzer";
 
 pub async fn analyzer_transaction(
     account_id: String,
@@ -22,56 +19,71 @@ pub async fn analyzer_transaction(
     block_hour: &NaiveDateTime,
     block_number: i64,
     block_time: NaiveDateTime,
+    context: &mut AnalyzeContext,
 ) {
-    let mut hourly_user_token = find_hourly_user_token(
-        account_id.clone(),
-        token_hash.clone(),
-        block_hour.clone(),
-        chain_id.clone(),
-    )
-    .await
-    .unwrap();
-    let mut hourly_orderly_token =
-        find_hourly_orderly_token(token_hash.clone(), block_hour.clone(), chain_id.clone())
-            .await
-            .unwrap();
-    let mut user_token_summary =
-        find_user_token_summary(account_id.clone(), token_hash.clone(), chain_id.clone())
-            .await
-            .unwrap();
-    let mut orderly_token_summary =
-        find_orderly_token_summary(token_hash.clone(), chain_id.clone())
-            .await
-            .unwrap();
-    let amount = BigDecimal::from_str(token_amount.as_str()).unwrap();
+    tracing::info!(target:TRANSACTION_ANALYZER,"receive {:?} - account:{},amount:{}",side.clone(),account_id.clone(),token_amount.clone());
+    let amount: BigDecimal = token_amount.parse().unwrap();
+    let deposit;
     match side {
         TransactionSide::Deposit => {
-            user_token_summary.deposit(amount.clone(), block_number, block_time);
-            hourly_user_token.deposit(amount.clone(), block_number, block_time);
-            hourly_orderly_token.deposit(amount.clone(), block_number, block_time);
-            orderly_token_summary.deposit(amount.clone(), block_number, block_time);
+            deposit = true;
         }
-        TransactionSide::Withdraw => {
-            user_token_summary.withdraw(amount.clone(), block_number, block_time);
+        TransactionSide::Withdraw => deposit = false,
+    }
+
+    {
+        let key = HourlyUserTokenKey {
+            account_id: account_id.clone(),
+            token: token_hash.clone(),
+            block_hour: block_hour.clone(),
+            chain_id: chain_id.clone(),
+        };
+        let hourly_user_token = context.get_hourly_user_token(&key).await;
+        if deposit {
+            hourly_user_token.deposit(amount.clone(), block_number, block_time);
+        } else {
             hourly_user_token.withdraw(amount.clone(), block_number, block_time);
-            hourly_orderly_token.withdraw(amount.clone(), block_number, block_time);
-            orderly_token_summary.withdraw(amount.clone(), block_number, block_time);
         }
     }
 
-    hourly_orderly_token.pulled_block_time = block_time.clone();
-    hourly_orderly_token.pulled_block_height = block_number.clone();
-    let _ = create_or_update_hourly_orderly_token(vec![hourly_orderly_token]).await;
+    {
+        let key = HourlyOrderlyTokenKey {
+            token: token_hash.clone(),
+            block_hour: block_hour.clone(),
+            chain_id: chain_id.clone(),
+        };
 
-    hourly_user_token.pulled_block_time = block_time.clone();
-    hourly_user_token.pulled_block_height = block_number.clone();
-    let _ = create_or_update_hourly_user_token(vec![hourly_user_token]).await;
+        let hourly_orderly_token = context.get_hourly_orderly_token(&key).await;
+        if deposit {
+            hourly_orderly_token.deposit(amount.clone(), block_number, block_time);
+        } else {
+            hourly_orderly_token.withdraw(amount.clone(), block_number, block_time);
+        }
+    }
 
-    user_token_summary.pulled_block_time = block_time.clone();
-    user_token_summary.pulled_block_height = block_number.clone();
-    let _ = create_or_update_user_token_summary(vec![user_token_summary]).await;
-
-    orderly_token_summary.pulled_block_time = block_time.clone();
-    orderly_token_summary.pulled_block_height = block_number.clone();
-    let _ = create_or_update_orderly_token_summary(vec![orderly_token_summary]).await;
+    {
+        let key = OrderlyTokenSummaryKey {
+            token: token_hash.clone(),
+            chain_id: chain_id.clone(),
+        };
+        let orderly_token = context.get_orderly_token(&key).await;
+        if deposit {
+            orderly_token.deposit(amount.clone(), block_number, block_time);
+        } else {
+            orderly_token.withdraw(amount.clone(), block_number, block_time);
+        }
+    }
+    {
+        let key = UserTokenSummaryKey {
+            account_id: account_id.clone(),
+            token: token_hash.clone(),
+            chain_id: chain_id.clone(),
+        };
+        let user_token = context.get_user_token(&key).await;
+        if deposit {
+            user_token.deposit(amount.clone(), block_number, block_time);
+        } else {
+            user_token.withdraw(amount.clone(), block_number, block_time);
+        }
+    }
 }

@@ -1,4 +1,3 @@
-use crate::schema::hourly_user_perp;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
@@ -10,6 +9,7 @@ use diesel::result::Error;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
 use crate::db::{PrimaryKey, POOL};
+use crate::schema::hourly_user_perp;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
 #[table_name = "hourly_user_perp"]
@@ -40,6 +40,16 @@ pub struct HourlyUserPerpKey {
     pub block_hour: NaiveDateTime,
 }
 
+impl HourlyUserPerpKey {
+    pub fn new_key(account_id: String, symbol: String, block_hour: NaiveDateTime) -> Self {
+        HourlyUserPerpKey {
+            account_id,
+            symbol,
+            block_hour,
+        }
+    }
+}
+
 impl HourlyUserPerp {
     pub fn new_trade(
         &mut self,
@@ -47,6 +57,7 @@ impl HourlyUserPerp {
         amount: BigDecimal,
         pulled_block_height: i64,
         pulled_block_time: NaiveDateTime,
+        realized_pnl: BigDecimal,
     ) -> bool {
         let new_hourly_user = self.trading_count == 0;
 
@@ -55,21 +66,28 @@ impl HourlyUserPerp {
         self.trading_count += 1;
         self.pulled_block_height = pulled_block_height;
         self.pulled_block_time = pulled_block_time;
+        self.realized_pnl += realized_pnl;
+
         new_hourly_user
     }
 
     #[allow(duplicate_macro_attributes)]
-    pub fn new_adl(
+    pub fn new_liquidation(
         &mut self,
-        adl_qty: BigDecimal,
-        adl_price: BigDecimal,
+        liquidation_amount: BigDecimal,
         block_num: i64,
         block_time: NaiveDateTime,
+        realized_pnl: BigDecimal,
     ) {
         self.liquidation_count += 1;
-        self.liquidation_amount += adl_qty * adl_price;
+        self.liquidation_amount += liquidation_amount;
         self.pulled_block_time = block_time;
         self.pulled_block_height = block_num;
+        self.realized_pnl += realized_pnl;
+    }
+
+    pub fn new_realized_pnl(&mut self, pnl: BigDecimal) {
+        self.realized_pnl += pnl;
     }
 }
 

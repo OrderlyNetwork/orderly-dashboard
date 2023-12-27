@@ -1,6 +1,3 @@
-use std::ops::Neg;
-use std::str::FromStr;
-
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
@@ -17,11 +14,11 @@ use crate::schema::user_perp_summary;
 #[derive(Queryable, Insertable, Debug, Clone)]
 #[table_name = "user_perp_summary"]
 pub struct UserPerpSummary {
-    account_id: String,
-    symbol: String,
+    pub account_id: String,
+    pub symbol: String,
 
-    holding: BigDecimal,
-    opening_cost: BigDecimal,
+    pub holding: BigDecimal,
+    pub opening_cost: BigDecimal,
     cost_position: BigDecimal,
 
     total_trading_volume: BigDecimal,
@@ -41,23 +38,27 @@ pub struct UserPerpSummary {
 }
 
 impl UserPerpSummary {
-    pub fn new_adl(
+    pub fn new_liquidation(
         &mut self,
         qty: BigDecimal,
         price: BigDecimal,
         block_num: i64,
         block_time: NaiveDateTime,
-        cost_position_transfer: String,
+        _cost_position_transfer: String,
         _sum_unitary_funding: String,
+        open_cost_diff: BigDecimal,
     ) {
         self.holding -= qty.clone();
-        self.cost_position += BigDecimal::from_str(&*cost_position_transfer)
-            .unwrap()
-            .neg();
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
         self.pulled_block_height = block_num;
         self.pulled_block_time = block_time.clone();
+        self.opening_cost += open_cost_diff;
+    }
+
+    pub fn new_liquidator(&mut self, holding_diff: BigDecimal, opening_cost_diff: BigDecimal) {
+        self.holding -= holding_diff.clone();
+        self.opening_cost += opening_cost_diff;
     }
 }
 
@@ -68,6 +69,7 @@ impl UserPerpSummary {
         amount: BigDecimal,
         pulled_block_height: i64,
         pulled_block_time: NaiveDateTime,
+        open_cost_diff: BigDecimal,
     ) -> (bool, bool) {
         let is_opening = self.holding.clone() == Default::default()
             || (self.holding.clone().sign() != amount.clone().sign()
@@ -80,6 +82,7 @@ impl UserPerpSummary {
         self.pulled_block_height = pulled_block_height;
         self.pulled_block_time = pulled_block_time;
         self.holding += amount;
+        self.opening_cost += open_cost_diff;
 
         (is_opening, is_new_user)
     }
@@ -89,6 +92,12 @@ impl UserPerpSummary {
 pub struct UserPerpSummaryKey {
     pub account_id: String,
     pub symbol: String,
+}
+
+impl UserPerpSummaryKey {
+    pub fn new_key(account_id: String, symbol: String) -> UserPerpSummaryKey {
+        UserPerpSummaryKey { account_id, symbol }
+    }
 }
 
 impl PrimaryKey for UserPerpSummaryKey {}

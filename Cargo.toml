@@ -4,3 +4,4 @@ members = [
     "orderly-dashboard-indexer",
     "orderly-dashboard-query-service",
 ]
+resolver = "2"

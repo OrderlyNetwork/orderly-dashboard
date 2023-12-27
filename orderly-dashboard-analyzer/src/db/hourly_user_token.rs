@@ -105,7 +105,7 @@ pub async fn find_hourly_user_token(
 }
 
 pub async fn create_or_update_hourly_user_token(
-    hourly_data_vec: Vec<HourlyUserToken>,
+    hourly_data_vec: Vec<&HourlyUserToken>,
 ) -> Result<usize, DBException> {
     use crate::schema::hourly_user_token::dsl::*;
 

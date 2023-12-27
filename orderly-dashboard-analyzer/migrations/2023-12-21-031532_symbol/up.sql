@@ -1,8 +1,8 @@
 -- Your SQL goes here
 CREATE TABLE IF NOT EXISTS symbols
 (
-    symbol      varchar(128) primary key not null,
-    symbol_hash varchar(256)             not null
+    symbol      text primary key not null,
+    symbol_hash text             not null
 );
 
 insert into symbols(symbol, symbol_hash) values

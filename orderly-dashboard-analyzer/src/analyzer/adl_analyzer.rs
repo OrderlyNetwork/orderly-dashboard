@@ -1,18 +1,17 @@
-use std::ops::Neg;
-use std::str::FromStr;
-
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 
-use crate::db::hourly_orderly_perp::{
-    create_or_update_hourly_orderly_perp, find_hourly_orderly_perp,
-};
-use crate::db::hourly_user_perp::{create_or_update_hourly_user_perp, find_hourly_user_perp};
-use crate::db::user_perp_summary::{create_or_update_user_perp_summary, find_user_perp_summary};
+use crate::analyzer::analyzer_context::AnalyzeContext;
+use crate::analyzer::calc::pnl_calc::RealizedPnl;
+use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
+use crate::db::hourly_user_perp::HourlyUserPerpKey;
+use crate::db::user_perp_summary::UserPerpSummaryKey;
+
+const ADL_ANALYZER: &str = "adl-analyzer";
 
 pub async fn analyzer_adl(
     account_id: String,
-    insurance_account_id: String,
+    _insurance_account_id: String,
     symbol_hash: String,
     position_qty_transfer: String,
     cost_position_transfer: String,
@@ -21,60 +20,56 @@ pub async fn analyzer_adl(
     block_hour: NaiveDateTime,
     pulled_block_time: NaiveDateTime,
     block_num: i64,
+    context: &mut AnalyzeContext,
 ) {
-    let mut hourly_orderly_perp = find_hourly_orderly_perp(symbol_hash.clone(), block_hour.clone())
-        .await
-        .unwrap();
-    hourly_orderly_perp.new_adl(
-        BigDecimal::from_str(&*position_qty_transfer.clone()).unwrap(),
-        BigDecimal::from_str(&*adl_price.clone()).unwrap(),
-        block_num,
-        pulled_block_time.clone(),
+    tracing::info!(target:ADL_ANALYZER,"receiver adl account_id:{},symbol:{},qty:{},cost_position:{}",account_id.clone(),symbol_hash.clone(),position_qty_transfer.clone(),cost_position_transfer.clone());
+    let adl_qty: BigDecimal = position_qty_transfer.parse().unwrap();
+    let adl_price: BigDecimal = adl_price.parse().unwrap();
+    {
+        let key = HourlyOrderlyPerpKey::new_key(symbol_hash.clone(), block_hour.clone());
+        let hourly_orderly_perp = context.get_hourly_orderly_perp(&key).await;
+        hourly_orderly_perp.new_adl(
+            adl_qty.clone(),
+            adl_price.clone(),
+            block_num,
+            pulled_block_time.clone(),
+        );
+    }
+
+    let user_perp_key = UserPerpSummaryKey {
+        account_id: account_id.clone(),
+        symbol: symbol_hash.clone(),
+    };
+    let user_perp_snap = context.get_user_perp(&user_perp_key.clone()).await.clone();
+    let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
+        position_qty_transfer.clone().parse().unwrap(),
+        cost_position_transfer.parse().unwrap(),
+        user_perp_snap.holding,
+        user_perp_snap.opening_cost,
     );
 
-    let mut hourly_user_perp =
-        find_hourly_user_perp(account_id.clone(), symbol_hash.clone(), block_hour.clone())
-            .await
-            .unwrap();
-    hourly_user_perp.new_adl(
-        BigDecimal::from_str(&*position_qty_transfer.clone()).unwrap(),
-        BigDecimal::from_str(&*adl_price.clone()).unwrap(),
-        block_num,
-        pulled_block_time.clone(),
-    );
+    {
+        let key =
+            HourlyUserPerpKey::new_key(account_id.clone(), symbol_hash.clone(), block_hour.clone());
+        let hourly_user_perp = context.get_hourly_user_perp(&key).await;
+        hourly_user_perp.new_liquidation(
+            adl_price.clone() * adl_qty.clone(),
+            block_num,
+            pulled_block_time.clone(),
+            pnl_diff,
+        );
+    }
 
-    let mut user_perp_summary = find_user_perp_summary(account_id.clone(), symbol_hash.clone())
-        .await
-        .unwrap();
-    user_perp_summary.new_adl(
-        BigDecimal::from_str(&*position_qty_transfer.clone()).unwrap(),
-        BigDecimal::from_str(&*adl_price.clone()).unwrap(),
-        block_num,
-        pulled_block_time.clone(),
-        cost_position_transfer.clone(),
-        sum_unitary_fundings.clone(),
-    );
-
-    let mut insurance_perp_summary =
-        find_user_perp_summary(insurance_account_id.clone(), symbol_hash.clone())
-            .await
-            .unwrap();
-    insurance_perp_summary.new_adl(
-        BigDecimal::from_str(&*position_qty_transfer).unwrap().neg(),
-        BigDecimal::from_str(&*adl_price).unwrap(),
-        block_num,
-        pulled_block_time.clone(),
-        cost_position_transfer,
-        sum_unitary_fundings,
-    );
-
-    create_or_update_hourly_user_perp(vec![&hourly_user_perp])
-        .await
-        .unwrap();
-    create_or_update_hourly_orderly_perp(vec![&hourly_orderly_perp])
-        .await
-        .unwrap();
-    create_or_update_user_perp_summary(vec![&user_perp_summary, &insurance_perp_summary])
-        .await
-        .unwrap();
+    {
+        let user_perp_summary = context.get_user_perp(&user_perp_key).await;
+        user_perp_summary.new_liquidation(
+            adl_qty.clone(),
+            adl_price.clone(),
+            block_num,
+            pulled_block_time.clone(),
+            cost_position_transfer.clone(),
+            sum_unitary_fundings.clone(),
+            open_cost_diff,
+        );
+    }
 }
