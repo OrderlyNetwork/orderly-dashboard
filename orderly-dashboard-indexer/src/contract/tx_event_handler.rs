@@ -586,9 +586,7 @@ pub(crate) async fn handle_log(
                             liquidation_trasfers
                                 .iter_mut()
                                 .for_each(|v| v.liquidation_result_log_idx = log_index);
-                            let mut data: Vec<_> = Vec::with_capacity(liquidation_trasfers.len());
-                            data.clone_from_slice(liquidation_trasfers);
-                            create_liquidation_transfers(data).await?;
+                            create_liquidation_transfers(liquidation_trasfers.clone()).await?;
                             liquidation_trasfers.clear();
                         }
                     }
@@ -643,9 +641,7 @@ pub(crate) async fn handle_log(
                             settlement_exectutions
                                 .iter_mut()
                                 .for_each(|v| v.settlement_result_log_idx = log_index);
-                            let mut data: Vec<_> = Vec::with_capacity(settlement_exectutions.len());
-                            data.clone_from_slice(settlement_exectutions);
-                            create_settlement_executions(data).await?;
+                            create_settlement_executions(settlement_exectutions.clone()).await?;
                             settlement_exectutions.clear();
                         }
                     }
