@@ -44,7 +44,7 @@ static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
     rt
 });
 
-/// schedule futures by tokio thread pool
+/// schedule futures by tokio thread pool, limit to return Result
 pub fn spawn_future<F, O>(fut: F) -> JoinHandle<()>
 where
     F: 'static + Future<Output = Result<O>> + Send,
@@ -60,6 +60,15 @@ where
         }
     };
     RUNTIME.spawn(fut_wrapper)
+}
+
+/// schedule futures by tokio thread pool
+pub fn raw_spawn_future<F>(future: F) -> JoinHandle<F::Output>
+where
+    F: Future + Send + 'static,
+    F::Output: Send + 'static,
+{
+    RUNTIME.spawn(future)
 }
 
 /// runtime pool

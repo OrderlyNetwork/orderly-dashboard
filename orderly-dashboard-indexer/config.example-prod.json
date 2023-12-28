@@ -26,6 +26,9 @@
     "indexer_address": "0.0.0.0:8018",
     "public_key": "7YgXI92OjRkkH76M2pb4UMB8VUS6jzxElKKohkap85U="
   },
+  "sync_block_strategy": {
+    "parallel_limit": 3
+  },
   "layerzero": {
     "scan_url": "https://api-mainnet.layerzero-scan.com",
     "graphql_url": "https://qtrhqncfi4.execute-api.us-east-1.amazonaws.com/prod/graphql"

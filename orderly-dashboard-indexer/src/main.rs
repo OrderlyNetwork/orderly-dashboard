@@ -18,14 +18,17 @@ pub mod utils;
 #[macro_use]
 extern crate diesel;
 
-use crate::config::{CommonConfigs, Opts, COMMON_CONFIGS};
+use crate::config::{get_common_cfg, CommonConfigs, Opts, COMMON_CONFIGS};
 use crate::contract::consume_data_on_block;
 use crate::db::settings::{get_last_rpc_processed_height, update_last_rpc_processed_height};
 use crate::eth_rpc::get_latest_block_num;
 use crate::init::init_handler;
 use crate::server::webserver;
+use crate::service_base::runtime::raw_spawn_future;
 use anyhow::Result;
 use clap::Parser;
+use futures::future::join_all;
+use std::cmp::min;
 use std::time::Duration;
 
 const ORDERLY_DASHBOARD_INDEXER: &str = "orderly_dashboard_indexer";
@@ -140,6 +143,7 @@ pub async fn consume_data_inner(
         "enter consume_data_inner loop,start block:{}",
         start_height
     );
+    let parallel_limit = get_common_cfg().sync_block_strategy.parallel_limit;
     loop {
         if start_height == target_block {
             match pull_target_block().await {
@@ -167,7 +171,17 @@ pub async fn consume_data_inner(
                 }
             }
         }
-        if let Err(err) = consume_data_on_block(start_height).await {
+        // concurrency
+        let gap = min(
+            target_block - start_height,
+            if parallel_limit == 0 {
+                0
+            } else {
+                (parallel_limit - 1) as u64
+            },
+        );
+        let last_processed = start_height + gap;
+        if let Err(err) = parallel_consume_blocks(start_height, gap).await {
             tracing::warn!(
                 target: ORDERLY_DASHBOARD_INDEXER,
                 "consume_data_on_block failed with err: {}",
@@ -181,7 +195,7 @@ pub async fn consume_data_inner(
                     "consume_data_inner checked block: {}",
                     start_height
                 );
-                if let Err(err) = update_last_rpc_processed_height(start_height).await {
+                if let Err(err) = update_last_rpc_processed_height(last_processed).await {
                     tracing::info!(
                         target: ORDERLY_DASHBOARD_INDEXER,
                         "update_last_rpc_processed_height failed with err: {}",
@@ -199,8 +213,36 @@ pub async fn consume_data_inner(
                     break;
                 }
             }
-            start_height += 1;
+            start_height = last_processed + 1;
         }
     }
     Ok(())
+}
+
+pub async fn parallel_consume_blocks(start_height: u64, gap: u64) -> Result<()> {
+    let mut futs = Vec::with_capacity(gap as usize);
+    (start_height..=(start_height + gap)).for_each(|block_height| {
+        futs.push(consume_data_on_block(block_height));
+    });
+    let res = raw_spawn_future(join_all(futs)).await?;
+    return if res.iter().all(|r| r.is_ok()) {
+        Ok(())
+    } else {
+        Err(anyhow::anyhow!("Some task failed to be executed."))
+    };
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_range_iter() {
+        let start = 3;
+        let end = 6;
+        let s = end - start;
+        let mut res = Vec::with_capacity(s + 1);
+        (start..=end).for_each(|v| {
+            res.push(v);
+        });
+        assert_eq!(res, vec![3, 4, 5, 6]);
+    }
 }

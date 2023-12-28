@@ -14,6 +14,9 @@ pub fn init_config(config: CommonConfigs) {
     }
 }
 
+pub fn get_common_cfg() -> &'static CommonConfigs {
+    unsafe { COMMON_CONFIGS.get_unchecked() }
+}
 #[derive(Parser, Debug)]
 #[clap(
     version,
@@ -66,6 +69,11 @@ pub struct IndexerServerConfig {
 }
 
 #[derive(Clone, Deserialize, Default)]
+pub struct SyncBlockStrategy {
+    pub parallel_limit: u32,
+}
+
+#[derive(Clone, Deserialize, Default)]
 pub struct LayerzeroConfig {
     pub scan_url: String,
     pub graphql_url: String,
@@ -76,6 +84,7 @@ pub struct CommonConfigs {
     pub l2_config: SubnetConfig,
     pub cefi_server: CefiServerConfig,
     pub indexer_server: IndexerServerConfig,
+    pub sync_block_strategy: SyncBlockStrategy,
     pub layerzero: LayerzeroConfig,
     pub perp_symbols_config: Vec<String>,
 }
@@ -89,17 +98,22 @@ impl Display for CommonConfigs {
             subnet_cfg.rpc_url, subnet_cfg.rpc_url_fallback, subnet_cfg.is_use_ws, subnet_cfg.ws_url, subnet_cfg.pull_check_interval,subnet_cfg.ledger_address, subnet_cfg.operator_manager_address,
             subnet_cfg.user_ledger_abi_path, subnet_cfg.operator_manager_abi_path, subnet_cfg.market_manager_address, subnet_cfg.market_manager_abi_path, subnet_cfg.confirm_block_num, subnet_cfg.contract_deploy_height
         )?;
-        let indexer_server = &self.cefi_server;
+        let indexer_server = &self.indexer_server;
         write!(
             f,
-            "indexer_server:[server_address:{}];",
-            indexer_server.server_address
+            "indexer_server:[indexer_address:{},public_key:{}];",
+            indexer_server.indexer_address, indexer_server.public_key
         )?;
-        let cefi_config = &self.indexer_server;
+        let cefi_config = &self.cefi_server;
         write!(
             f,
-            "cefi_config:[cefi_address:{},public_key:{}].",
-            cefi_config.indexer_address, cefi_config.public_key
+            "cefi_config:[server_address:{}].",
+            cefi_config.server_address,
+        )?;
+        write!(
+            f,
+            "sync_block_strategy: [parallel_limit: {}]",
+            &self.sync_block_strategy.parallel_limit
         )?;
         let layerzero_config = &self.layerzero;
         write!(
