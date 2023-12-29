@@ -1,8 +1,8 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{NaiveDate, NaiveDateTime};
-use diesel::QueryableByName;
 use diesel::sql_types::{Date, Numeric, Timestamp};
+use diesel::QueryableByName;
 
 #[allow(unused_imports)]
 use orderly_dashboard_analyzer::{
@@ -34,7 +34,10 @@ struct OrderlyDailyData {
     pub opening_count: BigDecimal,
 }
 
-pub async fn daily_orderly_perp(from_time: NaiveDateTime, end_time: NaiveDateTime) -> DailyData<OrderlyPerpDaily> {
+pub async fn daily_orderly_perp(
+    from_time: NaiveDateTime,
+    end_time: NaiveDateTime,
+) -> DailyData<OrderlyPerpDaily> {
     let sql_query = diesel::sql_query(
         "select \
       date(block_hour) as trading_day,\
@@ -77,5 +80,8 @@ pub async fn daily_orderly_perp(from_time: NaiveDateTime, end_time: NaiveDateTim
             tracing::error!(target:DB_CONTEXT,"{}",error);
         }
     };
-    DailyData { daytime: daytime_vec, data: orderly_perp_vec }
+    DailyData {
+        daytime: daytime_vec,
+        data: orderly_perp_vec,
+    }
 }

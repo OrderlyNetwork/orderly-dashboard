@@ -19,7 +19,6 @@ pub struct TradingVolumeRanking {
     pub volume: Vec<f64>,
 }
 
-
 #[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
 pub struct TradingPnlRanking {
     pub account_ids: Vec<String>,
@@ -51,7 +50,6 @@ pub struct OrderlyTokenDaily {
     pub deposit_count: f64,
 }
 
-
 #[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
 pub struct DailyData<T: Serialize> {
     pub daytime: Vec<String>,
@@ -71,7 +69,6 @@ pub struct CountAverageExtern {
     pub latest_month_metric: f64,
 }
 
-
 #[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
 pub struct DailyTokenAmountExtern {
     pub daytime: Vec<String>,
@@ -83,4 +80,3 @@ pub struct DailyTokenRanking {
     pub daytime: Vec<String>,
     pub amount: Vec<f64>,
 }
-

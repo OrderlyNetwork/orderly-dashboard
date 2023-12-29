@@ -1,8 +1,8 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{NaiveDate, NaiveDateTime};
-use diesel::QueryableByName;
 use diesel::sql_types::{Date, Numeric, Timestamp};
+use diesel::QueryableByName;
 
 use crate::db::DB_CONTEXT;
 
@@ -28,7 +28,6 @@ pub struct OrderlyDailyData {
     #[sql_type = "Numeric"]
     pub deposit_count: BigDecimal,
 }
-
 
 pub async fn get_daily_token(
     from_time: NaiveDateTime,
@@ -70,5 +69,8 @@ pub async fn get_daily_token(
             tracing::error!(target:DB_CONTEXT,"{}",error);
         }
     };
-    DailyData { daytime: daytime_vec, data: orderly_token_vec }
+    DailyData {
+        daytime: daytime_vec,
+        data: orderly_token_vec,
+    }
 }

@@ -14,9 +14,9 @@ use orderly_dashboard_analyzer::{
 use crate::format_extern::trading_metrics::{DailyTradingFeeExtern, DailyVolumeExtern};
 
 pub mod average;
-pub mod ranking;
-pub mod orderly_daily_token;
 pub mod orderly_daily_perp;
+pub mod orderly_daily_token;
+pub mod ranking;
 
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DailyVolume {

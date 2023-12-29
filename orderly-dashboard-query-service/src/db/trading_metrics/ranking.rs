@@ -1,10 +1,12 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{Duration, Local, NaiveDateTime};
-use diesel::QueryableByName;
 use diesel::sql_types::*;
+use diesel::QueryableByName;
 
-use crate::format_extern::trading_metrics::{TokenAmountRanking, TradingPnlRanking, TradingVolumeRanking, UserPerpHoldingRanking};
+use crate::format_extern::trading_metrics::{
+    TokenAmountRanking, TradingPnlRanking, TradingVolumeRanking, UserPerpHoldingRanking,
+};
 
 #[derive(Debug, QueryableByName, Clone)]
 pub struct AccountVolume {
@@ -22,7 +24,6 @@ pub struct AccountPerpHolding {
     holding: BigDecimal,
 }
 
-
 pub async fn get_token_ranking(hour: i64, account_size: i64, withdraw: bool) -> TokenAmountRanking {
     #[allow(unused_imports)]
     use orderly_dashboard_analyzer::{
@@ -34,12 +35,11 @@ pub async fn get_token_ranking(hour: i64, account_size: i64, withdraw: bool) -> 
     let now = Local::now().naive_utc();
     let start_time = now - Duration::hours(hour);
 
-
     let mut sql = "select account_id,sum(withdraw_amount) as volume from hourly_user_token \
     where block_hour>=$1 group by account_id order by volume desc limit $2";
 
     if !withdraw {
-        sql ="select account_id,sum(deposit_amount) as volume from hourly_user_token \
+        sql = "select account_id,sum(deposit_amount) as volume from hourly_user_token \
     where block_hour>=$1 group by account_id order by volume desc limit $2"
     }
 
@@ -69,7 +69,6 @@ pub async fn get_token_ranking(hour: i64, account_size: i64, withdraw: bool) -> 
     }
 }
 
-
 pub async fn get_pnl_ranking(hour: i64, account_size: i64) -> TradingPnlRanking {
     #[allow(unused_imports)]
     use orderly_dashboard_analyzer::{
@@ -85,10 +84,10 @@ pub async fn get_pnl_ranking(hour: i64, account_size: i64) -> TradingPnlRanking 
         "select account_id,sum(realized_pnl) as volume from hourly_user_perp \
     where block_hour>=$1 group by account_id order by volume desc limit $2",
     )
-        .bind::<Timestamp, _>(start_time)
-        .bind::<BigInt, _>(account_size)
-        .get_results_async::<AccountVolume>(&POOL)
-        .await;
+    .bind::<Timestamp, _>(start_time)
+    .bind::<BigInt, _>(account_size)
+    .get_results_async::<AccountVolume>(&POOL)
+    .await;
 
     match select_result {
         Ok(select_data) => {
@@ -110,7 +109,6 @@ pub async fn get_pnl_ranking(hour: i64, account_size: i64) -> TradingPnlRanking 
     }
 }
 
-
 pub async fn get_daily_trading_volume_ranking(
     hour: i64,
     account_size: i64,
@@ -129,10 +127,10 @@ pub async fn get_daily_trading_volume_ranking(
         "select account_id,sum(trading_volume) as volume from hourly_user_perp \
     where block_hour>=$1 group by account_id order by volume desc limit $2",
     )
-        .bind::<Timestamp, _>(start_time)
-        .bind::<BigInt, _>(account_size)
-        .get_results_async::<AccountVolume>(&POOL)
-        .await;
+    .bind::<Timestamp, _>(start_time)
+    .bind::<BigInt, _>(account_size)
+    .get_results_async::<AccountVolume>(&POOL)
+    .await;
 
     match select_result {
         Ok(select_data) => {
@@ -160,7 +158,7 @@ pub async fn get_user_perp_holding_ranking(
 ) -> UserPerpHoldingRanking {
     #[allow(unused_imports)]
     use orderly_dashboard_analyzer::{
-        db::{POOL, user_perp_summary::UserPerpSummary},
+        db::{user_perp_summary::UserPerpSummary, POOL},
         schema::user_perp_summary,
         schema::user_perp_summary::dsl::*,
     };
@@ -191,5 +189,3 @@ pub async fn get_user_perp_holding_ranking(
         },
     }
 }
-
-

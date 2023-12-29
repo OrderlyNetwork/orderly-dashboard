@@ -1,14 +1,17 @@
-use actix_web::{get, HttpResponse, Responder, Result, web};
+use actix_web::{get, web, HttpResponse, Responder, Result};
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use serde_derive::Deserialize;
 
-use crate::{add_base_header, format_extern::Response};
-use crate::db::trading_metrics::{get_daily_trading_fee, get_daily_volume};
 use crate::db::trading_metrics::average::get_average;
 use crate::db::trading_metrics::orderly_daily_perp::daily_orderly_perp;
 use crate::db::trading_metrics::orderly_daily_token::get_daily_token;
-use crate::db::trading_metrics::ranking::{get_daily_trading_volume_ranking, get_pnl_ranking, get_token_ranking, get_user_perp_holding_ranking};
+use crate::db::trading_metrics::ranking::{
+    get_daily_trading_volume_ranking, get_pnl_ranking, get_token_ranking,
+    get_user_perp_holding_ranking,
+};
+use crate::db::trading_metrics::{get_daily_trading_fee, get_daily_volume};
+use crate::{add_base_header, format_extern::Response};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct DailyRequest {
@@ -91,7 +94,9 @@ pub fn write_response<T: Serialize>(res_data: T) -> HttpResponse {
 #[get("/daily_orderly_perp")] // <- define path parameters
 pub async fn get_daily_orderly_perp(param: web::Query<DailyRequest>) -> Result<impl Responder> {
     let (from_time, end_time) = param.parse_day();
-    Ok(write_response(daily_orderly_perp(from_time, end_time).await))
+    Ok(write_response(
+        daily_orderly_perp(from_time, end_time).await,
+    ))
 }
 
 #[get("/daily_orderly_token")] // <- define path parameters
@@ -153,14 +158,11 @@ pub async fn get_perp_holding_rank(
 }
 
 #[get("/ranking/pnl")]
-pub async fn get_perp_pnl_rank(
-    param: web::Query<VolumeRankingRequest>,
-) -> Result<impl Responder> {
+pub async fn get_perp_pnl_rank(param: web::Query<VolumeRankingRequest>) -> Result<impl Responder> {
     Ok(write_response(
         get_pnl_ranking(param.to_hour(), param.size as i64).await,
     ))
 }
-
 
 #[get("/ranking/deposit")]
 pub async fn get_token_deposit_rank(
@@ -179,5 +181,3 @@ pub async fn get_token_withdraw_rank(
         get_token_ranking(param.to_hour(), param.size as i64, true).await,
     ))
 }
-
-
