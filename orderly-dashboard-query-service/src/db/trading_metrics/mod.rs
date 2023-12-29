@@ -15,6 +15,8 @@ use crate::format_extern::trading_metrics::{DailyTradingFeeExtern, DailyVolumeEx
 
 pub mod average;
 pub mod ranking;
+pub mod orderly_daily_token;
+pub mod orderly_daily_perp;
 
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DailyVolume {

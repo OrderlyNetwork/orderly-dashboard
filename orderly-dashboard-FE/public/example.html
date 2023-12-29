@@ -337,115 +337,168 @@
         });
     }
 
-    const ctx12 = document.getElementById('chart12');
-    new Chart(ctx12, {
-        type: 'bar',
-        data: {
-            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
-            datasets: [{
-                borderColor: '#ff9a63',
-                backgroundColor: '#ff9a63',
-                label: 'User’s Pnl Ranking In Past 24h',
-                data: [368000.00, 358000.00, 348000.00, 308000.00, 268000.00, 248000.00, 218000.00, 208000.00, 178000.00, 158000.00],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    function rankUserPnl24hCallBack(respData) {
+        console.log("rankUserPerpHoldingCallBack respData: ", respData);
+        const chartData = respData["data"];
 
-    const ctx13 = document.getElementById('chart13');
-    new Chart(ctx13, {
-        type: 'bar',
-        data: {
-            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
-            datasets: [{
-                borderColor: '#ff9a63',
-                backgroundColor: '#ff9a63',
-                label: 'User’s Pnl Ranking In Past 7Days',
-                data: [3680000.50, 3580000.60, 3480000.00, 3080000.00, 2680000.80, 2480000.90, 2180000.88, 2080000.96, 1780000.32, 1580000.58],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+        const ctx11 = document.getElementById('chart12');
+        new Chart(ctx11, {
+            type: 'line',
+            data: {
+                labels: chartData["account_ids"],
+                datasets: [{
+                    label: 'User’s Pnl Ranking In Past 24h',
+                    data: chartData["volume"],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+
+
+    function rankUserPnl7dCallBack(respData) {
+        console.log("rankUserPerpHoldingCallBack respData: ", respData);
+        const chartData = respData["data"];
+
+        const ctx11 = document.getElementById('chart13');
+        new Chart(ctx11, {
+            type: 'bar',
+            data: {
+                labels: chartData["account_ids"],
+                datasets: [{
+                    label: 'User’s Pnl Ranking In Past 7Days',
+                    data: chartData["volume"],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+
     // ===== Token’s Metrics ====================
-    const ctx15 = document.getElementById('chart15');
-    new Chart(ctx15, {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: 'Daily Deposit Amount In Orderly',
-                data: [{x: '2023-12-06', y: 10000000.0}, {x: '2023-12-07', y: 11000000.0}, {x: '2023-12-08', y: 12500000.0}, {x: '2023-12-09', y: 15000000.0}, {x: '2023-12-10', y: 19000000.0}, {x: '2023-12-11', y: 21500000.0}, {x: '2023-12-12', y: 26500000.0}]
-            }]
-        }
-    });
+    function deposit_token_in_orderly(respData) {
+        console.log("rankUserPerpHoldingCallBack respData: ", respData);
+        const chartData = respData["data"];
 
-    const ctx16 = document.getElementById('chart16');
-    new Chart(ctx16, {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: 'Daily Withdraw Amount In Orderly',
-                data: [{x: '2023-12-06', y: 1000000.0}, {x: '2023-12-07', y: 1100000.0}, {x: '2023-12-08', y: 1150000.0}, {x: '2023-12-09', y: 1200000.0}, {x: '2023-12-10', y: 1100000.0}, {x: '2023-12-11', y: 1150000.0}, {x: '2023-12-12', y: 1060000.0}]
-            }]
-        }
-    });
-
-    const ctx17 = document.getElementById('chart17');
-    new Chart(ctx17, {
-        type: 'bar',
-        data: {
-            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
-            datasets: [{
-                borderColor: '#ff9a63',
-                backgroundColor: '#ff9a63',
-                label: 'Daily Deposit Amount Ranking In Past 24h',
-                data: [368000.50, 358000.60, 348000.00, 308000.00, 268000.80, 248000.90, 218000.88, 208000.96, 178000.32, 158000.58],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+        const ctx11 = document.getElementById('chart15');
+        new Chart(ctx11, {
+            type: 'line',
+            data: {
+                labels: chartData["daytime"],
+                datasets: [{
+                    borderColor: '#ff9a63',
+                    backgroundColor: '#ff9a63',
+                    label: 'Daily Deposit Amount In Orderly',
+                    data: chartData["data"],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
-    const ctx18 = document.getElementById('chart18');
-    new Chart(ctx18, {
-        type: 'bar',
-        data: {
-            labels: ['address1', 'address2', 'address3','address4', 'address5','address6', 'address7', 'address8','address9', 'address10'],
-            datasets: [{
-                borderColor: '#ff9a63',
-                backgroundColor: '#ff9a63',
-                label: 'Daily Deposit Amount Ranking In Past 7Days',
-                data: [668000.50, 658000.60, 634800.00, 608000.00, 528000.80, 488000.90, 428000.88, 408000.96, 348000.32, 308000.58],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
+    function withdraw_token_in_orderly(respData) {
+        console.log("rankUserPerpHoldingCallBack respData: ", respData);
+        const chartData = respData["data"];
+
+        const ctx11 = document.getElementById('chart16');
+        new Chart(ctx11, {
+            type: 'line',
+            data: {
+                labels: chartData["daytime"],
+                datasets: [{
+                    borderColor: '#ff9a63',
+                    backgroundColor: '#ff9a63',
+                    label: 'Daily Withdraw Amount In Orderly',
+                    data: chartData["data"],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+
+
+    function deposit_ranking_in_orderly(respData) {
+        console.log("rankUserPerpHoldingCallBack respData: ", respData);
+        const chartData = respData["data"];
+
+        const ctx11 = document.getElementById('chart17');
+        new Chart(ctx11, {
+            type: 'bar',
+            data: {
+                borderColor: '#ff9a63',
+                backgroundColor: '#ff9a63',
+                labels: chartData["account_ids"],
+                datasets: [{
+                    label: 'Daily Deposit Amount Ranking In Past 24h',
+                    data: chartData["volume"],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function deposit_7d_in_orderly(respData) {
+        console.log("rankUserPerpHoldingCallBack respData: ", respData);
+        const chartData = respData["data"];
+
+        const ctx11 = document.getElementById('chart18');
+        new Chart(ctx11, {
+            type: 'bar',
+            data: {
+                labels: chartData["account_ids"],
+                borderColor: '#ff9a63',
+                backgroundColor: '#ff9a63',
+                datasets: [{
+                    label: 'Daily Deposit Amount Ranking In Past 7Days',
+                    data: chartData["volume"],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
     // =======================================
     const data = {
         labels: [
@@ -601,6 +654,94 @@
                 console.log(xhr9.responseText);
             } else {
                 console.warn("xhr9 response: ", xhr8.responseText);
+            }
+        };
+
+
+
+        // ranking/24h pnl
+        let rank24hApi = baseUrl +"/ranking/pnl?days=1";
+        var xhr10 = new XMLHttpRequest();
+        xhr10.open('GET', rank24hApi);
+        xhr10.send();
+        xhr10.onreadystatechange = function() {
+            if (xhr10.readyState == 4 && xhr10.status == 200) {
+                rankUserPnl24hCallBack(JSON.parse(xhr10.responseText));
+                console.log(xhr10.responseText);
+            } else {
+                console.warn("xhr9 response: ", xhr10.responseText);
+            }
+        };
+
+
+        // ranking/7d pnl
+        let rank7dApi = baseUrl +"/ranking/pnl?days=7";
+        var xhr11 = new XMLHttpRequest();
+        xhr11.open('GET', rank7dApi);
+        xhr11.send();
+        xhr11.onreadystatechange = function() {
+            if (xhr11.readyState == 4 && xhr11.status == 200) {
+                rankUserPnl7dCallBack(JSON.parse(xhr11.responseText));
+                console.log(xhr11.responseText);
+            } else {
+                console.warn("xhr9 response: ", xhr11.responseText);
+            }
+        };
+
+
+        // ranking/7d pnl
+        let depositApi = baseUrl +"/daily_orderly_token";
+        var xhr12 = new XMLHttpRequest();
+        xhr12.open('GET', depositApi);
+        xhr12.send();
+        xhr12.onreadystatechange = function() {
+            if (xhr12.readyState == 4 && xhr12.status == 200) {
+                deposit_token_in_orderly(JSON.parse(xhr12.responseText));
+                console.log(xhr12.responseText);
+            } else {
+                console.warn("xhr12 response: ", xhr12.responseText);
+            }
+        };
+
+        // ranking/7d pnl
+        let withdrawApi = baseUrl +"/daily_orderly_token";
+        var xhr13 = new XMLHttpRequest();
+        xhr13.open('GET', withdrawApi);
+        xhr13.send();
+        xhr13.onreadystatechange = function() {
+            if (xhr13.readyState == 4 && xhr13.status == 200) {
+                withdraw_token_in_orderly(JSON.parse(xhr13.responseText));
+                console.log(xhr13.responseText);
+            } else {
+                console.warn("xhr13 response: ", xhr13.responseText);
+            }
+        };
+
+        // ranking/7d pnl
+        let deposit_rank_Api = baseUrl +"/ranking/deposit?days=10";
+        var xhr14 = new XMLHttpRequest();
+        xhr14.open('GET', deposit_rank_Api);
+        xhr14.send();
+        xhr14.onreadystatechange = function() {
+            if (xhr14.readyState == 4 && xhr14.status == 200) {
+                deposit_ranking_in_orderly(JSON.parse(xhr14.responseText));
+                console.log(xhr14.responseText);
+            } else {
+                console.warn("xhr9 response: ", xhr14.responseText);
+            }
+        };
+
+        // ranking/7d pnl
+        let deposit_7d_rank_Api = baseUrl +"/ranking/deposit?days=70";
+        var xhr15 = new XMLHttpRequest();
+        xhr15.open('GET', deposit_7d_rank_Api);
+        xhr15.send();
+        xhr15.onreadystatechange = function() {
+            if (xhr15.readyState == 4 && xhr15.status == 200) {
+                deposit_7d_in_orderly(JSON.parse(xhr15.responseText));
+                console.log(xhr15.responseText);
+            } else {
+                console.warn("xhr15 response: ", xhr15.responseText);
             }
         };
     }

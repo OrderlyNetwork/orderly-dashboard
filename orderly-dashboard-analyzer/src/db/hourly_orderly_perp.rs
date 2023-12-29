@@ -35,15 +35,14 @@ pub struct HourlyOrderlyPerp {
 }
 
 impl HourlyOrderlyPerp {
-    pub fn new_adl(
+    pub fn new_liquidation(
         &mut self,
-        adl_qty: BigDecimal,
-        adl_price: BigDecimal,
+        liquidation_amount: BigDecimal,
         block_num: i64,
         block_time: NaiveDateTime,
     ) {
         self.liquidation_count += 1;
-        self.liquidation_amount += adl_qty * adl_price;
+        self.liquidation_amount += liquidation_amount;
         self.pulled_block_time = block_time;
         self.pulled_block_height = block_num;
     }

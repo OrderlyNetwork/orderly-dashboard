@@ -28,9 +28,8 @@ pub async fn analyzer_adl(
     {
         let key = HourlyOrderlyPerpKey::new_key(symbol_hash.clone(), block_hour.clone());
         let hourly_orderly_perp = context.get_hourly_orderly_perp(&key).await;
-        hourly_orderly_perp.new_adl(
-            adl_qty.clone(),
-            adl_price.clone(),
+        hourly_orderly_perp.new_liquidation(
+            adl_price.clone() * adl_qty.clone(),
             block_num,
             pulled_block_time.clone(),
         );

@@ -27,7 +27,6 @@ impl RealizedPnl {
     ) -> (BigDecimal, BigDecimal) {
         let reverse = is_reverse(holding_diff.clone(), latest_holding.clone());
         let current_holding = latest_holding.clone() + holding_diff.clone();
-
         let open_cost_diff;
         let pnl_diff;
 

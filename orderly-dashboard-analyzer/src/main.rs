@@ -53,9 +53,8 @@ async fn main() -> std::io::Result<()> {
     init_log();
     init_database_url(get_database_credentials());
     start_analyze_job();
-
     HttpServer::new(|| App::new().service(health))
-        .bind(("127.0.0.1", 8080))?
+        .bind(("127.0.0.1", 18080))?
         .run()
         .await
 }

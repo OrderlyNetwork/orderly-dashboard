@@ -35,6 +35,20 @@ pub struct OrderlyPerpSummary {
 }
 
 impl OrderlyPerpSummary {
+    pub fn new_liquidation(
+        &mut self,
+        liquidation_amount: BigDecimal,
+        block_num: i64,
+        block_time: NaiveDateTime,
+    ) {
+        self.total_liquidation_amount += liquidation_amount;
+        self.total_liquidation_count += 1;
+        self.pulled_block_height = block_num;
+        self.pulled_block_time = block_time;
+    }
+}
+
+impl OrderlyPerpSummary {
     pub fn new_trade(
         &mut self,
         fee: BigDecimal,

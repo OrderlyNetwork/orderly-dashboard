@@ -7,6 +7,7 @@ use orderly_dashboard_indexer::formats_external::trading_events::LiquidationTran
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
 use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
+use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
 use crate::db::hourly_user_perp::HourlyUserPerpKey;
 use crate::db::user_perp_summary::UserPerpSummaryKey;
 use crate::db::user_token_summary::UserTokenSummaryKey;
@@ -47,7 +48,13 @@ pub async fn analyzer_liquidation(
         }
     }
     for liquidation in liquidation_transfers {
+        tracing::info!(target:LIQUIDATION_ANALYZER,"{:?}",liquidation.clone());
         let liquidation_qty: BigDecimal = liquidation.position_qty_transfer.parse().unwrap();
+        if liquidation_qty.clone() == BigDecimal::from(0) {
+            tracing::info!(target:LIQUIDATION_ANALYZER,"liquidation_qty equals zero, skipped");
+            continue;
+        }
+
         let cost_position_transfer: BigDecimal =
             liquidation.cost_position_transfer.clone().parse().unwrap();
         let liquidator_fee: BigDecimal = liquidation.liquidator_fee.parse().unwrap();
@@ -128,6 +135,28 @@ pub async fn analyzer_liquidation(
             );
             let h_user_perp = context.get_hourly_user_perp(&h_perp_key).await;
             h_user_perp.new_realized_pnl(liquidator_pnl_diff.clone());
+        }
+
+        {
+            let h_orderly_perp_key =
+                HourlyOrderlyPerpKey::new_key(liquidation.symbol_hash.clone(), block_hour.clone());
+            let h_orderly_perp = context.get_hourly_orderly_perp(&h_orderly_perp_key).await;
+            h_orderly_perp.new_liquidation(
+                liquidation_qty.clone() * mark_price.clone(),
+                block_num,
+                block_time.clone(),
+            );
+        }
+
+        {
+            let orderly_perp = context
+                .get_orderly_perp(&liquidation.symbol_hash.clone())
+                .await;
+            orderly_perp.new_liquidation(
+                liquidation_qty.clone() * mark_price.clone(),
+                block_num,
+                block_time.clone(),
+            );
         }
     }
 }
