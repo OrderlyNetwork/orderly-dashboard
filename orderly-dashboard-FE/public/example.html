@@ -9,18 +9,18 @@
 <div class="container text-center">
     <div class="row">
         <div class="col">
-            <div>Column</div>
+            <div></div>
         </div>
         <div class="col">
-            Column
+
         </div>
         <div class="col">
-            Column
+
         </div>
     </div>
 </div>
 <div class="container">
-    <div>Trading Metrics</div>
+    <div><h1>Trading Metrics</h1></div>
     <div class="row">
         <div class="col">
             <canvas id="chart1"></canvas>
@@ -53,7 +53,7 @@
             <canvas id="chart8"></canvas>
         </div>
     </div>
-    <div>User’s Metrics</div>
+    <div><h1>User’s Metrics</h1></div>
     <div class="row">
         <div class="col">
             <canvas id="chart9"></canvas>
@@ -79,7 +79,7 @@
         </div>
     </div>
     <div class="row">
-        Token’s Metrics
+        <h1>Token’s Metrics</h1>
     </div>
     <div class="row">
         <div class="col">
@@ -97,14 +97,14 @@
             <canvas id="chart18"></canvas>
         </div>
     </div>
-    <div class="row">
-        <div class="col">
-            <canvas id="chart1000"></canvas>
-        </div>
-        <div class="col">
-            <canvas id="chart1001"></canvas>
-        </div>
-    </div>
+<!--    <div class="row">-->
+<!--        <div class="col">-->
+<!--            <canvas id="chart1000"></canvas>-->
+<!--        </div>-->
+<!--        <div class="col">-->
+<!--            <canvas id="chart1001"></canvas>-->
+<!--        </div>-->
+<!--    </div>-->
 </div>
 
 <script src="./javascripts/chart.js@4.4.1.min.js"></script>
@@ -393,8 +393,15 @@
     function deposit_token_in_orderly(respData) {
         console.log("rankUserPerpHoldingCallBack respData: ", respData);
         const chartData = respData["data"];
-
         const ctx11 = document.getElementById('chart15');
+
+        let daily_token = chartData["data"];
+        console.log("daily_token="+daily_token)
+        let deposit_data = [];
+        for (let dailyTokenKey in daily_token) {
+            console.log(daily_token[dailyTokenKey]["deposit_amount"])
+            deposit_data.push(daily_token[dailyTokenKey]["deposit_amount"])
+        }
         new Chart(ctx11, {
             type: 'line',
             data: {
@@ -403,7 +410,7 @@
                     borderColor: '#ff9a63',
                     backgroundColor: '#ff9a63',
                     label: 'Daily Deposit Amount In Orderly',
-                    data: chartData["data"],
+                    data: deposit_data,
                     borderWidth: 1
                 }]
             },
@@ -420,7 +427,11 @@
     function withdraw_token_in_orderly(respData) {
         console.log("rankUserPerpHoldingCallBack respData: ", respData);
         const chartData = respData["data"];
-
+        let daily_token = chartData["data"];
+        let withdraw_data = [];
+        for (let dailyTokenKey in daily_token) {
+            withdraw_data.push(daily_token[dailyTokenKey]["withdraw_amount"])
+        }
         const ctx11 = document.getElementById('chart16');
         new Chart(ctx11, {
             type: 'line',
@@ -430,7 +441,7 @@
                     borderColor: '#ff9a63',
                     backgroundColor: '#ff9a63',
                     label: 'Daily Withdraw Amount In Orderly',
-                    data: chartData["data"],
+                    data: withdraw_data,
                     borderWidth: 1
                 }]
             },
