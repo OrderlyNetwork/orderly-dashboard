@@ -41,7 +41,7 @@ pub async fn get_daily_token(
       sum(deposit_amount) as deposit_amount, \
       sum(deposit_count) as deposit_count \
       from hourly_orderly_token where block_hour>=$1 and block_hour<=$2 \
-      group by trading_day order by trading_day desc;",
+      group by trading_day order by trading_day asc;",
     );
 
     let result: Result<Vec<OrderlyDailyData>, _> = sql_query

@@ -38,7 +38,7 @@ impl OrderlyTokenSummary {
     ) {
         self.total_deposit_amount += p_deposit_amount.clone();
         self.total_deposit_count += 1;
-        self.balance += p_deposit_amount.clone();
+        self.balance += p_deposit_amount.clone().abs();
         self.pulled_block_height = p_block_height;
         self.pulled_block_time = p_block_time;
     }

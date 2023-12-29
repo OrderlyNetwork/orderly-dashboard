@@ -43,7 +43,7 @@ pub async fn get_daily_volume(
       date(block_hour) as trading_day,\
       sum(trading_volume) as trading_volume \
       from hourly_orderly_perp where block_hour>=$1 and block_hour<=$2 \
-      group by trading_day order by trading_day desc;",
+      group by trading_day order by trading_day asc;",
     );
 
     let result: Result<Vec<DailyVolume>, _> = sql_query

@@ -42,7 +42,7 @@ impl HourlyOrderlyPerp {
         block_time: NaiveDateTime,
     ) {
         self.liquidation_count += 1;
-        self.liquidation_amount += liquidation_amount;
+        self.liquidation_amount += liquidation_amount.abs();
         self.pulled_block_time = block_time;
         self.pulled_block_height = block_num;
     }

@@ -1,16 +1,14 @@
-use std::cmp::max;
-
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
+use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::result::Error;
 use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;
 
+use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
-use crate::db::POOL;
 use crate::schema::orderly_perp_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
@@ -68,11 +66,9 @@ impl OrderlyPerpSummary {
                 self.buy_amount += amount.clone();
             }
             PurchaseSide::Sell => {
-                self.sell_amount += amount.clone();
+                self.sell_amount -= amount.clone();
             }
         }
-
-        self.open_interest = max(self.buy_amount.clone(), self.sell_amount.clone());
     }
 
     pub fn new_user(&mut self) {

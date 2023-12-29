@@ -1,8 +1,8 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
-use chrono::{Duration, Local, NaiveDateTime};
-use diesel::sql_types::*;
+use chrono::{Duration, Local};
 use diesel::QueryableByName;
+use diesel::sql_types::*;
 
 use crate::format_extern::trading_metrics::{
     TokenAmountRanking, TradingPnlRanking, TradingVolumeRanking, UserPerpHoldingRanking,
@@ -158,7 +158,7 @@ pub async fn get_user_perp_holding_ranking(
 ) -> UserPerpHoldingRanking {
     #[allow(unused_imports)]
     use orderly_dashboard_analyzer::{
-        db::{user_perp_summary::UserPerpSummary, POOL},
+        db::{POOL, user_perp_summary::UserPerpSummary},
         schema::user_perp_summary,
         schema::user_perp_summary::dsl::*,
     };

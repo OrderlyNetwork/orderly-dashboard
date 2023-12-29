@@ -1,9 +1,7 @@
-use std::str::FromStr;
-
-use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use orderly_dashboard_indexer::formats_external::trading_events::SettlementExecution;
 
+use crate::analyzer::div_into_real;
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
 use crate::db::user_token_summary::UserTokenSummaryKey;
@@ -29,9 +27,10 @@ pub async fn analyzer_settlement(
         chain_id: String::from(USDC_CHAIN_ID),
     };
 
+    let fixed_amount = div_into_real(settled_amount.parse().unwrap(), 1000000);
     let user_token = context.get_user_token(&key).await;
     user_token.new_settlement(
-        BigDecimal::from_str(&*settled_amount).unwrap(),
+        fixed_amount,
         pulled_block_height,
         pulled_block_time.clone(),
     );

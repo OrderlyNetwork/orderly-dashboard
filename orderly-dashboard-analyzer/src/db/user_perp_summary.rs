@@ -44,8 +44,8 @@ impl UserPerpSummary {
         price: BigDecimal,
         block_num: i64,
         block_time: NaiveDateTime,
-        _cost_position_transfer: String,
-        _sum_unitary_funding: String,
+        _cost_position_transfer: BigDecimal,
+        _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
     ) {
         self.holding -= qty.clone();

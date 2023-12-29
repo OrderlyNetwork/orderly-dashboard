@@ -1,4 +1,3 @@
-use diesel::QueryableByName;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, PartialEq, Serialize, Default)]

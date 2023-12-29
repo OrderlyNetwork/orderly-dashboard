@@ -1,12 +1,14 @@
 use std::ops::Neg;
+use std::str::FromStr;
 
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::NaiveDateTime;
 use orderly_dashboard_indexer::formats_external::trading_events::LiquidationTransfer;
 
 use crate::analyzer::analyzer_context::AnalyzeContext;
-use crate::analyzer::calc::pnl_calc::RealizedPnl;
 use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
+use crate::analyzer::calc::pnl_calc::RealizedPnl;
+use crate::analyzer::{div_into_real, to_big_decimal};
 use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
 use crate::db::hourly_user_perp::HourlyUserPerpKey;
 use crate::db::user_perp_summary::UserPerpSummaryKey;
@@ -30,21 +32,22 @@ pub async fn analyzer_liquidation(
         .parse()
         .unwrap_or(BigDecimal::from(0));
     if need_transfer_amount != BigDecimal::from(0) {
+        let fixed_amount = div_into_real(need_transfer_amount.to_i128().unwrap(), 1_000_000);
         {
             transfer_amount(
                 liquidated_account_id.clone(),
                 context,
-                need_transfer_amount.clone(),
+                to_big_decimal(fixed_amount.clone()),
             )
-            .await;
+                .await;
         }
         {
             transfer_amount(
                 insurance_account_id.clone(),
                 context,
-                need_transfer_amount.clone().neg(),
+                to_big_decimal(fixed_amount.clone()).neg(),
             )
-            .await;
+                .await;
         }
     }
     for liquidation in liquidation_transfers {
@@ -61,6 +64,12 @@ pub async fn analyzer_liquidation(
         let insurance_fee: BigDecimal = liquidation.insurance_fee.parse().unwrap();
         let mark_price: BigDecimal = liquidation.mark_price.parse().unwrap();
 
+        let fixed_qty = div_into_real(liquidation_qty.to_i128().unwrap(), 100_000_000);
+        let fixed_cost_p_transfer = div_into_real(cost_position_transfer.to_i128().unwrap(), 1_000_000);
+        let fixed_liquidator_fee = div_into_real(liquidator_fee.to_i128().unwrap(), 1_000_000);
+        let fixed_insurance_fee = div_into_real(insurance_fee.to_i128().unwrap(), 1_000_000);
+        let fixed_mark_price = div_into_real(mark_price.to_i128().unwrap(), 100_000_000);
+
         let key = UserPerpSummaryKey::new_key(
             liquidated_account_id.clone(),
             liquidation.symbol_hash.clone(),
@@ -70,8 +79,8 @@ pub async fn analyzer_liquidation(
             let user_perp = context.get_user_perp(&key.clone()).await;
             let user_perp_snap = user_perp.clone();
             (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
-                liquidation_qty.clone().neg(),
-                cost_position_transfer.clone() - (liquidator_fee.clone() + insurance_fee.clone()),
+                to_big_decimal(fixed_qty.clone()),
+                to_big_decimal(fixed_cost_p_transfer.clone()) - (to_big_decimal(fixed_liquidator_fee.clone()) + to_big_decimal(fixed_insurance_fee.clone())),
                 user_perp_snap.holding.clone(),
                 user_perp_snap.opening_cost.clone(),
             );
@@ -80,12 +89,12 @@ pub async fn analyzer_liquidation(
         {
             let user_perp = context.get_user_perp(&key.clone()).await;
             user_perp.new_liquidation(
-                liquidation_qty.clone(),
-                mark_price.clone(),
+                to_big_decimal(fixed_qty.clone()),
+                to_big_decimal(fixed_mark_price.clone()),
                 block_num.clone(),
                 block_time.clone(),
-                liquidation.cost_position_transfer.clone(),
-                liquidation.sum_unitary_fundings.clone(),
+                to_big_decimal(fixed_cost_p_transfer.clone()),
+                BigDecimal::from_str(&*liquidation.sum_unitary_fundings).unwrap(),
                 open_cost_diff.clone(),
             );
         }
@@ -98,7 +107,7 @@ pub async fn analyzer_liquidation(
             );
             let h_user_perp = context.get_hourly_user_perp(&h_perp_key).await;
             h_user_perp.new_liquidation(
-                liquidation_qty.clone() * mark_price.clone(),
+                to_big_decimal(fixed_qty.clone()) * to_big_decimal(fixed_mark_price.clone()),
                 block_num,
                 block_time.clone(),
                 pnl_diff.clone(),
@@ -116,8 +125,8 @@ pub async fn analyzer_liquidation(
             let user_perp = context.get_user_perp(&liquidator_key.clone()).await;
             let user_perp_snap = user_perp.clone();
             (liquidator_open_cost_diff, liquidator_pnl_diff) = RealizedPnl::calc_realized_pnl(
-                liquidation_qty.clone(),
-                -(cost_position_transfer.clone() - liquidator_fee.clone()),
+                to_big_decimal(fixed_qty.clone()),
+                -(to_big_decimal(fixed_cost_p_transfer.clone()) - to_big_decimal(fixed_liquidator_fee.clone())),
                 user_perp_snap.holding.clone(),
                 user_perp_snap.opening_cost.clone(),
             );
@@ -125,7 +134,7 @@ pub async fn analyzer_liquidation(
 
         {
             let user_perp = context.get_user_perp(&liquidator_key.clone()).await;
-            user_perp.new_liquidator(liquidation_qty.clone(), liquidator_open_cost_diff.clone());
+            user_perp.new_liquidator(to_big_decimal(fixed_qty.clone()), liquidator_open_cost_diff.clone());
         }
         {
             let h_perp_key = HourlyUserPerpKey::new_key(
@@ -142,7 +151,7 @@ pub async fn analyzer_liquidation(
                 HourlyOrderlyPerpKey::new_key(liquidation.symbol_hash.clone(), block_hour.clone());
             let h_orderly_perp = context.get_hourly_orderly_perp(&h_orderly_perp_key).await;
             h_orderly_perp.new_liquidation(
-                liquidation_qty.clone() * mark_price.clone(),
+                to_big_decimal(fixed_qty.clone()) * to_big_decimal(fixed_mark_price.clone()),
                 block_num,
                 block_time.clone(),
             );
@@ -153,7 +162,7 @@ pub async fn analyzer_liquidation(
                 .get_orderly_perp(&liquidation.symbol_hash.clone())
                 .await;
             orderly_perp.new_liquidation(
-                liquidation_qty.clone() * mark_price.clone(),
+                to_big_decimal(fixed_qty) * to_big_decimal(fixed_mark_price),
                 block_num,
                 block_time.clone(),
             );

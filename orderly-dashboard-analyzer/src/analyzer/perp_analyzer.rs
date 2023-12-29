@@ -1,10 +1,12 @@
 use std::cmp::max;
 
+use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::NaiveDateTime;
 use orderly_dashboard_indexer::formats_external::trading_events::Trade;
 
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
+use crate::analyzer::{div_into_real, to_big_decimal};
 use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
 use crate::db::hourly_user_perp::HourlyUserPerpKey;
 use crate::db::user_perp_summary::UserPerpSummaryKey;
@@ -23,6 +25,16 @@ pub async fn analyzer_perp_trade(
         tracing::info!(target:PERP_ANALYZER,"receiver trade:{}",perp_trade.trade_id.clone());
         max_perp_trade_id = max(max_perp_trade_id, perp_trade.trade_id as i64);
 
+        let trade_qty: BigDecimal = perp_trade.trade_qty.parse().unwrap();
+        let fixed_qty = div_into_real(trade_qty.to_i128().unwrap(), 100000000);
+
+        let trade_fee: BigDecimal = perp_trade.fee.parse().unwrap();
+        let fixed_fee = div_into_real(trade_fee.to_i128().unwrap(), 1000000);
+
+        let notional: BigDecimal = perp_trade.notional.parse().unwrap();
+        let fixed_notional = div_into_real(notional.to_i128().unwrap(), 1000000);
+
+
         // hourly_orderly
         let hour_orderly_perp_key = HourlyOrderlyPerpKey {
             symbol: perp_trade.symbol_hash.clone(),
@@ -33,8 +45,8 @@ pub async fn analyzer_perp_trade(
                 .get_hourly_orderly_perp(&hour_orderly_perp_key)
                 .await;
             hourly_orderly_perp.new_trade(
-                perp_trade.fee.parse().unwrap(),
-                perp_trade.trade_qty.parse().unwrap(),
+                to_big_decimal(fixed_fee.clone()).abs(),
+                to_big_decimal(fixed_notional.clone()).abs(),
                 pulled_block_height.clone(),
                 pulled_block_time.clone(),
             );
@@ -45,8 +57,8 @@ pub async fn analyzer_perp_trade(
         {
             let orderly_perp_summary = context.get_orderly_perp(&perp_symbol).await;
             orderly_perp_summary.new_trade(
-                perp_trade.fee.parse().unwrap(),
-                perp_trade.trade_qty.parse().unwrap(),
+                to_big_decimal(fixed_fee.clone()).abs(),
+                to_big_decimal(fixed_notional.clone()).abs(),
                 pulled_block_height.clone(),
                 pulled_block_time.clone(),
                 perp_trade.side.clone(),
@@ -63,16 +75,16 @@ pub async fn analyzer_perp_trade(
             .await
             .clone();
         let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
-            perp_trade.trade_qty.parse().unwrap(),
-            perp_trade.notional.parse().unwrap(),
+            to_big_decimal(fixed_qty.clone()),
+            to_big_decimal(fixed_notional.clone()),
             user_perp_snap.holding.clone(),
             user_perp_snap.opening_cost.clone(),
         );
         {
             let user_perp_summary = context.get_user_perp(&user_perp_summary_key).await;
             let (opening, new_user) = user_perp_summary.new_trade(
-                perp_trade.fee.parse().unwrap(),
-                perp_trade.trade_qty.parse().unwrap(),
+                to_big_decimal(fixed_fee.clone()),
+                to_big_decimal(fixed_notional.clone()),
                 pulled_block_height.clone(),
                 pulled_block_time.clone(),
                 open_cost_diff,
@@ -98,8 +110,8 @@ pub async fn analyzer_perp_trade(
 
             let hourly_user_perp = context.get_hourly_user_perp(&hourly_user_perp_key).await;
             let new_hourly_user = hourly_user_perp.new_trade(
-                perp_trade.fee.parse().unwrap(),
-                perp_trade.trade_qty.parse().unwrap(),
+                to_big_decimal(fixed_fee),
+                to_big_decimal(fixed_notional),
                 pulled_block_height.clone(),
                 pulled_block_time.clone(),
                 pnl_diff,

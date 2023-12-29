@@ -39,3 +39,6 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 clap = { version = "4.3.0", features = ["color", "derive", "env"] }
 
 tiny-keccak = "2.0"
+
+num-bigint = "0.4.4"
+num-traits = "0.2"

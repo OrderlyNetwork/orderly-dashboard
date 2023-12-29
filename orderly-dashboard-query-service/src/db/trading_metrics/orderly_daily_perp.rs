@@ -49,7 +49,7 @@ pub async fn daily_orderly_perp(
       sum(liquidation_count) as liquidation_count,\
       sum(opening_count) as opening_count \
       from hourly_orderly_perp where block_hour>=$1 and block_hour<=$2 \
-      group by trading_day order by trading_day desc;",
+      group by trading_day order by trading_day asc;",
     );
 
     let select_result: Result<Vec<OrderlyDailyData>, _> = sql_query

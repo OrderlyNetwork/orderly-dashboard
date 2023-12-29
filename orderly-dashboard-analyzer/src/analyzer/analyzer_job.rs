@@ -2,10 +2,10 @@ use std::cmp::{max, min};
 use std::time::Duration;
 
 use chrono::{NaiveDateTime, Timelike, Utc};
+use orderly_dashboard_indexer::formats_external::Response;
 use orderly_dashboard_indexer::formats_external::trading_events::{
     TradingEventInnerData, TradingEventsResponse,
 };
-use orderly_dashboard_indexer::formats_external::Response;
 use tokio::time;
 
 use crate::analyzer::adl_analyzer::analyzer_adl;
@@ -24,10 +24,10 @@ pub fn start_analyzer_job(interval_seconds: u64, base_url: String, start_block: 
         loop {
             let mut block_summary = find_block_summary().await.unwrap();
             let from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
-            let to_block = min(from_block + 500, block_summary.latest_block_height);
+            let to_block = min(from_block + 1000, block_summary.latest_block_height);
 
             let timestamp = Utc::now().timestamp_millis();
-            tracing::info!(target: ANALYZER_CONTEXT,"start pull block from {} to {}.",from_block,to_block);
+            // tracing::info!(target: ANALYZER_CONTEXT,"start pull block from {} to {}.",from_block,to_block);
             let response_str = get_indexer_data(from_block, to_block, base_url.clone()).await;
             match response_str {
                 Ok(json_str) => {
@@ -48,7 +48,7 @@ pub fn start_analyzer_job(interval_seconds: u64, base_url: String, start_block: 
                     continue;
                 }
             }
-            tracing::info!(target: ANALYZER_CONTEXT,"end pull block from {} to {}. cost:{}",from_block,to_block,Utc::now().timestamp_millis()-timestamp);
+            tracing::info!(target: ANALYZER_CONTEXT,"pull block from {} to {}. cost:{}",from_block,to_block,Utc::now().timestamp_millis()-timestamp);
             time::sleep(Duration::from_secs(interval_seconds.clone())).await;
         }
     });
@@ -100,7 +100,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_time.clone(),
                             &mut context,
                         )
-                        .await;
+                            .await;
                     }
                     TradingEventInnerData::ProcessedTrades {
                         batch_id: _,
@@ -113,7 +113,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_num,
                             &mut context,
                         )
-                        .await;
+                            .await;
                         latest_perp_trade_id = max(latest_perp_trade_id, trade_id);
                     }
                     TradingEventInnerData::SettlementResult {
@@ -136,7 +136,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_time.clone(),
                             &mut context,
                         )
-                        .await
+                            .await
                     }
                     TradingEventInnerData::LiquidationResult {
                         liquidated_account_id,
@@ -152,11 +152,11 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             insurance_transfer_amount,
                             liquidation_transfers,
                             block_num.clone(),
+                            block_hour.clone(),
                             block_time.clone(),
-                            block_hour,
                             &mut context,
                         )
-                        .await
+                            .await
                     }
                     TradingEventInnerData::AdlResult {
                         account_id,
@@ -180,7 +180,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_num,
                             &mut context,
                         )
-                        .await;
+                            .await;
                     }
                 }
             }
