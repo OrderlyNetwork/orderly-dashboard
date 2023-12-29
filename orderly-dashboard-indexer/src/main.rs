@@ -189,7 +189,7 @@ pub async fn consume_data_inner(
             );
             tokio::time::sleep(Duration::from_secs(1)).await;
         } else {
-            if update_cursor && start_height % 30 == 0 {
+            if update_cursor {
                 tracing::info!(
                     target: ORDERLY_DASHBOARD_INDEXER,
                     "consume_data_inner checked block: {}",
