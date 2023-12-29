@@ -9,9 +9,9 @@ use trading_metrics::{average_trading_count, daily_trading_fee, daily_volume};
 
 use crate::db::init_analyzer_db_url;
 use crate::trading_metrics::{
-    average_opening_count, average_trading_fee, average_trading_volume, get_daily_orderly_perp,
-    get_daily_orderly_token, get_perp_holding_rank, get_perp_pnl_rank, get_token_deposit_rank,
-    get_token_withdraw_rank, get_trading_volume_rank,
+    average_opening_count, average_trading_fee, average_trading_volume, block_height,
+    get_daily_orderly_perp, get_daily_orderly_token, get_perp_holding_rank, get_perp_pnl_rank,
+    get_token_deposit_rank, get_token_withdraw_rank, get_trading_volume_rank,
 };
 
 mod config;
@@ -113,6 +113,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_perp_pnl_rank)
             .service(get_token_deposit_rank)
             .service(get_token_withdraw_rank)
+            .service(block_height)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind(("127.0.0.1", config.port))?

@@ -10,7 +10,7 @@ use crate::db::trading_metrics::ranking::{
     get_daily_trading_volume_ranking, get_pnl_ranking, get_token_ranking,
     get_user_perp_holding_ranking,
 };
-use crate::db::trading_metrics::{get_daily_trading_fee, get_daily_volume};
+use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
 use crate::{add_base_header, format_extern::Response};
 
 #[derive(Debug, Clone, Deserialize)]
@@ -89,6 +89,11 @@ pub fn write_response<T: Serialize>(res_data: T) -> HttpResponse {
     let mut resp = HttpResponse::Ok().json(success_response);
     add_base_header(&mut resp);
     resp
+}
+
+#[get("/block_height")] // <- define path parameters
+pub async fn block_height() -> Result<impl Responder> {
+    Ok(write_response(get_block_height().await))
 }
 
 #[get("/daily_orderly_perp")] // <- define path parameters

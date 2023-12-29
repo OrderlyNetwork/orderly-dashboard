@@ -4,6 +4,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use diesel::sql_types::{Date, Numeric, Timestamp};
 use diesel::QueryableByName;
 
+use orderly_dashboard_analyzer::db::block_summary::find_block_summary;
 #[allow(unused_imports)]
 use orderly_dashboard_analyzer::{
     db::{hourly_orderly_perp::HourlyOrderlyPerp, POOL},
@@ -32,6 +33,18 @@ pub struct DailyFee {
     trading_day: NaiveDate,
     #[sql_type = "Numeric"]
     trading_fee: BigDecimal,
+}
+
+pub async fn get_block_height() -> i64 {
+    #[allow(unused_imports)]
+    use orderly_dashboard_analyzer::{
+        db::{block_summary::BlockSummary, POOL},
+        schema::block_summary,
+        schema::block_summary::dsl::*,
+    };
+
+    let block = find_block_summary().await.unwrap();
+    block.pulled_block_height
 }
 
 pub async fn get_daily_volume(
@@ -87,7 +100,7 @@ pub async fn get_daily_trading_fee(
       date(block_hour) as trading_day,\
       sum(trading_fee) as trading_fee \
       from hourly_orderly_perp where block_hour>=$1 and block_hour<=$2 \
-      group by trading_day order by trading_day desc;",
+      group by trading_day order by trading_day asc;",
     );
 
     let result: Result<Vec<DailyFee>, _> = query

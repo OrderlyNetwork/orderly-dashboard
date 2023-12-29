@@ -1,14 +1,14 @@
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
+use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::result::Error;
 use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;
 
-use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError};
+use crate::db::POOL;
 use crate::schema::orderly_perp_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]

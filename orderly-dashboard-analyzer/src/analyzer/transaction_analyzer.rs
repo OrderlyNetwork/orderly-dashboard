@@ -41,9 +41,17 @@ pub async fn analyzer_transaction(
         };
         let hourly_user_token = context.get_hourly_user_token(&key).await;
         if deposit {
-            hourly_user_token.deposit(to_big_decimal(fixed_amount.clone()), block_number, block_time);
+            hourly_user_token.deposit(
+                to_big_decimal(fixed_amount.clone()),
+                block_number,
+                block_time,
+            );
         } else {
-            hourly_user_token.withdraw(to_big_decimal(fixed_amount.clone()), block_number, block_time);
+            hourly_user_token.withdraw(
+                to_big_decimal(fixed_amount.clone()),
+                block_number,
+                block_time,
+            );
         }
     }
 
@@ -56,9 +64,17 @@ pub async fn analyzer_transaction(
 
         let hourly_orderly_token = context.get_hourly_orderly_token(&key).await;
         if deposit {
-            hourly_orderly_token.deposit(to_big_decimal(fixed_amount.clone()), block_number, block_time);
+            hourly_orderly_token.deposit(
+                to_big_decimal(fixed_amount.clone()),
+                block_number,
+                block_time,
+            );
         } else {
-            hourly_orderly_token.withdraw(to_big_decimal(fixed_amount.clone()), block_number, block_time);
+            hourly_orderly_token.withdraw(
+                to_big_decimal(fixed_amount.clone()),
+                block_number,
+                block_time,
+            );
         }
     }
 
@@ -69,9 +85,17 @@ pub async fn analyzer_transaction(
         };
         let orderly_token = context.get_orderly_token(&key).await;
         if deposit {
-            orderly_token.deposit(to_big_decimal(fixed_amount.clone()), block_number, block_time);
+            orderly_token.deposit(
+                to_big_decimal(fixed_amount.clone()),
+                block_number,
+                block_time,
+            );
         } else {
-            orderly_token.withdraw(to_big_decimal(fixed_amount.clone()), block_number, block_time);
+            orderly_token.withdraw(
+                to_big_decimal(fixed_amount.clone()),
+                block_number,
+                block_time,
+            );
         }
     }
     {
@@ -82,9 +106,17 @@ pub async fn analyzer_transaction(
         };
         let user_token = context.get_user_token(&key).await;
         if deposit {
-            user_token.deposit(to_big_decimal(fixed_amount.clone()), block_number, block_time);
+            user_token.deposit(
+                to_big_decimal(fixed_amount.clone()),
+                block_number,
+                block_time,
+            );
         } else {
-            user_token.withdraw(to_big_decimal(fixed_amount.clone()), block_number, block_time);
+            user_token.withdraw(
+                to_big_decimal(fixed_amount.clone()),
+                block_number,
+                block_time,
+            );
         }
     }
 }

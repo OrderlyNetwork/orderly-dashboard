@@ -6,8 +6,8 @@ use chrono::NaiveDateTime;
 use orderly_dashboard_indexer::formats_external::trading_events::LiquidationTransfer;
 
 use crate::analyzer::analyzer_context::AnalyzeContext;
-use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
+use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
 use crate::analyzer::{div_into_real, to_big_decimal};
 use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
 use crate::db::hourly_user_perp::HourlyUserPerpKey;
@@ -39,7 +39,7 @@ pub async fn analyzer_liquidation(
                 context,
                 to_big_decimal(fixed_amount.clone()),
             )
-                .await;
+            .await;
         }
         {
             transfer_amount(
@@ -47,7 +47,7 @@ pub async fn analyzer_liquidation(
                 context,
                 to_big_decimal(fixed_amount.clone()).neg(),
             )
-                .await;
+            .await;
         }
     }
     for liquidation in liquidation_transfers {
@@ -65,7 +65,8 @@ pub async fn analyzer_liquidation(
         let mark_price: BigDecimal = liquidation.mark_price.parse().unwrap();
 
         let fixed_qty = div_into_real(liquidation_qty.to_i128().unwrap(), 100_000_000);
-        let fixed_cost_p_transfer = div_into_real(cost_position_transfer.to_i128().unwrap(), 1_000_000);
+        let fixed_cost_p_transfer =
+            div_into_real(cost_position_transfer.to_i128().unwrap(), 1_000_000);
         let fixed_liquidator_fee = div_into_real(liquidator_fee.to_i128().unwrap(), 1_000_000);
         let fixed_insurance_fee = div_into_real(insurance_fee.to_i128().unwrap(), 1_000_000);
         let fixed_mark_price = div_into_real(mark_price.to_i128().unwrap(), 100_000_000);
@@ -80,7 +81,9 @@ pub async fn analyzer_liquidation(
             let user_perp_snap = user_perp.clone();
             (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
                 to_big_decimal(fixed_qty.clone()),
-                to_big_decimal(fixed_cost_p_transfer.clone()) - (to_big_decimal(fixed_liquidator_fee.clone()) + to_big_decimal(fixed_insurance_fee.clone())),
+                to_big_decimal(fixed_cost_p_transfer.clone())
+                    - (to_big_decimal(fixed_liquidator_fee.clone())
+                        + to_big_decimal(fixed_insurance_fee.clone())),
                 user_perp_snap.holding.clone(),
                 user_perp_snap.opening_cost.clone(),
             );
@@ -126,7 +129,8 @@ pub async fn analyzer_liquidation(
             let user_perp_snap = user_perp.clone();
             (liquidator_open_cost_diff, liquidator_pnl_diff) = RealizedPnl::calc_realized_pnl(
                 to_big_decimal(fixed_qty.clone()),
-                -(to_big_decimal(fixed_cost_p_transfer.clone()) - to_big_decimal(fixed_liquidator_fee.clone())),
+                -(to_big_decimal(fixed_cost_p_transfer.clone())
+                    - to_big_decimal(fixed_liquidator_fee.clone())),
                 user_perp_snap.holding.clone(),
                 user_perp_snap.opening_cost.clone(),
             );
@@ -134,7 +138,10 @@ pub async fn analyzer_liquidation(
 
         {
             let user_perp = context.get_user_perp(&liquidator_key.clone()).await;
-            user_perp.new_liquidator(to_big_decimal(fixed_qty.clone()), liquidator_open_cost_diff.clone());
+            user_perp.new_liquidator(
+                to_big_decimal(fixed_qty.clone()),
+                liquidator_open_cost_diff.clone(),
+            );
         }
         {
             let h_perp_key = HourlyUserPerpKey::new_key(

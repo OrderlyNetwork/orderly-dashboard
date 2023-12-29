@@ -1,6 +1,6 @@
-use std::ops::Div;
 use bigdecimal::BigDecimal;
 use num_traits::FromPrimitive;
+use std::ops::Div;
 
 pub mod adl_analyzer;
 pub mod analyzer_context;
@@ -20,4 +20,3 @@ pub(crate) fn div_into_real(dividend: i128, divisor: i128) -> BigDecimal {
 pub(crate) fn to_big_decimal(num: BigDecimal) -> BigDecimal {
     num
 }
-

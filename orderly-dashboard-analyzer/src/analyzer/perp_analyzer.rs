@@ -34,7 +34,6 @@ pub async fn analyzer_perp_trade(
         let notional: BigDecimal = perp_trade.notional.parse().unwrap();
         let fixed_notional = div_into_real(notional.to_i128().unwrap(), 1000000);
 
-
         // hourly_orderly
         let hour_orderly_perp_key = HourlyOrderlyPerpKey {
             symbol: perp_trade.symbol_hash.clone(),

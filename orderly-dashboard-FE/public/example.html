@@ -19,7 +19,21 @@
         </div>
     </div>
 </div>
+<br/>
+<br/>
+<br/>
+<br/>
+
 <div class="container">
+    <div class="row">
+        <h1><div class="col"><div id="block_height"></div>
+        </div></h1>
+    </div>
+
+    <br/>
+    <br/>
+
+
     <div><h1>Trading Metrics</h1></div>
     <div class="row">
         <div class="col">
@@ -29,6 +43,9 @@
             <canvas id="chart2"></canvas>
         </div>
     </div>
+    <br/>
+    <br/>
+    <br/>
     <div class="row">
         <div class="col">
             <canvas id="chart3"></canvas>
@@ -37,6 +54,9 @@
             <canvas id="chart4"></canvas>
         </div>
     </div>
+    <br/>
+    <br/>
+    <br/>
     <div class="row">
         <div class="col">
             <canvas id="chart5"></canvas>
@@ -45,6 +65,9 @@
             <canvas id="chart6"></canvas>
         </div>
     </div>
+    <br/>
+    <br/>
+    <br/>
     <div class="row">
         <div class="col">
             <canvas id="chart7"></canvas>
@@ -53,6 +76,11 @@
             <canvas id="chart8"></canvas>
         </div>
     </div>
+
+    <br/>
+    <br/>
+    <br/>
+
     <div><h1>User’s Metrics</h1></div>
     <div class="row">
         <div class="col">
@@ -62,6 +90,9 @@
             <canvas id="chart10"></canvas>
         </div>
     </div>
+    <br/>
+    <br/>
+    <br/>
     <div class="row">
         <div class="col">
             <canvas id="chart11"></canvas>
@@ -70,6 +101,9 @@
             <canvas id="chart12"></canvas>
         </div>
     </div>
+    <br/>
+    <br/>
+    <br/>
     <div class="row">
         <div class="col">
             <canvas id="chart13"></canvas>
@@ -78,9 +112,15 @@
             <canvas id="chart14"></canvas>
         </div>
     </div>
+    <br/>
+    <br/>
+    <br/>
     <div class="row">
         <h1>Token’s Metrics</h1>
     </div>
+    <br/>
+    <br/>
+    <br/>
     <div class="row">
         <div class="col">
             <canvas id="chart15"></canvas>
@@ -89,6 +129,9 @@
             <canvas id="chart16"></canvas>
         </div>
     </div>
+    <br/>
+    <br/>
+    <br/>
     <div class="row">
         <div class="col">
             <canvas id="chart17"></canvas>
@@ -97,19 +140,34 @@
             <canvas id="chart18"></canvas>
         </div>
     </div>
-<!--    <div class="row">-->
-<!--        <div class="col">-->
-<!--            <canvas id="chart1000"></canvas>-->
-<!--        </div>-->
-<!--        <div class="col">-->
-<!--            <canvas id="chart1001"></canvas>-->
-<!--        </div>-->
-<!--    </div>-->
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <!--    <div class="row">-->
+    <!--        <div class="col">-->
+    <!--            <canvas id="chart1000"></canvas>-->
+    <!--        </div>-->
+    <!--        <div class="col">-->
+    <!--            <canvas id="chart1001"></canvas>-->
+    <!--        </div>-->
+    <!--    </div>-->
 </div>
 
 <script src="./javascripts/chart.js@4.4.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
 <script>
+
+
+    function blockHeightCallback(respData){
+        let dib = document.getElementById('block_height');
+        dib.textContent=" [Block Height] - "+respData["data"];
+    }
+
     function dailyVolumeCallBack(respData) {
         console.log("dailyVolumeCallBack respData: ", respData);
         const chartData = respData["data"];
@@ -136,6 +194,9 @@
         });
     }
 
+
+
+
     function tradingFeeCallBack(respData) {
         console.log("tradingFeeCallBack respData: ", respData);
         const chartData = respData["data"];
@@ -157,39 +218,76 @@
         });
     }
 
-    const ctx3 = document.getElementById('chart3');
-    new Chart(ctx3, {
-        type: 'line',
-        data: {
-            datasets: [{
-                label: 'trading count',
-                data: [{x: '2023-12-06', y: 20}, {x: '2023-12-07', y: 22}, {x: '2023-12-08', y: 24}, {x: '2023-12-09', y: 20}, {x: '2023-12-10', y: 21}, {x: '2023-12-11', y: 18}, {x: '2023-12-12', y: 25}]
-            }]
-        }
-    });
+    function tradingCountCallBack(respData) {
+        console.log("daily_data: ", respData);
+        const chartData = respData["data"];
+        let real_chart_data = [];
+        console.log("daily_data: ", chartData);
+        let ak = chartData["data"];
 
-    const ctx4 = document.getElementById('chart4');
-    new Chart(ctx4, {
-        type: 'line',
-        data: {
-            datasets: [{
-                borderColor: '#FF6384',
-                backgroundColor: '#FF6384',
-                label: 'trading user count',
-                data: [{x: '2023-12-06', y: 20}, {x: '2023-12-07', y: 22}, {x: '2023-12-08', y: 24}, {x: '2023-12-09', y: 20}, {x: '2023-12-10', y: 21}, {x: '2023-12-11', y: 18}, {x: '2023-12-12', y: 25}]
-            }]
+        for (let chartDataKey in ak) {
+            real_chart_data.push(ak[chartDataKey]["trading_count"])
         }
-    });
+        const ctx3 = document.getElementById('chart3');
+        new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: chartData["daytime"],
+                datasets: [{
+                    label: 'Daily Trading Count',
+                    data: real_chart_data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function tradingUserCountBack(respData) {
+        const chartData = respData["data"];
+        console.log("daily_data: ", respData);
+        console.log("daily_data: ", chartData);
+
+        let ak = chartData["data"];
+        let real_chart_data = [];
+        for (let chartDataKey in ak) {
+            real_chart_data.push(ak[chartDataKey]["trading_user_count"])
+        }
+        const ctx4 = document.getElementById('chart4');
+        new Chart(ctx4, {
+            type: 'bar',
+            data: {
+                labels: chartData["daytime"],
+                datasets: [{
+                    label: 'Daily Trading User Count',
+                    data: real_chart_data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
 
     function averageTradingCountCallBack(respData) {
-        console.log("averageTradingCountCallBack respData: ", respData);
         const chartData = respData["data"];
-
         const ctx5 = document.getElementById('chart5');
         new Chart(ctx5, {
             type: 'bar',
             data: {
-                labels: ['Past 24hours','Past 7Days', 'Past 30Days'],
+                labels: ['Past 24hours', 'Past 7Days', 'Past 30Days'],
                 datasets: [{
                     label: 'Average Trading Count In Past 24 Hours/7Days/30Days',
                     data: [chartData["latest_day_metric"], chartData["latest_week_metric"], chartData["latest_month_metric"]],
@@ -208,14 +306,13 @@
 
 
     function averageTradingFeeCallBack(respData) {
-        console.log("averageTradingFeeCallBack respData: ", respData);
         const chartData = respData["data"];
 
         const ctx6 = document.getElementById('chart6');
         new Chart(ctx6, {
             type: 'bar',
             data: {
-                labels: ['Past 24hours','Past 7Days', 'Past 30Days'],
+                labels: ['Past 24hours', 'Past 7Days', 'Past 30Days'],
                 datasets: [{
                     borderColor: '#ff9a63',
                     backgroundColor: '#ff9a63',
@@ -242,7 +339,7 @@
         new Chart(ctx7, {
             type: 'bar',
             data: {
-                labels: ['Past 24hours','Past 7Days', 'Past 30Days'],
+                labels: ['Past 24hours', 'Past 7Days', 'Past 30Days'],
                 datasets: [{
                     borderColor: '#ff9a63',
                     backgroundColor: '#ff9a63',
@@ -291,11 +388,17 @@
         console.log("rankTradingVolume7dayCallBack respData: ", respData);
         const chartData = respData["data"];
 
+        let ak = chartData["account_ids"];
+        let real_labels = [];
+        for (let akKey in ak) {
+            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+        }
+
         const ctx10 = document.getElementById('chart10');
         new Chart(ctx10, {
             type: 'bar',
             data: {
-                labels: chartData["account_ids"],
+                labels: real_labels,
                 datasets: [{
                     label: 'User’s Daily Trading Volume Ranking In Past 7Days',
                     data: chartData["volume"],
@@ -316,11 +419,17 @@
         console.log("rankUserPerpHoldingCallBack respData: ", respData);
         const chartData = respData["data"];
 
+        let ak = chartData["account_ids"];
+        let real_labels = [];
+        for (let akKey in ak) {
+            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+        }
+
         const ctx11 = document.getElementById('chart11');
         new Chart(ctx11, {
             type: 'bar',
             data: {
-                labels: chartData["account_ids"],
+                labels: real_labels,
                 datasets: [{
                     label: 'User’s Holding Ranking',
                     data: chartData["holding"],
@@ -341,11 +450,17 @@
         console.log("rankUserPerpHoldingCallBack respData: ", respData);
         const chartData = respData["data"];
 
+        let ak = chartData["account_ids"];
+        let real_labels = [];
+        for (let akKey in ak) {
+            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+        }
+
         const ctx11 = document.getElementById('chart12');
         new Chart(ctx11, {
             type: 'line',
             data: {
-                labels: chartData["account_ids"],
+                labels: real_labels,
                 datasets: [{
                     label: 'User’s Pnl Ranking In Past 24h',
                     data: chartData["volume"],
@@ -367,11 +482,19 @@
         console.log("rankUserPerpHoldingCallBack respData: ", respData);
         const chartData = respData["data"];
 
+
+        let ak = chartData["account_ids"];
+        let real_labels = [];
+        for (let akKey in ak) {
+            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+        }
+
+
         const ctx11 = document.getElementById('chart13');
         new Chart(ctx11, {
             type: 'bar',
             data: {
-                labels: chartData["account_ids"],
+                labels: real_labels,
                 datasets: [{
                     label: 'User’s Pnl Ranking In Past 7Days',
                     data: chartData["volume"],
@@ -396,7 +519,7 @@
         const ctx11 = document.getElementById('chart15');
 
         let daily_token = chartData["data"];
-        console.log("daily_token="+daily_token)
+        console.log("daily_token=" + daily_token)
         let deposit_data = [];
         for (let dailyTokenKey in daily_token) {
             console.log(daily_token[dailyTokenKey]["deposit_amount"])
@@ -460,13 +583,20 @@
         console.log("rankUserPerpHoldingCallBack respData: ", respData);
         const chartData = respData["data"];
 
+        let ak = chartData["account_ids"];
+        let real_labels = [];
+        for (let akKey in ak) {
+            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+        }
+
+
         const ctx11 = document.getElementById('chart17');
         new Chart(ctx11, {
             type: 'bar',
             data: {
                 borderColor: '#ff9a63',
                 backgroundColor: '#ff9a63',
-                labels: chartData["account_ids"],
+                labels: real_labels,
                 datasets: [{
                     label: 'Daily Deposit Amount Ranking In Past 24h',
                     data: chartData["volume"],
@@ -487,11 +617,17 @@
         console.log("rankUserPerpHoldingCallBack respData: ", respData);
         const chartData = respData["data"];
 
+        let ak = chartData["account_ids"];
+        let real_labels = [];
+        for (let akKey in ak) {
+            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+        }
+
         const ctx11 = document.getElementById('chart18');
         new Chart(ctx11, {
             type: 'bar',
             data: {
-                labels: chartData["account_ids"],
+                labels: real_labels,
                 borderColor: '#ff9a63',
                 backgroundColor: '#ff9a63',
                 datasets: [{
@@ -539,10 +675,10 @@
 
     var apiConfig;
     var xhr1 = new XMLHttpRequest();
-    xhr1.open('GET', 'http://localhost:3000/api'+ '?t='+ (new Date()).getTime().toString());
+    xhr1.open('GET', 'http://localhost:3000/api' + '?t=' + (new Date()).getTime().toString());
     xhr1.send();
 
-    xhr1.onreadystatechange = function() {
+    xhr1.onreadystatechange = function () {
         if (xhr1.readyState == 4 && xhr1.status == 200) {
             console.log(xhr1.responseText);
             apiConfig = JSON.parse(xhr1.responseText);
@@ -554,12 +690,12 @@
 
     function apiConfigCallback(apiConfig) {
         let baseUrl = apiConfig["analyzer_api"];
-        let dailyVolume = baseUrl+"/daily_volume";
+        let dailyVolume = baseUrl + "/daily_volume";
         console.log("apiConfig.analyzer_api/dailyVolume=", dailyVolume);
         var xhr2 = new XMLHttpRequest();
         xhr2.open('GET', dailyVolume);
         xhr2.send();
-        xhr2.onreadystatechange = function() {
+        xhr2.onreadystatechange = function () {
             if (xhr2.readyState == 4 && xhr2.status == 200) {
                 dailyVolumeCallBack(JSON.parse(xhr2.responseText));
                 console.log(xhr2.responseText);
@@ -568,12 +704,27 @@
             }
         };
 
-        let tradingFeeApi = baseUrl +"/daily_trading_fee";
+
+        let block_height = baseUrl + "/block_height";
+        var xhr200 = new XMLHttpRequest();
+        xhr200.open('GET', block_height);
+        xhr200.send();
+        xhr200.onreadystatechange = function () {
+            if (xhr200.readyState == 4 && xhr200.status == 200) {
+                let data_block = JSON.parse(xhr200.responseText);
+                blockHeightCallback(data_block)
+            } else {
+                console.warn("xhr200 response: ", xhr200.responseText);
+            }
+        };
+
+
+        let tradingFeeApi = baseUrl + "/daily_trading_fee";
         console.log("apiConfig.analyzer_api/tradingFeeApi=", tradingFeeApi);
         var xhr3 = new XMLHttpRequest();
         xhr3.open('GET', tradingFeeApi);
         xhr3.send();
-        xhr3.onreadystatechange = function() {
+        xhr3.onreadystatechange = function () {
             if (xhr3.readyState == 4 && xhr3.status == 200) {
                 tradingFeeCallBack(JSON.parse(xhr3.responseText));
                 console.log(xhr3.responseText);
@@ -582,12 +733,26 @@
             }
         };
 
-        let averageTradingCountApi = baseUrl +"/average_trading_count";
+        let h_orderly_p = baseUrl + "/daily_orderly_perp";
+        var xhr31 = new XMLHttpRequest();
+        xhr31.open('GET', h_orderly_p);
+        xhr31.send();
+        xhr31.onreadystatechange = function () {
+            if (xhr31.readyState == 4 && xhr31.status == 200) {
+                tradingCountCallBack(JSON.parse(xhr31.responseText));
+                tradingUserCountBack(JSON.parse(xhr31.responseText));
+                console.log(xhr31.responseText);
+            } else {
+                console.warn("xhr31 response: ", xhr31.responseText);
+            }
+        };
+
+        let averageTradingCountApi = baseUrl + "/average_trading_count";
         console.log("apiConfig.analyzer_api/averageTradingCountApi=", averageTradingCountApi);
         var xhr4 = new XMLHttpRequest();
         xhr4.open('GET', averageTradingCountApi);
         xhr4.send();
-        xhr4.onreadystatechange = function() {
+        xhr4.onreadystatechange = function () {
             if (xhr4.readyState == 4 && xhr4.status == 200) {
                 averageTradingCountCallBack(JSON.parse(xhr4.responseText));
                 console.log(xhr4.responseText);
@@ -596,12 +761,12 @@
             }
         };
 
-        let averageTradingFeeApi = baseUrl +"/average_trading_fee";
+        let averageTradingFeeApi = baseUrl + "/average_trading_fee";
         console.log("apiConfig.analyzer_api/averageTradingFeeApi=", averageTradingFeeApi);
         var xhr5 = new XMLHttpRequest();
         xhr5.open('GET', averageTradingFeeApi);
         xhr5.send();
-        xhr5.onreadystatechange = function() {
+        xhr5.onreadystatechange = function () {
             if (xhr5.readyState == 4 && xhr5.status == 200) {
                 averageTradingFeeCallBack(JSON.parse(xhr5.responseText));
                 console.log(xhr5.responseText);
@@ -610,12 +775,12 @@
             }
         };
 
-        let averageTradingVolumeApi = baseUrl +"/average_trading_volume";
+        let averageTradingVolumeApi = baseUrl + "/average_trading_volume";
         console.log("apiConfig.analyzer_api/averageTradingVolumeApi=", averageTradingVolumeApi);
         var xhr6 = new XMLHttpRequest();
         xhr6.open('GET', averageTradingFeeApi);
         xhr6.send();
-        xhr6.onreadystatechange = function() {
+        xhr6.onreadystatechange = function () {
             if (xhr6.readyState == 4 && xhr6.status == 200) {
                 averageTradingVolumeCallBack(JSON.parse(xhr6.responseText));
                 console.log(xhr6.responseText);
@@ -625,12 +790,12 @@
         };
 
         // user's metrics
-        let rankTradingVolumeApi24h = baseUrl +"/ranking/trading_volume" + "?days=1";
+        let rankTradingVolumeApi24h = baseUrl + "/ranking/trading_volume" + "?days=1";
         console.log("apiConfig.analyzer_api/rankTradingVolumeApi24h=", rankTradingVolumeApi24h);
         var xhr7 = new XMLHttpRequest();
         xhr7.open('GET', rankTradingVolumeApi24h);
         xhr7.send();
-        xhr7.onreadystatechange = function() {
+        xhr7.onreadystatechange = function () {
             if (xhr7.readyState == 4 && xhr7.status == 200) {
                 rankTradingVolume24hCallBack(JSON.parse(xhr7.responseText));
                 console.log(xhr7.responseText);
@@ -639,12 +804,12 @@
             }
         };
 
-        let rankTradingVolumeApi27day = baseUrl +"/ranking/trading_volume" + "?days=7";
+        let rankTradingVolumeApi27day = baseUrl + "/ranking/trading_volume" + "?days=7";
         console.log("apiConfig.analyzer_api/rankTradingVolumeApi27day=", rankTradingVolumeApi27day);
         var xhr8 = new XMLHttpRequest();
         xhr8.open('GET', rankTradingVolumeApi27day);
         xhr8.send();
-        xhr8.onreadystatechange = function() {
+        xhr8.onreadystatechange = function () {
             if (xhr8.readyState == 4 && xhr8.status == 200) {
                 rankTradingVolume7dayCallBack(JSON.parse(xhr8.responseText));
                 console.log(xhr8.responseText);
@@ -654,58 +819,57 @@
         };
 
         // ranking/perp_holding
-        let rankPerpHoldingApi = baseUrl +"/ranking/perp_holding";
+        let rankPerpHoldingApi = baseUrl + "/ranking/perp_holding?symbol=0x7e83089239db756ee233fa8972addfea16ae653db0f692e4851aed546b21caeb";
         console.log("apiConfig.analyzer_api/rankPerpHoldingApi=", rankPerpHoldingApi);
         var xhr9 = new XMLHttpRequest();
         xhr9.open('GET', rankPerpHoldingApi);
         xhr9.send();
-        xhr9.onreadystatechange = function() {
+        xhr9.onreadystatechange = function () {
             if (xhr9.readyState == 4 && xhr9.status == 200) {
                 rankUserPerpHoldingCallBack(JSON.parse(xhr9.responseText));
                 console.log(xhr9.responseText);
             } else {
-                console.warn("xhr9 response: ", xhr8.responseText);
+                console.warn("xhr9 response: ", xhr9.responseText);
             }
         };
 
 
-
         // ranking/24h pnl
-        let rank24hApi = baseUrl +"/ranking/pnl?days=1";
+        let rank24hApi = baseUrl + "/ranking/pnl?days=1";
         var xhr10 = new XMLHttpRequest();
         xhr10.open('GET', rank24hApi);
         xhr10.send();
-        xhr10.onreadystatechange = function() {
+        xhr10.onreadystatechange = function () {
             if (xhr10.readyState == 4 && xhr10.status == 200) {
                 rankUserPnl24hCallBack(JSON.parse(xhr10.responseText));
                 console.log(xhr10.responseText);
             } else {
-                console.warn("xhr9 response: ", xhr10.responseText);
+                console.warn("xhr10 response: ", xhr10.responseText);
             }
         };
 
 
         // ranking/7d pnl
-        let rank7dApi = baseUrl +"/ranking/pnl?days=7";
+        let rank7dApi = baseUrl + "/ranking/pnl?days=7";
         var xhr11 = new XMLHttpRequest();
         xhr11.open('GET', rank7dApi);
         xhr11.send();
-        xhr11.onreadystatechange = function() {
+        xhr11.onreadystatechange = function () {
             if (xhr11.readyState == 4 && xhr11.status == 200) {
                 rankUserPnl7dCallBack(JSON.parse(xhr11.responseText));
                 console.log(xhr11.responseText);
             } else {
-                console.warn("xhr9 response: ", xhr11.responseText);
+                console.warn("xhr11 response: ", xhr11.responseText);
             }
         };
 
 
         // ranking/7d pnl
-        let depositApi = baseUrl +"/daily_orderly_token";
+        let depositApi = baseUrl + "/daily_orderly_token";
         var xhr12 = new XMLHttpRequest();
         xhr12.open('GET', depositApi);
         xhr12.send();
-        xhr12.onreadystatechange = function() {
+        xhr12.onreadystatechange = function () {
             if (xhr12.readyState == 4 && xhr12.status == 200) {
                 deposit_token_in_orderly(JSON.parse(xhr12.responseText));
                 console.log(xhr12.responseText);
@@ -715,11 +879,11 @@
         };
 
         // ranking/7d pnl
-        let withdrawApi = baseUrl +"/daily_orderly_token";
+        let withdrawApi = baseUrl + "/daily_orderly_token";
         var xhr13 = new XMLHttpRequest();
         xhr13.open('GET', withdrawApi);
         xhr13.send();
-        xhr13.onreadystatechange = function() {
+        xhr13.onreadystatechange = function () {
             if (xhr13.readyState == 4 && xhr13.status == 200) {
                 withdraw_token_in_orderly(JSON.parse(xhr13.responseText));
                 console.log(xhr13.responseText);
@@ -729,11 +893,11 @@
         };
 
         // ranking/7d pnl
-        let deposit_rank_Api = baseUrl +"/ranking/deposit?days=10";
+        let deposit_rank_Api = baseUrl + "/ranking/deposit?days=10";
         var xhr14 = new XMLHttpRequest();
         xhr14.open('GET', deposit_rank_Api);
         xhr14.send();
-        xhr14.onreadystatechange = function() {
+        xhr14.onreadystatechange = function () {
             if (xhr14.readyState == 4 && xhr14.status == 200) {
                 deposit_ranking_in_orderly(JSON.parse(xhr14.responseText));
                 console.log(xhr14.responseText);
@@ -743,11 +907,11 @@
         };
 
         // ranking/7d pnl
-        let deposit_7d_rank_Api = baseUrl +"/ranking/deposit?days=70";
+        let deposit_7d_rank_Api = baseUrl + "/ranking/deposit?days=70";
         var xhr15 = new XMLHttpRequest();
         xhr15.open('GET', deposit_7d_rank_Api);
         xhr15.send();
-        xhr15.onreadystatechange = function() {
+        xhr15.onreadystatechange = function () {
             if (xhr15.readyState == 4 && xhr15.status == 200) {
                 deposit_7d_in_orderly(JSON.parse(xhr15.responseText));
                 console.log(xhr15.responseText);

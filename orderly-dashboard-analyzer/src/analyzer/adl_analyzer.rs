@@ -4,9 +4,9 @@ use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use num_traits::ToPrimitive;
 
-use crate::analyzer::div_into_real;
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
+use crate::analyzer::div_into_real;
 use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
 use crate::db::hourly_user_perp::HourlyUserPerpKey;
 use crate::db::user_perp_summary::UserPerpSummaryKey;
@@ -33,7 +33,6 @@ pub async fn analyzer_adl(
     let fixed_adl_qty = div_into_real(adl_qty.to_i128().unwrap(), 100_000_000);
     let fixed_adl_perice = div_into_real(adl_price.to_i128().unwrap(), 100_000_000);
     let fixed_position_transfer = div_into_real(cost_position_transfer.parse().unwrap(), 1_000_000);
-
 
     {
         let key = HourlyOrderlyPerpKey::new_key(symbol_hash.clone(), block_hour.clone());
@@ -62,7 +61,7 @@ pub async fn analyzer_adl(
             HourlyUserPerpKey::new_key(account_id.clone(), symbol_hash.clone(), block_hour.clone());
         let hourly_user_perp = context.get_hourly_user_perp(&key).await;
         hourly_user_perp.new_liquidation(
-            fixed_adl_perice.clone() *fixed_adl_qty.clone(),
+            fixed_adl_perice.clone() * fixed_adl_qty.clone(),
             block_num,
             pulled_block_time.clone(),
             pnl_diff,
