@@ -82,7 +82,6 @@ pub struct LayerzeroConfig {
 #[derive(Clone, Deserialize, Default)]
 pub struct CommonConfigs {
     pub l2_config: SubnetConfig,
-    pub cefi_server: CefiServerConfig,
     pub indexer_server: IndexerServerConfig,
     pub sync_block_strategy: SyncBlockStrategy,
     pub layerzero: LayerzeroConfig,
@@ -103,12 +102,6 @@ impl Display for CommonConfigs {
             f,
             "indexer_server:[indexer_address:{},public_key:{}];",
             indexer_server.indexer_address, indexer_server.public_key
-        )?;
-        let cefi_config = &self.cefi_server;
-        write!(
-            f,
-            "cefi_config:[server_address:{}].",
-            cefi_config.server_address,
         )?;
         write!(
             f,

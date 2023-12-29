@@ -1,5 +1,4 @@
 use crate::api;
-use crate::client::{get_default_client, HttpClient};
 use crate::config::CommonConfigs;
 use crate::formats_external::RecoveryBlockRequest;
 use anyhow::{Context, Result};
@@ -25,20 +24,15 @@ enum Either<T1, T2> {
     Right(T2),
 }
 pub(crate) struct Service {
-    #[allow(dead_code)]
-    http_client: HttpClient,
     peer_public_key: UnparsedPublicKey<Vec<u8>>,
 }
 
 impl Service {
-    pub fn new(http_client: HttpClient, cefi_public_key: String) -> Self {
+    pub fn new(cefi_public_key: String) -> Self {
         let decoded = base64::decode(&cefi_public_key).expect("Unable to decode cefi_public_key");
         let peer_public_key = UnparsedPublicKey::new(&ring::signature::ED25519, decoded);
 
-        Self {
-            http_client,
-            peer_public_key,
-        }
+        Self { peer_public_key }
     }
 
     pub async fn handle_request(&self, req: Request<Body>) -> Result<Response<Body>, Infallible> {
@@ -223,22 +217,11 @@ async fn get_post_data_as_string(req: Request<Body>) -> Result<String> {
 }
 
 pub(crate) async fn webserver(common_config: CommonConfigs) {
-    let http_client = match get_default_client() {
-        Ok(http_client) => http_client,
-        Err(err) => {
-            tracing::warn!(
-                target: crate::ORDERLY_DASHBOARD_INDEXER,
-                "webserver get cefi client error:{:?}",
-                err
-            );
-            return;
-        }
-    };
     let cefi_server = &common_config.indexer_server;
     let addr = SocketAddr::from_str(&cefi_server.indexer_address)
         .expect("unable to parse api server listen address");
 
-    let service = Arc::new(Service::new(http_client, cefi_server.public_key.clone()));
+    let service = Arc::new(Service::new(cefi_server.public_key.clone()));
     let make_svc = make_service_fn(move |_conn| {
         let service = service.clone();
 

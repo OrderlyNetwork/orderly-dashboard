@@ -18,10 +18,6 @@
     "vault_manager_abi_path": "./abis/vault_manager.json",
     "upgrade_height": 2358679
   },
-  "cefi_server": {
-    "server_address": "https://dev-api.orderly.network",
-    "private_key": "MFMCAQEwBQYDK2VwBCIEICYNtNE9Lm3k9rupXgU8zxp8ykrVmXbNAA63zZAt2X7QoSMDIQDtiBcj3Y6NGSQfvozalvhQwHxVRLqPPESUoqiGRqnzlQ=="
-  },
   "indexer_server": {
     "indexer_address": "0.0.0.0:8018",
     "public_key": "7YgXI92OjRkkH76M2pb4UMB8VUS6jzxElKKohkap85U="

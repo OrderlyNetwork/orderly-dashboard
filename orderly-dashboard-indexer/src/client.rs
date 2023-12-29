@@ -1,4 +1,4 @@
-use crate::config::{CefiServerConfig, COMMON_CONFIGS};
+use crate::config::CefiServerConfig;
 use anyhow::Result;
 use async_trait::async_trait;
 use chrono::Utc;
@@ -92,15 +92,4 @@ impl RealClient {
 
 pub(crate) fn new_http_client(config: CefiServerConfig) -> HttpClient {
     Arc::new(RealClient::new(config))
-}
-
-pub(crate) fn get_default_client() -> Result<HttpClient> {
-    let http_client = new_http_client(
-        COMMON_CONFIGS
-            .get()
-            .ok_or_else(|| anyhow::anyhow!("COMMON_CONFIGS not inited"))?
-            .cefi_server
-            .clone(),
-    );
-    Ok(http_client)
 }
