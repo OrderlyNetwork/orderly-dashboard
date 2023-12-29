@@ -190,11 +190,6 @@ pub async fn consume_data_inner(
             tokio::time::sleep(Duration::from_secs(1)).await;
         } else {
             if update_cursor {
-                tracing::info!(
-                    target: ORDERLY_DASHBOARD_INDEXER,
-                    "consume_data_inner checked block: {}",
-                    start_height
-                );
                 if let Err(err) = update_last_rpc_processed_height(last_processed).await {
                     tracing::info!(
                         target: ORDERLY_DASHBOARD_INDEXER,
