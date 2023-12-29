@@ -24,10 +24,15 @@ pub fn start_analyzer_job(interval_seconds: u64, base_url: String, start_block: 
         loop {
             let mut block_summary = find_block_summary().await.unwrap();
             let from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
-            let to_block = min(from_block + 1000, block_summary.latest_block_height);
+            if from_block > block_summary.latest_block_height {
+                tracing::info!(target:ANALYZER_CONTEXT,"pull task blocked, latest_block:{}",block_summary.latest_block_height);
+                time::sleep(Duration::from_secs(interval_seconds.clone())).await;
+                continue;
+            }
+
+            let to_block = max(from_block, min(from_block + 1000, block_summary.latest_block_height));
 
             let timestamp = Utc::now().timestamp_millis();
-            // tracing::info!(target: ANALYZER_CONTEXT,"start pull block from {} to {}.",from_block,to_block);
             let response_str = get_indexer_data(from_block, to_block, base_url.clone()).await;
             match response_str {
                 Ok(json_str) => {
@@ -35,9 +40,8 @@ pub fn start_analyzer_job(interval_seconds: u64, base_url: String, start_block: 
                         serde_json::from_str(&*json_str);
                     let (pulled_block_time, latest_block_height, pulled_perp_trade_id) =
                         parse_and_analyzer(result.unwrap()).await;
-                    block_summary.pulled_block_height = to_block;
-                    block_summary.pulled_block_time =
-                        NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
+                    block_summary.pulled_block_height = min(to_block, latest_block_height);
+                    block_summary.pulled_block_time = NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
                     block_summary.latest_block_height = latest_block_height;
                     block_summary.pulled_perp_trade_id = pulled_perp_trade_id;
                     create_or_update_block_summary(block_summary).await;
@@ -63,7 +67,9 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
     match response {
         Response::Success(success_event) => {
             let trading_event: TradingEventsResponse = success_event.into_data().unwrap();
+            tracing::info!(target:ANALYZER_CONTEXT,"indexer-response: {:?}",trading_event.clone());
             latest_block_height = trading_event.last_block as i64;
+
 
             let events = trading_event.events;
             for event in events {
