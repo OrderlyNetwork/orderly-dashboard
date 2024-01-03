@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="./javascripts/echarts.min.js"></script>
+    <title>Title</title>
+</head>
+<body>
+    <div id="main" style="width: 1200px;height:800px;"></div>
+    <script src="./javascripts/chart.js@4.4.1.min.js"></script>
+    <script type="text/javascript">
+        var xhr1 = new XMLHttpRequest();
+        xhr1.open('GET', 'http://localhost:3000/api' + '?t=' + (new Date()).getTime().toString());
+        xhr1.send();
+
+        xhr1.onreadystatechange = function () {
+            if (xhr1.readyState == 4 && xhr1.status == 200) {
+                console.log(xhr1.responseText);
+                var apiConfig;
+                apiConfig = JSON.parse(xhr1.responseText);
+                apiConfigCallback(apiConfig);
+            } else {
+                console.warn("xhr1 response: ", xhr1.responseText);
+            }
+        };
+
+        function apiConfigCallback(apiConfig) {
+            let baseUrl = apiConfig["analyzer_api"];
+            let dailyPerp = baseUrl + "/daily_orderly_perp";
+            console.log("apiConfig.analyzer_api/daily_orderly_perp=", dailyPerp);
+            var xhr2 = new XMLHttpRequest();
+            xhr2.open('GET', dailyPerp);
+            xhr2.send();
+            xhr2.onreadystatechange = function () {
+                if (xhr2.readyState == 4 && xhr2.status == 200) {
+                    dailyPerpCallBack(JSON.parse(xhr2.responseText));
+                    console.log(xhr2.responseText);
+                } else {
+                    console.warn("xhr2 response: ", xhr2.responseText);
+                }
+            };
+        }
+
+        function dailyPerpCallBack(respData) {
+            console.log("dailyPerpCallBack respData: ", respData);
+            let data = respData["data"];
+            console.log("dailyPerpCallBack respData['data']: ", data);
+            let datetime = data["daytime"];
+
+            let perpData = data["data"]
+            let tradingVol = [];
+            let tradingFee = [];
+            let liquidationAmount = [];
+            for (index = 0; index < perpData.length; index++) {
+                tradingVol.push(perpData[index]["trading_volume"]);
+                tradingFee.push(perpData[index]["trading_fee"]);
+                liquidationAmount.push(perpData[index]["liquidation_amount"]);
+
+            }
+            console.log("tradingVol: ", tradingVol);
+            console.log("tradingFee: ", tradingFee);
+            console.log("liquidationAmount: ", liquidationAmount);
+
+            // 基于准备好的dom，初始化echarts实例
+            var myChart = echarts.init(document.getElementById('main'));
+
+            // 指定图表的配置项和数据
+            var option = {
+                title: {
+                    text: 'Daily Orderly Perp'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['TradingVolume', 'TradingFee', 'LiquidationAmount']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {}
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: datetime
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: 'TradingVolume',
+                        type: 'line',
+                        // stack: 'Total',
+                        data: tradingVol
+                    },
+                    {
+                        name: 'TradingFee',
+                        type: 'line',
+                        // stack: 'Total',
+                        data: tradingFee
+                    },
+                    {
+                        name: 'LiquidationAmount',
+                        type: 'line',
+                        // stack: 'Total',
+                        data: liquidationAmount
+                    }
+                ]
+            };
+
+            // 使用刚指定的配置项和数据显示图表。
+            myChart.setOption(option);
+        }
+    </script>
+</body>
+</html>
