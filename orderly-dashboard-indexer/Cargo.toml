@@ -10,7 +10,7 @@ crate-type = ["rlib"]
 
 [dependencies]
 anyhow = "1.0.75"
-ethers = { version = "2.0.10", features = ["abigen"]}
+ethers = { version = "2.0.10", features = ["abigen", "rustls"]}
 tokio = { version = "1.33.0", features = ["full"]}
 futures = "0.3.29"
 tracing = "0.1.37"
@@ -39,6 +39,7 @@ ring = "0.16"
 reqwest = { version = "0.11", features = ["json"]}
 hex = "0.4.3"
 hex-literal = "0.4.1"
+openssl-probe = "0.1.5"
 
 [build-dependencies]
 ethers = { version = "2.0.10", features = ["abigen"]}

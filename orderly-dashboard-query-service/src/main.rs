@@ -77,6 +77,7 @@ fn init() {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    openssl_probe::init_ssl_cert_env_vars();
     init();
     let opts = Opts::parse();
     let raw_common_config =

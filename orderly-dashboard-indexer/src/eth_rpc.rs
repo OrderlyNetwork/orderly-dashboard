@@ -9,8 +9,13 @@ use tokio::time::timeout;
 pub(crate) static PROVIDER: OnceCell<Provider<Http>> = OnceCell::new();
 
 pub(crate) fn init_provider() -> Result<()> {
-    let rpc = unsafe { COMMON_CONFIGS.get_unchecked().l2_config.rpc_url.clone() };
-    PROVIDER.set(Provider::<Http>::try_from(rpc)?).ok();
+    let rpc = unsafe { &COMMON_CONFIGS.get_unchecked().l2_config.rpc_url };
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()?;
+    let http_client = Http::new_with_client(url::Url::parse(rpc)?, client);
+    let provider = Provider::new(http_client);
+    PROVIDER.set(provider).ok();
     Ok(())
 }
 

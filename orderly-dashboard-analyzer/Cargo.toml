@@ -42,3 +42,4 @@ tiny-keccak = "2.0"
 
 num-bigint = "0.4.4"
 num-traits = "0.2"
+openssl-probe = "0.1.5"

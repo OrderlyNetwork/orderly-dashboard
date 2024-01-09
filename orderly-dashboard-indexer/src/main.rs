@@ -34,6 +34,8 @@ use std::time::Duration;
 const ORDERLY_DASHBOARD_INDEXER: &str = "orderly_dashboard_indexer";
 
 fn main() -> Result<()> {
+    openssl_probe::init_ssl_cert_env_vars();
+
     let opts = Opts::parse();
     let raw_common_config =
         std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");

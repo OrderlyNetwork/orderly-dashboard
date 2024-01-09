@@ -50,6 +50,7 @@ async fn health() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    openssl_probe::init_ssl_cert_env_vars();
     init_log();
     init_database_url(get_database_credentials());
     start_analyze_job();
