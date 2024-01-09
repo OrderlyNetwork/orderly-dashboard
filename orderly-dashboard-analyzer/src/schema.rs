@@ -107,8 +107,8 @@ diesel::table! {
 
 diesel::table! {
     symbols (symbol) {
-        symbol -> Varchar,
-        symbol_hash -> Varchar,
+        symbol -> Text,
+        symbol_hash -> Text,
     }
 }
 
