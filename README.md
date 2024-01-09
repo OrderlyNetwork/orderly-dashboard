@@ -74,3 +74,7 @@ orderly dashboard indexer:
 ```shell
 docker build . -t orderly-dashboard-indexer -f dockerfiles/Dockerfile-indexer
 ```
+orderly dashboard FE:
+```shell
+docker build . -t orderly-dashboard-fe -f dockerfiles/Dockerfile-FE
+```
