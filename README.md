@@ -68,3 +68,9 @@ target/release
 ### explorer
 * testnet: https://testnet-explorer.orderly.org/
 * mainnet: https://explorer.orderly.network
+
+## Build images
+orderly dashboard indexer:
+```shell
+docker build . -t orderly-dashboard-indexer -f dockerfiles/Dockerfile-indexer
+```
