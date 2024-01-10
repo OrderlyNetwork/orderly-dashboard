@@ -745,17 +745,23 @@
     xhr1.open('GET', '/api' + '?t=' + (new Date()).getTime().toString());
     xhr1.send();
 
+
+    var time_config;
+
     xhr1.onreadystatechange = function () {
         if (xhr1.readyState == 4 && xhr1.status == 200) {
             console.log(xhr1.responseText);
             apiConfig = JSON.parse(xhr1.responseText);
-            apiConfigCallback(apiConfig);
+            time_config=apiConfig;
+            apiConfigCallback();
+            self.setInterval(apiConfigCallback,3000);
         } else {
             console.warn("xhr1 response: ", xhr1.responseText);
         }
     };
 
-    function apiConfigCallback(apiConfig) {
+    function apiConfigCallback() {
+
         let baseUrl = apiConfig["analyzer_api"];
         let dailyVolume = baseUrl + "/daily_volume";
         console.log("apiConfig.analyzer_api/dailyVolume=", dailyVolume);

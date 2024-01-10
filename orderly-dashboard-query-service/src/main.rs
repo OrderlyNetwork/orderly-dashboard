@@ -1,7 +1,8 @@
 use actix_cors::Cors;
 use actix_web::http::header;
 use actix_web::http::header::HeaderValue;
-use actix_web::{get, options, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, options, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest, dev, Error};
+use actix_web::dev::{Service, ServiceRequest};
 use clap::Parser;
 
 use config::{CommonConfig, Opts};
@@ -50,7 +51,6 @@ async fn hello() -> impl Responder {
     println!("request /");
     let mut resp = HttpResponse::Ok().body("data from query service");
     add_base_header(&mut resp);
-
     resp
 }
 
