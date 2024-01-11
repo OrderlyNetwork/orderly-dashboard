@@ -3,6 +3,7 @@ mod bindings;
 #[allow(dead_code)]
 mod client;
 mod config;
+pub mod constants;
 mod contract;
 mod db;
 mod eth_rpc;

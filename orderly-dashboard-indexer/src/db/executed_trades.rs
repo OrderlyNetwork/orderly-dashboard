@@ -1,3 +1,4 @@
+use crate::constants::ALERT_CONTEXT;
 use crate::db::DB_CONTEXT;
 use crate::db::POOL;
 use crate::schema::executed_trades;
@@ -93,8 +94,18 @@ pub async fn query_executed_trades(
 
     let events = match result {
         Ok(events) => {
+            if dur_ms >= 100 {
+                tracing::warn!(
+                    target: ALERT_CONTEXT,
+                    "query_executed_trades slow query. from:{}, to:{} length:{}, used time:{} ms",
+                        from_block,
+                        to_block,
+                    events.len(),
+                    dur_ms
+                );
+            }
             tracing::info!(
-                target: DB_CONTEXT,
+                target: ALERT_CONTEXT,
                 "query_executed_trades success. length:{}, used time:{} ms",
                 events.len(),
                 dur_ms
