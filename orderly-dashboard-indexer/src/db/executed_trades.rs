@@ -105,7 +105,7 @@ pub async fn query_executed_trades(
                 );
             }
             tracing::info!(
-                target: ALERT_CONTEXT,
+                target: DB_CONTEXT,
                 "query_executed_trades success. length:{}, used time:{} ms",
                 events.len(),
                 dur_ms
