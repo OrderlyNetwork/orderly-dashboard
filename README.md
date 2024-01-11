@@ -74,6 +74,14 @@ orderly dashboard indexer:
 ```shell
 docker build . -t orderly-dashboard-indexer -f dockerfiles/Dockerfile-indexer
 ```
+orderly dashboard analyzer:
+```shell
+docker build . -t orderly-dashboard-indexer -f dockerfiles/Dockerfile-analyzer
+```
+orderly dashboard query service:
+```shell
+docker build . -t orderly-dashboard-indexer -f dockerfiles/Dockerfile-query-service
+```
 orderly dashboard FE:
 ```shell
 docker build . -t orderly-dashboard-fe -f dockerfiles/Dockerfile-FE

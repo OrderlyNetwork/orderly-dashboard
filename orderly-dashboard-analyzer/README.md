@@ -10,7 +10,7 @@ cargo build --release
 ../target/release/orderly-dashboard-analyzer --help
 ```
 ```text
-Usage: orderly-dashboard-indexer [OPTIONS] --config-path <CONFIG_PATH>
+Usage: orderly-dashboard-analyzer [OPTIONS] --config-path <CONFIG_PATH>
 
 Options:
   -c, --config-path <CONFIG_PATH>
