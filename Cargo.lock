@@ -2637,6 +2637,7 @@ dependencies = [
  "once_cell",
  "openssl-probe",
  "orderly-dashboard-analyzer",
+ "orderly-dashboard-indexer 0.1.0",
  "serde",
  "serde_derive",
  "serde_json",

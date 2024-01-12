@@ -6,8 +6,10 @@ cargo build --release -p orderly-dashboard-query-service
 ```
 ## run
 ### set database url
+need to set `ANALYZER_DATABASE_URL` and `INDEXER_DATABASE_URL`
 ```shell
-echo ANALYZER_DATABASE_URL=postgres://username:password@localhost/diesel_demo > .env
+echo 'ANALYZER_DATABASE_URL=postgres://username:password@localhost/diesel_demo_analyzer\nINDEXER_DATABASE_URL=postgres://postgres:qwert123@localhost/diesel_demo_indexer' > .env
+echo INDEXER_DATABASE_URL=postgres://postgres:qwert123@localhost/orderly_dashboard_indexer > .env
 ```
 ### start run
 ```shell

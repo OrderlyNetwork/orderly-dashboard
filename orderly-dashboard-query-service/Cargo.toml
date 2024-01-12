@@ -15,6 +15,7 @@ tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 clap = { version = "4.3.0", features = ["color", "derive", "env"] }
 orderly-dashboard-analyzer = {path = "../orderly-dashboard-analyzer"}
+orderly-dashboard-indexer = {path = "../orderly-dashboard-indexer"}
 diesel = { version = "1.4.7", features = ["postgres", "numeric", "serde_json", "chrono", "uuidv07"] }
 dotenv = "0.15.0"
 actix-diesel = { git = "https://github.com/frol/actix-diesel", rev = "3a001986c89dfabfc3c448d8bae28525101b4992" }

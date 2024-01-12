@@ -17,7 +17,9 @@ use crate::trading_metrics::{
 mod config;
 mod db;
 mod format_extern;
+mod network_info;
 mod trading_metrics;
+use crate::network_info::{get_network_info, init_indexer_db_url};
 
 fn add_base_header(resp: &mut HttpResponse) {
     resp.headers_mut().insert(
@@ -73,6 +75,7 @@ fn init_log() {
 fn init() {
     init_log();
     init_analyzer_db_url();
+    init_indexer_db_url()
 }
 
 #[actix_web::main]
@@ -115,6 +118,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_token_deposit_rank)
             .service(get_token_withdraw_rank)
             .service(block_height)
+            .service(get_network_info)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind(("127.0.0.1", config.port))?

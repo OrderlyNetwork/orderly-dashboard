@@ -154,3 +154,8 @@ pub struct RecoveryBlockRequest {
     pub start_block_height: u64,
     pub end_block_height: u64,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct NetworkInfo {
+    pub finalized_height: Option<u64>,
+}

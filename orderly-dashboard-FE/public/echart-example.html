@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <script src="./javascripts/echarts.min.js"></script>
     <title>Title</title>
+    <link href="./stylesheets/bootstrap@5.3.2.min.css" rel="stylesheet" crossorigin="anonymous">
 </head>
 <body>
-    <div id="main" style="width: 1200px;height:800px;"></div>
+    <div id="chart1" style="width: 1200px;height:800px;"></div>
+    <div id="chart2" style="width: 1400px;height:1400px;"></div>
     <script src="./javascripts/chart.js@4.4.1.min.js"></script>
     <script type="text/javascript">
         var xhr1 = new XMLHttpRequest();
@@ -39,6 +41,20 @@
                     console.warn("xhr2 response: ", xhr2.responseText);
                 }
             };
+
+            // ranking/30d pnl
+            let rank30dApi = baseUrl + "/ranking/pnl?days=30";
+            var xhrRank30 = new XMLHttpRequest();
+            xhrRank30.open('GET', rank30dApi);
+            xhrRank30.send();
+            xhrRank30.onreadystatechange = function () {
+                if (xhrRank30.readyState == 4 && xhrRank30.status == 200) {
+                    rankUserPnl30dECCallBack(JSON.parse(xhrRank30.responseText));
+                    console.log(xhrRank30.responseText);
+                } else {
+                    console.warn("xhrRank30 response: ", xhrRank30.responseText);
+                }
+            };
         }
 
         function dailyPerpCallBack(respData) {
@@ -62,7 +78,7 @@
             console.log("liquidationAmount: ", liquidationAmount);
 
             // 基于准备好的dom，初始化echarts实例
-            var myChart = echarts.init(document.getElementById('main'));
+            var myChart = echarts.init(document.getElementById('chart1'));
 
             // 指定图表的配置项和数据
             var option = {
@@ -118,6 +134,47 @@
 
             // 使用刚指定的配置项和数据显示图表。
             myChart.setOption(option);
+        }
+
+        function rankUserPnl30dECCallBack(respData) {
+            console.log("rankUserPnl30dCallBack respData: ", respData);
+            const chartData = respData["data"];
+
+            let ak = chartData["account_ids"];
+            let real_labels = [];
+            for (let akKey in ak) {
+                real_labels.push(ak[akKey]);
+            }
+
+            var myChart2 = echarts.init(document.getElementById('chart2'));
+            option = {
+                title: {
+                    text: 'ECharts 入门示例'
+                },
+                xAxis: {
+                    // type: 'category',
+                    data: real_labels,
+                    axisLabel: {
+                        interval: 0,
+                        formatter: function (value) {
+                            return value.split('').join('\n');
+                        }
+                    }
+                },
+                grid: {
+                    bottom: "60%"
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        data: chartData["volume"],
+                        type: 'bar'
+                    }
+                ]
+            };
+            myChart2.setOption(option);
         }
     </script>
 </body>

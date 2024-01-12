@@ -111,6 +111,7 @@ impl Service {
                 Either::Right(response) => return Ok(response),
             },
             "/get_symbols_data" => serde_json::to_string(&api::get_symbols_data().await?),
+            "/get_network_info" => serde_json::to_string(&api::get_network_info().await?),
             "/status" => serde_json::to_string(&api::get_status().await?),
             _ => {
                 let mut not_found = Response::default();

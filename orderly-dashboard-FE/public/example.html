@@ -26,8 +26,16 @@
 
 <div class="container">
     <div class="row">
-        <h1><div class="col"><div id="block_height"></div>
-        </div></h1>
+        <h1>
+            <div class="col">
+                <div id="block_height"></div>
+            </div>
+        </h1>
+        <h1>
+            <div class="col">
+                <div id="network_block_height">[Network Block Height]-</div>
+            </div>
+        </h1>
     </div>
 
     <br/>
@@ -104,14 +112,8 @@
     <br/>
     <br/>
     <br/>
-    <div class="row">
-        <div class="col">
-            <canvas id="chart13"></canvas>
-        </div>
-        <div class="col">
-            <canvas id="chart14"></canvas>
-        </div>
-    </div>
+    <div id="chart13" style="width: 700px;height:1400px;"></div>
+    <div id="chart14" style="width: 1400px;height:1400px;"></div>
     <br/>
     <br/>
     <br/>
@@ -157,6 +159,7 @@
 </div>
 
 <script src="./javascripts/chart.js@4.4.1.min.js"></script>
+<script src="./javascripts/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
@@ -165,7 +168,12 @@
 
     function blockHeightCallback(respData){
         let dib = document.getElementById('block_height');
-        dib.textContent=" [Block Height] - "+respData["data"];
+        dib.textContent=" [Dashboard Block Height] - "+respData["data"];
+    }
+
+    function networkInfoCallback(respData){
+        let dib = document.getElementById('network_block_height');
+        dib.textContent=" [Network Block Height] - "+respData["data"]["finalized_height"];
     }
 
     function dailyVolumeCallBack(respData) {
@@ -391,7 +399,7 @@
         let ak = chartData["account_ids"];
         let real_labels = [];
         for (let akKey in ak) {
-            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+            real_labels.push(ak[akKey]);
         }
 
         const ctx10 = document.getElementById('chart10');
@@ -422,7 +430,7 @@
         let ak = chartData["account_ids"];
         let real_labels = [];
         for (let akKey in ak) {
-            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+            real_labels.push(ak[akKey]);
         }
 
         const ctx11 = document.getElementById('chart11');
@@ -453,7 +461,8 @@
         let ak = chartData["account_ids"];
         let real_labels = [];
         for (let akKey in ak) {
-            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+            // real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+            real_labels.push(ak[akKey]);
         }
 
         const ctx11 = document.getElementById('chart12');
@@ -479,36 +488,94 @@
 
 
     function rankUserPnl7dCallBack(respData) {
-        console.log("rankUserPerpHoldingCallBack respData: ", respData);
+        console.log("rankUserPnl7dCallBack respData: ", respData);
         const chartData = respData["data"];
 
 
         let ak = chartData["account_ids"];
         let real_labels = [];
         for (let akKey in ak) {
-            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+            // real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+            real_labels.push(ak[akKey]);
         }
 
-
-        const ctx11 = document.getElementById('chart13');
-        new Chart(ctx11, {
-            type: 'bar',
-            data: {
-                labels: real_labels,
-                datasets: [{
-                    label: 'User’s Pnl Ranking In Past 7Days',
-                    data: chartData["volume"],
-                    borderWidth: 1
-                }]
+        var myChart13 = echarts.init(document.getElementById('chart13'));
+        var axisLabel = {};
+        var grid = {};
+        if (chartData["volume"].length != 0) {
+            axisLabel = {
+                interval: 0,
+                formatter: function (value) {
+                    return value.split('').join('\n');
+                }
+            };
+            grid = {
+                bottom: "60%"
+            };
+        }
+        console.log("axisLabel config in rankUserPnl7dCallBack: ", axisLabel);
+        option = {
+            title: {
+                text: 'User’s Pnl Ranking In Past 7d'
             },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+            xAxis: {
+                // type: 'category',
+                data: real_labels,
+                axisLabel: axisLabel
+            },
+            grid: grid,
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    data: chartData["volume"],
+                    type: 'bar'
+                }
+            ]
+        };
+        myChart13.setOption(option);
+    }
+
+    function rankUserPnl30dCallBack(respData) {
+        console.log("rankUserPnl30dCallBack respData: ", respData);
+        const chartData = respData["data"];
+
+        let ak = chartData["account_ids"];
+        let real_labels = [];
+        for (let akKey in ak) {
+            real_labels.push(ak[akKey]);
+        }
+
+        var myChart14 = echarts.init(document.getElementById('chart14'));
+        option = {
+            title: {
+                text: 'User’s Pnl Ranking In Past 30d'
+            },
+            xAxis: {
+                // type: 'category',
+                data: real_labels,
+                axisLabel: {
+                    interval: 0,
+                    formatter: function (value) {
+                        return value.split('').join('\n');
                     }
                 }
-            }
-        });
+            },
+            grid: {
+                bottom: "60%"
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    data: chartData["volume"],
+                    type: 'bar'
+                }
+            ]
+        };
+        myChart14.setOption(option);
     }
 
 
@@ -586,7 +653,7 @@
         let ak = chartData["account_ids"];
         let real_labels = [];
         for (let akKey in ak) {
-            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+            real_labels.push(ak[akKey]);
         }
 
 
@@ -620,7 +687,7 @@
         let ak = chartData["account_ids"];
         let real_labels = [];
         for (let akKey in ak) {
-            real_labels.push(ak[akKey].substring(0, 4) + ak[akKey].substring(ak[akKey].length - 2));
+            real_labels.push(ak[akKey]);
         }
 
         const ctx11 = document.getElementById('chart18');
@@ -715,6 +782,19 @@
                 blockHeightCallback(data_block)
             } else {
                 console.warn("xhr200 response: ", xhr200.responseText);
+            }
+        };
+
+        let networkHeight = baseUrl + "/network_info";
+        var xhrNetworkInfo = new XMLHttpRequest();
+        xhrNetworkInfo.open('GET', networkHeight);
+        xhrNetworkInfo.send();
+        xhrNetworkInfo.onreadystatechange = function () {
+            if (xhrNetworkInfo.readyState == 4 && xhrNetworkInfo.status == 200) {
+                let data_block = JSON.parse(xhrNetworkInfo.responseText);
+                networkInfoCallback(data_block)
+            } else {
+                console.warn("xhrNetworkInfo response: ", xhrNetworkInfo.responseText);
             }
         };
 
@@ -860,6 +940,20 @@
                 console.log(xhr11.responseText);
             } else {
                 console.warn("xhr11 response: ", xhr11.responseText);
+            }
+        };
+
+        // ranking/30d pnl
+        let rank30dApi = baseUrl + "/ranking/pnl?days=30";
+        var xhrRank30 = new XMLHttpRequest();
+        xhrRank30.open('GET', rank30dApi);
+        xhrRank30.send();
+        xhrRank30.onreadystatechange = function () {
+            if (xhrRank30.readyState == 4 && xhrRank30.status == 200) {
+                rankUserPnl30dCallBack(JSON.parse(xhrRank30.responseText));
+                console.log(xhrRank30.responseText);
+            } else {
+                console.warn("xhrRank30 response: ", xhrRank30.responseText);
             }
         };
 

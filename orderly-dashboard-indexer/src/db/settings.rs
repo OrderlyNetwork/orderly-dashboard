@@ -1,4 +1,5 @@
 use crate::db::POOL;
+use crate::formats_external::NetworkInfo;
 use crate::schema::settings;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
@@ -11,6 +12,7 @@ use diesel::{Insertable, Queryable};
 #[derive(Debug, Copy, Clone)]
 pub enum SettingsKey {
     LastRpcProcessHeight = 1,
+    NetworkInfo = 2,
 }
 
 #[derive(Insertable, Queryable, Debug)]
@@ -44,8 +46,21 @@ pub async fn update_last_rpc_processed_height(block_height: u64) -> Result<()> {
         return Ok(());
     }
     update_setting(SettingsKey::LastRpcProcessHeight, block_height.to_string()).await?;
+    Ok(())
+}
+
+pub async fn update_network_info(network_info: NetworkInfo) -> Result<()> {
+    let info = serde_json::to_string(&network_info)?;
+    update_setting(SettingsKey::NetworkInfo, info).await?;
 
     Ok(())
+}
+
+pub async fn get_db_network_info() -> Result<NetworkInfo> {
+    match get_setting(SettingsKey::NetworkInfo as i32).await? {
+        Some(settings) => Ok(serde_json::from_str(&settings.value)?),
+        None => Ok(NetworkInfo::default()),
+    }
 }
 
 async fn get_setting(key: i32) -> Result<Option<DbSettings>> {
