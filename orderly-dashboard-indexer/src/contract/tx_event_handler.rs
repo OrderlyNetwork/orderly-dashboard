@@ -590,7 +590,31 @@ pub(crate) async fn handle_log(
                             liquidation_trasfers.clear();
                         }
                     }
-                    user_ledgerEvents::ProcessValidatedFuturesFilter(trade) => {
+                    user_ledgerEvents::ProcessValidatedFutures1Filter(trade) => {
+                        let db_trade = DbExecutedTrades {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            typ: TradeType::PerpTrade.value(),
+                            account_id: to_hex_format(&trade.account_id),
+                            symbol_hash: to_hex_format(&trade.symbol_hash),
+                            fee_asset_hash: to_hex_format(&trade.fee_asset_hash),
+                            trade_qty: convert_amount(trade.trade_qty).unwrap_or_default(),
+                            notional: convert_amount(trade.notional).unwrap_or_default(),
+                            executed_price: convert_amount(trade.executed_price as i128)
+                                .unwrap_or_default(),
+                            fee: convert_amount(trade.fee).unwrap_or_default(),
+                            sum_unitary_fundings: convert_amount(trade.sum_unitary_fundings)
+                                .unwrap_or_default(),
+                            trade_id: BigDecimal::from_u64(trade.trade_id).unwrap_or_default(),
+                            match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
+                            timestamp: BigDecimal::from_u64(trade.timestamp).unwrap_or_default(),
+                            side: trade.side,
+                        };
+                        create_executed_trades(vec![db_trade]).await?;
+                    }
+                    user_ledgerEvents::ProcessValidatedFutures2Filter(trade) => {
                         let db_trade = DbExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
