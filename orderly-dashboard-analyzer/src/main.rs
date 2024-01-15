@@ -39,6 +39,7 @@ fn start_analyze_job() {
         config.pull_interval,
         config.indexer_address,
         config.start_block,
+        config.batch_block_num,
     );
     tracing::info!(target:ORDERLY_DASHBOARD_ANALYZER,"start analyze block event")
 }

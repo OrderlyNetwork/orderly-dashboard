@@ -1,5 +1,6 @@
 {
   "indexer_address": "http://localhost:8018",
   "start_block": 1145079,
-  "pull_interval": 1
+  "pull_interval": 2,
+  "batch_block_num": 500
 }

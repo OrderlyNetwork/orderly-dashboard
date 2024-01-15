@@ -19,7 +19,12 @@ use crate::db::block_summary::{create_or_update_block_summary, find_block_summar
 
 const ANALYZER_CONTEXT: &str = "Analyzer-Job";
 
-pub fn start_analyzer_job(interval_seconds: u64, base_url: String, start_block: i64) {
+pub fn start_analyzer_job(
+    interval_seconds: u64,
+    base_url: String,
+    start_block: i64,
+    batch_block_num: u64,
+) {
     tokio::spawn(async move {
         loop {
             let mut block_summary = find_block_summary().await.unwrap();
@@ -27,7 +32,10 @@ pub fn start_analyzer_job(interval_seconds: u64, base_url: String, start_block: 
 
             let to_block = max(
                 from_block,
-                min(from_block + 1000, block_summary.latest_block_height),
+                min(
+                    from_block + batch_block_num as i64,
+                    block_summary.latest_block_height,
+                ),
             );
             let timestamp = Utc::now().timestamp_millis();
             let response_str = get_indexer_data(from_block, to_block, base_url.clone()).await;

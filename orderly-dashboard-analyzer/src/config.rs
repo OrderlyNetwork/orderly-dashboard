@@ -22,4 +22,5 @@ pub struct AnalyzerConfig {
     pub indexer_address: String,
     pub start_block: i64,
     pub pull_interval: u64,
+    pub batch_block_num: u64,
 }

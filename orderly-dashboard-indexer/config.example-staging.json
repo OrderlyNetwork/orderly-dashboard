@@ -23,7 +23,7 @@
     "public_key": "7YgXI92OjRkkH76M2pb4UMB8VUS6jzxElKKohkap85U="
   },
   "sync_block_strategy": {
-    "parallel_limit": 3
+    "parallel_limit": 6
   },
   "layerzero": {
     "scan_url": "https://api-testnet.layerzero-scan.com",
