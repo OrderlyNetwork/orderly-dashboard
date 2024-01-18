@@ -1,0 +1,79 @@
+stages:
+  - check_tag
+  - build_docker
+  - deploy
+
+variables:
+  SERVICE_NAME: ${CI_PROJECT_NAME}
+  DOCKER_CONTEXT: ${CI_PROJECT_DIR}
+  IMAGE_NAME: Dockerfile-FE
+  DOCKER_FILE: ${CI_PROJECT_DIR}/dockerfiles/Dockerfile-FE
+  IMAGE_NAME1: Dockerfile-analyzer
+  DOCKER_FILE1: ${CI_PROJECT_DIR}/dockerfiles/Dockerfile-analyzer
+  IMAGE_NAME2: Dockerfile-indexer
+  DOCKER_FILE2: ${CI_PROJECT_DIR}/dockerfiles/Dockerfile-indexer
+  IMAGE_NAME3: Dockerfile-query-service
+  DOCKER_FILE3: ${CI_PROJECT_DIR}/dockerfiles/Dockerfile-query-service
+
+check_tag:
+  stage: check_tag
+  image:
+    name: asia-northeast1-docker.pkg.dev/woo-orderly/orderly-devops/gcloud
+    entrypoint: [""]
+  script:
+    - echo ${IMAGE_NAME}
+    - TAG_EXISTS=$(gcloud container images list-tags asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME} --filter="tags=${CI_COMMIT_TAG}" --format="value(tags)")
+    - echo ${TAG_EXISTS}
+    - | 
+      if [ -z "${TAG_EXISTS}" ]; then
+        echo "TAG_EXISTS=false" > build.env 
+      else
+        echo "TAG_EXISTS=true" > build.env
+      fi
+  artifacts:
+    reports:
+      dotenv: build.env
+  only:
+    - tags
+  tags:
+    - dev
+    - build
+
+build_docker:
+  stage: build_docker
+  image:
+    name: asia-northeast1-docker.pkg.dev/woo-orderly/orderly-devops/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - echo ${TAG_EXISTS}
+    - |
+      if [ "${TAG_EXISTS}" = false ]; then
+        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=true
+        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE1}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME1}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=true
+        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE2}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME2}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=true
+        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE3}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME3}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=true
+      else
+        echo "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME}:${CI_COMMIT_TAG} exists, no need to build! Skip building docker image!"
+      fi
+  dependencies:
+    - check_tag
+  only:
+    - tags
+  tags:
+    - dev
+    - build
+
+deploy_dev_v2:
+  stage: deploy
+  image:
+    name: asia-northeast1-docker.pkg.dev/woo-orderly/orderly-devops/curl
+    entrypoint: [""]
+  script:
+    - echo "Trigger dev v2 helm deploying ... "
+    - curl -X POST --fail -F token=${DEPLOY_PRJ_TOKEN} -F "ref=dev-v2" -F "variables[SERVICE_NAME]=${SERVICE_NAME}" -F "variables[TAG]=${CI_COMMIT_TAG}" https://gitlab.com/api/v4/projects/${DEPLOY_PRJ_ID}/trigger/pipeline
+  when: manual
+  only:
+    - tags
+  tags:
+    - dev
+    - build
