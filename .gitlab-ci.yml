@@ -6,13 +6,13 @@ stages:
 variables:
   SERVICE_NAME: ${CI_PROJECT_NAME}
   DOCKER_CONTEXT: ${CI_PROJECT_DIR}
-  IMAGE_NAME: Dockerfile-FE
+  IMAGE_NAME: orderly-dashboard-fe
   DOCKER_FILE: ${CI_PROJECT_DIR}/dockerfiles/Dockerfile-FE
-  IMAGE_NAME1: Dockerfile-analyzer
+  IMAGE_NAME1: orderly-dashboard-analyzer
   DOCKER_FILE1: ${CI_PROJECT_DIR}/dockerfiles/Dockerfile-analyzer
-  IMAGE_NAME2: Dockerfile-indexer
+  IMAGE_NAME2: orderly-dashboard-indexer
   DOCKER_FILE2: ${CI_PROJECT_DIR}/dockerfiles/Dockerfile-indexer
-  IMAGE_NAME3: Dockerfile-query-service
+  IMAGE_NAME3: orderly-dashboard-query-service
   DOCKER_FILE3: ${CI_PROJECT_DIR}/dockerfiles/Dockerfile-query-service
 
 check_tag:
