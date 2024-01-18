@@ -48,7 +48,7 @@ build_fe:
     - echo ${TAG_EXISTS}
     - |
       if [ "${TAG_EXISTS}" = false ]; then
-        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=true
+        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=false
       else
         echo "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME}:${CI_COMMIT_TAG} exists, no need to build! Skip building docker image!"
       fi
@@ -69,7 +69,7 @@ build_analyzer:
     - echo ${TAG_EXISTS}
     - |
       if [ "${TAG_EXISTS}" = false ]; then
-        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE1}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME1}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=true
+        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE1}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME1}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=false
       else
         echo "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME1}:${CI_COMMIT_TAG} exists, no need to build! Skip building docker image!"
       fi
@@ -90,7 +90,7 @@ build_indexer:
     - echo ${TAG_EXISTS}
     - |
       if [ "${TAG_EXISTS}" = false ]; then
-        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE2}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME2}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=true
+        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE2}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME2}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=false
       else
         echo "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME2}:${CI_COMMIT_TAG} exists, no need to build! Skip building docker image!"
       fi
@@ -111,7 +111,7 @@ build_query-service:
     - echo ${TAG_EXISTS}
     - |
       if [ "${TAG_EXISTS}" = false ]; then
-        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE3}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME3}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=true
+        /kaniko/executor --context "${DOCKER_CONTEXT}" --dockerfile "${DOCKER_FILE3}" --destination "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME3}:${CI_COMMIT_TAG}" --snapshotMode=redo --cache=false
       else
         echo "asia-northeast1-docker.pkg.dev/woo-orderly/orderly-network/${IMAGE_NAME3}:${CI_COMMIT_TAG} exists, no need to build! Skip building docker image!"
       fi
