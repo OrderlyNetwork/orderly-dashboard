@@ -39,6 +39,21 @@ diesel::table! {
 }
 
 diesel::table! {
+    fee_distribution (block_number, transaction_index, log_index) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        transaction_id -> Text,
+        block_time -> Numeric,
+        event_id -> Numeric,
+        from_account_id -> Text,
+        to_account_id -> Text,
+        amount -> Numeric,
+        token_hash -> Text,
+    }
+}
+
+diesel::table! {
     liquidation_result (block_number, transaction_index, log_index) {
         block_number -> Int8,
         transaction_index -> Int4,
@@ -159,6 +174,7 @@ diesel::table! {
 diesel::allow_tables_to_appear_in_same_query!(
     adl_result,
     executed_trades,
+    fee_distribution,
     liquidation_result,
     liquidation_transfer,
     serial_batches,

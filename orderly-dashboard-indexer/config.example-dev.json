@@ -1,0 +1,34 @@
+{
+  "l2_config": {
+    "rpc_url": "https://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
+    "rpc_url_fallback": "https://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
+    "is_use_ws": true,
+    "ws_url": "wss://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
+    "pull_check_interval": 1,
+    "ledger_address": "0x8794E7260517B1766fc7b55cAfcd56e6bf08600e",
+    "operator_manager_address": "0xe34614EB781C5838C78B7f913b89A05e7a5b97e2",
+    "user_ledger_abi_path": "./abis/user_ledger.json",
+    "operator_manager_abi_path": "./abis/operator_manager.json",
+    "market_manager_address": "0x3ac2Ba11Ca2f9f109d50fb1a46d4C23fCadbbef6",
+    "market_manager_abi_path": "./abis/market_manager.json",
+    "confirm_block_num": 3,
+    "contract_deploy_height": 670373,
+    "explorer_url": "https://testnet-explorer.orderly.org",
+    "vault_manager_address": "0x4922872C26Befa37AdcA287fF68106013C82FeeD",
+    "vault_manager_abi_path": "./abis/vault_manager.json",
+    "operator_manager_zip_addr": "0xDdE9B764E58EC26086621919F4388359715F0f84",
+    "upgrade_height": 4810062
+  },
+  "indexer_server": {
+    "indexer_address": "0.0.0.0:8018",
+    "public_key": "7YgXI92OjRkkH76M2pb4UMB8VUS6jzxElKKohkap85U="
+  },
+  "sync_block_strategy": {
+    "parallel_limit": 3
+  },
+  "layerzero": {
+    "scan_url": "https://api-testnet.layerzero-scan.com",
+    "graphql_url": "https://gcp3p2q0l5.execute-api.us-east-1.amazonaws.com/prod/graphql"
+  },
+  "perp_symbols_config": ["PERP_APT_USDC", "PERP_ARB_USDC", "PERP_BCH_USDC", "PERP_BNB_USDC", "PERP_BTC_USDC", "PERP_ETH_USDC", "PERP_LINK_USDC", "PERP_MATIC_USDC", "PERP_OP_USDC", "PERP_SOL_USDC", "PERP_SUI_USDC", "PERP_TIA_USDC", "PERP_WOO_USDC", "PERP_XRP_USDC"]
+}

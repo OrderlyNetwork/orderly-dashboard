@@ -3,6 +3,7 @@ use crate::bindings::operator_manager::{operator_managerCalls, operator_managerE
 use crate::bindings::user_ledger::{user_ledgerEvents, LiquidationTransfer, SettlementExecution};
 use crate::config::COMMON_CONFIGS;
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC};
+use crate::db::fee_distribution::{create_fee_distributions, DbFeeDistribution};
 use std::{collections::VecDeque, str::FromStr};
 
 use crate::db::executed_trades::{create_executed_trades, DbExecutedTrades, TradeType};
@@ -691,7 +692,7 @@ pub(crate) async fn handle_log(
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
-                            log_index: log.transaction_index.unwrap_or_default().as_u64() as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
                             liquidation_result_log_idx: -1,
                             transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
                             liquidation_transfer_id: BigDecimal::from_u64(
@@ -716,6 +717,22 @@ pub(crate) async fn handle_log(
                             )?,
                             liquidation_fee: convert_amount(liquidation_transfer.liquidation_fee)?,
                         });
+                    }
+                    user_ledgerEvents::FeeDistributionFilter(event) => {
+                        create_fee_distributions(vec![DbFeeDistribution {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            event_id: convert_amount(event.event_id as i128)?,
+                            from_account_id: to_hex_format(&event.from_account_id),
+                            to_account_id: to_hex_format(&event.to_account_id),
+                            amount: convert_amount(event.amount as i128)?,
+                            token_hash: to_hex_format(&event.token_hash),
+                        }])
+                        .await?;
                     }
                     _ => {}
                 }
