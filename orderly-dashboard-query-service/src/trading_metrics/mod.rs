@@ -92,6 +92,13 @@ pub fn write_response<T: Serialize>(res_data: T) -> HttpResponse {
     resp
 }
 
+pub fn write_failed_response(err_code: i32, err_msg: &str) -> HttpResponse {
+    let failed_response: Response<()> = Response::new_err(err_code, err_msg.to_string());
+    let mut resp = HttpResponse::Ok().json(failed_response);
+    add_base_header(&mut resp);
+    resp
+}
+
 #[get("/block_height")] // <- define path parameters
 pub async fn block_height() -> Result<impl Responder> {
     tracing::debug!(target: TRADING_METRICS, "block_height request");
