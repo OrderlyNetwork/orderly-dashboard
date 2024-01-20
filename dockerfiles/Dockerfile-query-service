@@ -40,6 +40,6 @@ RUN echo '#!/usr/bin/env bash \n'\
 
 RUN chmod 755 ./entrypoint.sh
 
-EXPOSE 8018
+EXPOSE 8089
 
 ENTRYPOINT [ "./entrypoint.sh" ]

@@ -32,6 +32,7 @@ ENV TZ=UTC
 RUN apt update && apt install -y libssl-dev && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /root/orderly-dashboard/target/release/orderly-dashboard-analyzer /usr/local/bin/orderly-dashboard-analyzer
+COPY --from=build /root/.cargo/bin/diesel /usr/local/bin/diesel
 
 ENV HOME=/home/orderly
 WORKDIR ${HOME}
