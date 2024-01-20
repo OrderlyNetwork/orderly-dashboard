@@ -8,7 +8,7 @@ RUN apt update && apt install -y git cmake g++ pkg-config libssl-dev curl llvm c
 
 # set HOME env variable of root user
 ENV HOME=/root
-WORKDIR ${HOME}/orderly-dashboard
+WORKDIR ${HOME}/orderly
 ADD . .
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path
