@@ -29,6 +29,16 @@ app.get('/api', (req, res) => {
   res.json({analyzer_api: process.env.ANALYZER_SERVER_ADDR})
 })
 
+app.get('/status', (req, res) => {
+  res.status(200);
+  res.json({
+    "success": true,
+    "data": {
+      "is_ready": true
+    }
+  })
+})
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
