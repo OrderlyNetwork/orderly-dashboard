@@ -43,6 +43,11 @@ pub fn start_analyzer_job(
                 Ok(json_str) => {
                     let result: Result<Response<TradingEventsResponse>, serde_json::Error> =
                         serde_json::from_str(&*json_str);
+                    if result.is_err() {
+                        tracing::warn!(target:ANALYZER_CONTEXT, "parse data err, json_str: {}", json_str);
+                        time::sleep(Duration::from_secs(5 * interval_seconds)).await;
+                        continue;
+                    }
                     let (pulled_block_time, latest_block_height, pulled_perp_trade_id) =
                         parse_and_analyzer(result.unwrap()).await;
 

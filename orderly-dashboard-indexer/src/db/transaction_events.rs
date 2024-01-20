@@ -94,10 +94,6 @@ pub async fn query_balance_transaction_executions(
     to_block: i64,
 ) -> Result<Vec<DbTransactionEvent>> {
     use crate::schema::transaction_events::dsl::*;
-    tracing::info!(
-        target: DB_CONTEXT,
-        "query_balance_transaction_executions start",
-    );
     let start_time = Instant::now();
 
     let result = transaction_events

@@ -47,10 +47,6 @@ pub async fn query_liquidation_results(
     to_block: i64,
 ) -> Result<Vec<DbLiquidationResult>> {
     use crate::schema::liquidation_result::dsl::*;
-    tracing::info!(
-        target: DB_CONTEXT,
-        "query_liquidation_results start",
-    );
     let start_time = Instant::now();
 
     let result = liquidation_result

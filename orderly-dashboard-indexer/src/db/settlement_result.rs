@@ -47,10 +47,6 @@ pub async fn query_settlement_results(
     to_block: i64,
 ) -> Result<Vec<DbSettlementResult>> {
     use crate::schema::settlement_result::dsl::*;
-    tracing::info!(
-        target: DB_CONTEXT,
-        "query_settlement_results start",
-    );
     let start_time = Instant::now();
 
     let result = settlement_result

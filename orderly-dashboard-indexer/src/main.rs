@@ -184,13 +184,8 @@ pub async fn consume_data_inner(
             },
         );
         let last_processed = start_height + gap;
-        if let Err(err) = parallel_consume_blocks(start_height, gap).await {
-            tracing::warn!(
-                target: ORDERLY_DASHBOARD_INDEXER,
-                "consume_data_on_block failed with err: {}",
-                err
-            );
-            tokio::time::sleep(Duration::from_secs(1)).await;
+        if let Err(_err) = parallel_consume_blocks(start_height, gap).await {
+            tokio::time::sleep(Duration::from_secs(5)).await;
         } else {
             if update_cursor {
                 if let Err(err) = update_last_rpc_processed_height(last_processed).await {
@@ -223,7 +218,14 @@ pub async fn parallel_consume_blocks(start_height: u64, gap: u64) -> Result<()> 
         futs.push(consume_data_on_block(block_height));
     });
     let res = raw_spawn_future(join_all(futs)).await?;
-    return if res.iter().all(|r| r.is_ok()) {
+    return if res.iter().any(|r| {
+        r.as_ref()
+            .map_err(|r| {
+                tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "consume block task err:{}", r);
+                r
+            })
+            .is_err()
+    }) {
         Ok(())
     } else {
         Err(anyhow::anyhow!("Some task failed to be executed."))

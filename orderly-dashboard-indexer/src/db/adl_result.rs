@@ -41,10 +41,6 @@ pub async fn create_adl_results(adls: Vec<DbAdlResult>) -> Result<usize> {
 
 pub async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbAdlResult>> {
     use crate::schema::adl_result::dsl::*;
-    tracing::info!(
-        target: DB_CONTEXT,
-        "query_adl_results start",
-    );
     let start_time = Instant::now();
 
     let result = adl_result

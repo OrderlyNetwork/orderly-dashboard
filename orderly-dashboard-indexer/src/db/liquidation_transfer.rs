@@ -60,10 +60,6 @@ pub async fn query_liquidation_transfers(
     to_block: i64,
 ) -> Result<Vec<DbLiquidationTransfer>> {
     use crate::schema::liquidation_transfer::dsl::*;
-    tracing::info!(
-        target: DB_CONTEXT,
-        "query_liquidation_transfers start",
-    );
     let start_time = Instant::now();
 
     let result = liquidation_transfer
