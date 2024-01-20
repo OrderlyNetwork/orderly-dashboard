@@ -26,7 +26,7 @@ FROM ubuntu:22.04 as execution
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
-RUN apt update && apt install -y libssl-dev && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y libssl-dev libpq-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /root/orderly/target/release/orderly-dashboard-query-service /usr/local/bin/orderly-dashboard-query-service
 
