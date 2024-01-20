@@ -27,13 +27,7 @@ fn init_log() {
         .init();
 }
 
-fn start_analyze_job() {
-    let opts = Opts::parse();
-    let raw_common_config =
-        std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");
-    let config: AnalyzerConfig =
-        serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
-
+fn start_analyze_job(config: AnalyzerConfig) {
     tracing::info!(target:ORDERLY_DASHBOARD_ANALYZER,"config loaded: {:?}",config);
     start_analyzer_job(
         config.pull_interval,
@@ -53,10 +47,16 @@ async fn health() -> impl Responder {
 async fn main() -> std::io::Result<()> {
     openssl_probe::init_ssl_cert_env_vars();
     init_log();
+    let opts = Opts::parse();
+    let raw_common_config =
+        std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");
+    let config: AnalyzerConfig =
+        serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     init_database_url(get_database_credentials());
-    start_analyze_job();
+    let port = config.server_port;
+    start_analyze_job(config);
     HttpServer::new(|| App::new().service(health))
-        .bind(("127.0.0.1", 18080))?
+        .bind(("127.0.0.1", port))?
         .run()
         .await
 }
