@@ -48,7 +48,7 @@ pub fn start_analyzer_job(
 
                     if to_block > latest_block_height {
                         tracing::info!(target:ANALYZER_CONTEXT,"pull task blocked, latest_block:{}",block_summary.latest_block_height);
-                        time::sleep(Duration::from_secs(interval_seconds.clone())).await;
+                        time::sleep(Duration::from_secs(interval_seconds)).await;
                         continue;
                     }
                     block_summary.pulled_block_height = min(to_block, latest_block_height);
@@ -59,8 +59,8 @@ pub fn start_analyzer_job(
                     create_or_update_block_summary(block_summary).await;
                 }
                 Err(error) => {
-                    println!("{:?}", error);
-                    time::sleep(Duration::from_secs(interval_seconds.clone())).await;
+                    tracing::warn!(target: ANALYZER_CONTEXT, "get_indexer_data err: {:?}", error);
+                    time::sleep(Duration::from_secs(5 * interval_seconds)).await;
                     continue;
                 }
             }
