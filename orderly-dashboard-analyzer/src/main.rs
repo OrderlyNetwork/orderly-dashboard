@@ -56,7 +56,7 @@ async fn main() -> std::io::Result<()> {
     let port = config.server_port;
     start_analyze_job(config);
     HttpServer::new(|| App::new().service(health))
-        .bind(("127.0.0.1", port))?
+        .bind(("0.0.0.0", port))?
         .run()
         .await
 }

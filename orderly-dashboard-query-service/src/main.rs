@@ -121,7 +121,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_network_info)
             .route("/hey", web::get().to(manual_hello))
     })
-    .bind(("127.0.0.1", config.port))?
+    .bind(("0.0.0.0", config.port))?
     .run()
     .await
 }
