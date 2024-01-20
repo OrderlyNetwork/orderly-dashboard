@@ -4,7 +4,7 @@ FROM ubuntu:22.04 as build
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
-RUN apt update && apt install -y git cmake g++ pkg-config libssl-dev curl libpq-dev && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y git cmake g++ pkg-config libssl-dev curl llvm clang libpq-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # set HOME env variable of root user
 ENV HOME=/root
@@ -29,7 +29,7 @@ FROM ubuntu:22.04 as execution
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
-RUN apt update && apt install -y libssl-dev && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y libssl-dev libpq-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /root/orderly-dashboard/target/release/orderly-dashboard-indexer /usr/local/bin/orderly-dashboard-indexer
 COPY --from=build /root/.cargo/bin/diesel /usr/local/bin/diesel
