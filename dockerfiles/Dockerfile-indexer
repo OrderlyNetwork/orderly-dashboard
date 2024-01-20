@@ -31,7 +31,7 @@ ENV TZ=UTC
 
 RUN apt update && apt install -y libssl-dev libpq-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /root/orderly-dashboard/target/release/orderly-dashboard-indexer /usr/local/bin/orderly-dashboard-indexer
+COPY --from=build /root/orderly/target/release/orderly-dashboard-indexer /usr/local/bin/orderly-dashboard-indexer
 COPY --from=build /root/.cargo/bin/diesel /usr/local/bin/diesel
 
 ENV HOME=/home/orderly

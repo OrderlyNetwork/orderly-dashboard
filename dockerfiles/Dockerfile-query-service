@@ -28,7 +28,7 @@ ENV TZ=UTC
 
 RUN apt update && apt install -y libssl-dev && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /root/orderly-dashboard/target/release/orderly-dashboard-query-service /usr/local/bin/orderly-dashboard-query-service
+COPY --from=build /root/orderly/target/release/orderly-dashboard-query-service /usr/local/bin/orderly-dashboard-query-service
 
 ENV HOME=/home/orderly
 WORKDIR ${HOME}
