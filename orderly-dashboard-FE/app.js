@@ -26,7 +26,7 @@ app.use('/users', usersRouter);
 
 app.get('/api', (req, res) => {
   res.status(200);
-  res.json({analyzer_api: process.env.ANALYZER_SERVER_ADDR})
+  res.json({analyzer_api: process.env.QUERY_SERVER_ADDR})
 })
 
 app.get('/status', (req, res) => {

@@ -6,7 +6,7 @@ npm install
 ## Prerequisites
 set env variables
 ```
-echo 'PORT=3000\nANALYZER_SERVER_ADDR=http://localhost:8089\n' > .env
+echo 'PORT=3000\nQUERY_SERVER_ADDR=http://localhost:8020\n' > .env
 ```
 ## Start
 MacOS or Linux
