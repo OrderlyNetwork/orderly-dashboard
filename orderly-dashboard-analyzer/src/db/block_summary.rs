@@ -53,7 +53,7 @@ pub async fn find_block_summary() -> Result<BlockSummary, DBException> {
     }
 }
 
-pub async fn create_or_update_block_summary(summary: BlockSummary) {
+pub async fn create_or_update_block_summary(summary: BlockSummary) -> Result<(), String> {
     use crate::schema::block_summary::dsl::*;
     let init_result = diesel::insert_into(block_summary)
         .values(summary.clone())
@@ -70,10 +70,10 @@ pub async fn create_or_update_block_summary(summary: BlockSummary) {
         .await;
 
     match init_result {
-        Ok(_) => {}
+        Ok(_) => Ok(()),
         Err(error) => {
             tracing::warn!(target: DB_CONTEXT,"init_or_update_block_summary error. err:{:?}",error);
-            panic!("init_block_summary error")
+            Err("init_block_summary error".to_string())
         }
     }
 }

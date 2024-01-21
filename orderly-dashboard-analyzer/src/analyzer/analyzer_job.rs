@@ -61,7 +61,7 @@ pub fn start_analyzer_job(
                         NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
                     block_summary.latest_block_height = latest_block_height;
                     block_summary.pulled_perp_trade_id = pulled_perp_trade_id;
-                    create_or_update_block_summary(block_summary).await;
+                    create_or_update_block_summary(block_summary).await.ok();
                 }
                 Err(error) => {
                     tracing::warn!(target: ANALYZER_CONTEXT, "get_indexer_data err: {:?}", error);
