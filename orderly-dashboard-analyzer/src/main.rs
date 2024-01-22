@@ -4,6 +4,7 @@ extern crate diesel;
 
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
+use serde_json::json;
 
 use crate::analyzer::analyzer_job::start_analyzer_job;
 use crate::config::{AnalyzerConfig, Opts};
@@ -43,6 +44,18 @@ async fn health() -> impl Responder {
     HttpResponse::Ok().body("Server is Health!")
 }
 
+#[get("/status")]
+async fn status() -> impl Responder {
+    HttpResponse::Ok().json(json!(
+        {
+            "success": true,
+            "data": {
+                "is_ready": true
+            }
+        }
+    ))
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     openssl_probe::init_ssl_cert_env_vars();
@@ -55,7 +68,7 @@ async fn main() -> std::io::Result<()> {
     init_database_url(get_database_credentials());
     let port = config.server_port;
     start_analyze_job(config);
-    HttpServer::new(|| App::new().service(health))
+    HttpServer::new(|| App::new().service(health).service(status))
         .bind(("0.0.0.0", port))?
         .run()
         .await
