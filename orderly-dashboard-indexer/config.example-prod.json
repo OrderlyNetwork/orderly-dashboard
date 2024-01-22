@@ -3,7 +3,7 @@
     "rpc_url": "https://rpc.orderly.network",
     "rpc_url_fallback": "https://rpc.orderly.network",
     "is_use_ws": false,
-    "ws_url": "wss://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
+    "ws_url": "wss://l2-orderly-mainnet-0.t.conduit.xyz",
     "pull_check_interval": 1,
     "ledger_address": "0x6F7a338F2aA472838dEFD3283eB360d4Dff5D203",
     "operator_manager_address": "0x7CC5B6433eb33164c88F6512f56C566CFC3420BF",
@@ -11,7 +11,7 @@
     "operator_manager_abi_path": "./abis/operator_manager.json",
     "market_manager_address": "0x9281CBc1e37d3bcDB8BAddFa4302B6eb5DAd2672",
     "market_manager_abi_path": "./abis/market_manager.json",
-    "confirm_block_num": 20,
+    "confirm_block_num": 3,
     "contract_deploy_height": 537464,
     "explorer_url": "https://explorer.orderly.network",
     "vault_manager_address": "0x14a6342A8C1Ef9856898F510FcCE377e46668F33",
@@ -23,7 +23,7 @@
     "public_key": "7YgXI92OjRkkH76M2pb4UMB8VUS6jzxElKKohkap85U="
   },
   "sync_block_strategy": {
-    "parallel_limit": 3
+    "parallel_limit": 6
   },
   "layerzero": {
     "scan_url": "https://api-mainnet.layerzero-scan.com",
