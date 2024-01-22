@@ -8,6 +8,7 @@ use config::{CommonConfig, Opts};
 use trading_metrics::{average_trading_count, daily_trading_fee, daily_volume};
 
 use crate::db::init_analyzer_db_url;
+use crate::status::get_status;
 use crate::trading_metrics::{
     average_opening_count, average_trading_fee, average_trading_volume, block_height,
     get_daily_orderly_perp, get_daily_orderly_token, get_perp_holding_rank, get_perp_pnl_rank,
@@ -18,6 +19,7 @@ mod config;
 mod db;
 mod format_extern;
 mod network_info;
+mod status;
 mod trading_metrics;
 use crate::network_info::{get_network_info, init_indexer_db_url};
 
@@ -119,6 +121,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_token_withdraw_rank)
             .service(block_height)
             .service(get_network_info)
+            .service(get_status)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind(("0.0.0.0", config.port))?
