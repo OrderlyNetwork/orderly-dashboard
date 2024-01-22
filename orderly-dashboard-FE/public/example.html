@@ -742,7 +742,7 @@
 
     var apiConfig;
     var xhr1 = new XMLHttpRequest();
-    xhr1.open('GET', 'http://localhost:3000/api' + '?t=' + (new Date()).getTime().toString());
+    xhr1.open('GET', '/api' + '?t=' + (new Date()).getTime().toString());
     xhr1.send();
 
     xhr1.onreadystatechange = function () {
