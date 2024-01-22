@@ -9,6 +9,29 @@ use crate::db::transaction_events::DbTransactionEvent;
 use bigdecimal::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use std::fmt;
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum TradingEventType {
+    TRANSACTION,
+    PerpTrade,
+    SETTLEMENT,
+    LIQUIDATION,
+    ADL,
+}
+
+impl fmt::Display for TradingEventType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            TradingEventType::TRANSACTION => write!(f, "TRANSACTION"),
+            TradingEventType::PerpTrade => write!(f, "PERPTRADE"),
+            TradingEventType::SETTLEMENT => write!(f, "SETTLEMENT"),
+            TradingEventType::LIQUIDATION => write!(f, "LIQUIDATION"),
+            TradingEventType::ADL => write!(f, "ADL"),
+        }
+    }
+}
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct TradingEventsResponse {

@@ -7,17 +7,44 @@ use crate::db::settings::get_last_rpc_processed_height;
 use crate::db::settlement_execution::{query_settlement_executions, DbSettlementExecution};
 use crate::db::settlement_result::query_settlement_results;
 use crate::db::transaction_events::query_balance_transaction_executions;
-use crate::formats_external::trading_events::{TradingEvent, TradingEventsResponse};
+use crate::formats_external::trading_events::{
+    TradingEvent, TradingEventType, TradingEventsResponse,
+};
 use anyhow::Result;
 use std::collections::BTreeMap;
 
 pub async fn perp_trading_join_events(
     from_block: i64,
     to_block: i64,
+    event_type: Option<TradingEventType>,
 ) -> Result<TradingEventsResponse> {
     let last_block = get_last_rpc_processed_height().await?.unwrap_or_default();
     let mut response = TradingEventsResponse::default();
     if last_block == 0 {
+        return Ok(response);
+    }
+    if let Some(event_type) = event_type {
+        let mut trading_events: Vec<TradingEvent>;
+        match event_type {
+            TradingEventType::TRANSACTION => {
+                trading_events = join_balance_transactions(from_block, to_block).await?;
+            }
+            TradingEventType::PerpTrade => {
+                trading_events = join_perp_trades(from_block, to_block).await?;
+            }
+            TradingEventType::SETTLEMENT => {
+                trading_events = join_settlements(from_block, to_block).await?;
+            }
+            TradingEventType::LIQUIDATION => {
+                trading_events = join_liquidations(from_block, to_block).await?;
+            }
+            TradingEventType::ADL => {
+                trading_events = join_adls(from_block, to_block).await?;
+            }
+        }
+        trading_events.sort();
+        response.events = trading_events;
+        response.last_block = last_block;
         return Ok(response);
     }
     let balance_trans = join_balance_transactions(from_block, to_block).await?;
