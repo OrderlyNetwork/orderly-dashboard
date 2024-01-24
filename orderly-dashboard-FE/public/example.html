@@ -351,7 +351,7 @@
                 datasets: [{
                     borderColor: '#ff9a63',
                     backgroundColor: '#ff9a63',
-                    label: 'Average Trading Fee In Past 24 Hours/7Days/30Days',
+                    label: 'Average Trading Volume In Past 24 Hours/7Days/30Days',
                     data: [chartData["latest_day_metric"], chartData["latest_week_metric"], chartData["latest_month_metric"]],
                     borderWidth: 1
                 }]
@@ -858,7 +858,7 @@
         let averageTradingVolumeApi = baseUrl + "/average_trading_volume";
         console.log("apiConfig.analyzer_api/averageTradingVolumeApi=", averageTradingVolumeApi);
         var xhr6 = new XMLHttpRequest();
-        xhr6.open('GET', averageTradingFeeApi);
+        xhr6.open('GET', averageTradingVolumeApi);
         xhr6.send();
         xhr6.onreadystatechange = function () {
             if (xhr6.readyState == 4 && xhr6.status == 200) {
