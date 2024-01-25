@@ -22,6 +22,7 @@ mod network_info;
 mod status;
 mod trading_metrics;
 use crate::network_info::{get_network_info, init_indexer_db_url};
+const ORDERLY_DASHBOARD_CONTEXT: &str = "orderly_dashboard_context";
 
 fn add_base_header(resp: &mut HttpResponse) {
     resp.headers_mut().insert(
@@ -80,15 +81,20 @@ fn init() {
     init_indexer_db_url()
 }
 
+pub fn set_envs() {
+    std::env::set_var("RUST_BACKTRACE", "1");
+}
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     openssl_probe::init_ssl_cert_env_vars();
     init();
+    set_envs();
     let opts = Opts::parse();
     let raw_common_config =
         std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");
     let config: CommonConfig =
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
+    tracing::info!(target: ORDERLY_DASHBOARD_CONTEXT, "orderly dashboard config info: {:?}", config);
     HttpServer::new(|| {
         let cors = Cors::default()
             .allow_any_origin()
