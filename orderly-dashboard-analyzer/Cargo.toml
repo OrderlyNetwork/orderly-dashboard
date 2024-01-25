@@ -14,7 +14,7 @@ futures = "0.3.29"
 actix-web = "4"
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.11", features = ["json"] }
-orderly-dashboard-indexer = { git = "https://orderly-dashboard-read:sqxjE1xsuzPv2rRssZeP@gitlab.com/orderlynetwork/orderly-v2/orderly-dashboard.git", tag = "v0.0.2-alpha" }
+orderly-dashboard-indexer = { path = "../orderly-dashboard-indexer" }
 
 diesel = { version = "1.4.7", features = ["postgres", "numeric", "serde_json", "chrono", "uuidv07"] }
 dotenv = "0.15.0"

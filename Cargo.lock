@@ -2537,7 +2537,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "openssl-probe",
- "orderly-dashboard-indexer 0.1.0 (git+https://orderly-dashboard-read:sqxjE1xsuzPv2rRssZeP@gitlab.com/orderlynetwork/orderly-v2/orderly-dashboard.git?tag=v0.0.2-alpha)",
+ "orderly-dashboard-indexer",
  "reqwest",
  "ring 0.16.20",
  "serde",
@@ -2586,41 +2586,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "orderly-dashboard-indexer"
-version = "0.1.0"
-source = "git+https://orderly-dashboard-read:sqxjE1xsuzPv2rRssZeP@gitlab.com/orderlynetwork/orderly-v2/orderly-dashboard.git?tag=v0.0.2-alpha#6e87f84aec3d62a696bd1415fe0be9d06dc3a238"
-dependencies = [
- "actix",
- "actix-diesel",
- "actix-rt",
- "anyhow",
- "async-trait",
- "base64 0.13.1",
- "base64-url",
- "bigdecimal",
- "chrono",
- "clap",
- "diesel",
- "dotenv",
- "ethers",
- "futures",
- "hyper",
- "lazy_static",
- "num_cpus",
- "once_cell",
- "parking_lot",
- "prometheus",
- "reqwest",
- "ring 0.16.20",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "url",
-]
-
-[[package]]
 name = "orderly-dashboard-query-service"
 version = "0.1.0"
 dependencies = [
@@ -2637,7 +2602,7 @@ dependencies = [
  "once_cell",
  "openssl-probe",
  "orderly-dashboard-analyzer",
- "orderly-dashboard-indexer 0.1.0",
+ "orderly-dashboard-indexer",
  "serde",
  "serde_derive",
  "serde_json",
