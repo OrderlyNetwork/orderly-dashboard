@@ -18,4 +18,5 @@ pub(crate) struct Opts {
 #[derive(Clone, Deserialize, Default, Debug)]
 pub struct CommonConfig {
     pub port: u16,
+    pub is_debug: bool,
 }

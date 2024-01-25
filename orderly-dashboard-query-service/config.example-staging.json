@@ -1,3 +1,4 @@
 {
-  "port": 8020
+  "port": 8020,
+  "is_debug": true
 }

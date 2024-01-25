@@ -66,17 +66,22 @@ async fn manual_hello() -> impl Responder {
     HttpResponse::Ok().body("Hey there!")
 }
 
-fn init_log() {
+fn init_log(is_debug: bool) {
+    let log_level = if is_debug {
+        tracing_subscriber::filter::LevelFilter::DEBUG
+    } else {
+        tracing_subscriber::filter::LevelFilter::INFO
+    };
     tracing_subscriber::fmt::Subscriber::builder()
         .with_writer(std::io::stderr)
-        // .with_max_level(tracing_subscriber::filter::LevelFilter::DEBUG)
+        .with_max_level(log_level)
         .with_thread_ids(true)
         .with_thread_names(true)
         .init();
 }
 
-fn init() {
-    init_log();
+fn init(is_debug: bool) {
+    init_log(is_debug);
     init_analyzer_db_url();
     init_indexer_db_url()
 }
@@ -87,13 +92,13 @@ pub fn set_envs() {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     openssl_probe::init_ssl_cert_env_vars();
-    init();
     set_envs();
     let opts = Opts::parse();
     let raw_common_config =
         std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");
     let config: CommonConfig =
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
+    init(config.is_debug);
     tracing::info!(target: ORDERLY_DASHBOARD_CONTEXT, "orderly dashboard config info: {:?}", config);
     HttpServer::new(|| {
         let cors = Cors::default()

@@ -13,6 +13,7 @@ use crate::db::trading_metrics::ranking::{
 use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
 use crate::{add_base_header, format_extern::Response};
 
+const TRADING_METRICS: &str = "trading_metrics_context";
 #[derive(Debug, Clone, Deserialize)]
 pub struct DailyRequest {
     #[serde(default = "default_past")]
@@ -93,11 +94,13 @@ pub fn write_response<T: Serialize>(res_data: T) -> HttpResponse {
 
 #[get("/block_height")] // <- define path parameters
 pub async fn block_height() -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "block_height request");
     Ok(write_response(get_block_height().await))
 }
 
 #[get("/daily_orderly_perp")] // <- define path parameters
 pub async fn get_daily_orderly_perp(param: web::Query<DailyRequest>) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "daily_orderly_perp from day: {}, end_day: {}", param.from_day, param.end_day);
     let (from_time, end_time) = param.parse_day();
     Ok(write_response(
         daily_orderly_perp(from_time, end_time).await,
@@ -106,18 +109,21 @@ pub async fn get_daily_orderly_perp(param: web::Query<DailyRequest>) -> Result<i
 
 #[get("/daily_orderly_token")] // <- define path parameters
 pub async fn get_daily_orderly_token(param: web::Query<DailyRequest>) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "daily_orderly_token from day: {}, end_day: {}", param.from_day, param.end_day);
     let (from_time, end_time) = param.parse_day();
     Ok(write_response(get_daily_token(from_time, end_time).await))
 }
 
 #[get("/daily_volume")] // <- define path parameters
 pub async fn daily_volume(param: web::Query<DailyRequest>) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "daily_volume from day: {}, end_day: {}", param.from_day, param.end_day);
     let (from_time, end_time) = param.parse_day();
     Ok(write_response(get_daily_volume(from_time, end_time).await))
 }
 
 #[get("/daily_trading_fee")] // <- define path parameters
 pub async fn daily_trading_fee(param: web::Query<DailyRequest>) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "daily_trading_fee from day: {}, end_day: {}", param.from_day, param.end_day);
     let (from_time, end_time) = param.parse_day();
     Ok(write_response(
         get_daily_trading_fee(from_time, end_time).await,
@@ -126,21 +132,25 @@ pub async fn daily_trading_fee(param: web::Query<DailyRequest>) -> Result<impl R
 
 #[get("/average_trading_count")]
 pub async fn average_trading_count() -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "average_trading_count request");
     Ok(write_response(get_average("trading_count").await))
 }
 
 #[get("/average_trading_fee")]
 pub async fn average_trading_fee() -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "average_trading_fee request");
     Ok(write_response(get_average("trading_fee").await))
 }
 
 #[get("/average_trading_volume")]
 pub async fn average_trading_volume() -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "average_trading_volume request");
     Ok(write_response(get_average("trading_volume").await))
 }
 
 #[get("/average_opening_count")]
 pub async fn average_opening_count() -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "average_opening_count request");
     Ok(write_response(get_average("opening_count").await))
 }
 
@@ -148,6 +158,7 @@ pub async fn average_opening_count() -> Result<impl Responder> {
 pub async fn get_trading_volume_rank(
     param: web::Query<VolumeRankingRequest>,
 ) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "/ranking/trading_volume request, days: {}, size: {}", param.days, param.size);
     Ok(write_response(
         get_daily_trading_volume_ranking(param.to_hour(), param.size as i64).await,
     ))
@@ -157,6 +168,7 @@ pub async fn get_trading_volume_rank(
 pub async fn get_perp_holding_rank(
     param: web::Query<PerpHoldingRankingRequest>,
 ) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "/ranking/perp_holding request, days: {}, size: {}", param.symbol, param.size);
     Ok(write_response(
         get_user_perp_holding_ranking(param.symbol.clone(), param.size as i64).await,
     ))
@@ -164,6 +176,7 @@ pub async fn get_perp_holding_rank(
 
 #[get("/ranking/pnl")]
 pub async fn get_perp_pnl_rank(param: web::Query<VolumeRankingRequest>) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "/ranking/pnl, days: {}, size: {}", param.days, param.size);
     Ok(write_response(
         get_pnl_ranking(param.to_hour(), param.size as i64).await,
     ))
@@ -173,6 +186,7 @@ pub async fn get_perp_pnl_rank(param: web::Query<VolumeRankingRequest>) -> Resul
 pub async fn get_token_deposit_rank(
     param: web::Query<VolumeRankingRequest>,
 ) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "/ranking/deposit, days: {}, size: {}", param.days, param.size);
     Ok(write_response(
         get_token_ranking(param.to_hour(), param.size as i64, false).await,
     ))
@@ -182,6 +196,7 @@ pub async fn get_token_deposit_rank(
 pub async fn get_token_withdraw_rank(
     param: web::Query<VolumeRankingRequest>,
 ) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "/ranking/withdraw, days: {}, size: {}", param.days, param.size);
     Ok(write_response(
         get_token_ranking(param.to_hour(), param.size as i64, true).await,
     ))

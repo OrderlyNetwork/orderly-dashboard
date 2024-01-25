@@ -18,8 +18,10 @@ fn get_database_credentials() -> String {
 static LAST_CALL: AtomicI64 = AtomicI64::new(0);
 static CACHE_HEIGHT: AtomicU64 = AtomicU64::new(0);
 
+const NETWORK_METRICS: &str = "network_metrics_context";
 #[get("/network_info")]
 pub async fn get_network_info() -> Result<impl Responder> {
+    tracing::debug!(target: NETWORK_METRICS, "network_info request");
     let now = chrono::Utc::now().timestamp();
     let last = LAST_CALL.load(Ordering::Relaxed);
     let cache_height = CACHE_HEIGHT.load(Ordering::Relaxed);
