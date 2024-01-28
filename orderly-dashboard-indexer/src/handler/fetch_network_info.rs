@@ -22,7 +22,7 @@ pub fn init_fetch_network_info_task() -> Result<()> {
         loop {
             if let Some(block) = provider.get_block(BlockNumber::Latest).await.map_err(|err| tracing::warn!(target: SYNC_NETWORK_INFO_CONTEXT, "get block failed: {}", err)).ok() {
                 if let Some(block) = block {
-                    tracing::info!(target: SYNC_NETWORK_INFO_CONTEXT,"block height: {}", block.number.unwrap_or_default().as_u64() - confirm_block);
+                    tracing::info!(target: SYNC_NETWORK_INFO_CONTEXT,"syn network block height: {}", block.number.unwrap_or_default().as_u64() - confirm_block);
                     update_network_info(NetworkInfo{finalized_height: Some(block.number.unwrap_or_default().as_u64())}).await.ok();
                 }
             }

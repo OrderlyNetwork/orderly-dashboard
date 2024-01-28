@@ -27,6 +27,7 @@ use crate::init::init_handler;
 use crate::server::webserver;
 use crate::service_base::runtime::raw_spawn_future;
 use anyhow::Result;
+use chrono::Utc;
 use clap::Parser;
 use futures::future::join_all;
 use std::cmp::min;
@@ -148,7 +149,7 @@ pub async fn consume_data_inner(
     );
     let parallel_limit = get_common_cfg().sync_block_strategy.parallel_limit;
     loop {
-        if start_height == target_block {
+        if start_height >= target_block {
             match pull_target_block().await {
                 Ok(height) => {
                     if height > target_block {
@@ -159,7 +160,7 @@ pub async fn consume_data_inner(
                             "current:{}, not new blocks, sleep 1 secs",
                             target_block
                         );
-                        tokio::time::sleep(Duration::from_secs(1)).await;
+                        tokio::time::sleep(Duration::from_secs(2)).await;
                         continue;
                     }
                 }
@@ -169,7 +170,7 @@ pub async fn consume_data_inner(
                         "pull_target_block failed in consume_data_inner, err:{}",
                         err
                     );
-                    tokio::time::sleep(Duration::from_secs(1)).await;
+                    tokio::time::sleep(Duration::from_secs(2)).await;
                     continue;
                 }
             }
@@ -184,6 +185,13 @@ pub async fn consume_data_inner(
             },
         );
         let last_processed = start_height + gap;
+        if Utc::now().timestamp() % 60 == 0 {
+            tracing::info!(
+                target: ORDERLY_DASHBOARD_INDEXER,
+                "symbol block summary start_height: {} gap: {} last_processed block is: {}, target_block: {}",
+                start_height, gap, last_processed, target_block
+            );
+        }
         if let Err(err) = parallel_consume_blocks(start_height, gap).await {
             tokio::time::sleep(Duration::from_secs(5)).await;
             tracing::warn!(
@@ -211,6 +219,7 @@ pub async fn consume_data_inner(
                     break;
                 }
             }
+            // may be bigger than target_block here
             start_height = last_processed + 1;
         }
     }
