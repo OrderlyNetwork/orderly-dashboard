@@ -17,11 +17,17 @@ use crate::trading_metrics::{
 
 mod config;
 mod db;
+mod error_code;
 mod format_extern;
 mod network_info;
+mod raw_query;
+mod service_base;
 mod status;
 mod trading_metrics;
 use crate::network_info::{get_network_info, init_indexer_db_url};
+use crate::raw_query::analyzer_raw_query;
+use crate::service_base::runtime::spawn_future;
+
 const ORDERLY_DASHBOARD_CONTEXT: &str = "orderly_dashboard_context";
 
 fn add_base_header(resp: &mut HttpResponse) {
@@ -100,6 +106,12 @@ async fn main() -> std::io::Result<()> {
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     init(config.is_debug);
     tracing::info!(target: ORDERLY_DASHBOARD_CONTEXT, "orderly dashboard config info: {:?}", config);
+    std::thread::spawn(|| {
+        spawn_future(async {
+            tracing::info!(target: ORDERLY_DASHBOARD_CONTEXT, "start new thread pool");
+            Ok(())
+        });
+    });
     HttpServer::new(|| {
         let cors = Cors::default()
             .allow_any_origin()
@@ -132,6 +144,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_token_withdraw_rank)
             .service(block_height)
             .service(get_network_info)
+            .service(analyzer_raw_query)
             .service(get_status)
             .route("/hey", web::get().to(manual_hello))
     })
