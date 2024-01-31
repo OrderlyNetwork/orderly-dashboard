@@ -80,7 +80,8 @@ pub fn start_analyzer_job(
                 }
             }
             tracing::info!(target: ANALYZER_CONTEXT,"pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
-            time::sleep(Duration::from_secs(interval_seconds.clone())).await;
+            // todo: update back to Duration::from_secs(interval_seconds.clone())
+            time::sleep(Duration::from_millis(400)).await;
         }
     });
 }
