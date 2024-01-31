@@ -18,15 +18,13 @@ use crate::analyzer::settlement_analyzer::analyzer_settlement;
 use crate::analyzer::transaction_analyzer::analyzer_transaction;
 use crate::db::block_summary::{create_or_update_block_summary, find_block_summary};
 
-const PULL_NUM: i32 = 3000;
-
 const ANALYZER_CONTEXT: &str = "Analyzer-Job";
 
 pub fn start_analyzer_job(
     interval_seconds: u64,
     base_url: String,
     start_block: i64,
-    _batch_block_num: u64,
+    batch_block_num: u64,
 ) {
     tokio::spawn(async move {
         let mut block_summary = find_block_summary().await.unwrap();
@@ -37,7 +35,7 @@ pub fn start_analyzer_job(
             let round_from_block = from_block;
             let round_to_block = max(
                 round_from_block,
-                min(round_from_block + PULL_NUM as i64, max_block),
+                min(round_from_block + batch_block_num as i64, max_block),
             );
             let timestamp = Utc::now().timestamp_millis();
             let response_str =
@@ -80,8 +78,7 @@ pub fn start_analyzer_job(
                 }
             }
             tracing::info!(target: ANALYZER_CONTEXT,"pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
-            // todo: update back to Duration::from_secs(interval_seconds.clone())
-            time::sleep(Duration::from_millis(400)).await;
+            time::sleep(Duration::from_secs(interval_seconds)).await;
         }
     });
 }
