@@ -2,6 +2,7 @@ use std::cmp::max;
 
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::NaiveDateTime;
+
 use orderly_dashboard_indexer::formats_external::trading_events::Trade;
 
 use crate::analyzer::analyzer_context::AnalyzeContext;
@@ -26,13 +27,13 @@ pub async fn analyzer_perp_trade(
         max_perp_trade_id = max(max_perp_trade_id, perp_trade.trade_id as i64);
 
         let trade_qty: BigDecimal = perp_trade.trade_qty.parse().unwrap();
-        let fixed_qty = div_into_real(trade_qty.to_i128().unwrap(), 100000000);
+        let fixed_qty = div_into_real(trade_qty.to_i128().unwrap(), 100_000_000);
 
         let trade_fee: BigDecimal = perp_trade.fee.parse().unwrap();
-        let fixed_fee = div_into_real(trade_fee.to_i128().unwrap(), 1000000);
+        let fixed_fee = div_into_real(trade_fee.to_i128().unwrap(), 1_000_000);
 
         let notional: BigDecimal = perp_trade.notional.parse().unwrap();
-        let fixed_notional = div_into_real(notional.to_i128().unwrap(), 1000000);
+        let fixed_notional = div_into_real(notional.to_i128().unwrap(), 1000_000);
 
         // hourly_orderly
         let hour_orderly_perp_key = HourlyOrderlyPerpKey {
@@ -86,7 +87,8 @@ pub async fn analyzer_perp_trade(
                 to_big_decimal(fixed_notional.clone()),
                 pulled_block_height.clone(),
                 pulled_block_time.clone(),
-                open_cost_diff,
+                open_cost_diff.clone(),
+                fixed_qty.clone(),
             );
             if opening {
                 context

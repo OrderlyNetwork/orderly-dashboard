@@ -70,6 +70,7 @@ impl UserPerpSummary {
         pulled_block_height: i64,
         pulled_block_time: NaiveDateTime,
         open_cost_diff: BigDecimal,
+        qty: BigDecimal,
     ) -> (bool, bool) {
         let is_opening = self.holding.clone() == Default::default()
             || (self.holding.clone().sign() != amount.clone().sign()
@@ -81,7 +82,7 @@ impl UserPerpSummary {
         self.total_trading_count += 1;
         self.pulled_block_height = pulled_block_height;
         self.pulled_block_time = pulled_block_time;
-        self.holding += amount;
+        self.holding += qty;
         self.opening_cost += open_cost_diff;
 
         (is_opening, is_new_user)
