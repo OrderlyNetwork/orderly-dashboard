@@ -1,8 +1,10 @@
 use actix_cors::Cors;
+use actix_web::dev::{Service, ServiceRequest};
 use actix_web::http::header;
 use actix_web::http::header::HeaderValue;
-use actix_web::{get, options, post, web, App, HttpResponse, HttpServer, Responder, HttpRequest, dev, Error};
-use actix_web::dev::{Service, ServiceRequest};
+use actix_web::{
+    dev, get, options, post, web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder,
+};
 use clap::Parser;
 
 use config::{CommonConfig, Opts};

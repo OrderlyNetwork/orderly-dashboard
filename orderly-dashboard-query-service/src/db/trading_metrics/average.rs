@@ -1,6 +1,6 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
-use chrono::{Duration, Local, NaiveDateTime};
+use chrono::{Duration, Local, NaiveDateTime, Utc};
 use diesel::sql_types::*;
 use diesel::QueryableByName;
 
@@ -21,7 +21,7 @@ pub struct CountWrapper {
 }
 
 pub async fn get_average(field: &str) -> CountAverageExtern {
-    let now = Local::now().naive_utc();
+    let now = Utc::now().naive_utc();
     let current_day_start = now.clone() - Duration::days(1);
     let current_week_start = now.clone() - Duration::days(7);
     let current_month_start = now.clone() - Duration::days(30);

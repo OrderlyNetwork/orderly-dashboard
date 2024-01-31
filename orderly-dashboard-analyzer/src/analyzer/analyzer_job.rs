@@ -2,11 +2,12 @@ use std::cmp::{max, min};
 use std::time::Duration;
 
 use chrono::{NaiveDateTime, Timelike, Utc};
+use tokio::time;
+
 use orderly_dashboard_indexer::formats_external::trading_events::{
     TradingEventInnerData, TradingEventsResponse,
 };
 use orderly_dashboard_indexer::formats_external::Response;
-use tokio::time;
 
 use crate::analyzer::adl_analyzer::analyzer_adl;
 use crate::analyzer::analyzer_context::AnalyzeContext;
@@ -26,19 +27,19 @@ pub fn start_analyzer_job(
     batch_block_num: u64,
 ) {
     tokio::spawn(async move {
-        loop {
-            let mut block_summary = find_block_summary().await.unwrap();
-            let from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
+        let mut block_summary = find_block_summary().await.unwrap();
+        let mut from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
+        let mut max_block = block_summary.latest_block_height;
 
-            let to_block = max(
-                from_block,
-                min(
-                    from_block + batch_block_num as i64,
-                    block_summary.latest_block_height,
-                ),
+        loop {
+            let round_from_block = from_block;
+            let round_to_block = max(
+                round_from_block,
+                min(round_from_block + batch_block_num as i64, max_block),
             );
             let timestamp = Utc::now().timestamp_millis();
-            let response_str = get_indexer_data(from_block, to_block, base_url.clone()).await;
+            let response_str =
+                get_indexer_data(round_from_block, round_to_block, base_url.clone()).await;
             match response_str {
                 Ok(json_str) => {
                     let result: Result<Response<TradingEventsResponse>, serde_json::Error> =
@@ -48,20 +49,27 @@ pub fn start_analyzer_job(
                         time::sleep(Duration::from_secs(5 * interval_seconds)).await;
                         continue;
                     }
+
                     let (pulled_block_time, latest_block_height, pulled_perp_trade_id) =
                         parse_and_analyzer(result.unwrap()).await;
 
-                    if to_block > latest_block_height {
+                    if round_to_block == latest_block_height {
                         tracing::info!(target:ANALYZER_CONTEXT,"pull task blocked, latest_block:{}",block_summary.latest_block_height);
                         time::sleep(Duration::from_secs(interval_seconds)).await;
                         continue;
                     }
-                    block_summary.pulled_block_height = min(to_block, latest_block_height);
+
+                    block_summary.pulled_block_height = min(round_to_block, latest_block_height);
                     block_summary.pulled_block_time =
                         NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
                     block_summary.latest_block_height = latest_block_height;
                     block_summary.pulled_perp_trade_id = pulled_perp_trade_id;
-                    create_or_update_block_summary(block_summary).await.ok();
+                    create_or_update_block_summary(block_summary.clone())
+                        .await
+                        .ok();
+
+                    max_block = latest_block_height;
+                    from_block = block_summary.pulled_block_height + 1;
                 }
                 Err(error) => {
                     tracing::warn!(target: ANALYZER_CONTEXT, "get_indexer_data err: {:?}", error);
@@ -69,7 +77,7 @@ pub fn start_analyzer_job(
                     continue;
                 }
             }
-            tracing::info!(target: ANALYZER_CONTEXT,"pull block from {} to {}. cost:{}",from_block,to_block,Utc::now().timestamp_millis()-timestamp);
+            tracing::info!(target: ANALYZER_CONTEXT,"pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
             time::sleep(Duration::from_secs(interval_seconds.clone())).await;
         }
     });
@@ -84,7 +92,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
     match response {
         Response::Success(success_event) => {
             let trading_event: TradingEventsResponse = success_event.into_data().unwrap();
-            tracing::info!(target:ANALYZER_CONTEXT,"indexer-response: {:?}",trading_event.clone());
+            // tracing::info!(target:ANALYZER_CONTEXT,"indexer-response: {:?}",trading_event.clone());
             latest_block_height = trading_event.last_block as i64;
 
             let events = trading_event.events;
@@ -128,14 +136,8 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         batch_id: _,
                         trades,
                     } => {
-                        let trade_id = analyzer_perp_trade(
-                            trades,
-                            block_hour,
-                            block_time,
-                            block_num,
-                            &mut context,
-                        )
-                        .await;
+                        let trade_id =
+                            analyzer_perp_trade(trades, block_time, block_num, &mut context).await;
                         latest_perp_trade_id = max(latest_perp_trade_id, trade_id);
                     }
                     TradingEventInnerData::SettlementResult {

@@ -1,7 +1,7 @@
 use std::cmp::max;
 
 use bigdecimal::{BigDecimal, ToPrimitive};
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Timelike};
 
 use orderly_dashboard_indexer::formats_external::trading_events::Trade;
 
@@ -16,7 +16,6 @@ const PERP_ANALYZER: &str = "perp-trade-analyzer";
 
 pub async fn analyzer_perp_trade(
     trades: Vec<Trade>,
-    block_hour: NaiveDateTime,
     pulled_block_time: NaiveDateTime,
     pulled_block_height: i64,
     context: &mut AnalyzeContext,
@@ -35,10 +34,12 @@ pub async fn analyzer_perp_trade(
         let notional: BigDecimal = perp_trade.notional.parse().unwrap();
         let fixed_notional = div_into_real(notional.to_i128().unwrap(), 1000_000);
 
+        let trade_hour = convert_block_hour(perp_trade.timestamp as i64);
+
         // hourly_orderly
         let hour_orderly_perp_key = HourlyOrderlyPerpKey {
             symbol: perp_trade.symbol_hash.clone(),
-            block_hour: block_hour.clone(),
+            block_hour: trade_hour.clone(),
         };
         {
             let hourly_orderly_perp = context
@@ -106,7 +107,7 @@ pub async fn analyzer_perp_trade(
             let hourly_user_perp_key = HourlyUserPerpKey {
                 account_id: perp_trade.account_id.clone(),
                 symbol: perp_trade.symbol_hash.clone(),
-                block_hour: block_hour.clone(),
+                block_hour: trade_hour.clone(),
             };
 
             let hourly_user_perp = context.get_hourly_user_perp(&hourly_user_perp_key).await;
@@ -128,4 +129,9 @@ pub async fn analyzer_perp_trade(
     }
 
     return max_perp_trade_id;
+}
+
+fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
+    let date_time = NaiveDateTime::from_timestamp_opt(block_timestamp / 1000, 0).unwrap();
+    return date_time.with_second(0).unwrap().with_minute(0).unwrap();
 }

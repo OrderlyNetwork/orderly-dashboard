@@ -1,7 +1,7 @@
 {
   "indexer_address": "http://localhost:8018",
   "start_block": 537464,
-  "pull_interval": 2,
+  "pull_interval": 3,
   "batch_block_num": 500,
   "server_port": 8019
 }
