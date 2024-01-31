@@ -51,6 +51,7 @@ pub async fn daily_orderly_perp(
       from hourly_orderly_perp where block_hour>=$1 and block_hour<=$2 \
       group by trading_day order by trading_day asc;",
     );
+    tracing::debug!(target:DB_CONTEXT,"daily_orderly_perp query string: {:?}; from_time: {}, end_time: {}", sql_query, from_time, end_time);
 
     let select_result: Result<Vec<OrderlyDailyData>, _> = sql_query
         .bind::<Timestamp, _>(from_time)

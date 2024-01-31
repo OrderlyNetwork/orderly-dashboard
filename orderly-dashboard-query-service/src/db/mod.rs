@@ -8,7 +8,6 @@ use parking_lot::Mutex;
 use postgres::{Client, NoTls};
 use std::env;
 
-#[allow(dead_code)]
 pub const DB_CONTEXT: &str = "DB_operation";
 
 lazy_static! {
