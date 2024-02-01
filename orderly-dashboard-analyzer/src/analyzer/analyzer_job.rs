@@ -56,6 +56,7 @@ pub fn start_analyzer_job(
                     if round_to_block == latest_block_height {
                         tracing::info!(target:ANALYZER_CONTEXT,"pull task blocked, latest_block:{}",block_summary.latest_block_height);
                         time::sleep(Duration::from_secs(interval_seconds)).await;
+                        from_block += round_to_block + 1;
                         continue;
                     }
 
