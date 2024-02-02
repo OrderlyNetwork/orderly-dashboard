@@ -11,6 +11,7 @@ use crate::formats_external::trading_events::{
     TradingEvent, TradingEventType, TradingEventsResponse,
 };
 use anyhow::Result;
+use std::cmp::min;
 use std::collections::BTreeMap;
 
 pub async fn perp_trading_join_events(
@@ -19,6 +20,7 @@ pub async fn perp_trading_join_events(
     event_type: Option<TradingEventType>,
 ) -> Result<TradingEventsResponse> {
     let last_block = get_last_rpc_processed_height().await?.unwrap_or_default();
+    let to_block = min(last_block as i64, to_block);
     let mut response = TradingEventsResponse::default();
     if last_block == 0 {
         return Ok(response);
