@@ -5,7 +5,7 @@ pub struct RealizedPnl {}
 fn is_reverse(holding_diff: BigDecimal, latest_holding: BigDecimal) -> bool {
     if latest_holding.clone() != BigDecimal::from(0) {
         let current_holding = latest_holding.clone() + holding_diff.clone();
-        if (current_holding.clone() != BigDecimal::from(0))
+        if (current_holding.clone() == BigDecimal::from(0))
             || current_holding.clone().sign() != latest_holding.clone().sign()
         {
             return true;
