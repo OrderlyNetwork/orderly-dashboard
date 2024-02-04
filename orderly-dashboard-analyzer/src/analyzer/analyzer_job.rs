@@ -4,10 +4,10 @@ use std::time::Duration;
 use chrono::{NaiveDateTime, Timelike, Utc};
 use tokio::time;
 
-use orderly_dashboard_indexer::formats_external::Response;
 use orderly_dashboard_indexer::formats_external::trading_events::{
     TradingEventInnerData, TradingEventsResponse,
 };
+use orderly_dashboard_indexer::formats_external::Response;
 
 use crate::analyzer::adl_analyzer::analyzer_adl;
 use crate::analyzer::analyzer_context::AnalyzeContext;
@@ -54,7 +54,6 @@ pub fn start_analyzer_job(
                         parse_and_analyzer(result.unwrap()).await;
 
                     if round_to_block > latest_block_height {
-                        //如果拉到了最新区块之后再继续拉取，indexer并没有索引到新的区块，这一轮空了，直接跳过，防止漏区块
                         tracing::info!(target: ANALYZER_CONTEXT,"continue to pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
                         continue;
                     }
@@ -63,7 +62,8 @@ pub fn start_analyzer_job(
                     from_block = round_to_block + 1;
 
                     block_summary.pulled_block_height = round_to_block;
-                    block_summary.pulled_block_time = NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
+                    block_summary.pulled_block_time =
+                        NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
                     block_summary.latest_block_height = latest_block_height;
                     block_summary.pulled_perp_trade_id = pulled_perp_trade_id;
                     create_or_update_block_summary(block_summary.clone())
@@ -129,7 +129,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_time.clone(),
                             &mut context,
                         )
-                            .await;
+                        .await;
                     }
                     TradingEventInnerData::ProcessedTrades {
                         batch_id: _,
@@ -159,7 +159,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_time.clone(),
                             &mut context,
                         )
-                            .await
+                        .await
                     }
                     TradingEventInnerData::LiquidationResult {
                         liquidated_account_id,
@@ -179,7 +179,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_time.clone(),
                             &mut context,
                         )
-                            .await
+                        .await
                     }
                     TradingEventInnerData::AdlResult {
                         account_id,
@@ -203,7 +203,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_num,
                             &mut context,
                         )
-                            .await;
+                        .await;
                     }
                 }
             }
