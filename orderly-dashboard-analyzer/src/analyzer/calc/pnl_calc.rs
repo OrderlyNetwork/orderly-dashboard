@@ -49,6 +49,6 @@ impl RealizedPnl {
             }
         }
 
-        (open_cost_diff.with_prec(6), pnl_diff.with_prec(6))
+        (open_cost_diff.with_prec(8), pnl_diff.with_prec(8))
     }
 }
