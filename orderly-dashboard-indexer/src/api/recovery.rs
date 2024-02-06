@@ -1,9 +1,10 @@
+use crate::consume_data_task::{consume_data_inner, pull_target_block};
 use crate::formats_external::{FailureResponse, RecoveryBlockRequest, Response};
-use crate::{consume_data_inner, pull_target_block};
 use anyhow::Result;
 use std::cmp::min;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+#[allow(dead_code)]
 const RECOVERY: &str = "recovery_block";
 static IS_RECOVER_FLIGHT: AtomicBool = AtomicBool::new(false);
 

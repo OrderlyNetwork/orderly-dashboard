@@ -10,7 +10,7 @@ crate-type = ["rlib"]
 
 [dependencies]
 anyhow = "1.0.75"
-ethers = { version = "2.0.10", features = ["abigen", "rustls"]}
+ethers = { version = "2.0.10", features = ["abigen", "rustls", "optimism"]}
 tokio = { version = "1.33.0", features = ["full"]}
 futures = "0.3.29"
 tracing = "0.1.37"

@@ -6,6 +6,7 @@ use once_cell::sync::OnceCell;
 use std::time::Duration;
 use tokio::time::timeout;
 
+use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 pub(crate) static PROVIDER: OnceCell<Provider<Http>> = OnceCell::new();
 
 pub(crate) fn init_provider() -> Result<()> {
@@ -46,7 +47,7 @@ pub async fn get_block_with_id(block_id: BlockId) -> Result<Option<Block<H256>>>
         }
         Ok(Err(err)) => {
             tracing::warn!(
-                target: crate::ORDERLY_DASHBOARD_INDEXER,
+                target: ORDERLY_DASHBOARD_INDEXER,
                 "get_block_num query err: {}",
                 err
             );
@@ -74,7 +75,7 @@ pub async fn get_block_with_txs(block_num: u64) -> Result<Block<Transaction>> {
         }
         Ok(Err(err)) => {
             tracing::warn!(
-                target: crate::ORDERLY_DASHBOARD_INDEXER,
+                target: ORDERLY_DASHBOARD_INDEXER,
                 "get_block_with_txs query err: {}",
                 err
             );
@@ -103,7 +104,7 @@ pub async fn get_tx_receipt(tx_hash: H256) -> Result<TransactionReceipt> {
         }
         Ok(Err(err)) => {
             tracing::warn!(
-                target: crate::ORDERLY_DASHBOARD_INDEXER,
+                target: ORDERLY_DASHBOARD_INDEXER,
                 "get_tx_receipt query err: {}",
                 err
             );
@@ -129,7 +130,7 @@ pub async fn get_block_receipts(block_num: u64) -> Result<Vec<TransactionReceipt
         }
         Ok(Err(err)) => {
             tracing::warn!(
-                target: crate::ORDERLY_DASHBOARD_INDEXER,
+                target: ORDERLY_DASHBOARD_INDEXER,
                 "get_block_receipts query err: {}",
                 err
             );

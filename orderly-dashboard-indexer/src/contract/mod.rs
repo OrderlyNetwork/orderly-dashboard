@@ -7,6 +7,9 @@ use ethers::prelude::{Address, Block, Transaction, TransactionReceipt, H160};
 use once_cell::sync::OnceCell;
 use std::collections::BTreeMap;
 use std::str::FromStr;
+
+use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
+
 pub(crate) const HANDLE_LOG: &str = "handle_log";
 pub(crate) const OPERATOR_MANAGER_SC: &str = "operator_manager_sc";
 pub(crate) const LEDGER_SC: &str = "ledger_sc";
@@ -24,7 +27,7 @@ pub(crate) fn init_addr_set() -> anyhow::Result<()> {
     addr_map.insert(H160::from_str(&config.ledger_address)?, LEDGER_SC);
     addr_map.insert(H160::from_str(&config.vault_manager_address)?, VAULT_SC);
     if ADDR_MAP.set(addr_map).is_err() {
-        tracing::warn!(target: crate::ORDERLY_DASHBOARD_INDEXER, "ADDR_SET already inited");
+        tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "ADDR_SET already inited");
     }
     Ok(())
 }

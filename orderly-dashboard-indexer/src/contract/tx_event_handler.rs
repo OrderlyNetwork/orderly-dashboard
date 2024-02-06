@@ -48,6 +48,7 @@ pub(crate) async fn consume_logs_from_tx_receipts(
                     &mut liquidation_trasfers_cache,
                     &mut settlement_exectutions_cahce,
                     log.clone(),
+                    receipt,
                     Some(block.timestamp.as_u64()),
                 )
                 .await
@@ -373,6 +374,7 @@ pub(crate) async fn handle_log(
     liquidation_trasfers: &mut Vec<DbLiquidationTransfer>,
     settlement_exectutions: &mut Vec<DbSettlementExecution>,
     log: Log,
+    receipt: &TransactionReceipt,
     block_t: Option<u64>,
 ) -> Result<()> {
     let addr_map = unsafe { ADDR_MAP.get_unchecked() };
@@ -393,6 +395,24 @@ pub(crate) async fn handle_log(
                             block_time: (block_t.unwrap_or_default() as i64).into(),
                             batch_id: event_upload.batch_id as i64,
                             event_type: SerialBatchType::EventUpload.value(),
+                            effective_gas_price: receipt.effective_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            gas_used: receipt.gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee: receipt.l1_fee.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
                         }])
                         .await?;
                     }
@@ -406,6 +426,24 @@ pub(crate) async fn handle_log(
                             block_time: (block_t.unwrap_or_default() as i64).into(),
                             batch_id: event_upload.batch_id as i64,
                             event_type: SerialBatchType::EventUpload.value(),
+                            effective_gas_price: receipt.effective_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            gas_used: receipt.gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee: receipt.l1_fee.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
                         }])
                         .await?;
                     }
@@ -419,6 +457,24 @@ pub(crate) async fn handle_log(
                             block_time: (block_t.unwrap_or_default() as i64).into(),
                             batch_id: futures_upload.batch_id as i64,
                             event_type: SerialBatchType::PerpTrade.value(),
+                            effective_gas_price: receipt.effective_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            gas_used: receipt.gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee: receipt.l1_fee.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
                         }])
                         .await?;
                     }
@@ -432,6 +488,24 @@ pub(crate) async fn handle_log(
                             block_time: (block_t.unwrap_or_default()).into(),
                             batch_id: futures_upload.batch_id as i64,
                             event_type: SerialBatchType::PerpTrade.value(),
+                            effective_gas_price: receipt.effective_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            gas_used: receipt.gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee: receipt.l1_fee.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
                         }])
                         .await?;
                     }
@@ -461,6 +535,24 @@ pub(crate) async fn handle_log(
                             status: DbTransactionStatus::Succeed.value(),
                             withdraw_nonce: None,
                             fail_reason: None,
+                            effective_gas_price: receipt.effective_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            gas_used: receipt.gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee: receipt.l1_fee.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
                         }])
                         .await?;
                     }
@@ -484,6 +576,24 @@ pub(crate) async fn handle_log(
                             status: DbTransactionStatus::Succeed.value(),
                             withdraw_nonce: None,
                             fail_reason: None,
+                            effective_gas_price: receipt.effective_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            gas_used: receipt.gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee: receipt.l1_fee.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
+                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
+                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                            }),
                         }])
                         .await?;
                     }
@@ -507,6 +617,12 @@ pub(crate) async fn handle_log(
                             status: DbTransactionStatus::Succeed.value(),
                             withdraw_nonce: Some(withdraw_event.withdraw_nonce as i64),
                             fail_reason: None,
+                            effective_gas_price: None,
+                            gas_used: None,
+                            l1_fee: None,
+                            l1_fee_scalar: None,
+                            l1_gas_price: None,
+                            l1_gas_used: None,
                         }])
                         .await?;
                     }
@@ -530,6 +646,12 @@ pub(crate) async fn handle_log(
                             status: DbTransactionStatus::Succeed.value(),
                             withdraw_nonce: Some(withdraw_event.withdraw_nonce as i64),
                             fail_reason: None,
+                            effective_gas_price: None,
+                            gas_used: None,
+                            l1_fee: None,
+                            l1_fee_scalar: None,
+                            l1_gas_price: None,
+                            l1_gas_used: None,
                         }])
                         .await?;
                     }

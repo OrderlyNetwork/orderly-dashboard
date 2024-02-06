@@ -96,6 +96,12 @@ diesel::table! {
         block_time -> Numeric,
         batch_id -> Int8,
         event_type -> Int2,
+        effective_gas_price -> Nullable<Numeric>,
+        gas_used -> Nullable<Numeric>,
+        l1_fee -> Nullable<Numeric>,
+        l1_fee_scalar -> Nullable<Numeric>,
+        l1_gas_price -> Nullable<Numeric>,
+        l1_gas_used -> Nullable<Numeric>,
     }
 }
 
@@ -168,6 +174,12 @@ diesel::table! {
         status -> Int2,
         withdraw_nonce -> Nullable<Int8>,
         fail_reason -> Nullable<Int2>,
+        effective_gas_price -> Nullable<Numeric>,
+        gas_used -> Nullable<Numeric>,
+        l1_fee -> Nullable<Numeric>,
+        l1_fee_scalar -> Nullable<Numeric>,
+        l1_gas_price -> Nullable<Numeric>,
+        l1_gas_used -> Nullable<Numeric>,
     }
 }
 

@@ -32,6 +32,12 @@ pub struct DbSerialBatches {
     pub block_time: BigDecimal,
     pub batch_id: i64,
     pub event_type: i16,
+    pub effective_gas_price: Option<BigDecimal>,
+    pub gas_used: Option<BigDecimal>,
+    pub l1_fee: Option<BigDecimal>,
+    pub l1_fee_scalar: Option<BigDecimal>,
+    pub l1_gas_price: Option<BigDecimal>,
+    pub l1_gas_used: Option<BigDecimal>,
 }
 
 impl DbSerialBatches {
@@ -94,6 +100,55 @@ pub async fn query_serial_batches_with_type(
                 tracing::warn!(
                     target: DB_CONTEXT,
                     "query_serial_batches_with_type fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
+pub async fn get_serial_batches(from_block: i64, to_block: i64) -> Result<Vec<DbSerialBatches>> {
+    use crate::schema::serial_batches::dsl::*;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_serial_batches_with_type start",
+    );
+    let start_time = Instant::now();
+
+    let result = serial_batches
+        .filter(block_number.ge(from_block))
+        .filter(block_number.le(to_block))
+        .load_async::<DbSerialBatches>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "get_serial_batches success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "get_serial_batches success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "get_serial_batches fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );

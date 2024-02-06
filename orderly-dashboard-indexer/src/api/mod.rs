@@ -1,5 +1,7 @@
+pub mod calculate_gas;
 pub mod network_info;
 pub mod pull_perp_trading_events;
+#[allow(dead_code)]
 pub mod recovery;
 pub mod symbols_config;
 use crate::formats_external::{Response, SuccessResponse};

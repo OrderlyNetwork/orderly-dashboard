@@ -3,12 +3,14 @@ use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use std::fmt::{Display, Formatter};
 
+use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
+
 pub static COMMON_CONFIGS: OnceCell<CommonConfigs> = OnceCell::new();
 
 pub fn init_config(config: CommonConfigs) {
     if COMMON_CONFIGS.set(config).is_err() {
         tracing::info!(
-            target: crate::ORDERLY_DASHBOARD_INDEXER,
+            target: ORDERLY_DASHBOARD_INDEXER,
             "COMMON_CONFIGS already inited"
         );
     }
@@ -26,7 +28,7 @@ pub fn get_common_cfg() -> &'static CommonConfigs {
     propagate_version(true),
     next_line_help(true)
 )]
-pub(crate) struct Opts {
+pub struct Opts {
     #[clap(short, long)]
     pub config_path: std::path::PathBuf,
     #[clap(short, long)]
