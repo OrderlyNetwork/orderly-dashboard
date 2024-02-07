@@ -6,7 +6,7 @@ alter table serial_batches
 alter table serial_batches
     add l1_fee numeric default null;
 alter table serial_batches
-    add l1_fee_scalar numeric default null;
+    add l1_fee_scalar text default null;
 alter table serial_batches
     add l1_gas_price numeric default null;
 alter table serial_batches

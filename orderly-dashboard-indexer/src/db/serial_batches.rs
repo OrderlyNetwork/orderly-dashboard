@@ -35,7 +35,7 @@ pub struct DbSerialBatches {
     pub effective_gas_price: Option<BigDecimal>,
     pub gas_used: Option<BigDecimal>,
     pub l1_fee: Option<BigDecimal>,
-    pub l1_fee_scalar: Option<BigDecimal>,
+    pub l1_fee_scalar: Option<String>,
     pub l1_gas_price: Option<BigDecimal>,
     pub l1_gas_used: Option<BigDecimal>,
 }

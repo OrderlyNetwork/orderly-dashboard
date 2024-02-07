@@ -99,7 +99,7 @@ diesel::table! {
         effective_gas_price -> Nullable<Numeric>,
         gas_used -> Nullable<Numeric>,
         l1_fee -> Nullable<Numeric>,
-        l1_fee_scalar -> Nullable<Numeric>,
+        l1_fee_scalar -> Nullable<Text>,
         l1_gas_price -> Nullable<Numeric>,
         l1_gas_used -> Nullable<Numeric>,
     }
@@ -177,7 +177,7 @@ diesel::table! {
         effective_gas_price -> Nullable<Numeric>,
         gas_used -> Nullable<Numeric>,
         l1_fee -> Nullable<Numeric>,
-        l1_fee_scalar -> Nullable<Numeric>,
+        l1_fee_scalar -> Nullable<Text>,
         l1_gas_price -> Nullable<Numeric>,
         l1_gas_used -> Nullable<Numeric>,
     }

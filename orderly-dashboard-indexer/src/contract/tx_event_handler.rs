@@ -10,6 +10,7 @@ use crate::db::executed_trades::{create_executed_trades, DbExecutedTrades, Trade
 
 use crate::db::liquidation_transfer::{create_liquidation_transfers, DbLiquidationTransfer};
 
+use crate::api::calculate_gas::GasReceiptCalculator;
 use crate::db::serial_batches::{create_serial_batches, DbSerialBatches, SerialBatchType};
 use crate::db::{
     adl_result::{create_adl_results, DbAdlResult},
@@ -386,6 +387,7 @@ pub(crate) async fn handle_log(
                 ))?;
                 match event {
                     operator_managerEvents::EventUpload1Filter(event_upload) => {
+                        let fee_st = receipt.cal_gas_used_and_wei_used();
                         create_serial_batches(vec![DbSerialBatches {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -401,22 +403,19 @@ pub(crate) async fn handle_log(
                             gas_used: receipt.gas_used.map(|amount| {
                                 convert_amount(amount.as_u128() as i128).unwrap_or_default()
                             }),
-                            l1_fee: receipt.l1_fee.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
+                            l1_fee: Some(convert_amount(fee_st.l1_fee as i128).unwrap_or_default()),
+                            l1_fee_scalar: Some(fee_st.l1_fee_scalar),
+                            l1_gas_price: Some(
+                                convert_amount(fee_st.l1_gas_price as i128).unwrap_or_default(),
+                            ),
+                            l1_gas_used: Some(
+                                convert_amount(fee_st.l1_gas_used as i128).unwrap_or_default(),
+                            ),
                         }])
                         .await?;
                     }
                     operator_managerEvents::EventUpload2Filter(event_upload) => {
+                        let fee_st = receipt.cal_gas_used_and_wei_used();
                         create_serial_batches(vec![DbSerialBatches {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -432,22 +431,19 @@ pub(crate) async fn handle_log(
                             gas_used: receipt.gas_used.map(|amount| {
                                 convert_amount(amount.as_u128() as i128).unwrap_or_default()
                             }),
-                            l1_fee: receipt.l1_fee.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
+                            l1_fee: Some(convert_amount(fee_st.l1_fee as i128).unwrap_or_default()),
+                            l1_fee_scalar: Some(fee_st.l1_fee_scalar),
+                            l1_gas_price: Some(
+                                convert_amount(fee_st.l1_gas_price as i128).unwrap_or_default(),
+                            ),
+                            l1_gas_used: Some(
+                                convert_amount(fee_st.l1_gas_used as i128).unwrap_or_default(),
+                            ),
                         }])
                         .await?;
                     }
                     operator_managerEvents::FuturesTradeUpload1Filter(futures_upload) => {
+                        let fee_st = receipt.cal_gas_used_and_wei_used();
                         create_serial_batches(vec![DbSerialBatches {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -463,22 +459,19 @@ pub(crate) async fn handle_log(
                             gas_used: receipt.gas_used.map(|amount| {
                                 convert_amount(amount.as_u128() as i128).unwrap_or_default()
                             }),
-                            l1_fee: receipt.l1_fee.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
+                            l1_fee: Some(convert_amount(fee_st.l1_fee as i128).unwrap_or_default()),
+                            l1_fee_scalar: Some(fee_st.l1_fee_scalar),
+                            l1_gas_price: Some(
+                                convert_amount(fee_st.l1_gas_price as i128).unwrap_or_default(),
+                            ),
+                            l1_gas_used: Some(
+                                convert_amount(fee_st.l1_gas_used as i128).unwrap_or_default(),
+                            ),
                         }])
                         .await?;
                     }
                     operator_managerEvents::FuturesTradeUpload2Filter(futures_upload) => {
+                        let fee_st = receipt.cal_gas_used_and_wei_used();
                         create_serial_batches(vec![DbSerialBatches {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -494,18 +487,14 @@ pub(crate) async fn handle_log(
                             gas_used: receipt.gas_used.map(|amount| {
                                 convert_amount(amount.as_u128() as i128).unwrap_or_default()
                             }),
-                            l1_fee: receipt.l1_fee.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
+                            l1_fee: Some(convert_amount(fee_st.l1_fee as i128).unwrap_or_default()),
+                            l1_fee_scalar: Some(fee_st.l1_fee_scalar),
+                            l1_gas_price: Some(
+                                convert_amount(fee_st.l1_gas_price as i128).unwrap_or_default(),
+                            ),
+                            l1_gas_used: Some(
+                                convert_amount(fee_st.l1_gas_used as i128).unwrap_or_default(),
+                            ),
                         }])
                         .await?;
                     }
@@ -516,6 +505,7 @@ pub(crate) async fn handle_log(
                 let event = user_ledgerEvents::decode_log(&RawLog::from(log.clone()))?;
                 match event {
                     user_ledgerEvents::AccountDeposit1Filter(deposit_event) => {
+                        let fee_st = receipt.cal_gas_used_and_wei_used();
                         create_balance_transaction_executions(vec![DbTransactionEvent {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -541,22 +531,19 @@ pub(crate) async fn handle_log(
                             gas_used: receipt.gas_used.map(|amount| {
                                 convert_amount(amount.as_u128() as i128).unwrap_or_default()
                             }),
-                            l1_fee: receipt.l1_fee.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
+                            l1_fee: Some(convert_amount(fee_st.l1_fee as i128).unwrap_or_default()),
+                            l1_fee_scalar: Some(fee_st.l1_fee_scalar),
+                            l1_gas_price: Some(
+                                convert_amount(fee_st.l1_gas_price as i128).unwrap_or_default(),
+                            ),
+                            l1_gas_used: Some(
+                                convert_amount(fee_st.l1_gas_used as i128).unwrap_or_default(),
+                            ),
                         }])
                         .await?;
                     }
                     user_ledgerEvents::AccountDeposit2Filter(deposit_event) => {
+                        let fee_st = receipt.cal_gas_used_and_wei_used();
                         create_balance_transaction_executions(vec![DbTransactionEvent {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -582,18 +569,14 @@ pub(crate) async fn handle_log(
                             gas_used: receipt.gas_used.map(|amount| {
                                 convert_amount(amount.as_u128() as i128).unwrap_or_default()
                             }),
-                            l1_fee: receipt.l1_fee.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_fee_scalar: receipt.l1_fee_scalar.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_price: receipt.l1_gas_price.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
-                            l1_gas_used: receipt.l1_gas_used.map(|amount| {
-                                convert_amount(amount.as_u128() as i128).unwrap_or_default()
-                            }),
+                            l1_fee: Some(convert_amount(fee_st.l1_fee as i128).unwrap_or_default()),
+                            l1_fee_scalar: Some(fee_st.l1_fee_scalar),
+                            l1_gas_price: Some(
+                                convert_amount(fee_st.l1_gas_price as i128).unwrap_or_default(),
+                            ),
+                            l1_gas_used: Some(
+                                convert_amount(fee_st.l1_gas_used as i128).unwrap_or_default(),
+                            ),
                         }])
                         .await?;
                     }
