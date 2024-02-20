@@ -754,7 +754,7 @@
             apiConfig = JSON.parse(xhr1.responseText);
             time_config=apiConfig;
             apiConfigCallback();
-            self.setInterval(apiConfigCallback,3000);
+            self.setInterval(apiConfigCallback,30000);
         } else {
             console.warn("xhr1 response: ", xhr1.responseText);
         }

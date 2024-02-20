@@ -33,11 +33,11 @@ pub struct DbSerialBatches {
     pub batch_id: i64,
     pub event_type: i16,
     pub effective_gas_price: Option<BigDecimal>,
-    pub gas_used: Option<BigDecimal>,
     pub l1_fee: Option<BigDecimal>,
-    pub l1_fee_scalar: Option<String>,
     pub l1_gas_price: Option<BigDecimal>,
     pub l1_gas_used: Option<BigDecimal>,
+    pub gas_used: Option<BigDecimal>,
+    pub l1_fee_scalar: Option<String>,
 }
 
 impl DbSerialBatches {
