@@ -1,14 +1,14 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
+use actix_diesel::dsl::AsyncRunQueryDsl;
 use chrono::NaiveDateTime;
+use diesel::{Insertable, Queryable};
 use diesel::prelude::*;
 use diesel::result::Error;
-use diesel::{Insertable, Queryable};
 
-use crate::db::user_token_summary::DBException;
-use crate::db::user_token_summary::DBException::QueryError;
 use crate::db::DB_CONTEXT;
 use crate::db::POOL;
+use crate::db::user_token_summary::DBException;
+use crate::db::user_token_summary::DBException::QueryError;
 use crate::schema::block_summary;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
@@ -24,10 +24,10 @@ pub struct BlockSummary {
     pub pulled_perp_trade_id: i64,
 }
 
-pub async fn find_block_summary() -> Result<BlockSummary, DBException> {
+pub async fn find_block_summary(p_id: i32) -> Result<BlockSummary, DBException> {
     use crate::schema::block_summary::dsl::*;
     let select_result = block_summary
-        .filter(id.eq(1i32))
+        .filter(id.eq(p_id))
         .first_async::<BlockSummary>(&POOL)
         .await;
 

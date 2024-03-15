@@ -5,8 +5,9 @@ extern crate diesel;
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
 use serde_json::json;
+use crate::analyzer::analyzer_gas_job::start_analyzer_gas_job;
 
-use crate::analyzer::analyzer_job::start_analyzer_job;
+use crate::analyzer::analyzer_job::start_analyzer_trade_job;
 use crate::config::{AnalyzerConfig, Opts};
 use crate::db::{get_database_credentials, init_database_url};
 
@@ -30,9 +31,15 @@ fn init_log() {
 
 fn start_analyze_job(config: AnalyzerConfig) {
     tracing::info!(target:ORDERLY_DASHBOARD_ANALYZER,"config loaded: {:?}",config);
-    start_analyzer_job(
+    start_analyzer_trade_job(
         config.pull_interval,
-        config.indexer_address,
+        config.indexer_address.clone(),
+        config.start_block,
+        config.batch_block_num,
+    );
+    start_analyzer_gas_job(
+        config.pull_interval,
+        config.indexer_address.clone(),
         config.start_block,
         config.batch_block_num,
     );

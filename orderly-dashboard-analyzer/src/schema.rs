@@ -8,6 +8,18 @@ diesel::table! {
         pulled_block_time -> Timestamp,
         pulled_event_id -> Int8,
         pulled_perp_trade_id -> Int8,
+        metrics_type -> Text,
+    }
+}
+
+diesel::table! {
+    hourly_gas_fee (event_type, block_hour) {
+        block_hour -> Timestamp,
+        gas_fee -> Numeric,
+        event_type -> Text,
+        batch_count -> Int8,
+        pulled_block_height -> Int8,
+        pulled_block_time -> Timestamp,
     }
 }
 
@@ -148,6 +160,7 @@ diesel::table! {
 
 diesel::allow_tables_to_appear_in_same_query!(
     block_summary,
+    hourly_gas_fee,
     hourly_orderly_perp,
     hourly_orderly_token,
     hourly_user_perp,

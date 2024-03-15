@@ -16,6 +16,7 @@ pub mod orderly_token_summary;
 pub mod symbols;
 pub mod user_perp_summary;
 pub mod user_token_summary;
+pub mod hourly_gas_fee;
 
 pub const DB_CONTEXT: &str = "DB_operation";
 

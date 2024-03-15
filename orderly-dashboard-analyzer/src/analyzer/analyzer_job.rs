@@ -20,14 +20,14 @@ use crate::db::block_summary::{create_or_update_block_summary, find_block_summar
 
 const ANALYZER_CONTEXT: &str = "Analyzer-Job";
 
-pub fn start_analyzer_job(
+pub fn start_analyzer_trade_job(
     interval_seconds: u64,
     base_url: String,
     start_block: i64,
     batch_block_num: u64,
 ) {
     tokio::spawn(async move {
-        let mut block_summary = find_block_summary().await.unwrap();
+        let mut block_summary = find_block_summary(1i32).await.unwrap();
         let mut from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
         let mut max_block = block_summary.latest_block_height;
 
@@ -38,12 +38,11 @@ pub fn start_analyzer_job(
                 min(round_from_block + batch_block_num as i64, max_block),
             );
             let timestamp = Utc::now().timestamp_millis();
-            let response_str =
-                get_indexer_data(round_from_block, round_to_block, base_url.clone()).await;
+            let response_str = get_indexer_data(round_from_block, round_to_block, base_url.clone()).await;
             match response_str {
                 Ok(json_str) => {
-                    let result: Result<Response<TradingEventsResponse>, serde_json::Error> =
-                        serde_json::from_str(&*json_str);
+                    let result: Result<Response<TradingEventsResponse>, serde_json::Error> = serde_json::from_str(&*json_str);
+
                     if result.is_err() {
                         tracing::warn!(target:ANALYZER_CONTEXT, "parse data err, json_str: {}", json_str);
                         time::sleep(Duration::from_secs(5 * interval_seconds)).await;
@@ -221,7 +220,7 @@ fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
 }
 
 #[derive(Debug)]
-enum HTTPException {
+pub enum HTTPException {
     Timeout,
 }
 
