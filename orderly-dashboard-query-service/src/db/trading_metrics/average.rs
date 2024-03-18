@@ -1,6 +1,6 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
-use chrono::{Duration, Local, NaiveDateTime, Utc};
+use chrono::{Duration, NaiveDateTime, Utc};
 use diesel::sql_types::*;
 use diesel::QueryableByName;
 

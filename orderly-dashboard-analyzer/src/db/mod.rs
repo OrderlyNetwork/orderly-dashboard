@@ -28,7 +28,7 @@ pub fn init_database_url(database_url: String) {
 
 pub fn establish_connection() -> Database<PgConnection> {
     let database_url = get_database_credentials();
-    Database::builder().pool_max_size(16).open(&database_url)
+    Database::builder().pool_max_size(8).open(&database_url)
 }
 
 pub fn get_database_credentials() -> String {
