@@ -110,6 +110,12 @@ impl Service {
                 }
                 Either::Right(response) => return Ok(response),
             },
+            "/pull_account_trading_events" => match get_query_params(&req) {
+                Either::Left(params) => {
+                    serde_json::to_string(&api::pull_perp_trading_events_by_account(&params).await?)
+                }
+                Either::Right(response) => return Ok(response),
+            },
             "/pull_transaction_gas_cost" => match get_query_params(&req) {
                 Either::Left(params) => serde_json::to_string(
                     &api::calculate_gas::pull_gas_consumptions::pull_gas_consumptions(&params)

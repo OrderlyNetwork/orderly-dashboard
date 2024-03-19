@@ -84,6 +84,7 @@ diesel::table! {
         mark_price -> Numeric,
         sum_unitary_fundings -> Numeric,
         liquidation_fee -> Numeric,
+        block_time -> Nullable<Numeric>,
     }
 }
 
@@ -123,6 +124,7 @@ diesel::table! {
         sum_unitary_fundings -> Numeric,
         mark_price -> Numeric,
         settled_amount -> Numeric,
+        block_time -> Nullable<Numeric>,
     }
 }
 

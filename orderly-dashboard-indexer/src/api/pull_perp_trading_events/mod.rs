@@ -1,8 +1,15 @@
 mod filter_join;
-use crate::formats_external::trading_events::TradingEventType;
-use crate::formats_external::{trading_events::TradingEventsResponse, Response, SuccessResponse};
+use crate::formats_external::trading_events::{AccountTradingEventsResponse, TradingEventType};
+use crate::formats_external::{
+    trading_events::TradingEventsResponse, FailureResponse, Response, SuccessResponse,
+};
 use anyhow::{Context, Result};
+use chrono::Utc;
 use std::collections::HashMap;
+use std::str::FromStr;
+
+// two weeks
+pub const QUERY_RANGE_S: i64 = 14 * 24 * 3600;
 
 pub async fn pull_perp_trading_events(
     params: &HashMap<String, String>,
@@ -13,12 +20,71 @@ pub async fn pull_perp_trading_events(
     let to_block = params.get("to_block").context("param to_block not found")?;
     let e_type = if let Some(event_type) = params.get("event_type") {
         let event_type = "\"".to_string() + event_type + "\"";
-        Some(serde_json::from_str::<TradingEventType>(&event_type)?)
+        match serde_json::from_str::<TradingEventType>(&event_type) {
+            Ok(event_type) => Some(event_type),
+            Err(err) => {
+                return Ok(Response::Failure(FailureResponse::new(
+                    1000,
+                    format!("parse event_type failed with err: {}", err),
+                )))
+            }
+        }
     } else {
         None
     };
     let response =
         filter_join::perp_trading_join_events(from_block.parse()?, to_block.parse()?, e_type)
+            .await?;
+    Ok(Response::Success(SuccessResponse::new(response)))
+}
+
+pub async fn pull_perp_trading_events_by_account(
+    params: &HashMap<String, String>,
+) -> Result<Response<AccountTradingEventsResponse>> {
+    let account_id = params
+        .get("account_id")
+        .context("param account_id not found")?;
+    let now = Utc::now().timestamp();
+    let from_time = if let Some(from_time) = params.get("from_time") {
+        i64::from_str(from_time)?
+    } else {
+        now - QUERY_RANGE_S
+    };
+    let to_time = if let Some(to_time) = params.get("to_time") {
+        i64::from_str(to_time)?
+    } else {
+        now
+    };
+    if to_time <= from_time {
+        return Ok(Response::Success(SuccessResponse::new(
+            AccountTradingEventsResponse::default(),
+        )));
+    }
+    if to_time - from_time > QUERY_RANGE_S {
+        return Ok(Response::Failure(FailureResponse::new(
+            1000,
+            format!(
+                "to_time - from_time should less than {} days",
+                QUERY_RANGE_S as f64 / (24 * 3600) as f64
+            ),
+        )));
+    }
+    let e_type = if let Some(event_type) = params.get("event_type") {
+        let event_type = "\"".to_string() + event_type + "\"";
+        match serde_json::from_str::<TradingEventType>(&event_type) {
+            Ok(event_type) => Some(event_type),
+            Err(err) => {
+                return Ok(Response::Failure(FailureResponse::new(
+                    1000,
+                    format!("parse event_type failed with err: {}", err),
+                )))
+            }
+        }
+    } else {
+        None
+    };
+    let response =
+        filter_join::account_perp_trading_join_events(account_id, from_time, to_time, e_type)
             .await?;
     Ok(Response::Success(SuccessResponse::new(response)))
 }
