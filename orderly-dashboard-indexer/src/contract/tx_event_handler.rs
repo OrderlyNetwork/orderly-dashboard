@@ -198,6 +198,7 @@ pub(crate) async fn handle_tx_params(
                             .unwrap_or_default(),
                             mark_price: convert_amount(settlement_exec.mark_price as i128)?,
                             settled_amount: convert_amount(settlement_exec.settled_amount)?,
+                            block_time: Some((block_t.unwrap_or_default() as i64).into()),
                         });
                     }
                 } else if event.biz_type == 4 {
@@ -351,6 +352,7 @@ pub(crate) async fn handle_tx_params(
                                 liquidation_transfer.sum_unitary_fundings,
                             )?,
                             liquidation_fee: convert_amount(liquidation_transfer.liquidation_fee)?,
+                            block_time: Some((block_t.unwrap_or_default() as i64).into()),
                         });
                     }
                 }
@@ -745,6 +747,8 @@ pub(crate) async fn handle_log(
                         create_executed_trades(vec![db_trade]).await?;
                     }
                     user_ledgerEvents::SettlementResultFilter(settlement_res_event) => {
+                        // https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_getlogs
+                        // logIndex: QUANTITY - integer of the log index position in the block.
                         let log_index = log.log_index.unwrap_or_default().as_u64() as i32;
                         settlement_result_log_index_queue.push_back(log_index);
                         create_settlement_results(vec![DbSettlementResult {
@@ -790,6 +794,7 @@ pub(crate) async fn handle_log(
                             .unwrap_or_default(),
                             mark_price: convert_amount(settlement_exec.mark_price as i128)?,
                             settled_amount: convert_amount(settlement_exec.settled_amount)?,
+                            block_time: Some((block_t.unwrap_or_default() as i64).into()),
                         });
                     }
                     user_ledgerEvents::LiquidationTransferFilter(liquidation_transfer) => {
@@ -821,6 +826,7 @@ pub(crate) async fn handle_log(
                                 liquidation_transfer.sum_unitary_fundings,
                             )?,
                             liquidation_fee: convert_amount(liquidation_transfer.liquidation_fee)?,
+                            block_time: Some((block_t.unwrap_or_default() as i64).into()),
                         });
                     }
                     user_ledgerEvents::FeeDistributionFilter(event) => {

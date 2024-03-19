@@ -382,6 +382,11 @@ pub enum TradingEventInnerData {
     },
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct AccountTradingEventsResponse {
+    pub events: Vec<TradingEvent>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

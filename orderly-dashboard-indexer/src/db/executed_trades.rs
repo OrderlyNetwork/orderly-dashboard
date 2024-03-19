@@ -5,7 +5,7 @@ use crate::schema::executed_trades;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use anyhow::Result;
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, FromPrimitive};
 use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
@@ -125,6 +125,73 @@ pub async fn query_executed_trades(
                 tracing::warn!(
                     target: DB_CONTEXT,
                     "query_executed_trades fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
+// time of executed trades need to be convert from secs to millisecond
+pub async fn query_account_executed_trades(
+    account: String,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<DbExecutedTrades>> {
+    use crate::schema::executed_trades::dsl::*;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_account_executed_trades start",
+    );
+    let start_time = Instant::now();
+    let from_time = from_time * 1000;
+    let to_time = to_time * 1000;
+
+    let result = executed_trades
+        .filter(account_id.eq(account))
+        .filter(timestamp.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
+        .filter(timestamp.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
+        .load_async::<DbExecutedTrades>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            if dur_ms >= 100 {
+                tracing::warn!(
+                    target: ALERT_CONTEXT,
+                    "query_account_executed_trades slow query. from_time:{}, to_time:{} length:{}, used time:{} ms",
+                        from_time,
+                        to_time,
+                    events.len(),
+                    dur_ms
+                );
+            }
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_account_executed_trades success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_account_executed_trades success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_account_executed_trades fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );
