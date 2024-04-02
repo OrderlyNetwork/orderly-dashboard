@@ -42,6 +42,28 @@
     <br/>
 
 
+    <div><h1>Gas Fee Metrics</h1></div>
+    <div class="row">
+        <div class="col">
+            <canvas id="chart101"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart102"></canvas>
+        </div>
+        <div class="col">
+            <canvas id="chart103"></canvas>
+        </div>
+    </div>
+
+
+
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+
+
+
     <div><h1>Trading Metrics</h1></div>
     <div class="row">
         <div class="col">
@@ -225,6 +247,101 @@
             }
         });
     }
+
+    function perpGasFeeCallBack(respData) {
+        console.log("daily_data: ", respData);
+        const chartData = respData["data"];
+        let real_chart_data = [];
+        console.log("daily_data: ", chartData);
+        let ak = chartData["data"];
+
+        for (let chartDataKey in ak) {
+            real_chart_data.push(ak[chartDataKey]["avg_gas_fee"])
+        }
+        const ctx3 = document.getElementById('chart101');
+        new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: chartData["daytime"],
+                datasets: [{
+                    label: 'Daily Perp_Trade Gas_Fee',
+                    data: real_chart_data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+
+    function eventGasFeeCallBack(respData) {
+        console.log("daily_data: ", respData);
+        const chartData = respData["data"];
+        let real_chart_data = [];
+        console.log("daily_data: ", chartData);
+        let ak = chartData["data"];
+
+        for (let chartDataKey in ak) {
+            real_chart_data.push(ak[chartDataKey]["avg_gas_fee"])
+        }
+        const ctx3 = document.getElementById('chart102');
+        new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: chartData["daytime"],
+                datasets: [{
+                    label: 'Daily Event Gas_Fee',
+                    data: real_chart_data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function depositGasFeeCallBack(respData) {
+        console.log("daily_data: ", respData);
+        const chartData = respData["data"];
+        let real_chart_data = [];
+        console.log("daily_data: ", chartData);
+        let ak = chartData["data"];
+
+        for (let chartDataKey in ak) {
+            real_chart_data.push(ak[chartDataKey]["avg_gas_fee"])
+        }
+        const ctx3 = document.getElementById('chart103');
+        new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: chartData["daytime"],
+                datasets: [{
+                    label: 'Daily Deposit Gas_Fee',
+                    data: real_chart_data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
 
     function tradingCountCallBack(respData) {
         console.log("daily_data: ", respData);
@@ -791,6 +908,8 @@
             }
         };
 
+
+
         let networkHeight = baseUrl + "/network_info";
         var xhrNetworkInfo = new XMLHttpRequest();
         xhrNetworkInfo.open('GET', networkHeight);
@@ -818,6 +937,49 @@
                 console.warn("xhr3 response: ", xhr3.responseText);
             }
         };
+
+
+        let gaf = baseUrl + "/daily_gas_fee/perp_trade";
+        var xhr3 = new XMLHttpRequest();
+        xhr3.open('GET', gaf);
+        xhr3.send();
+        xhr3.onreadystatechange = function () {
+            if (xhr3.readyState == 4 && xhr3.status == 200) {
+                perpGasFeeCallBack(JSON.parse(xhr3.responseText));
+                console.log(xhr3.responseText);
+            } else {
+                console.warn("xhr3 response: ", xhr3.responseText);
+            }
+        };
+
+
+        let gasEvent = baseUrl + "/daily_gas_fee/event";
+        var xhr3 = new XMLHttpRequest();
+        xhr3.open('GET', gasEvent);
+        xhr3.send();
+        xhr3.onreadystatechange = function () {
+            if (xhr3.readyState == 4 && xhr3.status == 200) {
+                eventGasFeeCallBack(JSON.parse(xhr3.responseText));
+                console.log(xhr3.responseText);
+            } else {
+                console.warn("xhr3 response: ", xhr3.responseText);
+            }
+        };
+
+        let gasDeposit = baseUrl + "/daily_gas_fee/deposit";
+        var xhr3 = new XMLHttpRequest();
+        xhr3.open('GET', gasDeposit);
+        xhr3.send();
+        xhr3.onreadystatechange = function () {
+            if (xhr3.readyState == 4 && xhr3.status == 200) {
+                depositGasFeeCallBack(JSON.parse(xhr3.responseText));
+                console.log(xhr3.responseText);
+            } else {
+                console.warn("xhr3 response: ", xhr3.responseText);
+            }
+        };
+
+
 
         let h_orderly_p = baseUrl + "/daily_orderly_perp";
         var xhr31 = new XMLHttpRequest();
