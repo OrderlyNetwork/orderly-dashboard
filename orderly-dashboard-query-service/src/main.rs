@@ -9,11 +9,7 @@ use trading_metrics::{average_trading_count, daily_trading_fee, daily_volume};
 
 use crate::db::init_analyzer_db_url;
 use crate::status::get_status;
-use crate::trading_metrics::{
-    average_opening_count, average_trading_fee, average_trading_volume, block_height,
-    get_daily_orderly_perp, get_daily_orderly_token, get_perp_holding_rank, get_perp_pnl_rank,
-    get_token_deposit_rank, get_token_withdraw_rank, get_trading_volume_rank,
-};
+use crate::trading_metrics::{average_opening_count, average_trading_fee, average_trading_volume, block_height, deposit_gas_fee, event_gas_fee, get_daily_orderly_perp, get_daily_orderly_token, get_perp_holding_rank, get_perp_pnl_rank, get_token_deposit_rank, get_token_withdraw_rank, get_trading_volume_rank, perp_gas_fee};
 
 mod config;
 mod db;
@@ -133,6 +129,9 @@ async fn main() -> std::io::Result<()> {
             .service(average_trading_count)
             .service(average_trading_fee)
             .service(average_trading_volume)
+            .service(perp_gas_fee)
+            .service(event_gas_fee)
+            .service(deposit_gas_fee)
             .service(get_trading_volume_rank)
             .service(get_daily_orderly_perp)
             .service(get_daily_orderly_token)

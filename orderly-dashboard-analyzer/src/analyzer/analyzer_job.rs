@@ -27,7 +27,7 @@ pub fn start_analyzer_trade_job(
     batch_block_num: u64,
 ) {
     tokio::spawn(async move {
-        let mut block_summary = find_block_summary(1i32).await.unwrap();
+        let mut block_summary = find_block_summary("trade".to_string()).await.unwrap();
         let mut from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
         let mut max_block = block_summary.latest_block_height;
 

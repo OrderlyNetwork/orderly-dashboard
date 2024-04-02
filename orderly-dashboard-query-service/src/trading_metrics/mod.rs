@@ -1,19 +1,20 @@
-use actix_web::{get, web, HttpResponse, Responder, Result};
+use actix_web::{get, HttpResponse, Responder, Result, web};
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use serde_derive::Deserialize;
 
+use crate::{add_base_header, format_extern::Response};
+use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
 use crate::db::trading_metrics::average::get_average;
-use crate::db::trading_metrics::orderly_daily_perp::daily_orderly_perp;
+use crate::db::trading_metrics::orderly_daily_perp::{daily_gas_fee, daily_orderly_perp};
 use crate::db::trading_metrics::orderly_daily_token::get_daily_token;
 use crate::db::trading_metrics::ranking::{
     get_daily_trading_volume_ranking, get_pnl_ranking, get_token_ranking,
     get_user_perp_holding_ranking,
 };
-use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
-use crate::{add_base_header, format_extern::Response};
 
 const TRADING_METRICS: &str = "trading_metrics_context";
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct DailyRequest {
     #[serde(default = "default_past")]
@@ -27,7 +28,7 @@ fn default_now() -> String {
 }
 
 fn default_past() -> String {
-    let past = Local::now().naive_utc() - Duration::days(30);
+    let past = Local::now().naive_utc() - Duration::days(90);
     past.format("%Y-%m-%d").to_string()
 }
 
@@ -113,6 +114,31 @@ pub async fn get_daily_orderly_perp(param: web::Query<DailyRequest>) -> Result<i
         daily_orderly_perp(from_time, end_time).await,
     ))
 }
+
+#[get("/daily_gas_fee/perp_trade")] // <- define path parameters
+pub async fn perp_gas_fee(param: web::Query<DailyRequest>) -> Result<impl Responder> {
+    let (from_time, end_time) = param.parse_day();
+    Ok(write_response(
+        daily_gas_fee(from_time, end_time, "perp_trade".to_string()).await,
+    ))
+}
+
+#[get("/daily_gas_fee/event")] // <- define path parameters
+pub async fn event_gas_fee(param: web::Query<DailyRequest>) -> Result<impl Responder> {
+    let (from_time, end_time) = param.parse_day();
+    Ok(write_response(
+        daily_gas_fee(from_time, end_time, "event_upload".to_string()).await,
+    ))
+}
+
+#[get("/daily_gas_fee/deposit")] // <- define path parameters
+pub async fn deposit_gas_fee(param: web::Query<DailyRequest>) -> Result<impl Responder> {
+    let (from_time, end_time) = param.parse_day();
+    Ok(write_response(
+        daily_gas_fee(from_time, end_time, "deposit".to_string()).await,
+    ))
+}
+
 
 #[get("/daily_orderly_token")] // <- define path parameters
 pub async fn get_daily_orderly_token(param: web::Query<DailyRequest>) -> Result<impl Responder> {

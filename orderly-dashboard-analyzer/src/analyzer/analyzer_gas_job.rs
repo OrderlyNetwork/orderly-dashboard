@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDateTime, Timelike, Utc};
+use num_traits::ToPrimitive;
 use tokio::time;
 
 use orderly_dashboard_indexer::formats_external::gas_consumption::{GasConsumptionResponse, TransactionGasCost, TransactionGasCostData};
@@ -16,6 +17,7 @@ use crate::analyzer::adl_analyzer::analyzer_adl;
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::analyzer_job::HTTPException;
 use crate::analyzer::analyzer_job::HTTPException::Timeout;
+use crate::analyzer::div_into_real;
 use crate::analyzer::liquidation_analyzer::analyzer_liquidation;
 use crate::analyzer::perp_analyzer::analyzer_perp_trade;
 use crate::analyzer::settlement_analyzer::analyzer_settlement;
@@ -32,7 +34,7 @@ pub fn start_analyzer_gas_job(
     batch_block_num: u64,
 ) {
     tokio::spawn(async move {
-        let mut block_summary = find_block_summary(2i32).await.unwrap();
+        let mut block_summary = find_block_summary("gas_fee".to_string()).await.unwrap();
         let mut from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
         let mut max_block = block_summary.latest_block_height;
 
@@ -110,8 +112,10 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
                         let gs = context.get_hourly_gas(&p_key).await;
                         let l1_fee: BigDecimal = gas_event.fee_data.clone().l1_fee.parse().unwrap();
                         let l2_fee: BigDecimal = gas_event.fee_data.clone().l2_fee.parse().unwrap();
+                        let fixed_l1_fee = div_into_real(l1_fee.to_i128().unwrap(),1000_000_000_000_000_000);
+                        let fixed_l2_fee = div_into_real(l2_fee.to_i128().unwrap(),1000_000_000_000_000_000);
                         gs.new_event(
-                            l1_fee + l2_fee,
+                            fixed_l1_fee + fixed_l2_fee,
                             block_num,
                             block_time.clone(),
                         );
@@ -121,26 +125,32 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
                         let gs = context.get_hourly_gas(&p_key).await;
                         let l1_fee: BigDecimal = gas_event.fee_data.clone().l1_fee.parse().unwrap();
                         let l2_fee: BigDecimal = gas_event.fee_data.clone().l2_fee.parse().unwrap();
+                        let fixed_l1_fee = div_into_real(l1_fee.to_i128().unwrap(),1000_000_000_000_000_000);
+                        let fixed_l2_fee = div_into_real(l2_fee.to_i128().unwrap(),1000_000_000_000_000_000);
                         gs.new_event(
-                            l1_fee + l2_fee,
+                            fixed_l1_fee + fixed_l2_fee,
                             block_num,
                             block_time.clone(),
                         );
                     }
+
+
                     TransactionGasCostData::EventUpload { .. } => {
                         let p_key = HourlyGasFeeKey::new_key("event_upload".to_string(), block_hour);
                         let gs = context.get_hourly_gas(&p_key).await;
                         let l1_fee: BigDecimal = gas_event.fee_data.clone().l1_fee.parse().unwrap();
                         let l2_fee: BigDecimal = gas_event.fee_data.clone().l2_fee.parse().unwrap();
+                        let fixed_l1_fee = div_into_real(l1_fee.to_i128().unwrap(),1000_000_000_000_000_000);
+                        let fixed_l2_fee = div_into_real(l2_fee.to_i128().unwrap(),1000_000_000_000_000_000);
                         gs.new_event(
-                            l1_fee + l2_fee,
+                            fixed_l1_fee + fixed_l2_fee,
                             block_num,
                             block_time.clone(),
                         );
                     }
                 }
             }
-            context.save_analyze_result().await?
+            context.save_analyze_result().await
         }
         Response::Failure(_) => {}
     }

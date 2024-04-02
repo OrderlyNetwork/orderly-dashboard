@@ -3,12 +3,13 @@ use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::on_constraint;
+use diesel::prelude::*;
 use diesel::result::Error;
 
 use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError, Timeout};
-use crate::schema::hourly_gas_fee::dsl::hourly_gas_fee;
+use crate::schema::hourly_gas_fee;
 
 #[derive(Insertable, Queryable, QueryableByName, Debug, Clone)]
 #[table_name = "hourly_gas_fee"]
@@ -27,12 +28,13 @@ impl HourlyGasFee {
     pub fn new_event(
         &mut self,
         fee: BigDecimal,
-        pulled_block_height: i64,
-        pulled_block_time: NaiveDateTime,
+        p_pulled_block_height: i64,
+        p_pulled_block_time: NaiveDateTime,
     ) {
         self.gas_fee += fee;
-        self.pulled_block_height = pulled_block_height;
-        self.pulled_block_time = pulled_block_time;
+        self.batch_count += 1;
+        self.pulled_block_height = p_pulled_block_height;
+        self.pulled_block_time = p_pulled_block_time;
     }
 }
 
@@ -87,7 +89,7 @@ pub async fn create_or_update_hourly_gas_fee(
     for hourly_data in p_hourly_data_vec {
         let update_result = diesel::insert_into(hourly_gas_fee)
             .values(hourly_data.clone())
-            .on_conflict(on_constraint("hourly_orderly_perp_uq"))
+            .on_conflict(on_constraint("hourly_block_type"))
             .do_update()
             .set((
                 gas_fee.eq(hourly_data.gas_fee.clone()),
@@ -102,7 +104,8 @@ pub async fn create_or_update_hourly_gas_fee(
             Ok(_) => {
                 row_nums += 1;
             }
-            Err(_) => {
+            Err(erro) => {
+                println!(":{}", erro);
                 return Err(InsertError);
             }
         }

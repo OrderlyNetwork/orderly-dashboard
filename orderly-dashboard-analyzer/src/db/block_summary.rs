@@ -22,12 +22,14 @@ pub struct BlockSummary {
 
     pub pulled_event_id: i64,
     pub pulled_perp_trade_id: i64,
+
+    pub metrics_type: String,
 }
 
-pub async fn find_block_summary(p_id: i32) -> Result<BlockSummary, DBException> {
+pub async fn find_block_summary(p_metric: String) -> Result<BlockSummary, DBException> {
     use crate::schema::block_summary::dsl::*;
     let select_result = block_summary
-        .filter(id.eq(p_id))
+        .filter(metrics_type.eq(p_metric.clone()))
         .first_async::<BlockSummary>(&POOL)
         .await;
 
@@ -36,12 +38,13 @@ pub async fn find_block_summary(p_id: i32) -> Result<BlockSummary, DBException> 
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
                 let result = BlockSummary {
-                    id: 1i32,
+                    id: 3,
                     latest_block_height: 1143278,
                     pulled_block_height: 1143268,
                     pulled_block_time: Default::default(),
                     pulled_event_id: 0,
                     pulled_perp_trade_id: 0,
+                    metrics_type: p_metric.clone(),
                 };
                 Ok(result)
             }

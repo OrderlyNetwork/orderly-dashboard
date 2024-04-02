@@ -43,7 +43,7 @@ pub async fn get_block_height() -> i64 {
         schema::block_summary::dsl::*,
     };
 
-    let block = find_block_summary().await.unwrap();
+    let block = find_block_summary("trade".to_string()).await.unwrap();
     block.pulled_block_height
 }
 

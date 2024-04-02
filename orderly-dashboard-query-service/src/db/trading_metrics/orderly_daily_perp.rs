@@ -1,8 +1,8 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{NaiveDate, NaiveDateTime};
-use diesel::sql_types::{Date, Numeric, Timestamp};
 use diesel::QueryableByName;
+use diesel::sql_types::{Date, Numeric, Timestamp, Varchar};
 
 #[allow(unused_imports)]
 use orderly_dashboard_analyzer::{
@@ -12,7 +12,7 @@ use orderly_dashboard_analyzer::{
 };
 
 use crate::db::DB_CONTEXT;
-use crate::format_extern::trading_metrics::{DailyData, OrderlyPerpDaily};
+use crate::format_extern::trading_metrics::{DailyData, OrderlyGasFee, OrderlyPerpDaily};
 
 #[derive(Debug, Clone, QueryableByName)]
 struct OrderlyDailyData {
@@ -33,6 +33,15 @@ struct OrderlyDailyData {
     #[sql_type = "Numeric"]
     pub opening_count: BigDecimal,
 }
+
+#[derive(Debug, Clone, QueryableByName)]
+struct OrderlyDailyGas {
+    #[sql_type = "Date"]
+    pub trading_day: NaiveDate,
+    #[sql_type = "Numeric"]
+    pub avg_gas_fee: BigDecimal,
+}
+
 
 pub async fn daily_orderly_perp(
     from_time: NaiveDateTime,
@@ -74,6 +83,50 @@ pub async fn daily_orderly_perp(
                     liquidation_amount: daily_data.liquidation_amount.to_f64().unwrap(),
                     liquidation_count: daily_data.liquidation_count.to_f64().unwrap(),
                     opening_count: daily_data.opening_count.to_f64().unwrap(),
+                });
+            }
+        }
+        Err(error) => {
+            tracing::error!(target:DB_CONTEXT,"{}",error);
+        }
+    };
+    DailyData {
+        daytime: daytime_vec,
+        data: orderly_perp_vec,
+    }
+}
+
+
+pub async fn daily_gas_fee(
+    from_time: NaiveDateTime,
+    end_time: NaiveDateTime,
+    p_event_type: String,
+) -> DailyData<OrderlyGasFee> {
+    let sql_query = diesel::sql_query(
+        "select \
+      date(block_hour) as trading_day,\
+      sum(gas_fee)/sum(batch_count) as avg_gas_fee \
+      from hourly_gas_fee where block_hour>=$1 and block_hour<=$2 \
+      and event_type = $3
+      group by trading_day order by trading_day asc;",
+    );
+
+    let select_result: Result<Vec<OrderlyDailyGas>, _> = sql_query
+        .bind::<Timestamp, _>(from_time)
+        .bind::<Timestamp, _>(end_time)
+        .bind::<Varchar, _>(p_event_type)
+        .get_results_async::<OrderlyDailyGas>(&POOL)
+        .await;
+
+    let mut daytime_vec: Vec<String> = Vec::new();
+    let mut orderly_perp_vec: Vec<OrderlyGasFee> = Vec::new();
+    match select_result {
+        Ok(select_data) => {
+            let daily_format = "%Y-%m-%d";
+            for daily_data in select_data {
+                daytime_vec.push(daily_data.trading_day.format(daily_format).to_string());
+                orderly_perp_vec.push(OrderlyGasFee {
+                    avg_gas_fee: daily_data.avg_gas_fee.to_f64().unwrap(),
                 });
             }
         }
