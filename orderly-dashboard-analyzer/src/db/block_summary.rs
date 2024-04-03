@@ -39,8 +39,8 @@ pub async fn find_block_summary(p_metric: String) -> Result<BlockSummary, DBExce
             AsyncError::Execute(Error::NotFound) => {
                 let result = BlockSummary {
                     id: 3,
-                    latest_block_height: 1143278,
-                    pulled_block_height: 1143268,
+                    latest_block_height: 0,
+                    pulled_block_height: 0,
                     pulled_block_time: Default::default(),
                     pulled_event_id: 0,
                     pulled_perp_trade_id: 0,
