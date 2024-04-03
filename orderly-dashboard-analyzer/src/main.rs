@@ -2,10 +2,10 @@
 #[macro_use]
 extern crate diesel;
 
+use crate::analyzer::analyzer_gas_job::start_analyzer_gas_job;
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
 use serde_json::json;
-use crate::analyzer::analyzer_gas_job::start_analyzer_gas_job;
 
 use crate::analyzer::analyzer_job::start_analyzer_trade_job;
 use crate::config::{AnalyzerConfig, Opts};

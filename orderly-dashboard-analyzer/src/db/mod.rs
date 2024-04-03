@@ -7,6 +7,8 @@ use dotenv::dotenv;
 use once_cell::sync::{Lazy, OnceCell};
 
 pub mod block_summary;
+pub mod broker_info;
+pub mod hourly_gas_fee;
 pub mod hourly_orderly_perp;
 pub mod hourly_orderly_token;
 pub mod hourly_user_perp;
@@ -14,9 +16,9 @@ pub mod hourly_user_token;
 pub mod orderly_perp_summary;
 pub mod orderly_token_summary;
 pub mod symbols;
+pub mod user_info;
 pub mod user_perp_summary;
 pub mod user_token_summary;
-pub mod hourly_gas_fee;
 
 pub const DB_CONTEXT: &str = "DB_operation";
 

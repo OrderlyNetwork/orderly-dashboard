@@ -1,14 +1,14 @@
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
+use actix_diesel::AsyncError;
 use chrono::NaiveDateTime;
-use diesel::{Insertable, Queryable};
 use diesel::prelude::*;
 use diesel::result::Error;
+use diesel::{Insertable, Queryable};
 
-use crate::db::DB_CONTEXT;
-use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
+use crate::db::DB_CONTEXT;
+use crate::db::POOL;
 use crate::schema::block_summary;
 
 #[derive(Insertable, Queryable, Debug, Clone)]

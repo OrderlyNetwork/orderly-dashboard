@@ -1,11 +1,14 @@
 use chrono::NaiveDateTime;
+
 use orderly_dashboard_indexer::formats_external::trading_events::*;
 
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::{div_into_real, to_big_decimal};
+use crate::db::broker_info::find_by_broker_hash;
 use crate::db::hourly_orderly_token::HourlyOrderlyTokenKey;
 use crate::db::hourly_user_token::HourlyUserTokenKey;
 use crate::db::orderly_token_summary::OrderlyTokenSummaryKey;
+use crate::db::user_info::{create_user_info, UserInfo};
 use crate::db::user_token_summary::UserTokenSummaryKey;
 
 const TRANSACTION_ANALYZER: &str = "transaction-analyzer";
@@ -20,16 +23,35 @@ pub async fn analyzer_transaction(
     block_number: i64,
     block_time: NaiveDateTime,
     context: &mut AnalyzeContext,
+    sender: String,
+    broker_hash: String,
 ) {
     tracing::info!(target:TRANSACTION_ANALYZER,"receive {:?} - account:{},amount:{}",side.clone(),account_id.clone(),token_amount.clone());
     let fixed_amount = div_into_real(token_amount.parse().unwrap(), 1000000);
 
+    println!("122");
     let deposit;
     match side {
         TransactionSide::Deposit => {
             deposit = true;
         }
         TransactionSide::Withdraw => deposit = false,
+    }
+
+    if deposit {
+        let broker_info = find_by_broker_hash(broker_hash.clone()).await;
+        match broker_info {
+            Ok(broker) => {
+                let user: UserInfo = UserInfo {
+                    account_id: account_id.clone(),
+                    broker_id: broker.broker_id,
+                    broker_hash: broker_hash.clone(),
+                    address: sender,
+                };
+                create_user_info(&user).await.expect("insert user error");
+            }
+            Err(_) => {}
+        }
     }
 
     {

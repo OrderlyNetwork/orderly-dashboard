@@ -38,10 +38,12 @@ pub fn start_analyzer_trade_job(
                 min(round_from_block + batch_block_num as i64, max_block),
             );
             let timestamp = Utc::now().timestamp_millis();
-            let response_str = get_indexer_data(round_from_block, round_to_block, base_url.clone()).await;
+            let response_str =
+                get_indexer_data(round_from_block, round_to_block, base_url.clone()).await;
             match response_str {
                 Ok(json_str) => {
-                    let result: Result<Response<TradingEventsResponse>, serde_json::Error> = serde_json::from_str(&*json_str);
+                    let result: Result<Response<TradingEventsResponse>, serde_json::Error> =
+                        serde_json::from_str(&*json_str);
 
                     if result.is_err() {
                         tracing::warn!(target:ANALYZER_CONTEXT, "parse data err, json_str: {}", json_str);
@@ -102,13 +104,13 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
 
                 pulled_block_time = max(pulled_block_time, block_time.timestamp());
                 let event_data = event.data;
-                match event_data {
+                match event_data.clone() {
                     TradingEventInnerData::Transaction {
                         account_id,
                         sender: _,
-                        receiver: _,
+                        receiver,
                         token_hash,
-                        broker_hash: _,
+                        broker_hash,
                         chain_id,
                         side,
                         token_amount,
@@ -117,6 +119,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         fail_reason: _,
                         fee: _,
                     } => {
+                        println!("deposit/withdraw -- {:?}", event_data.clone());
                         analyzer_transaction(
                             account_id,
                             token_hash,
@@ -127,6 +130,8 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             block_num,
                             block_time.clone(),
                             &mut context,
+                            receiver,
+                            broker_hash,
                         )
                         .await;
                     }

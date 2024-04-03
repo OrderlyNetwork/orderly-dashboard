@@ -13,6 +13,13 @@ diesel::table! {
 }
 
 diesel::table! {
+    broker_info (broker_id) {
+        broker_id -> Text,
+        broker_hash -> Text,
+    }
+}
+
+diesel::table! {
     hourly_gas_fee (event_type, block_hour) {
         block_hour -> Timestamp,
         gas_fee -> Numeric,
@@ -125,6 +132,15 @@ diesel::table! {
 }
 
 diesel::table! {
+    user_info (account_id) {
+        account_id -> Text,
+        broker_id -> Text,
+        broker_hash -> Text,
+        address -> Text,
+    }
+}
+
+diesel::table! {
     user_perp_summary (account_id, symbol) {
         account_id -> Text,
         symbol -> Text,
@@ -160,6 +176,7 @@ diesel::table! {
 
 diesel::allow_tables_to_appear_in_same_query!(
     block_summary,
+    broker_info,
     hourly_gas_fee,
     hourly_orderly_perp,
     hourly_orderly_token,
@@ -168,6 +185,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     orderly_perp_summary,
     orderly_token_summary,
     symbols,
+    user_info,
     user_perp_summary,
     user_token_summary,
 );

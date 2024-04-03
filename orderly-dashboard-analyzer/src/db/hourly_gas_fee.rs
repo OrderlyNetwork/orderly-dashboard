@@ -1,14 +1,14 @@
-use actix_diesel::AsyncError;
 use actix_diesel::dsl::AsyncRunQueryDsl;
+use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::db::POOL;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::{InsertError, QueryError, Timeout};
+use crate::db::POOL;
 use crate::schema::hourly_gas_fee;
 
 #[derive(Insertable, Queryable, QueryableByName, Debug, Clone)]
@@ -46,7 +46,10 @@ pub struct HourlyGasFeeKey {
 
 impl HourlyGasFeeKey {
     pub fn new_key(event_type: String, block_hour: NaiveDateTime) -> Self {
-        HourlyGasFeeKey { block_hour, event_type }
+        HourlyGasFeeKey {
+            block_hour,
+            event_type,
+        }
     }
 }
 

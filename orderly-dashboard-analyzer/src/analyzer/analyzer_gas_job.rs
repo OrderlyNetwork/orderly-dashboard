@@ -6,22 +6,15 @@ use chrono::{NaiveDateTime, Timelike, Utc};
 use num_traits::ToPrimitive;
 use tokio::time;
 
-use orderly_dashboard_indexer::formats_external::gas_consumption::{GasConsumptionResponse, TransactionGasCost, TransactionGasCostData};
-use orderly_dashboard_indexer::formats_external::Response;
-use orderly_dashboard_indexer::formats_external::trading_events::{
-    TradingEventInnerData, TradingEventsResponse,
+use orderly_dashboard_indexer::formats_external::gas_consumption::{
+    GasConsumptionResponse, TransactionGasCostData,
 };
+use orderly_dashboard_indexer::formats_external::Response;
 
 use crate::analyzer::abalyer_gas_context::GasFeeContext;
-use crate::analyzer::adl_analyzer::analyzer_adl;
-use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::analyzer_job::HTTPException;
 use crate::analyzer::analyzer_job::HTTPException::Timeout;
 use crate::analyzer::div_into_real;
-use crate::analyzer::liquidation_analyzer::analyzer_liquidation;
-use crate::analyzer::perp_analyzer::analyzer_perp_trade;
-use crate::analyzer::settlement_analyzer::analyzer_settlement;
-use crate::analyzer::transaction_analyzer::analyzer_transaction;
 use crate::db::block_summary::{create_or_update_block_summary, find_block_summary};
 use crate::db::hourly_gas_fee::HourlyGasFeeKey;
 
@@ -49,14 +42,15 @@ pub fn start_analyzer_gas_job(
                 get_indexer_data(round_from_block, round_to_block, base_url.clone()).await;
             match response_str {
                 Ok(json_str) => {
-                    let result: Result<Response<GasConsumptionResponse>, serde_json::Error> = serde_json::from_str(&*json_str);
+                    let result: Result<Response<GasConsumptionResponse>, serde_json::Error> =
+                        serde_json::from_str(&*json_str);
                     if result.is_err() {
                         tracing::warn!(target:ANALYZER_CONTEXT, "parse data err, json_str: {}", json_str);
                         time::sleep(Duration::from_secs(5 * interval_seconds)).await;
                         continue;
                     }
 
-                    let (pulled_block_time, latest_block_height, pulled_perp_trade_id) =
+                    let (pulled_block_time, latest_block_height, _) =
                         parse_and_analyzer(result.unwrap()).await;
 
                     if round_to_block > latest_block_height {
@@ -68,7 +62,8 @@ pub fn start_analyzer_gas_job(
                     from_block = round_to_block + 1;
 
                     block_summary.pulled_block_height = round_to_block;
-                    block_summary.pulled_block_time = NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
+                    block_summary.pulled_block_time =
+                        NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
                     block_summary.latest_block_height = latest_block_height;
                     create_or_update_block_summary(block_summary.clone())
                         .await
@@ -89,7 +84,7 @@ pub fn start_analyzer_gas_job(
 async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
     let mut latest_block_height = 0i64;
-    let mut latest_perp_trade_id = 0i64;
+    let latest_perp_trade_id = 0i64;
 
     match response {
         Response::Success(success_event) => {
@@ -112,41 +107,35 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
                         let gs = context.get_hourly_gas(&p_key).await;
                         let l1_fee: BigDecimal = gas_event.fee_data.clone().l1_fee.parse().unwrap();
                         let l2_fee: BigDecimal = gas_event.fee_data.clone().l2_fee.parse().unwrap();
-                        let fixed_l1_fee = div_into_real(l1_fee.to_i128().unwrap(),1000_000_000_000_000_000);
-                        let fixed_l2_fee = div_into_real(l2_fee.to_i128().unwrap(),1000_000_000_000_000_000);
-                        gs.new_event(
-                            fixed_l1_fee + fixed_l2_fee,
-                            block_num,
-                            block_time.clone(),
-                        );
+                        let fixed_l1_fee =
+                            div_into_real(l1_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
+                        let fixed_l2_fee =
+                            div_into_real(l2_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
+                        gs.new_event(fixed_l1_fee + fixed_l2_fee, block_num, block_time.clone());
                     }
                     TransactionGasCostData::PerpTradesUpload { .. } => {
                         let p_key = HourlyGasFeeKey::new_key("perp_trade".to_string(), block_hour);
                         let gs = context.get_hourly_gas(&p_key).await;
                         let l1_fee: BigDecimal = gas_event.fee_data.clone().l1_fee.parse().unwrap();
                         let l2_fee: BigDecimal = gas_event.fee_data.clone().l2_fee.parse().unwrap();
-                        let fixed_l1_fee = div_into_real(l1_fee.to_i128().unwrap(),1000_000_000_000_000_000);
-                        let fixed_l2_fee = div_into_real(l2_fee.to_i128().unwrap(),1000_000_000_000_000_000);
-                        gs.new_event(
-                            fixed_l1_fee + fixed_l2_fee,
-                            block_num,
-                            block_time.clone(),
-                        );
+                        let fixed_l1_fee =
+                            div_into_real(l1_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
+                        let fixed_l2_fee =
+                            div_into_real(l2_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
+                        gs.new_event(fixed_l1_fee + fixed_l2_fee, block_num, block_time.clone());
                     }
 
-
                     TransactionGasCostData::EventUpload { .. } => {
-                        let p_key = HourlyGasFeeKey::new_key("event_upload".to_string(), block_hour);
+                        let p_key =
+                            HourlyGasFeeKey::new_key("event_upload".to_string(), block_hour);
                         let gs = context.get_hourly_gas(&p_key).await;
                         let l1_fee: BigDecimal = gas_event.fee_data.clone().l1_fee.parse().unwrap();
                         let l2_fee: BigDecimal = gas_event.fee_data.clone().l2_fee.parse().unwrap();
-                        let fixed_l1_fee = div_into_real(l1_fee.to_i128().unwrap(),1000_000_000_000_000_000);
-                        let fixed_l2_fee = div_into_real(l2_fee.to_i128().unwrap(),1000_000_000_000_000_000);
-                        gs.new_event(
-                            fixed_l1_fee + fixed_l2_fee,
-                            block_num,
-                            block_time.clone(),
-                        );
+                        let fixed_l1_fee =
+                            div_into_real(l1_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
+                        let fixed_l2_fee =
+                            div_into_real(l2_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
+                        gs.new_event(fixed_l1_fee + fixed_l2_fee, block_num, block_time.clone());
                     }
                 }
             }
@@ -161,7 +150,6 @@ fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
     let date_time = NaiveDateTime::from_timestamp_opt(block_timestamp, 0).unwrap();
     return date_time.with_second(0).unwrap().with_minute(0).unwrap();
 }
-
 
 async fn get_indexer_data(
     from_block: i64,
