@@ -73,11 +73,11 @@ pub struct DbTransactionEvent {
     pub withdraw_nonce: Option<i64>,
     pub fail_reason: Option<i16>,
     pub effective_gas_price: Option<BigDecimal>,
+    pub gas_used: Option<BigDecimal>,
     pub l1_fee: Option<BigDecimal>,
+    pub l1_fee_scalar: Option<String>,
     pub l1_gas_price: Option<BigDecimal>,
     pub l1_gas_used: Option<BigDecimal>,
-    pub gas_used: Option<BigDecimal>,
-    pub l1_fee_scalar: Option<String>,
 }
 
 pub async fn create_balance_transaction_executions(
