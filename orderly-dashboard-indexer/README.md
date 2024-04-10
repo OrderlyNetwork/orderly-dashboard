@@ -33,6 +33,10 @@ echo DATABASE_URL=postgres://username:password@localhost/diesel_demo > .env
 ```shell
 diesel migration run
 ```
+### start from special block height for testing,for example start from 7976034
+```sql
+insert into settings (id,value) values (1,7976034);
+```
 ### local run for test
 We can set `start-block` and `end-block` as params to pull blocks in this range, in fact we just need to set `end-block` because we have init `start-block` in config file
 ```shell

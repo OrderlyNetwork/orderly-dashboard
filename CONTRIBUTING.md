@@ -23,3 +23,15 @@ And the `scope` is:
 * `FE`: orderly dashboard front end
 * empty: didn't make change on above scopes.
 7. The PR should also contain a description when appropriate to provide additional information to help the reviewer inspect the proposed change.
+## SQL commits
+1. confirm to generate new schema in the package of [indexer](./orderly-dashboard-indexer) and [analyzer](./orderly-dashboard-analyzer)
+```shell
+cd orderly-dashboard-indexer
+# or `cd orderly-dashboard-analyzer`
+diesel migration run
+```
+2. confirm to add changes in `schema.rs`:
+```shell
+git add schema.rs
+```
+3. should not change sql in legacy migrations, those changes may not take effects. For example in [this commits](https://gitlab.com/orderlynetwork/orderly-v2/orderly-dashboard/-/commit/c3b472576c2b5647fb5a396cb68eba4d77bea01f), delete sql in `migrations/2024-03-14-234455_gas_fee/up.sql` but didn't updates `schema.rs`
