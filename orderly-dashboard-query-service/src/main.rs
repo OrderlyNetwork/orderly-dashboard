@@ -8,6 +8,7 @@ use config::{CommonConfig, Opts};
 use trading_metrics::{average_trading_count, daily_trading_fee, daily_volume};
 
 use crate::db::init_analyzer_db_url;
+use crate::events::events_api::list_events;
 use crate::status::get_status;
 use crate::trading_metrics::{average_opening_count, average_trading_fee, average_trading_volume, block_height, deposit_gas_fee, event_gas_fee, get_daily_orderly_perp, get_daily_orderly_token, get_perp_holding_rank, get_perp_pnl_rank, get_token_deposit_rank, get_token_withdraw_rank, get_trading_volume_rank, perp_gas_fee};
 
@@ -20,6 +21,8 @@ mod raw_query;
 mod service_base;
 mod status;
 mod trading_metrics;
+mod events;
+
 use crate::network_info::{get_network_info, init_indexer_db_url};
 use crate::raw_query::analyzer_raw_query;
 use crate::service_base::runtime::spawn_future;
@@ -144,6 +147,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_network_info)
             .service(analyzer_raw_query)
             .service(get_status)
+            .service(list_events)
             .route("/hey", web::get().to(manual_hello))
     })
     .bind(("0.0.0.0", config.port))?

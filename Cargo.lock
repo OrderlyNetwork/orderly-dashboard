@@ -2625,6 +2625,7 @@ dependencies = [
  "orderly-dashboard-indexer",
  "parking_lot",
  "postgres",
+ "reqwest",
  "serde",
  "serde_derive",
  "serde_json",
