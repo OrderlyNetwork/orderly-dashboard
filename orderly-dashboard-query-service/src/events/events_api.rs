@@ -13,6 +13,9 @@ use crate::config::get_common_cfg;
 
 use crate::events::events_api::HTTPException::Timeout;
 
+pub(crate) const QUERY_ACCOUNT_EVENT_CONTEXT: &str = "query_account_event_context";
+
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct GetAccountEventsRequest {
     broker_id: String,
@@ -35,6 +38,7 @@ fn now_time() -> i64 {
 
 #[get("/events")] // <- define path parameters
 pub async fn list_events(param: web::Query<GetAccountEventsRequest>) -> actix_web::Result<impl Responder> {
+    tracing::info!(target: QUERY_ACCOUNT_EVENT_CONTEXT, "query account events params: {:?}", param);
     let select_result: Result<UserInfo, _> = user_info
         .filter(broker_id.eq(param.broker_id.clone()))
         .filter(address.eq(param.address.clone()))
