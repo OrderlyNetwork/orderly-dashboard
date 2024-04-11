@@ -1,7 +1,7 @@
 {
   "l2_config": {
-    "rpc_url": "https://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
-    "rpc_url_fallback": "https://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
+    "rpc_url": "https://testnet-rpc.orderly.org/8jbWg77mA6PCwHe13tEiv6rFqT1UJLPEBz",
+    "rpc_url_fallback": "https://testnet-rpc.orderly.org/8jbWg77mA6PCwHe13tEiv6rFqT1UJLPEB",
     "is_use_ws": false,
     "ws_url": "wss://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
     "pull_check_interval": 1,
