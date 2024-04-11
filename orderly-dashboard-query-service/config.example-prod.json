@@ -1,4 +1,5 @@
 {
   "port": 8020,
-  "is_debug": true
+  "is_debug": true,
+  "indexer_address": "http://localhost:8018"
 }

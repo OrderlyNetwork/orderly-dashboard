@@ -1,3 +1,4 @@
 /target
 .idea
 .env
+config.example-prod-local.json

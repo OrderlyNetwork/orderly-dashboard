@@ -9,6 +9,7 @@ use orderly_dashboard_analyzer::db::user_info::UserInfo;
 use orderly_dashboard_analyzer::schema::user_info::dsl::*;
 use orderly_dashboard_indexer::formats_external::{FailureResponse, Response};
 use orderly_dashboard_indexer::formats_external::trading_events::{AccountTradingEventsResponse};
+use crate::config::get_common_cfg;
 
 use crate::events::events_api::HTTPException::Timeout;
 
@@ -20,7 +21,7 @@ pub struct GetAccountEventsRequest {
     from_time: i64,
     #[serde(default = "now_time")]
     to_time: i64,
-    event_type: String,
+    event_type: Option<String>,
 }
 
 fn two_weeks_ago() -> i64 {
@@ -45,8 +46,8 @@ pub async fn list_events(param: web::Query<GetAccountEventsRequest>) -> actix_we
                 param.from_time,
                 param.to_time,
                 user_info_res.account_id,
-                param.event_type.to_uppercase(),
-                "http://localhost:8018".to_string(),
+                param.event_type.as_deref().map(str::to_uppercase),
+                get_common_cfg().indexer_address.clone(),
             ).await;
 
              match indexer_data {
@@ -91,13 +92,20 @@ async fn get_indexer_data(
     from_time: i64,
     to_time: i64,
     p_account_id: String,
-    event_type: String,
+    event_type: Option<String>,
     base_url: String,
 ) -> Result<String, HTTPException> {
-    let indexer_url = format!(
-        "{}/pull_account_trading_events?account_id={}&from_time={}&to_time={}&event_type={}",
-        base_url, p_account_id, from_time, to_time, event_type
-    );
+    let indexer_url = if let Some(event_type) = event_type {
+        format!(
+            "{}/pull_account_trading_events?account_id={}&from_time={}&to_time={}&event_type={}",
+            base_url, p_account_id, from_time, to_time, event_type
+        )
+    } else {
+        format!(
+            "{}/pull_account_trading_events?account_id={}&from_time={}&to_time={}",
+            base_url, p_account_id, from_time, to_time,
+        )
+    };
     let response = reqwest::get(indexer_url).await;
     match response {
         Ok(res) => Ok(res.text().await.unwrap()),

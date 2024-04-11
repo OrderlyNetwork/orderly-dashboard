@@ -6,6 +6,7 @@ use clap::Parser;
 
 use config::{CommonConfig, Opts};
 use trading_metrics::{average_trading_count, daily_trading_fee, daily_volume};
+use crate::config::init_config;
 
 use crate::db::init_analyzer_db_url;
 use crate::events::events_api::list_events;
@@ -27,7 +28,7 @@ use crate::network_info::{get_network_info, init_indexer_db_url};
 use crate::raw_query::analyzer_raw_query;
 use crate::service_base::runtime::spawn_future;
 
-const ORDERLY_DASHBOARD_CONTEXT: &str = "orderly_dashboard_context";
+pub(crate) const ORDERLY_DASHBOARD_CONTEXT: &str = "orderly_dashboard_context";
 
 fn add_base_header(resp: &mut HttpResponse) {
     resp.headers_mut().insert(
@@ -103,6 +104,7 @@ async fn main() -> std::io::Result<()> {
     let config: CommonConfig =
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     init(config.is_debug);
+    init_config(config.clone());
     tracing::info!(target: ORDERLY_DASHBOARD_CONTEXT, "orderly dashboard config info: {:?}", config);
     std::thread::spawn(|| {
         spawn_future(async {
