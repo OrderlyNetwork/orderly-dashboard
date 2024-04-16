@@ -46,7 +46,6 @@ pub struct OrderlyGasFee {
     pub avg_gas_fee: f64,
 }
 
-
 #[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
 pub struct OrderlyTokenDaily {
     pub withdraw_amount: f64,

@@ -1,7 +1,7 @@
-use clap::Parser;
-use serde::Deserialize;
-use once_cell::sync::OnceCell;
 use crate::ORDERLY_DASHBOARD_CONTEXT;
+use clap::Parser;
+use once_cell::sync::OnceCell;
+use serde::Deserialize;
 
 pub static COMMON_CONFIGS: OnceCell<CommonConfig> = OnceCell::new();
 

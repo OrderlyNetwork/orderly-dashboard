@@ -1,20 +1,19 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_web::{get, HttpResponse, Responder, web};
+use actix_web::{get, web, HttpResponse, Responder};
 use chrono::{Duration, Utc};
 use diesel::{ExpressionMethods, QueryDsl};
 use serde_derive::Deserialize;
 
-use orderly_dashboard_analyzer::db::POOL;
-use orderly_dashboard_analyzer::db::user_info::UserInfo;
-use orderly_dashboard_analyzer::schema::user_info::dsl::*;
-use orderly_dashboard_indexer::formats_external::{FailureResponse, Response};
-use orderly_dashboard_indexer::formats_external::trading_events::{AccountTradingEventsResponse};
 use crate::config::get_common_cfg;
+use orderly_dashboard_analyzer::db::user_info::UserInfo;
+use orderly_dashboard_analyzer::db::POOL;
+use orderly_dashboard_analyzer::schema::user_info::dsl::*;
+use orderly_dashboard_indexer::formats_external::trading_events::AccountTradingEventsResponse;
+use orderly_dashboard_indexer::formats_external::{FailureResponse, Response};
 
 use crate::events::events_api::HTTPException::Timeout;
 
 pub(crate) const QUERY_ACCOUNT_EVENT_CONTEXT: &str = "query_account_event_context";
-
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GetAccountEventsRequest {
@@ -37,14 +36,17 @@ fn now_time() -> i64 {
 }
 
 #[get("/events")] // <- define path parameters
-pub async fn list_events(param: web::Query<GetAccountEventsRequest>) -> actix_web::Result<impl Responder> {
+pub async fn list_events(
+    param: web::Query<GetAccountEventsRequest>,
+) -> actix_web::Result<impl Responder> {
     tracing::info!(target: QUERY_ACCOUNT_EVENT_CONTEXT, "query account events params: {:?}", param);
     let select_result: Result<UserInfo, _> = user_info
         .filter(address.eq(param.address.clone()))
         .filter(broker_id.eq(param.broker_id.clone()))
-        .first_async::<UserInfo>(&POOL).await;
+        .first_async::<UserInfo>(&POOL)
+        .await;
 
-     match select_result {
+    match select_result {
         Ok(user_info_res) => {
             let indexer_data = get_indexer_data(
                 param.from_time,
@@ -52,12 +54,13 @@ pub async fn list_events(param: web::Query<GetAccountEventsRequest>) -> actix_we
                 user_info_res.account_id,
                 param.event_type.as_deref().map(str::to_uppercase),
                 get_common_cfg().indexer_address.clone(),
-            ).await;
+            )
+            .await;
 
-             match indexer_data {
+            match indexer_data {
                 Ok(res_json_str) => {
-                    let result: Result<Response<AccountTradingEventsResponse>, serde_json::Error>
-                        = serde_json::from_str(&*res_json_str);
+                    let result: Result<Response<AccountTradingEventsResponse>, serde_json::Error> =
+                        serde_json::from_str(&*res_json_str);
 
                     match result {
                         Ok(response) => {
@@ -82,15 +85,11 @@ pub async fn list_events(param: web::Query<GetAccountEventsRequest>) -> actix_we
             };
         }
         Err(_) => {
-            let resp = FailureResponse::new(
-                1000,
-                "user not found".to_string(),
-            );
+            let resp = FailureResponse::new(1000, "user not found".to_string());
             return Ok(HttpResponse::Ok().json(resp));
         }
     };
 }
-
 
 async fn get_indexer_data(
     from_time: i64,

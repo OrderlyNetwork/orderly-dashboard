@@ -1,8 +1,8 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{NaiveDate, NaiveDateTime};
-use diesel::QueryableByName;
 use diesel::sql_types::{Date, Numeric, Timestamp, Varchar};
+use diesel::QueryableByName;
 
 #[allow(unused_imports)]
 use orderly_dashboard_analyzer::{
@@ -41,7 +41,6 @@ struct OrderlyDailyGas {
     #[sql_type = "Numeric"]
     pub avg_gas_fee: BigDecimal,
 }
-
 
 pub async fn daily_orderly_perp(
     from_time: NaiveDateTime,
@@ -95,7 +94,6 @@ pub async fn daily_orderly_perp(
         data: orderly_perp_vec,
     }
 }
-
 
 pub async fn daily_gas_fee(
     from_time: NaiveDateTime,

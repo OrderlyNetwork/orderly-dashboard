@@ -1,10 +1,8 @@
-use actix_web::{get, HttpResponse, Responder, Result, web};
+use actix_web::{get, web, HttpResponse, Responder, Result};
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use serde::Serialize;
 use serde_derive::Deserialize;
 
-use crate::{add_base_header, format_extern::Response};
-use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
 use crate::db::trading_metrics::average::get_average;
 use crate::db::trading_metrics::orderly_daily_perp::{daily_gas_fee, daily_orderly_perp};
 use crate::db::trading_metrics::orderly_daily_token::get_daily_token;
@@ -12,6 +10,8 @@ use crate::db::trading_metrics::ranking::{
     get_daily_trading_volume_ranking, get_pnl_ranking, get_token_ranking,
     get_user_perp_holding_ranking,
 };
+use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
+use crate::{add_base_header, format_extern::Response};
 
 const TRADING_METRICS: &str = "trading_metrics_context";
 
@@ -138,7 +138,6 @@ pub async fn deposit_gas_fee(param: web::Query<DailyRequest>) -> Result<impl Res
         daily_gas_fee(from_time, end_time, "deposit".to_string()).await,
     ))
 }
-
 
 #[get("/daily_orderly_token")] // <- define path parameters
 pub async fn get_daily_orderly_token(param: web::Query<DailyRequest>) -> Result<impl Responder> {
