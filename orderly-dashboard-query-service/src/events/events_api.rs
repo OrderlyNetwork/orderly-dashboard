@@ -40,8 +40,8 @@ fn now_time() -> i64 {
 pub async fn list_events(param: web::Query<GetAccountEventsRequest>) -> actix_web::Result<impl Responder> {
     tracing::info!(target: QUERY_ACCOUNT_EVENT_CONTEXT, "query account events params: {:?}", param);
     let select_result: Result<UserInfo, _> = user_info
-        .filter(broker_id.eq(param.broker_id.clone()))
         .filter(address.eq(param.address.clone()))
+        .filter(broker_id.eq(param.broker_id.clone()))
         .first_async::<UserInfo>(&POOL).await;
 
      match select_result {

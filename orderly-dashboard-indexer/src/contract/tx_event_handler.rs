@@ -119,6 +119,7 @@ pub(crate) async fn handle_tx_params(
                     match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
                     timestamp: BigDecimal::from_u64(trade.timestamp).unwrap_or_default(),
                     side: trade.side,
+                    block_time: block_t.unwrap_or_default() as i64,
                 })
                 .collect::<Vec<_>>();
             create_executed_trades(db_trades).await?;
@@ -719,6 +720,7 @@ pub(crate) async fn handle_log(
                             match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
                             timestamp: BigDecimal::from_u64(trade.timestamp).unwrap_or_default(),
                             side: trade.side,
+                            block_time: block_t.unwrap_or_default() as i64,
                         };
                         create_executed_trades(vec![db_trade]).await?;
                     }
@@ -743,6 +745,7 @@ pub(crate) async fn handle_log(
                             match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
                             timestamp: BigDecimal::from_u64(trade.timestamp).unwrap_or_default(),
                             side: trade.side,
+                            block_time: block_t.unwrap_or_default() as i64,
                         };
                         create_executed_trades(vec![db_trade]).await?;
                     }
