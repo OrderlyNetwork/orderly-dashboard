@@ -35,6 +35,7 @@ diesel::table! {
         match_id -> Numeric,
         timestamp -> Numeric,
         side -> Bool,
+        block_time -> Int8,
     }
 }
 

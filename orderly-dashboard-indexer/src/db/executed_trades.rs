@@ -5,7 +5,7 @@ use crate::schema::executed_trades;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use anyhow::Result;
-use bigdecimal::{BigDecimal, FromPrimitive};
+use bigdecimal::BigDecimal;
 use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
@@ -31,6 +31,7 @@ pub struct DbExecutedTrades {
     pub match_id: BigDecimal,
     pub timestamp: BigDecimal,
     pub side: bool,
+    pub block_time: i64,
 }
 
 impl DbExecutedTrades {
@@ -148,13 +149,11 @@ pub async fn query_account_executed_trades(
         "query_account_executed_trades start",
     );
     let start_time = Instant::now();
-    let from_time = from_time * 1000;
-    let to_time = to_time * 1000;
 
     let result = executed_trades
         .filter(account_id.eq(account))
-        .filter(timestamp.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
-        .filter(timestamp.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
+        .filter(block_time.ge(from_time))
+        .filter(block_time.le(to_time))
         .load_async::<DbExecutedTrades>(&POOL)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();

@@ -8,8 +8,8 @@ use chrono::Utc;
 use std::collections::HashMap;
 use std::str::FromStr;
 
-// two weeks
-pub const QUERY_RANGE_S: i64 = 14 * 24 * 3600;
+// 31 days, one month
+pub const QUERY_RANGE_S: i64 = 31 * 24 * 3600;
 
 pub async fn pull_perp_trading_events(
     params: &HashMap<String, String>,
