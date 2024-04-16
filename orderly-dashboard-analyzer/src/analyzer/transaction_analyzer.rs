@@ -29,7 +29,6 @@ pub async fn analyzer_transaction(
     tracing::info!(target:TRANSACTION_ANALYZER,"receive {:?} - account:{},amount:{}",side.clone(),account_id.clone(),token_amount.clone());
     let fixed_amount = div_into_real(token_amount.parse().unwrap(), 1000000);
 
-    println!("122");
     let deposit;
     match side {
         TransactionSide::Deposit => {

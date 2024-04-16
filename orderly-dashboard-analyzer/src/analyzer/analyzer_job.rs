@@ -26,6 +26,7 @@ pub fn start_analyzer_trade_job(
     start_block: i64,
     batch_block_num: u64,
 ) {
+    let mut interval_ms = interval_seconds * 1000;
     tokio::spawn(async move {
         let mut block_summary = find_block_summary("trade".to_string()).await.unwrap();
         let mut from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
@@ -58,6 +59,11 @@ pub fn start_analyzer_trade_job(
                         tracing::info!(target: ANALYZER_CONTEXT,"continue to pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
                         continue;
                     }
+                    if latest_block_height > round_from_block + 2 * (batch_block_num as i64) {
+                        interval_ms = 10;
+                    } else {
+                        interval_ms = interval_seconds * 1000;
+                    }
 
                     max_block = latest_block_height;
                     from_block = round_to_block + 1;
@@ -78,7 +84,7 @@ pub fn start_analyzer_trade_job(
                     continue;
                 }
             }
-            time::sleep(Duration::from_secs(interval_seconds)).await;
+            time::sleep(Duration::from_millis(interval_ms)).await;
         }
     });
 }
@@ -119,7 +125,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         fail_reason: _,
                         fee: _,
                     } => {
-                        println!("deposit/withdraw -- {:?}", event_data.clone());
+                        tracing::info!(target: ANALYZER_CONTEXT, "deposit/withdraw -- {:?}", event_data.clone());
                         analyzer_transaction(
                             account_id,
                             token_hash,
