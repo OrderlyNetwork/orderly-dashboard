@@ -57,6 +57,7 @@ pub fn start_analyzer_trade_job(
 
                     if round_to_block > latest_block_height {
                         tracing::info!(target: ANALYZER_CONTEXT,"continue to pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
+                        time::sleep(Duration::from_millis(interval_ms)).await;
                         continue;
                     }
                     if latest_block_height > round_from_block + 2 * (batch_block_num as i64) {
