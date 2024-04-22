@@ -37,4 +37,5 @@ pub struct CommonConfig {
     pub port: u16,
     pub is_debug: bool,
     pub indexer_address: String,
+    pub is_raw_query_allow: bool,
 }

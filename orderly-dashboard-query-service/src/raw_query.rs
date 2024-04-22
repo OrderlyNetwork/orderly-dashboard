@@ -1,7 +1,8 @@
+use crate::config::get_common_cfg;
 use crate::db::raw_request::raw_query;
 use crate::error_code::{
-    GENERAL_ERR, RAW_QUERY_EXECUTE_ERR, RAW_QUERY_EXECUTE_ERR_MESSAGE, RAW_QUERY_OVERLIMIT_ERR,
-    RAW_QUERY_OVERLIMIT_ERR_MESSAGE,
+    GENERAL_ERR, RAW_QUERY_BAN_ERR, RAW_QUERY_BAN_ERR_MESSAGE, RAW_QUERY_EXECUTE_ERR,
+    RAW_QUERY_EXECUTE_ERR_MESSAGE, RAW_QUERY_OVERLIMIT_ERR, RAW_QUERY_OVERLIMIT_ERR_MESSAGE,
 };
 use crate::format_extern::{RawQueryRequest, RawQueryResponse};
 use crate::trading_metrics::{write_failed_response, write_response};
@@ -9,6 +10,12 @@ use actix_web::{post, web, Responder, Result};
 
 #[post("/analyzer_raw_query")] // <- define path parameters
 pub async fn analyzer_raw_query(param: web::Json<RawQueryRequest>) -> Result<impl Responder> {
+    if !get_common_cfg().is_raw_query_allow {
+        return Ok(write_failed_response(
+            RAW_QUERY_BAN_ERR,
+            RAW_QUERY_BAN_ERR_MESSAGE,
+        ));
+    }
     let query_str = param.query_str.clone();
     match raw_query(query_str).await {
         Ok((code, res)) => {
