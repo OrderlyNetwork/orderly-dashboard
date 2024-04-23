@@ -98,7 +98,7 @@ async fn get_indexer_data(
     p_account_id: String,
     event_type: Option<String>,
     base_url: String,
-) -> Result<String, String> {
+) -> anyhow::Result<String> {
     let indexer_url = if let Some(event_type) = event_type {
         format!(
             "{}/pull_account_trading_events?account_id={}&from_time={}&to_time={}&event_type={}",
@@ -112,7 +112,7 @@ async fn get_indexer_data(
     };
     let response = reqwest::get(indexer_url).await;
     match response {
-        Ok(res) => Ok(res.text().await.unwrap()),
-        Err(err) => Err(err.to_string()),
+        Ok(res) => Ok(res.text().await?),
+        Err(err) => Err(anyhow::anyhow!("reqwest failed with: {}", err)),
     }
 }
