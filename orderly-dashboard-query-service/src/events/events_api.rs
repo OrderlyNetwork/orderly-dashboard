@@ -11,8 +11,6 @@ use orderly_dashboard_analyzer::schema::user_info::dsl::*;
 use orderly_dashboard_indexer::formats_external::trading_events::AccountTradingEventsResponse;
 use orderly_dashboard_indexer::formats_external::{FailureResponse, Response};
 
-use crate::events::events_api::HTTPException::Timeout;
-
 pub(crate) const QUERY_ACCOUNT_EVENT_CONTEXT: &str = "query_account_event_context";
 
 #[derive(Debug, Clone, Deserialize)]
@@ -69,7 +67,10 @@ pub async fn list_events(
                         Err(err) => {
                             let resp = FailureResponse::new(
                                 1000,
-                                format!("parse event_type failed with err: {}", err),
+                                format!(
+                                    "get_indexer_data parse event_type failed with err: {}",
+                                    err
+                                ),
                             );
                             return Ok(HttpResponse::Ok().json(resp));
                         }
@@ -78,7 +79,7 @@ pub async fn list_events(
                 Err(err) => {
                     let resp = FailureResponse::new(
                         1000,
-                        format!("parse event_type failed with err: {:?}", err),
+                        format!("get user info failed with err: {}", err),
                     );
                     return Ok(HttpResponse::Ok().json(resp));
                 }
@@ -97,7 +98,7 @@ async fn get_indexer_data(
     p_account_id: String,
     event_type: Option<String>,
     base_url: String,
-) -> Result<String, HTTPException> {
+) -> Result<String, String> {
     let indexer_url = if let Some(event_type) = event_type {
         format!(
             "{}/pull_account_trading_events?account_id={}&from_time={}&to_time={}&event_type={}",
@@ -112,11 +113,6 @@ async fn get_indexer_data(
     let response = reqwest::get(indexer_url).await;
     match response {
         Ok(res) => Ok(res.text().await.unwrap()),
-        Err(_) => Err(Timeout),
+        Err(err) => Err(err.to_string()),
     }
-}
-
-#[derive(Debug)]
-pub enum HTTPException {
-    Timeout,
 }
