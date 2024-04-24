@@ -10,3 +10,4 @@ yarn.lock
 /.cache
 /build
 /public/build
+/app/types/api**

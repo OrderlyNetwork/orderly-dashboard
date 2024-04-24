@@ -11,7 +11,7 @@
     "dev": "run-p \"dev:*\"",
     "dev:css": "npm run generate:css -- --watch",
     "dev:remix": "node ./server.js",
-    "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "format": "prettier --write . && yarn eslint --fix .",
     "start": "cross-env NODE_ENV=production node ./server.js",
     "typecheck": "tsc"

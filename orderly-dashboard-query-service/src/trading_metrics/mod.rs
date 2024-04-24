@@ -69,11 +69,11 @@ impl VolumeRankingRequest {
 impl DailyRequest {
     pub fn parse_day(&self) -> (NaiveDateTime, NaiveDateTime) {
         let date_format = "%Y-%m-%d";
-        let from_time = NaiveDate::parse_from_str(&*self.from_day, date_format)
+        let from_time = NaiveDate::parse_from_str(&self.from_day, date_format)
             .unwrap()
             .and_hms_opt(0, 0, 0)
             .unwrap();
-        let end_time = NaiveDate::parse_from_str(&*self.end_day, date_format)
+        let end_time = NaiveDate::parse_from_str(&self.end_day, date_format)
             .unwrap()
             .and_hms_opt(0, 0, 0)
             .unwrap();

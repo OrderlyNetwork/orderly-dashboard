@@ -1,54 +1,27 @@
 use actix_cors::Cors;
 use actix_web::http::header;
-use actix_web::http::header::HeaderValue;
 use actix_web::{get, options, post, web, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
 
-use crate::config::init_config;
-use config::{CommonConfig, Opts};
-use trading_metrics::{average_trading_count, daily_trading_fee, daily_volume};
+use orderly_dashboard_query_service::config::init_config;
+use orderly_dashboard_query_service::config::{CommonConfig, Opts};
+use orderly_dashboard_query_service::trading_metrics::{
+    average_trading_count, daily_trading_fee, daily_volume,
+};
+use orderly_dashboard_query_service::{add_base_header, ORDERLY_DASHBOARD_CONTEXT};
 
-use crate::db::init_analyzer_db_url;
-use crate::events::events_api::list_events;
-use crate::status::get_status;
-use crate::trading_metrics::{
+use orderly_dashboard_query_service::db::init_analyzer_db_url;
+use orderly_dashboard_query_service::events::events_api::list_events;
+use orderly_dashboard_query_service::network_info::{get_network_info, init_indexer_db_url};
+use orderly_dashboard_query_service::raw_query::analyzer_raw_query;
+use orderly_dashboard_query_service::service_base::runtime::spawn_future;
+use orderly_dashboard_query_service::status::get_status;
+use orderly_dashboard_query_service::trading_metrics::{
     average_opening_count, average_trading_fee, average_trading_volume, block_height,
     deposit_gas_fee, event_gas_fee, get_daily_orderly_perp, get_daily_orderly_token,
     get_perp_holding_rank, get_perp_pnl_rank, get_token_deposit_rank, get_token_withdraw_rank,
     get_trading_volume_rank, perp_gas_fee,
 };
-
-mod config;
-mod db;
-mod error_code;
-mod events;
-mod format_extern;
-mod network_info;
-mod raw_query;
-mod service_base;
-mod status;
-mod trading_metrics;
-
-use crate::network_info::{get_network_info, init_indexer_db_url};
-use crate::raw_query::analyzer_raw_query;
-use crate::service_base::runtime::spawn_future;
-
-pub(crate) const ORDERLY_DASHBOARD_CONTEXT: &str = "orderly_dashboard_context";
-
-fn add_base_header(resp: &mut HttpResponse) {
-    resp.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_ORIGIN,
-        HeaderValue::from_static("*"),
-    );
-    resp.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_METHODS,
-        HeaderValue::from_static("*"),
-    );
-    resp.headers_mut().insert(
-        header::ACCESS_CONTROL_ALLOW_HEADERS,
-        HeaderValue::from_static("*"),
-    );
-}
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -96,9 +69,10 @@ fn init(is_debug: bool) {
     init_indexer_db_url()
 }
 
-pub fn set_envs() {
+fn set_envs() {
     std::env::set_var("RUST_BACKTRACE", "1");
 }
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     openssl_probe::init_ssl_cert_env_vars();
