@@ -1,32 +1,34 @@
-# orderly-dashboard-FE
-## Install deps
-```shell
-npm install
+# Welcome to Remix + Vite!
+
+📖 See the [Remix docs](https://remix.run/docs) and the [Remix Vite docs](https://remix.run/docs/en/main/guides/vite) for details on supported features.
+
+## Development
+
+Run the Express server with Vite dev middleware:
+
+```shellscript
+npm run dev
 ```
-## Prerequisites
-set env variables
+
+## Deployment
+
+First, build your app for production:
+
+```sh
+npm run build
 ```
-echo 'PORT=3000\nQUERY_SERVER_ADDR=http://localhost:8020\n' > .env
+
+Then run the app in production mode:
+
+```sh
+npm start
 ```
-## Start
-MacOS or Linux
-```shell
-DEBUG=myapp:* npm start
-```
-Window
-```shell
-set DEBUG=myapp:* & npm start
-```
-Visit on explorer  
-http://localhost:3000/example.html
-http://localhost:3000/echart-example.html
-## Chart getting started
-* [Create a Chart](https://www.chartjs.org/docs/latest/getting-started/#create-a-chart)
-## Dependencies
-### Front END Framework
-[Express](https://www.expressjs.com.cn/starter/generator.html)
-### Chart plugin
-[chart.js](https://www.chartjs.org/)
-[echarts](https://echarts.apache.org/examples/zh/index.html)
-### Boostrap5
-[Bootstrap](https://getbootstrap.com/docs/5.3/layout/containers/)
+
+Now you'll need to pick a host to deploy it to.
+
+### DIY
+
+If you're familiar with deploying Express applications you should be right at home. Just make sure to deploy the output of `npm run build`
+
+- `build/server`
+- `build/client`
