@@ -2611,6 +2611,7 @@ dependencies = [
 name = "orderly-dashboard-fe"
 version = "0.1.0"
 dependencies = [
+ "orderly-dashboard-indexer",
  "orderly-dashboard-query-service",
  "typescript-type-def",
 ]
@@ -2649,6 +2650,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "typescript-type-def",
  "url",
 ]
 

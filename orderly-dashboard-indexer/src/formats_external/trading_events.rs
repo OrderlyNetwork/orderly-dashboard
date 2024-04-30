@@ -10,6 +10,7 @@ use bigdecimal::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt;
+use typescript_type_def::TypeDef;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
@@ -39,7 +40,7 @@ pub struct TradingEventsResponse {
     pub last_block: u64,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
 pub struct TradingEvent {
     pub block_number: u64,
     pub transaction_index: u32,
@@ -201,7 +202,7 @@ impl TradingEvent {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef)]
 #[serde(rename_all = "snake_case")]
 pub enum TransactionSide {
     Deposit,
@@ -220,7 +221,7 @@ impl TryFrom<i16> for TransactionSide {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef)]
 #[serde(rename_all = "snake_case")]
 pub enum TransactionStatus {
     Succeed,
@@ -239,14 +240,14 @@ impl TryFrom<i16> for TransactionStatus {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum PurchaseSide {
     Buy,
     Sell,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
 pub struct Trade {
     pub account_id: String,
     pub symbol_hash: String,
@@ -286,7 +287,7 @@ impl From<DbExecutedTrades> for Trade {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
 pub struct SettlementExecution {
     pub symbol_hash: String,
     pub mark_price: String,
@@ -305,7 +306,7 @@ impl From<DbSettlementExecution> for SettlementExecution {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
 pub struct LiquidationTransfer {
     pub liquidation_transfer_id: String,
     pub liquidator_account_id: String,
@@ -336,7 +337,7 @@ impl From<DbLiquidationTransfer> for LiquidationTransfer {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
 pub enum TradingEventInnerData {
     Transaction {
         account_id: String,
@@ -382,10 +383,21 @@ pub enum TradingEventInnerData {
     },
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default, TypeDef)]
 pub struct AccountTradingEventsResponse {
     pub events: Vec<TradingEvent>,
 }
+
+pub type Events = (
+    TransactionSide,
+    TransactionStatus,
+    PurchaseSide,
+    Trade,
+    SettlementExecution,
+    LiquidationTransfer,
+    TradingEventInnerData,
+    AccountTradingEventsResponse,
+);
 
 #[cfg(test)]
 mod tests {
