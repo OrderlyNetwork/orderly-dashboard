@@ -1,6 +1,6 @@
 /.cache
 /build
-.env
+!.env
 
 # UnoCSS generated css file
 /app/styles/uno.css
