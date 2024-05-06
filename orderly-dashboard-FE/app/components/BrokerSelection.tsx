@@ -4,13 +4,10 @@ import { FC, useEffect, useState } from 'react';
 
 import { Spinner } from '.';
 
-import { useAppState } from '~/App';
 import { useBrokers } from '~/hooks';
 
 export const BrokerSelection: FC = () => {
   const [broker, setBroker] = useState<string>();
-  const { evmApiUrl } = useAppState();
-  console.log(`${evmApiUrl}/v1/public/broker/name`);
   const { data: brokers, isLoading } = useBrokers();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -33,7 +30,6 @@ export const BrokerSelection: FC = () => {
     <Select.Root
       defaultValue={brokers[0].broker_id}
       onValueChange={(value) => {
-        console.log('BROKER', value);
         setBroker(value);
       }}
       value={broker}
