@@ -36,7 +36,7 @@ export const SearchInput: FC = () => {
       <input
         className="p-[0.3rem_0_0.3rem_40px] h-full w-[20rem]"
         type="text"
-        placeholder="Search for wallet or account ID"
+        placeholder="Search for wallet"
         onChange={(event) => {
           setSearch(event.target.value.toLowerCase());
         }}

@@ -7,7 +7,9 @@ export type EventType = 'TRANSACTION' | 'PERPTRADE' | 'SETTLEMENT' | 'LIQUIDATIO
 
 export type EventTableData =
   | { type: 'event'; event: types.TradingEvent }
-  | { type: 'trade'; trade: types.Trade };
+  | { type: 'trade'; trade: types.Trade }
+  | { type: 'settlement'; settlement: types.SettlementExecution }
+  | { type: 'liquidation'; liquidation: types.LiquidationTransfer };
 
 export type EventsParams = {
   address: string;
