@@ -488,6 +488,8 @@ export const Address: FC = () => {
 
   return (
     <div className="flex flex-col gap-4 flex-items-start">
+      <h2>{address}</h2>
+
       <div className="flex flex-col gap-1">
         <span className="font-bold font-size-5">Filter:</span>
         <Select.Root
