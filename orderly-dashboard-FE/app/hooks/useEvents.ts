@@ -5,6 +5,10 @@ import { types } from '~/types';
 
 export type EventType = 'TRANSACTION' | 'PERPTRADE' | 'SETTLEMENT' | 'LIQUIDATION' | 'ADL';
 
+export type EventTableData =
+  | { type: 'event'; event: types.TradingEvent }
+  | { type: 'trade'; trade: types.Trade };
+
 export type EventsParams = {
   address: string;
   broker_id: string;
@@ -21,7 +25,7 @@ export function useEvents(query: EventsParams | null) {
     }
   }
   const url = `${queryServiceUrl}/events?${searchParams.toString()}`;
-  return useSWR<types.TradingEvent[]>(query != null ? url : null, (url: string) =>
+  return useSWR<EventTableData[]>(query != null ? url : null, (url: string) =>
     fetch(url)
       .then((r) => r.json())
       .then((val) => {
@@ -31,7 +35,13 @@ export function useEvents(query: EventsParams | null) {
           error.message = val.message;
           throw error;
         }
-        return val.data.events;
+        return (val.data.events as types.TradingEvent[]).map(
+          (event) =>
+            ({
+              type: 'event',
+              event
+            }) as EventTableData
+        );
       })
   );
 }
