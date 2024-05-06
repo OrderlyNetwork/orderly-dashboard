@@ -7,9 +7,11 @@ import { Spinner } from '.';
 import { useBrokers } from '~/hooks';
 
 export const BrokerSelection: FC = () => {
-  const [broker, setBroker] = useState<string>();
-  const { data: brokers, isLoading } = useBrokers();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [broker, setBroker] = useState<string | undefined>(
+    searchParams.get('broker_id') ?? undefined
+  );
+  const { data: brokers, isLoading } = useBrokers();
 
   useEffect(() => {
     if (broker != null || brokers == null) return;
