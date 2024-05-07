@@ -19,18 +19,17 @@ a {
   text-decoration: none;
 }
 
-input {
+input:not(.MuiInputBase-input) {
   background: rgba(255, 255, 255, 0.1);
   color: white;
   border: none;
   outline: none;
   font-size: 1.1rem;
   border-radius: 0.5rem;
-  padding: 0 0.6rem;
   border: 2px solid rgba(255, 255, 255, 0.7);
 }
 
-input:not(.error):hover {
+input:not(.error):not(.MuiInputBase-input):hover {
   border: 2px solid white;
 }
 

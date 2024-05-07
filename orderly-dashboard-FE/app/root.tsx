@@ -1,3 +1,6 @@
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Theme } from '@radix-ui/themes';
 import radixTheme from '@radix-ui/themes/styles.css?url';
 import { LinksFunction } from '@remix-run/node';
@@ -30,6 +33,12 @@ export function loader() {
   });
 }
 
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark'
+  }
+});
+
 export default function Root() {
   const { queryServiceUrl, evmApiUrl } = useLoaderData<typeof loader>();
   const [appState] = useState<AppContextType>({ queryServiceUrl, evmApiUrl });
@@ -49,7 +58,11 @@ export default function Root() {
           className="flex flex-col flex-items-center"
         >
           <AppContext.Provider value={appState}>
-            <App />
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <ThemeProvider theme={darkTheme}>
+                <App />
+              </ThemeProvider>
+            </LocalizationProvider>
           </AppContext.Provider>
         </Theme>
         <ScrollRestoration />
