@@ -4,12 +4,17 @@
  * For more information, see https://remix.run/file-conventions/entry.server
  */
 
+import { CacheProvider } from '@emotion/react';
+import createEmotionServer from '@emotion/server/create-instance';
 import type { AppLoadContext, EntryContext } from '@remix-run/node';
 import { createReadableStreamFromReadable } from '@remix-run/node';
 import { RemixServer } from '@remix-run/react';
 import { isbot } from 'isbot';
 import { PassThrough } from 'node:stream';
-import { renderToPipeableStream } from 'react-dom/server';
+import { renderToPipeableStream, renderToString } from 'react-dom/server';
+
+import { ServerStyleContext } from './styles';
+import createEmotionCache from './styles/createEmotionCache';
 
 const ABORT_DELAY = 5_000;
 
@@ -82,8 +87,24 @@ function handleBrowserRequest(
 ) {
   return new Promise((resolve, reject) => {
     let shellRendered = false;
+    const cache = createEmotionCache();
+    const { extractCriticalToChunks } = createEmotionServer(cache);
+
+    const html = renderToString(
+      <ServerStyleContext.Provider value={null}>
+        <CacheProvider value={cache}>
+          <RemixServer context={remixContext} url={request.url} abortDelay={ABORT_DELAY} />
+        </CacheProvider>
+      </ServerStyleContext.Provider>
+    );
+    const chunks = extractCriticalToChunks(html);
+
     const { pipe, abort } = renderToPipeableStream(
-      <RemixServer context={remixContext} url={request.url} abortDelay={ABORT_DELAY} />,
+      <ServerStyleContext.Provider value={chunks.styles}>
+        <CacheProvider value={cache}>
+          <RemixServer context={remixContext} url={request.url} abortDelay={ABORT_DELAY} />
+        </CacheProvider>
+      </ServerStyleContext.Provider>,
       {
         onShellReady() {
           shellRendered = true;

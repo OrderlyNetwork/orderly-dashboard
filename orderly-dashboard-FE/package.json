@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",
+    "@emotion/server": "^11.11.0",
     "@emotion/styled": "^11.11.5",
     "@mui/material": "^5.15.16",
     "@mui/x-date-pickers": "^7.3.2",
