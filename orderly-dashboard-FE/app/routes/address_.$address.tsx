@@ -5,10 +5,12 @@ import { json, useLoaderData, useSearchParams } from '@remix-run/react';
 import {
   ExpandedState,
   PaginationState,
+  SortingState,
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table';
 import dayjs, { Dayjs } from 'dayjs';
@@ -29,6 +31,12 @@ export const Address: FC = () => {
 
   const [from, setFrom] = useState<Dayjs | null>(dayjs(new Date()).subtract(2, 'weeks'));
   const [until, setUntil] = useState<Dayjs | null>(dayjs(new Date()));
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: 'block_timestamp',
+      desc: true
+    }
+  ]);
 
   const { address }: { address: string } = useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
@@ -60,7 +68,8 @@ export const Address: FC = () => {
   const table = useReactTable<EventTableData>({
     data: events ?? [],
     columns,
-    state: { expanded: (eventType !== 'ALL') as ExpandedState, pagination },
+    state: { expanded: (eventType !== 'ALL') as ExpandedState, pagination, sorting },
+    onSortingChange: setSorting,
     getSubRows: (row) =>
       row.type === 'event'
         ? match(row.event.data)
@@ -87,6 +96,7 @@ export const Address: FC = () => {
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     onPaginationChange: setPagination
   });
 
@@ -218,9 +228,29 @@ export const Address: FC = () => {
                 <Table.Row key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <Table.ColumnHeaderCell key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.isPlaceholder ? null : (
+                        <div
+                          className={
+                            header.column.getCanSort()
+                              ? 'cursor-pointer select-none hover:bg-[--accent-3]'
+                              : ''
+                          }
+                          onClick={header.column.getToggleSortingHandler()}
+                          onKeyDown={(ev) => {
+                            if (ev.key === 'Enter') {
+                              header.column.getToggleSortingHandler();
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {{
+                            asc: ' 🔼',
+                            desc: ' 🔽'
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </div>
+                      )}
                     </Table.ColumnHeaderCell>
                   ))}
                 </Table.Row>

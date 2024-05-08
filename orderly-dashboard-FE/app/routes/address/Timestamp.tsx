@@ -2,7 +2,10 @@ import { Button } from '@radix-ui/themes';
 import dayjs from 'dayjs';
 import { FC, useState } from 'react';
 
-export const Timestamp: FC<{ timestamp?: number }> = ({ timestamp }) => {
+export const Timestamp: FC<{ timestamp?: number; multiplier?: number }> = ({
+  timestamp,
+  multiplier
+}) => {
   const [humanReadable, setHumanReadable] = useState(true);
 
   if (!timestamp) return '';
@@ -13,7 +16,7 @@ export const Timestamp: FC<{ timestamp?: number }> = ({ timestamp }) => {
         setHumanReadable(!humanReadable);
       }}
     >
-      {humanReadable ? dayjs(timestamp * 1_000).format('lll') : timestamp}
+      {humanReadable ? dayjs(timestamp * (multiplier ?? 1)).format('lll') : timestamp}
     </Button>
   );
 };

@@ -21,15 +21,18 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
         header: 'General',
         columns: [
           columnHelper.accessor('event.block_number', {
+            id: 'block_number',
             header: 'Block height',
             cell: (info) => info.getValue()
           }),
           columnHelper.accessor('event.block_timestamp', {
+            id: 'block_timestamp',
             header: 'Block timestamp',
-            cell: (info) => <Timestamp timestamp={info.getValue()} />
+            cell: (info) => <Timestamp timestamp={info.getValue()} multiplier={1_000} />
           }),
           columnHelper.accessor('event.transaction_id', {
             header: 'Transaction ID',
+            enableSorting: false,
             cell: (info) => {
               const value = info.getValue();
               if (value == null) return '';
@@ -50,6 +53,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
         columns.push(
           columnHelper.display({
             header: 'Event Type',
+            enableSorting: false,
             cell: (info) => {
               if (events == null) return '';
               return match(events![info.row.index])
@@ -100,14 +104,17 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
             columns: [
               columnHelper.accessor('event.data.Transaction.chain_id', {
                 header: 'Chain ID',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.Transaction.side', {
                 header: 'Side',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.Transaction.token_amount', {
                 header: 'Token amount',
+                enableSorting: false,
                 cell: (info) =>
                   new FixedNumber(info.getValue(), 6).format({
                     maximumFractionDigits: 2
@@ -115,14 +122,17 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('event.data.Transaction.status', {
                 header: 'Status',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.Transaction.fail_reason', {
                 header: 'Fail Reason',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.Transaction.fee', {
                 header: 'Fee',
+                enableSorting: false,
                 cell: (info) =>
                   new FixedNumber(info.getValue(), 6).format({
                     maximumFractionDigits: 2
@@ -130,6 +140,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('event.data.Transaction.withdraw_nonce', {
                 header: 'Withdraw Nonce',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               })
             ]
@@ -144,10 +155,12 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
             columns: [
               columnHelper.accessor('event.data.ProcessedTrades.batch_id', {
                 header: 'Batch ID',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('trade.executed_price', {
                 header: 'Executed Price',
+                enableSorting: false,
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
@@ -159,10 +172,12 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('trade.fee', {
                 header: 'Fee',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('trade.match_id', {
                 header: 'Match ID',
+                enableSorting: false,
                 cell: (info) => {
                   let value = info.getValue();
                   if (value == null) return;
@@ -178,6 +193,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('trade.notional', {
                 header: 'Notional',
+                enableSorting: false,
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
@@ -188,10 +204,12 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('trade.side', {
                 header: 'Side',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('trade.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
+                enableSorting: false,
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
@@ -203,14 +221,17 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('trade.timestamp', {
                 header: 'Timestamp',
-                cell: (info) => info.getValue()
+                enableSorting: false,
+                cell: (info) => <Timestamp timestamp={info.getValue()} />
               }),
               columnHelper.accessor('trade.trade_id', {
                 header: 'Trade ID',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('trade.trade_qty', {
                 header: 'Trade Qty',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               })
             ]
@@ -225,6 +246,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
             columns: [
               columnHelper.accessor('event.data.SettlementResult.settled_amount', {
                 header: 'Settled Amount',
+                enableSorting: false,
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
@@ -235,6 +257,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('event.data.SettlementResult.insurance_transfer_amount', {
                 header: 'Insurance Transfer Amount',
+                enableSorting: false,
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
@@ -245,6 +268,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('event.data.SettlementResult.insurance_account_id', {
                 header: 'Insurance Account ID',
+                enableSorting: false,
                 cell: (info) => {
                   let value = info.getValue();
                   if (value == null) return;
@@ -260,6 +284,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('settlement.mark_price', {
                 header: 'Mark Price',
+                enableSorting: false,
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
@@ -271,6 +296,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('settlement.settled_amount', {
                 header: 'Settled Amount',
+                enableSorting: false,
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
@@ -281,6 +307,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('settlement.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
+                enableSorting: false,
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
@@ -302,6 +329,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
             columns: [
               columnHelper.accessor('event.data.LiquidationResult.liquidated_account_id', {
                 header: 'Liquidated Account ID',
+                enableSorting: false,
                 cell: (info) => {
                   let value = info.getValue();
                   if (value == null) return;
@@ -317,6 +345,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('event.data.LiquidationResult.insurance_account_id', {
                 header: 'Insurance Account ID',
+                enableSorting: false,
                 cell: (info) => {
                   let value = info.getValue();
                   if (value == null) return;
@@ -332,42 +361,52 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               }),
               columnHelper.accessor('event.data.LiquidationResult.insurance_transfer_amount', {
                 header: 'Insurance Transfer Amount',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('liquidation.cost_position_transfer', {
                 header: 'Cost Position Transfer',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('liquidation.insurance_fee', {
                 header: 'Insurance Fee',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('liquidation.liquidation_fee', {
                 header: 'Liquidation Fee',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('liquidation.liquidation_transfer_id', {
                 header: 'Liquidation Transfer ID',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('liquidation.liquidator_account_id', {
                 header: 'Liquidator Account ID',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('liquidation.liquidator_fee', {
                 header: 'Liquidator Fee',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('liquidation.mark_price', {
                 header: 'Mark Price',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('liquidation.position_qty_transfer', {
                 header: 'Position Qty Transfer',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('liquidation.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               })
             ]
@@ -382,30 +421,37 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
             columns: [
               columnHelper.accessor('event.data.AdlResult.account_id', {
                 header: 'Account ID',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.AdlResult.adl_price', {
                 header: 'Adl Price',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.AdlResult.cost_position_transfer', {
                 header: 'Cost Position Transfer',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.AdlResult.insurance_account_id', {
                 header: 'Insurance Account ID',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.AdlResult.position_qty_transfer', {
                 header: 'Position Qty Transfer',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.AdlResult.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.AdlResult.symbol_hash', {
                 header: 'Symbol Hash',
+                enableSorting: false,
                 cell: (info) => info.getValue()
               })
             ]
