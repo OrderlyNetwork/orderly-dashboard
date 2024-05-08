@@ -1,5 +1,12 @@
 import { DatePicker } from '@mui/x-date-pickers';
-import { Select, Table } from '@radix-ui/themes';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DoubleArrowLeftIcon,
+  DoubleArrowRightIcon,
+  MixerHorizontalIcon
+} from '@radix-ui/react-icons';
+import { Button, Popover, Select, Table } from '@radix-ui/themes';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { json, useLoaderData, useSearchParams } from '@remix-run/react';
 import {
@@ -26,6 +33,41 @@ export function loader({ params }: LoaderFunctionArgs) {
   return json({ address: params.address });
 }
 
+const defaultVisibility = {
+  event_block_number: false,
+  'event_data.Transaction.account_id': false,
+  'event_data.Transaction.broker_hash': false,
+  'event_data.Transaction.fail_reason': false,
+  'event_data.Transaction.withdraw_nonce': false,
+  'event_data.Transaction.token_hash': false,
+  'event_data.ProcessedTrades.batch_id': false,
+  trade_account_id: false,
+  trade_match_id: false,
+  trade_fee_asset_hash: false,
+  trade_sum_unitary_fundings: false,
+  trade_trade_id: false,
+  trade_symbol_hash: false,
+  'event_data.SettlementResult.account_id': false,
+  'event_data.SettlementResult.settled_amount': false,
+  'event_data.SettlementResult.insurance_transfer_amount': false,
+  'event_data.SettlementResult.insurance_account_id': false,
+  'event_data.SettlementResult.settled_asset_hash': false,
+  settlement_sum_unitary_fundings: false,
+  settlement_symbol_hash: false,
+  'event_data.LiquidationResult.liquidated_account_id': false,
+  'event_data.LiquidationResult.insurance_account_id': false,
+  'event_data.LiquidationResult.insurance_transfer_amount': false,
+  liquidation_cost_position_transfer: false,
+  liquidation_insurance_fee: false,
+  liquidation_liquidation_transfer_id: false,
+  liquidation_liquidator_fee: false,
+  liquidation_sum_unitary_fundings: false,
+  'event_data.AdlResult.account_id': false,
+  'event_data.AdlResult.insurance_account_id': false,
+  'event_data.AdlResult.sum_unitary_fundings': false,
+  'event_data.AdlResult.symbol_hash': false
+};
+
 export const Address: FC = () => {
   const [eventType, setEventType] = useState<EventType | 'ALL'>('ALL');
 
@@ -33,7 +75,7 @@ export const Address: FC = () => {
   const [until, setUntil] = useState<Dayjs | null>(dayjs(new Date()));
   const [sorting, setSorting] = useState<SortingState>([
     {
-      id: 'block_timestamp',
+      id: 'event_block_timestamp',
       desc: true
     }
   ]);
@@ -68,7 +110,14 @@ export const Address: FC = () => {
   const table = useReactTable<EventTableData>({
     data: events ?? [],
     columns,
-    state: { expanded: (eventType !== 'ALL') as ExpandedState, pagination, sorting },
+    state: {
+      expanded: (eventType !== 'ALL') as ExpandedState,
+      pagination,
+      sorting
+    },
+    initialState: {
+      columnVisibility: defaultVisibility
+    },
     onSortingChange: setSorting,
     getSubRows: (row) =>
       row.type === 'event'
@@ -107,34 +156,34 @@ export const Address: FC = () => {
   console.log('EVENTS', events);
 
   const renderPagination = () => (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       <button
         className="border rounded p-1"
         onClick={() => table.firstPage()}
         disabled={!table.getCanPreviousPage()}
       >
-        {'<<'}
+        <DoubleArrowLeftIcon />
       </button>
       <button
         className="border rounded p-1"
         onClick={() => table.previousPage()}
         disabled={!table.getCanPreviousPage()}
       >
-        {'<'}
+        <ChevronLeftIcon />
       </button>
       <button
         className="border rounded p-1"
         onClick={() => table.nextPage()}
         disabled={!table.getCanNextPage()}
       >
-        {'>'}
+        <ChevronRightIcon />
       </button>
       <button
         className="border rounded p-1"
         onClick={() => table.lastPage()}
         disabled={!table.getCanNextPage()}
       >
-        {'>>'}
+        <DoubleArrowRightIcon />
       </button>
       <span className="flex items-center gap-1">
         <div>Page</div>
@@ -174,7 +223,7 @@ export const Address: FC = () => {
       <h2>{address}</h2>
 
       <div className="flex flex-col flex-items-start gap-1">
-        <span className="font-bold font-size-5">Filter:</span>
+        <span className="font-bold font-size-5">Events:</span>
         <Select.Root
           defaultValue={undefined}
           onValueChange={(value) => {
@@ -214,6 +263,63 @@ export const Address: FC = () => {
           }}
           minDate={from ?? undefined}
         />
+      </div>
+
+      <div>
+        <Popover.Root>
+          <Popover.Trigger className="w-auto flex-self-start">
+            <Button variant="soft">
+              <MixerHorizontalIcon width="16" height="16" />
+              Column Filters
+            </Button>
+          </Popover.Trigger>
+          <Popover.Content width="20rem" maxHeight="26rem">
+            <div className="flex flex-col [&>*]:text-size-4 gap-2">
+              <div className="px-1">
+                <Button
+                  onClick={() => {
+                    table.resetColumnVisibility();
+                  }}
+                >
+                  Reset to default
+                </Button>
+              </div>
+              <div className="px-1">
+                <label>
+                  <input
+                    {...{
+                      type: 'checkbox',
+                      checked: table.getIsAllColumnsVisible(),
+                      onChange: table.getToggleAllColumnsVisibilityHandler()
+                    }}
+                  />{' '}
+                  Toggle All
+                </label>
+              </div>
+              <hr className="w-full" />
+              {table.getAllLeafColumns().map((column) => {
+                return (
+                  <div key={column.id} className="px-1">
+                    <label>
+                      <input
+                        {...{
+                          type: 'checkbox',
+                          checked: column.getIsVisible(),
+                          onChange: column.getToggleVisibilityHandler()
+                        }}
+                      />{' '}
+                      {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        flexRender(column.columnDef.header, undefined as any)
+                      }{' '}
+                      ({column.id})
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          </Popover.Content>
+        </Popover.Root>
       </div>
 
       {!events || isLoading ? (

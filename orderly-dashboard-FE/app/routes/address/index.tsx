@@ -1,9 +1,9 @@
-import { Tooltip } from '@radix-ui/themes';
 import { GroupColumnDef, createColumnHelper } from '@tanstack/react-table';
 import { FixedNumber } from '@tarnadas/fixed-number';
 import { useMemo } from 'react';
 import { P, match } from 'ts-pattern';
 
+import { Shortened } from './Shortened';
 import { Timestamp } from './Timestamp';
 
 import { EventTableData, EventType, EventsParams, useEvents } from '~/hooks';
@@ -21,29 +21,17 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
         header: 'General',
         columns: [
           columnHelper.accessor('event.block_number', {
-            id: 'block_number',
             header: 'Block height',
             cell: (info) => info.getValue()
           }),
           columnHelper.accessor('event.block_timestamp', {
-            id: 'block_timestamp',
             header: 'Block timestamp',
             cell: (info) => <Timestamp timestamp={info.getValue()} multiplier={1_000} />
           }),
           columnHelper.accessor('event.transaction_id', {
             header: 'Transaction ID',
             enableSorting: false,
-            cell: (info) => {
-              const value = info.getValue();
-              if (value == null) return '';
-              return (
-                <Tooltip content={`${value} (click to copy)`}>
-                  <span>
-                    {value.substring(0, 4)}...{value.substr(-4)}
-                  </span>
-                </Tooltip>
-              );
-            }
+            cell: (info) => <Shortened value={info.getValue()} />
           })
         ]
       })
@@ -102,10 +90,30 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
             id: 'transaction',
             header: 'Transaction',
             columns: [
+              columnHelper.accessor('event.data.Transaction.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('event.data.Transaction.broker_hash', {
+                header: 'Broker Hash',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
               columnHelper.accessor('event.data.Transaction.chain_id', {
                 header: 'Chain ID',
                 enableSorting: false,
                 cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('event.data.Transaction.sender', {
+                header: 'Sender',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('event.data.Transaction.receiver', {
+                header: 'Receiver',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
               }),
               columnHelper.accessor('event.data.Transaction.side', {
                 header: 'Side',
@@ -142,6 +150,11 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                 header: 'Withdraw Nonce',
                 enableSorting: false,
                 cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('event.data.Transaction.token_hash', {
+                header: 'Token Hash',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
               })
             ]
           })
@@ -157,6 +170,11 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                 header: 'Batch ID',
                 enableSorting: false,
                 cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('trade.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
               }),
               columnHelper.accessor('trade.executed_price', {
                 header: 'Executed Price',
@@ -175,21 +193,15 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
+              columnHelper.accessor('trade.fee_asset_hash', {
+                header: 'Fee Asset Hash',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
               columnHelper.accessor('trade.match_id', {
                 header: 'Match ID',
                 enableSorting: false,
-                cell: (info) => {
-                  let value = info.getValue();
-                  if (value == null) return;
-                  value = String(value);
-                  return (
-                    <Tooltip content={`${value} (click to copy)`}>
-                      <span>
-                        {value.substring(0, 3)}...{value.substr(-3)}
-                      </span>
-                    </Tooltip>
-                  );
-                }
+                cell: (info) => <Shortened value={info.getValue()} displayCount={3} />
               }),
               columnHelper.accessor('trade.notional', {
                 header: 'Notional',
@@ -232,7 +244,18 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('trade.trade_qty', {
                 header: 'Trade Qty',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('trade.symbol_hash', {
+                header: 'Symbol Hash',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
               })
             ]
           })
@@ -244,6 +267,11 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
             id: 'settlement',
             header: 'PnL Settlement',
             columns: [
+              columnHelper.accessor('event.data.SettlementResult.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
               columnHelper.accessor('event.data.SettlementResult.settled_amount', {
                 header: 'Settled Amount',
                 enableSorting: false,
@@ -269,18 +297,12 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('event.data.SettlementResult.insurance_account_id', {
                 header: 'Insurance Account ID',
                 enableSorting: false,
-                cell: (info) => {
-                  let value = info.getValue();
-                  if (value == null) return;
-                  value = String(value);
-                  return (
-                    <Tooltip content={`${value} (click to copy)`}>
-                      <span>
-                        {value.substring(0, 4)}...{value.substr(-4)}
-                      </span>
-                    </Tooltip>
-                  );
-                }
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('event.data.SettlementResult.settled_asset_hash', {
+                header: 'Settled Asset Hash',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
               }),
               columnHelper.accessor('settlement.mark_price', {
                 header: 'Mark Price',
@@ -316,6 +338,11 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                     maximumFractionDigits: 2
                   });
                 }
+              }),
+              columnHelper.accessor('settlement.symbol_hash', {
+                header: 'Symbol Hash',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
               })
             ]
           })
@@ -330,34 +357,12 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('event.data.LiquidationResult.liquidated_account_id', {
                 header: 'Liquidated Account ID',
                 enableSorting: false,
-                cell: (info) => {
-                  let value = info.getValue();
-                  if (value == null) return;
-                  value = String(value);
-                  return (
-                    <Tooltip content={`${value} (click to copy)`}>
-                      <span>
-                        {value.substring(0, 4)}...{value.substr(-4)}
-                      </span>
-                    </Tooltip>
-                  );
-                }
+                cell: (info) => <Shortened value={info.getValue()} />
               }),
               columnHelper.accessor('event.data.LiquidationResult.insurance_account_id', {
                 header: 'Insurance Account ID',
                 enableSorting: false,
-                cell: (info) => {
-                  let value = info.getValue();
-                  if (value == null) return;
-                  value = String(value);
-                  return (
-                    <Tooltip content={`${value} (click to copy)`}>
-                      <span>
-                        {value.substring(0, 4)}...{value.substr(-4)}
-                      </span>
-                    </Tooltip>
-                  );
-                }
+                cell: (info) => <Shortened value={info.getValue()} />
               }),
               columnHelper.accessor('event.data.LiquidationResult.insurance_transfer_amount', {
                 header: 'Insurance Transfer Amount',
@@ -452,7 +457,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('event.data.AdlResult.symbol_hash', {
                 header: 'Symbol Hash',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => <Shortened value={info.getValue()} />
               })
             ]
           })
