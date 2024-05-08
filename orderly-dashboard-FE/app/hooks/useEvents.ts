@@ -53,7 +53,8 @@ export function useEvents(query: EventsParams | null) {
 
       searchParams.set('from_time', String(Math.trunc(fromTime.valueOf() / 1_000)));
       searchParams.set('to_time', String(Math.trunc(toTime.valueOf() / 1_000)));
-      const url = `${queryServiceUrl}/events?${searchParams.toString()}`;
+      // we add `from` and `to` params here to invalidate SWR cache
+      const url = `${queryServiceUrl}/events?${searchParams.toString()}&from=${query.from_time.format('L')}&to=${query.to_time.format('L')}`;
       return url;
     },
     (url: string) =>
@@ -74,6 +75,10 @@ export function useEvents(query: EventsParams | null) {
               }) as EventTableData
           );
         }),
-    { parallel: true }
+    {
+      parallel: true,
+      initialSize: 100,
+      persistSize: true
+    }
   );
 }
