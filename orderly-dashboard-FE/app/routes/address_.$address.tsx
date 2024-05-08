@@ -160,10 +160,10 @@ export const Address: FC = () => {
   );
 
   return (
-    <div className="flex flex-col gap-4 flex-items-start">
+    <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full [&>*]:max-w-[50rem]">
       <h2>{address}</h2>
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col flex-items-start gap-1">
         <span className="font-bold font-size-5">Filter:</span>
         <Select.Root
           defaultValue={undefined}
@@ -212,7 +212,7 @@ export const Address: FC = () => {
         <>
           {renderPagination()}
 
-          <Table.Root>
+          <Table.Root className="max-w-full">
             <Table.Header>
               {table.getHeaderGroups().map((headerGroup) => (
                 <Table.Row key={headerGroup.id}>
@@ -231,7 +231,7 @@ export const Address: FC = () => {
               {table.getRowModel().rows.map((row) => (
                 <Table.Row key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <Table.Cell key={cell.id}>
+                    <Table.Cell key={cell.id} className="align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </Table.Cell>
                   ))}

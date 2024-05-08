@@ -4,6 +4,8 @@ import { FixedNumber } from '@tarnadas/fixed-number';
 import { useMemo } from 'react';
 import { P, match } from 'ts-pattern';
 
+import { Timestamp } from './Timestamp';
+
 import { EventTableData, EventType, EventsParams, useEvents } from '~/hooks';
 
 export function useRenderColumns(query: EventsParams | null, eventType: EventType | 'ALL') {
@@ -24,7 +26,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
           }),
           columnHelper.accessor('event.block_timestamp', {
             header: 'Block timestamp',
-            cell: (info) => info.getValue()
+            cell: (info) => <Timestamp timestamp={info.getValue()} />
           }),
           columnHelper.accessor('event.transaction_id', {
             header: 'Transaction ID',
