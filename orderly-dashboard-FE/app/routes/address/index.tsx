@@ -191,7 +191,10 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('trade.fee', {
                 header: 'Fee',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) =>
+                  new FixedNumber(info.getValue(), 6).format({
+                    maximumFractionDigits: 2
+                  })
               }),
               columnHelper.accessor('trade.fee_asset_hash', {
                 header: 'Fee Asset Hash',
