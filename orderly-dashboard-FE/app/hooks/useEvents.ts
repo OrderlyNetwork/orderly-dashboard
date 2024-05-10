@@ -78,7 +78,8 @@ export function useEvents(query: EventsParams | null) {
     {
       parallel: true,
       initialSize: 100,
-      persistSize: true
+      persistSize: true,
+      revalidateOnFocus: false
     }
   );
 }
