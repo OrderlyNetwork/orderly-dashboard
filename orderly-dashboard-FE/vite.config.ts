@@ -3,11 +3,8 @@ import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [
-    remix(),
-    tsconfigPaths()
-  ],
+  plugins: [remix(), tsconfigPaths()],
   ssr: {
-    noExternal: ['@mui/**/*'],
+    noExternal: process.env.NODE_ENV === 'production' ? ['@mui/**/*'] : undefined
   }
 });
