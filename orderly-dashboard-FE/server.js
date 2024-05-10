@@ -1,10 +1,12 @@
 import { createRequestHandler } from '@remix-run/express';
 import { installGlobals } from '@remix-run/node';
 import compression from 'compression';
+import dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
 
 installGlobals();
+dotenv.config();
 
 const viteDevServer =
   process.env.NODE_ENV === 'production'
