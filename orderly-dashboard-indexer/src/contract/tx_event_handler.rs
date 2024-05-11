@@ -774,6 +774,7 @@ pub(crate) async fn handle_log(
                             )?,
                         }])
                         .await?;
+                        // attention please: update settlement_execution's settlement_result_log_idx
                         if !settlement_exectutions.is_empty() {
                             settlement_exectutions
                                 .iter_mut()
@@ -787,7 +788,9 @@ pub(crate) async fn handle_log(
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
-                            log_index: log.transaction_index.unwrap_or_default().as_u64() as i32,
+                            // here is an error
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            // will be update in handle settlement result flow
                             settlement_result_log_idx: -1,
                             transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
                             symbol_hash: to_hex_format(&settlement_exec.symbol_hash),
@@ -806,6 +809,7 @@ pub(crate) async fn handle_log(
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
                             log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            // will be update in handle settlement result flow
                             liquidation_result_log_idx: -1,
                             transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
                             liquidation_transfer_id: BigDecimal::from_u64(
