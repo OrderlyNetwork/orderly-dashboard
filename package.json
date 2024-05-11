@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "workspaces": [
+    "orderly-dashboard-FE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "fe": "yarn workspace orderly-dashboard-fe"
+  }
+}

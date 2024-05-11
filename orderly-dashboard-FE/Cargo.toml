@@ -1,0 +1,9 @@
+[package]
+name = "orderly-dashboard-fe"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+indexer = { package = "orderly-dashboard-indexer", path = "../orderly-dashboard-indexer" }
+query-service = { package = "orderly-dashboard-query-service", path = "../orderly-dashboard-query-service" }
+typescript-type-def = "0.5.4"

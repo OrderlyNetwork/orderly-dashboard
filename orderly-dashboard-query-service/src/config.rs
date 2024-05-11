@@ -27,7 +27,7 @@ pub fn get_common_cfg() -> &'static CommonConfig {
     propagate_version(true),
     next_line_help(true)
 )]
-pub(crate) struct Opts {
+pub struct Opts {
     #[clap(short, long)]
     pub config_path: std::path::PathBuf,
 }

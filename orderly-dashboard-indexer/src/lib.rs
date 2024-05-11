@@ -18,3 +18,5 @@ pub mod eth_rpc;
 #[allow(dead_code)]
 pub mod bindings;
 pub mod utils;
+
+pub use formats_external::trading_events::Events;

@@ -1,12 +1,27 @@
-FROM node:21.5.0
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
+FROM node:20-slim as build
 
-RUN mkdir -p /home/node/app
-WORKDIR /home/node/app
+WORKDIR /app
+
+COPY package.json .
+COPY yarn.lock .
 COPY ./orderly-dashboard-FE/ .
-RUN npm install
+RUN yarn && \
+    yarn build
+
+FROM build
+
+WORKDIR /app/orderly-dashboard-FE
+
+COPY package.json /app
+COPY yarn.lock /app
+COPY ./orderly-dashboard-FE/package.json /app
+COPY ./orderly-dashboard-FE/build /app
+COPY --from=build /app/build .
+RUN yarn --prod
+
+ENV QUERY_SERVICE_URL=https://orderly-dashboard-query-service.orderly.network
+ENV EVM_API_URL=https://api-evm.orderly.org
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["yarn", "start"]

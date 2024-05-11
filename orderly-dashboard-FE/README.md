@@ -1,32 +1,24 @@
-# orderly-dashboard-FE
-## Install deps
-```shell
-npm install
+# Orderly Dashboard FE
+
+Frontend for Orderly Dashboard via Remix, React & Express.
+
+## Development
+
+Run the frontend via:
+
 ```
-## Prerequisites
-set env variables
+cd orderly-dashboard-FE
+yarn
+yarn dev
 ```
-echo 'PORT=3000\nQUERY_SERVER_ADDR=http://localhost:8020\n' > .env
+
+Then navigate to http://localhost:3000
+
+## Docker build
+
+Docker build & run is done from root project folder:
+
 ```
-## Start
-MacOS or Linux
-```shell
-DEBUG=myapp:* npm start
+docker build -t orderly-dashboard-fe -f dockerfiles/Dockerfile-FE .
+docker run --rm -it -p 3000:3000 --name orderly-dashboard-fe orderly-dashboard-fe
 ```
-Window
-```shell
-set DEBUG=myapp:* & npm start
-```
-Visit on explorer  
-http://localhost:3000/example.html
-http://localhost:3000/echart-example.html
-## Chart getting started
-* [Create a Chart](https://www.chartjs.org/docs/latest/getting-started/#create-a-chart)
-## Dependencies
-### Front END Framework
-[Express](https://www.expressjs.com.cn/starter/generator.html)
-### Chart plugin
-[chart.js](https://www.chartjs.org/)
-[echarts](https://echarts.apache.org/examples/zh/index.html)
-### Boostrap5
-[Bootstrap](https://getbootstrap.com/docs/5.3/layout/containers/)

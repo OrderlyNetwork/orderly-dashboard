@@ -3,5 +3,6 @@ members = [
     "orderly-dashboard-analyzer",
     "orderly-dashboard-indexer",
     "orderly-dashboard-query-service",
+    "orderly-dashboard-FE",
 ]
 resolver = "2"
