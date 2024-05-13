@@ -15,12 +15,8 @@ WORKDIR /app/orderly-dashboard-FE
 COPY package.json /app
 COPY yarn.lock /app
 COPY ./orderly-dashboard-FE/package.json /app
-COPY ./orderly-dashboard-FE/build /app
 COPY --from=build /app/build .
 RUN yarn --prod
-
-ENV QUERY_SERVICE_URL=https://orderly-dashboard-query-service.orderly.network
-ENV EVM_API_URL=https://api-evm.orderly.org
 
 EXPOSE 3000
 
