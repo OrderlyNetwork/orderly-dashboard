@@ -22,10 +22,12 @@ import {
 } from '@tanstack/react-table';
 import dayjs, { Dayjs } from 'dayjs';
 import { FC, useMemo, useState } from 'react';
+import useSWR from 'swr';
 import { P, match } from 'ts-pattern';
 
 import { useRenderColumns } from './address';
 
+import { useAppState } from '~/App';
 import { Spinner } from '~/components';
 import { EventTableData, EventType } from '~/hooks';
 
@@ -105,6 +107,19 @@ export const Address: FC = () => {
     [broker_id, address, eventType, from, until]
   );
 
+  const { evmApiUrl } = useAppState();
+  const { data: accountId } = useSWR<string>(
+    broker_id != null
+      ? `${evmApiUrl}/v1/get_account?address=${address}&broker_id=${broker_id}`
+      : undefined,
+    (url: string) =>
+      fetch(url)
+        .then((r) => r.json())
+        .then((val) => {
+          return val.data.account_id;
+        })
+  );
+
   const { columns, events, error, isLoading, mutate } = useRenderColumns(eventsParams, eventType);
 
   const table = useReactTable<EventTableData>({
@@ -152,8 +167,6 @@ export const Address: FC = () => {
   if (error) {
     return error.message ?? '';
   }
-
-  console.log('EVENTS', events);
 
   const renderPagination = () => (
     <div className="flex items-center gap-3">
@@ -221,6 +234,15 @@ export const Address: FC = () => {
   return (
     <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full [&>*]:max-w-[50rem]">
       <h2>{address}</h2>
+
+      {accountId != null && (
+        <div className="flex flex-col [&>*:first-child]:font-bold">
+          <div>Account ID:</div>
+          <div>
+            {accountId.substring(0, 7)}...{accountId.substr(-7)}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col flex-items-start gap-1">
         <span className="font-bold font-size-5">Events:</span>
