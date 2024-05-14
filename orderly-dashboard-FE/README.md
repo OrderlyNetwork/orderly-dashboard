@@ -2,6 +2,15 @@
 
 Frontend for Orderly Dashboard via Remix, React & Express.
 
+## Base endpoint Info
+### Backend RESTful api url
+* https://api-evm.orderly.org/ (Mainnet)
+* https://testnet-api-evm.orderly.org (Testnet)
+
+### Query service
+* https://orderly-dashboard-query-service.orderly.network (Mainnet)
+* https://dev-orderly-dashboard-query-service.orderly.network (Testnet)
+
 ## Development
 
 Run the frontend via:
