@@ -91,9 +91,10 @@ const Root = withEmotionCache((_, emotionCache) => {
       </head>
       <body>
         <Theme
+          hasBackground={false}
           appearance="dark"
           accentColor="iris"
-          radius="small"
+          radius="medium"
           className="flex flex-col flex-items-center"
         >
           <AppContext.Provider value={appState}>
