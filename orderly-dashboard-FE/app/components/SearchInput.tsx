@@ -13,11 +13,15 @@ export const SearchInput: FC = () => {
 
   useEffect(() => {
     if (!searchValue) return;
-    if (!searchValue.startsWith('0x') || searchValue.length != 42) return;
+    if (!searchValue.startsWith('0x')) return;
+    if (searchValue.length != 42 && searchValue.length != 66) return;
 
     const query = new URLSearchParams();
     query.set('q', searchValue);
-    navigate(`/search?${query.toString()}`);
+    navigate({
+      pathname: '/search',
+      search: `?${query.toString()}`
+    });
   }, [searchValue, navigate, pathname]);
 
   useEffect(() => {

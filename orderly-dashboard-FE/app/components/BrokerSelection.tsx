@@ -19,6 +19,12 @@ export const BrokerSelection: FC = () => {
   }, [broker, brokers]);
 
   useEffect(() => {
+    const broker_id = searchParams.get('broker_id');
+    if (broker_id == null) return;
+    setBroker(broker_id);
+  }, [searchParams]);
+
+  useEffect(() => {
     if (broker == null) return;
     searchParams.set('broker_id', broker);
     setSearchParams(searchParams);
