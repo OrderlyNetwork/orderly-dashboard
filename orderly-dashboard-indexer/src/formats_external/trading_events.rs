@@ -1,6 +1,7 @@
+use crate::db::adl_result::AdlVersion;
 use crate::db::adl_result::DbAdlResult;
 use crate::db::executed_trades::DbExecutedTrades;
-use crate::db::liquidation_result::DbLiquidationResult;
+use crate::db::liquidation_result::{DbLiquidationResult, LiquidationResultVersion};
 use crate::db::liquidation_transfer::DbLiquidationTransfer;
 use crate::db::serial_batches::DbSerialBatches;
 use crate::db::settlement_execution::DbSettlementExecution;
@@ -162,9 +163,35 @@ impl TradingEvent {
         liquidation_res: DbLiquidationResult,
         transfers: Vec<DbLiquidationTransfer>,
     ) -> TradingEvent {
+        if liquidation_res
+            .version
+            .unwrap_or(LiquidationResultVersion::V1.value())
+            == LiquidationResultVersion::V1.value()
+        {
+            let liquidation_transfers = transfers
+                .into_iter()
+                .map(LiquidationTransfer::from)
+                .collect::<Vec<_>>();
+            return TradingEvent {
+                block_number: liquidation_res.block_number as u64,
+                transaction_index: liquidation_res.transaction_index as u32,
+                log_index: liquidation_res.log_index as u32,
+                transaction_id: liquidation_res.transaction_id,
+                block_timestamp: liquidation_res.block_time.to_u64().unwrap(),
+                data: TradingEventInnerData::LiquidationResult {
+                    liquidated_account_id: liquidation_res.liquidated_account_id,
+                    insurance_account_id: liquidation_res.insurance_account_id,
+                    liquidated_asset_hash: liquidation_res.liquidated_asset_hash,
+                    insurance_transfer_amount: liquidation_res
+                        .insurance_transfer_amount
+                        .to_string(),
+                    liquidation_transfers,
+                },
+            };
+        }
         let liquidation_transfers = transfers
             .into_iter()
-            .map(LiquidationTransfer::from)
+            .map(LiquidationTransferV2::from)
             .collect::<Vec<_>>();
         TradingEvent {
             block_number: liquidation_res.block_number as u64,
@@ -172,9 +199,8 @@ impl TradingEvent {
             log_index: liquidation_res.log_index as u32,
             transaction_id: liquidation_res.transaction_id,
             block_timestamp: liquidation_res.block_time.to_u64().unwrap(),
-            data: TradingEventInnerData::LiquidationResult {
-                liquidated_account_id: liquidation_res.liquidated_account_id,
-                insurance_account_id: liquidation_res.insurance_account_id,
+            data: TradingEventInnerData::LiquidationResultV2 {
+                account_id: liquidation_res.liquidated_account_id,
                 liquidated_asset_hash: liquidation_res.liquidated_asset_hash,
                 insurance_transfer_amount: liquidation_res.insurance_transfer_amount.to_string(),
                 liquidation_transfers,
@@ -183,15 +209,32 @@ impl TradingEvent {
     }
 
     pub fn from_adl_result(adl: DbAdlResult) -> TradingEvent {
+        if adl.version.unwrap_or(AdlVersion::V1.value()) == AdlVersion::V1.value() {
+            return TradingEvent {
+                block_number: adl.block_number as u64,
+                transaction_index: adl.transaction_index as u32,
+                log_index: adl.log_index as u32,
+                transaction_id: adl.transaction_id,
+                block_timestamp: adl.block_time.to_u64().unwrap(),
+                data: TradingEventInnerData::AdlResult {
+                    account_id: adl.account_id,
+                    insurance_account_id: adl.insurance_account_id,
+                    symbol_hash: adl.symbol_hash,
+                    position_qty_transfer: adl.position_qty_transfer.to_string(),
+                    cost_position_transfer: adl.cost_position_transfer.to_string(),
+                    adl_price: adl.adl_price.to_string(),
+                    sum_unitary_fundings: adl.sum_unitary_fundings.to_string(),
+                },
+            };
+        }
         TradingEvent {
             block_number: adl.block_number as u64,
             transaction_index: adl.transaction_index as u32,
             log_index: adl.log_index as u32,
             transaction_id: adl.transaction_id,
             block_timestamp: adl.block_time.to_u64().unwrap(),
-            data: TradingEventInnerData::AdlResult {
+            data: TradingEventInnerData::AdlResultV2 {
                 account_id: adl.account_id,
-                insurance_account_id: adl.insurance_account_id,
                 symbol_hash: adl.symbol_hash,
                 position_qty_transfer: adl.position_qty_transfer.to_string(),
                 cost_position_transfer: adl.cost_position_transfer.to_string(),
@@ -338,6 +381,35 @@ impl From<DbLiquidationTransfer> for LiquidationTransfer {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
+pub struct LiquidationTransferV2 {
+    pub account_id: String,
+    pub symbol_hash: String,
+    pub position_qty_transfer: String,
+    pub cost_position_transfer: String,
+    pub liquidator_fee: String,
+    pub insurance_fee: String,
+    pub liquidation_fee: String,
+    pub mark_price: String,
+    pub sum_unitary_fundings: String,
+}
+
+impl From<DbLiquidationTransfer> for LiquidationTransferV2 {
+    fn from(value: DbLiquidationTransfer) -> Self {
+        LiquidationTransferV2 {
+            account_id: value.liquidator_account_id,
+            symbol_hash: value.symbol_hash,
+            position_qty_transfer: value.position_qty_transfer.to_string(),
+            cost_position_transfer: value.cost_position_transfer.to_string(),
+            liquidator_fee: value.liquidator_fee.to_string(),
+            insurance_fee: value.insurance_fee.to_string(),
+            liquidation_fee: value.liquidation_fee.to_string(),
+            mark_price: value.mark_price.to_string(),
+            sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
 pub enum TradingEventInnerData {
     Transaction {
         account_id: String,
@@ -375,6 +447,20 @@ pub enum TradingEventInnerData {
     AdlResult {
         account_id: String,
         insurance_account_id: String,
+        symbol_hash: String,
+        position_qty_transfer: String,
+        cost_position_transfer: String,
+        adl_price: String,
+        sum_unitary_fundings: String,
+    },
+    LiquidationResultV2 {
+        account_id: String,
+        liquidated_asset_hash: String,
+        insurance_transfer_amount: String,
+        liquidation_transfers: Vec<LiquidationTransferV2>,
+    },
+    AdlResultV2 {
+        account_id: String,
         symbol_hash: String,
         position_qty_transfer: String,
         cost_position_transfer: String,

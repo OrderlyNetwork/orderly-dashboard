@@ -20,12 +20,41 @@ pub struct DbAdlResult {
     pub transaction_id: String,
     pub block_time: BigDecimal,
     pub account_id: String,
+    // adl v2 removed insuranceAccountId
     pub insurance_account_id: String,
     pub symbol_hash: String,
     pub position_qty_transfer: BigDecimal,
     pub cost_position_transfer: BigDecimal,
     pub adl_price: BigDecimal,
     pub sum_unitary_fundings: BigDecimal,
+    pub version: Option<i16>,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum AdlVersion {
+    V1 = 1,
+    V2 = 2,
+}
+
+impl AdlVersion {
+    pub fn value(&self) -> i16 {
+        *self as i16
+    }
+}
+
+impl TryFrom<i16> for AdlVersion {
+    type Error = anyhow::Error;
+
+    fn try_from(value: i16) -> Result<Self, Self::Error> {
+        match value {
+            0 | 1 => Ok(Self::V1),
+            2 => Ok(Self::V2),
+            _ => Err(anyhow::anyhow!(
+                "cannot convert integer:{} to AdlVersion",
+                value
+            )),
+        }
+    }
 }
 
 pub async fn create_adl_results(adls: Vec<DbAdlResult>) -> Result<usize> {

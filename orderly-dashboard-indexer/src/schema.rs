@@ -14,6 +14,7 @@ diesel::table! {
         cost_position_transfer -> Numeric,
         adl_price -> Numeric,
         sum_unitary_fundings -> Numeric,
+        version -> Nullable<Int2>,
     }
 }
 
@@ -65,6 +66,7 @@ diesel::table! {
         insurance_account_id -> Text,
         liquidated_asset_hash -> Text,
         insurance_transfer_amount -> Numeric,
+        version -> Nullable<Int2>,
     }
 }
 
@@ -86,6 +88,7 @@ diesel::table! {
         sum_unitary_fundings -> Numeric,
         liquidation_fee -> Numeric,
         block_time -> Nullable<Numeric>,
+        version -> Nullable<Int2>,
     }
 }
 
