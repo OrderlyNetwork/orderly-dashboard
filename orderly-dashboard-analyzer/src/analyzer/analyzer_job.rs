@@ -216,6 +216,9 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         )
                         .await;
                     }
+                    _ => {
+                        // todo: support LiquidationResultV2, AdlResultV2
+                    }
                 }
             }
         }
