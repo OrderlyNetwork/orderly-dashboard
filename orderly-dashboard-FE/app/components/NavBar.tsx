@@ -29,11 +29,6 @@ export const NavBar: FC = () => {
             Home
           </Link>
         </TabNav.Link>
-        <TabNav.Link asChild active={pathname === '/leaderboard'}>
-          <Link to="/leaderboard" className="w-full h-full px5 line-height-8" onClick={closeMenu}>
-            Leaderboard
-          </Link>
-        </TabNav.Link>
       </TabNav.Root>
     </nav>
   );
