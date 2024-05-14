@@ -19,10 +19,39 @@ pub struct DbLiquidationResult {
     pub log_index: i32,
     pub transaction_id: String,
     pub block_time: BigDecimal,
+    // reuse liquidatedAccountId as accountId in v2
     pub liquidated_account_id: String,
     pub insurance_account_id: String,
     pub liquidated_asset_hash: String,
     pub insurance_transfer_amount: BigDecimal,
+    pub version: Option<i16>,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum LiquidationResultVersion {
+    V1 = 1,
+    V2 = 2,
+}
+
+impl LiquidationResultVersion {
+    pub fn value(&self) -> i16 {
+        *self as i16
+    }
+}
+
+impl TryFrom<i16> for LiquidationResultVersion {
+    type Error = anyhow::Error;
+
+    fn try_from(value: i16) -> Result<Self, Self::Error> {
+        match value {
+            0 | 1 => Ok(Self::V1),
+            2 => Ok(Self::V2),
+            _ => Err(anyhow::anyhow!(
+                "cannot convert integer:{} to LiquidationResultVersion",
+                value
+            )),
+        }
+    }
 }
 
 impl DbLiquidationResult {

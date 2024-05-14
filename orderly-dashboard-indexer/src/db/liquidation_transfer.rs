@@ -19,6 +19,7 @@ pub struct DbLiquidationTransfer {
     pub liquidation_result_log_idx: i32,
     pub transaction_id: String,
     pub liquidation_transfer_id: BigDecimal,
+    // reused as accountId in LiquidationTransferV2
     pub liquidator_account_id: String,
     pub symbol_hash: String,
     pub position_qty_transfer: BigDecimal,
@@ -29,6 +30,34 @@ pub struct DbLiquidationTransfer {
     pub sum_unitary_fundings: BigDecimal,
     pub liquidation_fee: BigDecimal,
     pub block_time: Option<BigDecimal>,
+    pub version: Option<i16>,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum LiquidationTransferVersion {
+    V1 = 1,
+    V2 = 2,
+}
+
+impl LiquidationTransferVersion {
+    pub fn value(&self) -> i16 {
+        *self as i16
+    }
+}
+
+impl TryFrom<i16> for LiquidationTransferVersion {
+    type Error = anyhow::Error;
+
+    fn try_from(value: i16) -> Result<Self, Self::Error> {
+        match value {
+            0 | 1 => Ok(Self::V1),
+            2 => Ok(Self::V2),
+            _ => Err(anyhow::anyhow!(
+                "cannot convert integer:{} to LiquidationTransferVersion",
+                value
+            )),
+        }
+    }
 }
 
 impl DbLiquidationTransfer {

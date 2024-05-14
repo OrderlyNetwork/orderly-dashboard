@@ -8,13 +8,17 @@ use std::{collections::VecDeque, str::FromStr};
 
 use crate::db::executed_trades::{create_executed_trades, DbExecutedTrades, TradeType};
 
-use crate::db::liquidation_transfer::{create_liquidation_transfers, DbLiquidationTransfer};
+use crate::db::liquidation_transfer::{
+    create_liquidation_transfers, DbLiquidationTransfer, LiquidationTransferVersion,
+};
 
 use crate::api::calculate_gas::GasReceiptCalculator;
 use crate::db::serial_batches::{create_serial_batches, DbSerialBatches, SerialBatchType};
 use crate::db::{
-    adl_result::{create_adl_results, DbAdlResult},
-    liquidation_result::{create_liquidation_results, DbLiquidationResult},
+    adl_result::{create_adl_results, AdlVersion, DbAdlResult},
+    liquidation_result::{
+        create_liquidation_results, DbLiquidationResult, LiquidationResultVersion,
+    },
     settlement_execution::{create_settlement_executions, DbSettlementExecution},
     settlement_result::{create_settlement_results, DbSettlementResult},
     transaction_events::{
@@ -354,6 +358,7 @@ pub(crate) async fn handle_tx_params(
                             )?,
                             liquidation_fee: convert_amount(liquidation_transfer.liquidation_fee)?,
                             block_time: Some((block_t.unwrap_or_default() as i64).into()),
+                            version: Some(LiquidationTransferVersion::V1.value()),
                         });
                     }
                 }
@@ -664,6 +669,33 @@ pub(crate) async fn handle_log(
                             sum_unitary_fundings: convert_amount(
                                 adl_result_event.sum_unitary_fundings,
                             )?,
+                            version: Some(AdlVersion::V1.value()),
+                        }])
+                        .await?;
+                    }
+                    user_ledgerEvents::AdlResultV2Filter(adl_result_event) => {
+                        create_adl_results(vec![DbAdlResult {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            account_id: to_hex_format(&adl_result_event.account_id),
+                            // useless field in AdlResultV2
+                            insurance_account_id: "".to_string(),
+                            symbol_hash: to_hex_format(&adl_result_event.symbol_hash),
+                            position_qty_transfer: convert_amount(
+                                adl_result_event.position_qty_transfer,
+                            )?,
+                            cost_position_transfer: convert_amount(
+                                adl_result_event.cost_position_transfer,
+                            )?,
+                            adl_price: convert_amount(adl_result_event.adl_price as i128)?,
+                            sum_unitary_fundings: convert_amount(
+                                adl_result_event.sum_unitary_fundings,
+                            )?,
+                            version: Some(AdlVersion::V2.value()),
                         }])
                         .await?;
                     }
@@ -684,11 +716,45 @@ pub(crate) async fn handle_log(
                                 &liquidation_result_event.insurance_account_id,
                             ),
                             liquidated_asset_hash: to_hex_format(
-                                &liquidation_result_event.liquidated_account_id,
+                                &liquidation_result_event.liquidated_asset_hash,
                             ),
                             insurance_transfer_amount: convert_amount(
                                 liquidation_result_event.insurance_transfer_amount as i128,
                             )?,
+                            version: Some(LiquidationResultVersion::V1.value()),
+                        }])
+                        .await?;
+                        if !liquidation_trasfers.is_empty() {
+                            liquidation_trasfers
+                                .iter_mut()
+                                .for_each(|v| v.liquidation_result_log_idx = log_index);
+                            create_liquidation_transfers(liquidation_trasfers.clone()).await?;
+                            liquidation_trasfers.clear();
+                        }
+                    }
+                    user_ledgerEvents::LiquidationResultV2Filter(liquidation_result_event) => {
+                        let log_index = log.log_index.unwrap_or_default().as_u64() as i32;
+                        liquidation_result_log_index_queue.push_back(log_index);
+                        create_liquidation_results(vec![DbLiquidationResult {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            // reuse for account_id
+                            liquidated_account_id: to_hex_format(
+                                &liquidation_result_event.account_id,
+                            ),
+                            // useless in LiquidationResultV2
+                            insurance_account_id: "".to_string(),
+                            liquidated_asset_hash: to_hex_format(
+                                &liquidation_result_event.liquidated_asset_hash,
+                            ),
+                            insurance_transfer_amount: convert_amount(
+                                liquidation_result_event.insurance_transfer_amount as i128,
+                            )?,
+                            version: Some(LiquidationResultVersion::V2.value()),
                         }])
                         .await?;
                         if !liquidation_trasfers.is_empty() {
@@ -834,6 +900,38 @@ pub(crate) async fn handle_log(
                             )?,
                             liquidation_fee: convert_amount(liquidation_transfer.liquidation_fee)?,
                             block_time: Some((block_t.unwrap_or_default() as i64).into()),
+                            version: Some(LiquidationTransferVersion::V1.value()),
+                        });
+                    }
+                    user_ledgerEvents::LiquidationTransferV2Filter(liquidation_transfer) => {
+                        liquidation_trasfers.push(DbLiquidationTransfer {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            // will be update in handle settlement result flow
+                            liquidation_result_log_idx: -1,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            // removed in LiquidationTransferV2
+                            liquidation_transfer_id: BigDecimal::from(0),
+                            // reused as accountId in LiquidationTransferV2
+                            liquidator_account_id: to_hex_format(&liquidation_transfer.account_id),
+                            symbol_hash: to_hex_format(&liquidation_transfer.symbol_hash),
+                            position_qty_transfer: convert_amount(
+                                liquidation_transfer.position_qty_transfer,
+                            )?,
+                            cost_position_transfer: convert_amount(
+                                liquidation_transfer.cost_position_transfer,
+                            )?,
+                            liquidator_fee: convert_amount(0)?,
+                            insurance_fee: convert_amount(0)?,
+                            mark_price: convert_amount(liquidation_transfer.mark_price as i128)?,
+                            sum_unitary_fundings: convert_amount(
+                                liquidation_transfer.sum_unitary_fundings,
+                            )?,
+                            liquidation_fee: convert_amount(liquidation_transfer.fee)?,
+                            block_time: Some((block_t.unwrap_or_default() as i64).into()),
+                            version: Some(LiquidationTransferVersion::V2.value()),
                         });
                     }
                     user_ledgerEvents::FeeDistributionFilter(event) => {

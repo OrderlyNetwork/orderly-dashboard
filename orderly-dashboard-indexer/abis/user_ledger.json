@@ -116,6 +116,66 @@
   },
   {
     "type": "function",
+    "name": "accountWithdrawFail",
+    "inputs": [
+      {
+        "name": "withdraw",
+        "type": "tuple",
+        "internalType": "struct AccountTypes.AccountWithdraw",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "sender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "receiver",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "brokerHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "tokenHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "tokenAmount",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "fee",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "chainId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "withdrawNonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "batchGetUserLedger",
     "inputs": [
       {
@@ -386,6 +446,30 @@
   },
   {
     "type": "function",
+    "name": "contractSigner",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "chainId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "signer",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "crossChainManagerAddress",
     "inputs": [],
     "outputs": [
@@ -445,6 +529,191 @@
             "name": "timestamp",
             "type": "uint64",
             "internalType": "uint64"
+          }
+        ]
+      },
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeAdlV2",
+    "inputs": [
+      {
+        "name": "adl",
+        "type": "tuple",
+        "internalType": "struct EventTypes.AdlV2",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "symbolHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "positionQtyTransfer",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "costPositionTransfer",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "adlPrice",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "sumUnitaryFundings",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "timestamp",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "isInsuranceAccount",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      },
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeDelegateSigner",
+    "inputs": [
+      {
+        "name": "delegateSigner",
+        "type": "tuple",
+        "internalType": "struct EventTypes.DelegateSigner",
+        "components": [
+          {
+            "name": "delegateSigner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "delegateContract",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "brokerHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "chainId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      },
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeDelegateWithdrawAction",
+    "inputs": [
+      {
+        "name": "delegateWithdraw",
+        "type": "tuple",
+        "internalType": "struct EventTypes.WithdrawData",
+        "components": [
+          {
+            "name": "tokenAmount",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "fee",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "chainId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "accountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "r",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "s",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "v",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "sender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "withdrawNonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "receiver",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "timestamp",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "brokerId",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "tokenSymbol",
+            "type": "string",
+            "internalType": "string"
           }
         ]
       },
@@ -585,6 +854,88 @@
                 "name": "liquidationTransferId",
                 "type": "uint64",
                 "internalType": "uint64"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeLiquidationV2",
+    "inputs": [
+      {
+        "name": "liquidation",
+        "type": "tuple",
+        "internalType": "struct EventTypes.LiquidationV2",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "liquidatedAssetHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "insuranceTransferAmount",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "timestamp",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "isInsuranceAccount",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "liquidationTransfers",
+            "type": "tuple[]",
+            "internalType": "struct EventTypes.LiquidationTransferV2[]",
+            "components": [
+              {
+                "name": "symbolHash",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "positionQtyTransfer",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "costPositionTransfer",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "fee",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "markPrice",
+                "type": "uint128",
+                "internalType": "uint128"
+              },
+              {
+                "name": "sumUnitaryFundings",
+                "type": "int128",
+                "internalType": "int128"
               }
             ]
           }
@@ -1950,6 +2301,61 @@
   },
   {
     "type": "event",
+    "name": "AdlResultV2",
+    "inputs": [
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "symbolHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "positionQtyTransfer",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "costPositionTransfer",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "adlPrice",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      },
+      {
+        "name": "sumUnitaryFundings",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "lastEngineEventId",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "ChangeCrossChainManager",
     "inputs": [
       {
@@ -2064,6 +2470,49 @@
   },
   {
     "type": "event",
+    "name": "DelegateSigner",
+    "inputs": [
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "chainId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "delegateContract",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "brokerHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "delegateSigner",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "FeeDistribution",
     "inputs": [
       {
@@ -2157,6 +2606,43 @@
   },
   {
     "type": "event",
+    "name": "LiquidationResultV2",
+    "inputs": [
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "liquidatedAssetHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "insuranceTransferAmount",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "lastEngineEventId",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "LiquidationTransfer",
     "inputs": [
       {
@@ -2203,6 +2689,55 @@
       },
       {
         "name": "liquidationFee",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "markPrice",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      },
+      {
+        "name": "sumUnitaryFundings",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "LiquidationTransferV2",
+    "inputs": [
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "symbolHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "positionQtyTransfer",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "costPositionTransfer",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "fee",
         "type": "int128",
         "indexed": false,
         "internalType": "int128"
@@ -2555,6 +3090,64 @@
   },
   {
     "type": "error",
+    "name": "DelegateChainIdNotMatch",
+    "inputs": [
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "savedChainId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "givenChainId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "DelegateReceiverNotMatch",
+    "inputs": [
+      {
+        "name": "receiver",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "delegateContract",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "DelegateSignerNotMatch",
+    "inputs": [
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "savedSginer",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "givenSigner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "DelegatecallFail",
     "inputs": []
   },
@@ -2781,5 +3374,73 @@
         "internalType": "bytes32"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "WithdrawBalanceNotEnough",
+    "inputs": [
+      {
+        "name": "balance",
+        "type": "uint128",
+        "internalType": "uint128"
+      },
+      {
+        "name": "withdrawAmount",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "WithdrawFeeTooLarge",
+    "inputs": [
+      {
+        "name": "maxFee",
+        "type": "uint128",
+        "internalType": "uint128"
+      },
+      {
+        "name": "withdrawFee",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "WithdrawToAddressZero",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "WithdrawVaultBalanceNotEnough",
+    "inputs": [
+      {
+        "name": "balance",
+        "type": "uint128",
+        "internalType": "uint128"
+      },
+      {
+        "name": "withdrawAmount",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ZeroChainId",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroDelegateContract",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ZeroDelegateSigner",
+    "inputs": []
   }
 ]
