@@ -337,7 +337,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                   const value = info.getValue();
                   if (value == null) return '';
                   // FIXME how many decimals?
-                  return new FixedNumber(value, 11).format({
+                  return new FixedNumber(value, 8).format({
                     maximumFractionDigits: 2
                   });
                 }
@@ -380,12 +380,24 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('liquidation.insurance_fee', {
                 header: 'Insurance Fee',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
               }),
               columnHelper.accessor('liquidation.liquidation_fee', {
                 header: 'Liquidation Fee',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
               }),
               columnHelper.accessor('liquidation.liquidation_transfer_id', {
                 header: 'Liquidation Transfer ID',
@@ -395,27 +407,54 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('liquidation.liquidator_account_id', {
                 header: 'Liquidator Account ID',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => <Shortened value={info.getValue()} />
               }),
               columnHelper.accessor('liquidation.liquidator_fee', {
                 header: 'Liquidator Fee',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
               }),
               columnHelper.accessor('liquidation.mark_price', {
                 header: 'Mark Price',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXMe why 8 decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
               }),
               columnHelper.accessor('liquidation.position_qty_transfer', {
                 header: 'Position Qty Transfer',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXME how many decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
               }),
               columnHelper.accessor('liquidation.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXME how many decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
               })
             ]
           })
@@ -450,12 +489,26 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('event.data.AdlResult.position_qty_transfer', {
                 header: 'Position Qty Transfer',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXME how many decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
               }),
               columnHelper.accessor('event.data.AdlResult.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
                 enableSorting: false,
-                cell: (info) => info.getValue()
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXME how many decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
               }),
               columnHelper.accessor('event.data.AdlResult.symbol_hash', {
                 header: 'Symbol Hash',
