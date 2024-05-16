@@ -55,7 +55,7 @@ pub async fn pull_perp_trading_events_by_account(
     } else {
         now
     };
-    if to_time <= from_time {
+    if to_time < from_time {
         return Ok(Response::Success(SuccessResponse::new(
             AccountTradingEventsResponse::default(),
         )));

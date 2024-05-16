@@ -386,9 +386,7 @@ pub struct LiquidationTransferV2 {
     pub symbol_hash: String,
     pub position_qty_transfer: String,
     pub cost_position_transfer: String,
-    pub liquidator_fee: String,
-    pub insurance_fee: String,
-    pub liquidation_fee: String,
+    pub fee: String,
     pub mark_price: String,
     pub sum_unitary_fundings: String,
 }
@@ -400,9 +398,7 @@ impl From<DbLiquidationTransfer> for LiquidationTransferV2 {
             symbol_hash: value.symbol_hash,
             position_qty_transfer: value.position_qty_transfer.to_string(),
             cost_position_transfer: value.cost_position_transfer.to_string(),
-            liquidator_fee: value.liquidator_fee.to_string(),
-            insurance_fee: value.insurance_fee.to_string(),
-            liquidation_fee: value.liquidation_fee.to_string(),
+            fee: value.liquidator_fee.to_string(),
             mark_price: value.mark_price.to_string(),
             sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
         }

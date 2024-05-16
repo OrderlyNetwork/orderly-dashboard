@@ -28,6 +28,7 @@ pub struct DbLiquidationTransfer {
     pub insurance_fee: BigDecimal,
     pub mark_price: BigDecimal,
     pub sum_unitary_fundings: BigDecimal,
+    // reuse as fee in LiquidationTransferV2
     pub liquidation_fee: BigDecimal,
     pub block_time: Option<BigDecimal>,
     pub version: Option<i16>,
