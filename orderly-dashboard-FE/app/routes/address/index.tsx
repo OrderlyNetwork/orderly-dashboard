@@ -63,7 +63,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                       {
                         LiquidationResult: P.any
                       },
-                      () => 'Liqudation'
+                      () => 'Liquidation'
                     )
                     .with(
                       {
