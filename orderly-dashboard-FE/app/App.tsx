@@ -20,7 +20,7 @@ export const App: FC = () => {
   return (
     <>
       <NavBar />
-      <div className="m-3 mt-8 max-w-full">
+      <div className="m-3 mt-8 max-w-full xs:p-2 md:p-3 lg:p-6">
         <Outlet />
       </div>
     </>

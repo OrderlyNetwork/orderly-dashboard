@@ -6,7 +6,7 @@ import {
   DoubleArrowRightIcon,
   MixerHorizontalIcon
 } from '@radix-ui/react-icons';
-import { Button, Popover, Select, Table } from '@radix-ui/themes';
+import { Button, Popover, Table, Tabs } from '@radix-ui/themes';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { json, useLoaderData, useSearchParams } from '@remix-run/react';
 import {
@@ -41,21 +41,16 @@ const defaultVisibility = {
   'event_data.Transaction.broker_hash': false,
   'event_data.Transaction.fail_reason': false,
   'event_data.Transaction.withdraw_nonce': false,
-  'event_data.Transaction.token_hash': false,
   'event_data.ProcessedTrades.batch_id': false,
   trade_account_id: false,
   trade_match_id: false,
-  trade_fee_asset_hash: false,
   trade_sum_unitary_fundings: false,
   trade_trade_id: false,
-  trade_symbol_hash: false,
   'event_data.SettlementResult.account_id': false,
   'event_data.SettlementResult.settled_amount': false,
   'event_data.SettlementResult.insurance_transfer_amount': false,
   'event_data.SettlementResult.insurance_account_id': false,
-  'event_data.SettlementResult.settled_asset_hash': false,
   settlement_sum_unitary_fundings: false,
-  settlement_symbol_hash: false,
   'event_data.LiquidationResult.liquidated_account_id': false,
   'event_data.LiquidationResult.insurance_account_id': false,
   'event_data.LiquidationResult.insurance_transfer_amount': false,
@@ -66,8 +61,7 @@ const defaultVisibility = {
   liquidation_sum_unitary_fundings: false,
   'event_data.AdlResult.account_id': false,
   'event_data.AdlResult.insurance_account_id': false,
-  'event_data.AdlResult.sum_unitary_fundings': false,
-  'event_data.AdlResult.symbol_hash': false
+  'event_data.AdlResult.sum_unitary_fundings': false
 };
 
 export const Address: FC = () => {
@@ -120,7 +114,11 @@ export const Address: FC = () => {
         })
   );
 
-  const { columns, events, error, isLoading, mutate } = useRenderColumns(eventsParams, eventType);
+  const { columns, events, error, isLoading, mutate } = useRenderColumns(
+    eventsParams,
+    eventType,
+    setEventType
+  );
 
   const table = useReactTable<EventTableData>({
     data: events ?? [],
@@ -233,7 +231,7 @@ export const Address: FC = () => {
 
   return (
     <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full [&>*]:max-w-[50rem]">
-      <h2>{address}</h2>
+      <h2 className="mb-2">{address}</h2>
 
       {accountId != null && (
         <div className="flex flex-col [&>*:first-child]:font-bold">
@@ -243,27 +241,6 @@ export const Address: FC = () => {
           </div>
         </div>
       )}
-
-      <div className="flex flex-col flex-items-start gap-1">
-        <span className="font-bold font-size-5">Events:</span>
-        <Select.Root
-          defaultValue={undefined}
-          onValueChange={(value) => {
-            setEventType(value as EventType);
-          }}
-          value={eventType}
-        >
-          <Select.Trigger />
-          <Select.Content>
-            <Select.Item value="ALL">All</Select.Item>
-            <Select.Item value="TRANSACTION">Transactions</Select.Item>
-            <Select.Item value="PERPTRADE">Trades</Select.Item>
-            <Select.Item value="SETTLEMENT">Pnl Settlements</Select.Item>
-            <Select.Item value="LIQUIDATION">Liquidations</Select.Item>
-            <Select.Item value="ADL">ADL</Select.Item>
-          </Select.Content>
-        </Select.Root>
-      </div>
 
       <div className="flex flex-items-center gap-2">
         <DatePicker
@@ -286,6 +263,23 @@ export const Address: FC = () => {
           minDate={from ?? undefined}
         />
       </div>
+
+      <Tabs.Root
+        value={eventType}
+        defaultValue="ALL"
+        onValueChange={(value) => {
+          setEventType(value as EventType);
+        }}
+      >
+        <Tabs.List>
+          <Tabs.Trigger value="ALL">All</Tabs.Trigger>
+          <Tabs.Trigger value="TRANSACTION">Transactions</Tabs.Trigger>
+          <Tabs.Trigger value="PERPTRADE">Trades</Tabs.Trigger>
+          <Tabs.Trigger value="SETTLEMENT">Pnl Settlements</Tabs.Trigger>
+          <Tabs.Trigger value="LIQUIDATION">Liquidations</Tabs.Trigger>
+          <Tabs.Trigger value="ADL">ADL</Tabs.Trigger>
+        </Tabs.List>
+      </Tabs.Root>
 
       <div>
         <Popover.Root>

@@ -19,10 +19,12 @@ export const Search: FC = () => {
   }
 
   return (
-    <div className="flex flex-wrap gap-5 max-w-[40rem] px-4 flex-justify-center flex-items-center">
+    <div className="flex flex-wrap gap-8 max-w-[40rem] px-4 flex-justify-center flex-items-center">
+      <h2>{address}</h2>
+
       {addressData.map((data) => (
         <Card
-          className="cursor-pointer flex flex-col gap-4"
+          className="cursor-pointer flex flex-col gap-4 p-4"
           onClick={() => {
             navigate({
               pathname: `/address/${data.address}`,
