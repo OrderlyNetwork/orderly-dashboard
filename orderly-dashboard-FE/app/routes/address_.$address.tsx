@@ -269,6 +269,7 @@ export const Address: FC = () => {
         defaultValue="ALL"
         onValueChange={(value) => {
           setEventType(value as EventType);
+          table.resetColumnVisibility();
         }}
       >
         <Tabs.List>
