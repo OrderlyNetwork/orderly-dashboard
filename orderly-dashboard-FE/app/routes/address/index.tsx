@@ -1,19 +1,35 @@
+import { Button } from '@radix-ui/themes';
 import { GroupColumnDef, createColumnHelper } from '@tanstack/react-table';
 import { FixedNumber } from '@tarnadas/fixed-number';
-import { useMemo } from 'react';
+import { Dispatch, SetStateAction, useMemo } from 'react';
 import { P, match } from 'ts-pattern';
 
 import { Shortened } from './Shortened';
 import { Timestamp } from './Timestamp';
 
-import { EventTableData, EventType, EventsParams, useEvents } from '~/hooks';
+import {
+  EventTableData,
+  EventType,
+  EventsParams,
+  getSymbolName,
+  getTokenName,
+  useEvents,
+  useSymbols,
+  useTokens
+} from '~/hooks';
 
-export function useRenderColumns(query: EventsParams | null, eventType: EventType | 'ALL') {
+export function useRenderColumns(
+  query: EventsParams | null,
+  eventType: EventType | 'ALL',
+  setEventType: Dispatch<SetStateAction<EventType | 'ALL'>>
+) {
   const { data, error, isLoading, setSize, mutate } = useEvents(query);
   const events = useMemo(() => data?.flat(), [data]);
 
   const columnHelper = createColumnHelper<EventTableData>();
 
+  const tokens = useTokens();
+  const symbols = useSymbols();
   const columns = useMemo<GroupColumnDef<EventTableData, unknown>[]>(() => {
     const columns = [
       columnHelper.group({
@@ -44,42 +60,56 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
             enableSorting: false,
             cell: (info) => {
               if (events == null) return '';
-              return match(events![info.row.index])
-                .with({ type: 'event', event: P.select() }, (event) =>
-                  match(event.data)
-                    .with(
-                      {
-                        Transaction: P.any
-                      },
-                      () => 'Transaction'
-                    )
-                    .with(
-                      {
-                        ProcessedTrades: P.any
-                      },
-                      () => 'Trade'
-                    )
-                    .with(
-                      {
-                        LiquidationResult: P.any
-                      },
-                      () => 'Liquidation'
-                    )
-                    .with(
-                      {
-                        SettlementResult: P.any
-                      },
-                      () => 'Pnl Settlement'
-                    )
-                    .with(
-                      {
-                        AdlResult: P.any
-                      },
-                      () => 'Adl'
-                    )
-                    .exhaustive()
+              const [renderedValue, newEventType]: [string | undefined, EventType | 'ALL'] = match(
+                events![info.row.index]
+              )
+                .with(
+                  { type: 'event', event: P.select() },
+                  (event) =>
+                    match(event.data)
+                      .with(
+                        {
+                          Transaction: P.any
+                        },
+                        () => ['Transaction', 'TRANSACTION']
+                      )
+                      .with(
+                        {
+                          ProcessedTrades: P.any
+                        },
+                        () => ['Trade', 'PERPTRADE']
+                      )
+                      .with(
+                        {
+                          LiquidationResult: P.any
+                        },
+                        () => ['Liquidation', 'LIQUIDATION']
+                      )
+                      .with(
+                        {
+                          SettlementResult: P.any
+                        },
+                        () => ['Pnl Settlement', 'SETTLEMENT']
+                      )
+                      .with(
+                        {
+                          AdlResult: P.any
+                        },
+                        () => ['Adl', 'ADL']
+                      )
+                      .exhaustive() as [string | undefined, EventType | 'ALL']
                 )
-                .otherwise(() => undefined);
+                .otherwise(() => [undefined, 'ALL'] as [string | undefined, EventType | 'ALL']);
+              return (
+                <Button
+                  className="p-1 h-auto bg-[--accent-5] hover:bg-[--accent-4]"
+                  onClick={() => {
+                    setEventType(newEventType);
+                  }}
+                >
+                  {renderedValue}
+                </Button>
+              );
             }
           })
         );
@@ -136,6 +166,7 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('event.data.Transaction.fail_reason', {
                 header: 'Fail Reason',
                 enableSorting: false,
+
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.Transaction.fee', {
@@ -152,9 +183,9 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('event.data.Transaction.token_hash', {
-                header: 'Token Hash',
+                header: 'Token',
                 enableSorting: false,
-                cell: (info) => <Shortened value={info.getValue()} />
+                cell: (info) => getTokenName(info.getValue(), tokens)
               })
             ]
           })
@@ -197,9 +228,9 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                   })
               }),
               columnHelper.accessor('trade.fee_asset_hash', {
-                header: 'Fee Asset Hash',
+                header: 'Fee Asset',
                 enableSorting: false,
-                cell: (info) => <Shortened value={info.getValue()} />
+                cell: (info) => getTokenName(info.getValue(), tokens)
               }),
               columnHelper.accessor('trade.match_id', {
                 header: 'Match ID',
@@ -256,9 +287,9 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                 }
               }),
               columnHelper.accessor('trade.symbol_hash', {
-                header: 'Symbol Hash',
+                header: 'Symbol',
                 enableSorting: false,
-                cell: (info) => <Shortened value={info.getValue()} />
+                cell: (info) => getSymbolName(info.getValue(), symbols)
               })
             ]
           })
@@ -303,9 +334,9 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                 cell: (info) => <Shortened value={info.getValue()} />
               }),
               columnHelper.accessor('event.data.SettlementResult.settled_asset_hash', {
-                header: 'Settled Asset Hash',
+                header: 'Settled Asset',
                 enableSorting: false,
-                cell: (info) => <Shortened value={info.getValue()} />
+                cell: (info) => getTokenName(info.getValue(), tokens)
               }),
               columnHelper.accessor('settlement.mark_price', {
                 header: 'Mark Price',
@@ -343,9 +374,9 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
                 }
               }),
               columnHelper.accessor('settlement.symbol_hash', {
-                header: 'Symbol Hash',
+                header: 'Symbol',
                 enableSorting: false,
-                cell: (info) => <Shortened value={info.getValue()} />
+                cell: (info) => getSymbolName(info.getValue(), symbols)
               })
             ]
           })
@@ -513,14 +544,14 @@ export function useRenderColumns(query: EventsParams | null, eventType: EventTyp
               columnHelper.accessor('event.data.AdlResult.symbol_hash', {
                 header: 'Symbol Hash',
                 enableSorting: false,
-                cell: (info) => <Shortened value={info.getValue()} />
+                cell: (info) => getSymbolName(info.getValue(), symbols)
               })
             ]
           })
         );
       });
     return columns;
-  }, [columnHelper, eventType, events]);
+  }, [columnHelper, eventType, setEventType, events, tokens, symbols]);
 
   return { columns, events, error, isLoading, setSize, mutate };
 }
