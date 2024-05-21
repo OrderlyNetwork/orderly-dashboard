@@ -22,6 +22,8 @@ export const Search: FC = () => {
     <div className="flex flex-wrap gap-8 max-w-[40rem] px-4 flex-justify-center flex-items-center">
       <h2>{address}</h2>
 
+      {addressData.length === 0 && !loading && <>Account not found on any broker</>}
+
       {addressData.map((data) => (
         <Card
           className="cursor-pointer flex flex-col gap-4 p-4"

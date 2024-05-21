@@ -34,6 +34,12 @@ export const useSearchAddress = (
   }, [searchType]);
 
   useEffect(() => {
+    if (loadingCount === 0 && addressData == null) {
+      setAddressData([]);
+    }
+  }, [loadingCount, addressData, setAddressData]);
+
+  useEffect(() => {
     setUrls(
       match(brokers)
         .with(P.nullish, () => [])
@@ -92,11 +98,9 @@ export const useSearchAddress = (
         try {
           code = Number(error.message);
         } catch (err) {
-          // setLoadingCount((count) => count - 1);
           return;
         }
         if (code !== -1_003 || retryCount >= 10) {
-          // setLoadingCount((count) => count - 1);
           return;
         }
         setTimeout(() => revalidate({ retryCount }), 1_000);
