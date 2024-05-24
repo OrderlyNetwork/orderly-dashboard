@@ -15,7 +15,9 @@ const allowedBrokers = [
   'ibx',
   'ascendex',
   'vooi',
-  'sharpe_ai'
+  'sharpe_ai',
+  'coolwallet',
+  'quick_perps'
 ];
 
 export function useBrokers() {
