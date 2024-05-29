@@ -36,15 +36,15 @@ export function useRenderColumns(
         id: 'general',
         header: 'General',
         columns: [
-          columnHelper.accessor('event.block_number', {
+          columnHelper.accessor('block_number', {
             header: 'Block height',
             cell: (info) => info.getValue()
           }),
-          columnHelper.accessor('event.block_timestamp', {
+          columnHelper.accessor('block_timestamp', {
             header: 'Block timestamp',
             cell: (info) => <Timestamp timestamp={info.getValue()} multiplier={1_000} />
           }),
-          columnHelper.accessor('event.transaction_id', {
+          columnHelper.accessor('transaction_id', {
             header: 'Transaction ID',
             enableSorting: false,
             cell: (info) => <Shortened value={info.getValue()} />
@@ -60,46 +60,39 @@ export function useRenderColumns(
             enableSorting: false,
             cell: (info) => {
               if (events == null) return '';
-              const [renderedValue, newEventType]: [string | undefined, EventType | 'ALL'] = match(
-                events![info.row.index]
-              )
+              const event = events[info.row.index];
+              const [renderedValue, newEventType] = match(event.data)
                 .with(
-                  { type: 'event', event: P.select() },
-                  (event) =>
-                    match(event.data)
-                      .with(
-                        {
-                          Transaction: P.any
-                        },
-                        () => ['Transaction', 'TRANSACTION']
-                      )
-                      .with(
-                        {
-                          ProcessedTrades: P.any
-                        },
-                        () => ['Trade', 'PERPTRADE']
-                      )
-                      .with(
-                        {
-                          LiquidationResult: P.any
-                        },
-                        () => ['Liquidation', 'LIQUIDATION']
-                      )
-                      .with(
-                        {
-                          SettlementResult: P.any
-                        },
-                        () => ['Pnl Settlement', 'SETTLEMENT']
-                      )
-                      .with(
-                        {
-                          AdlResult: P.any
-                        },
-                        () => ['Adl', 'ADL']
-                      )
-                      .exhaustive() as [string | undefined, EventType | 'ALL']
+                  {
+                    Transaction: P.any
+                  },
+                  () => ['Transaction', 'TRANSACTION']
                 )
-                .otherwise(() => [undefined, 'ALL'] as [string | undefined, EventType | 'ALL']);
+                .with(
+                  {
+                    ProcessedTrades: P.any
+                  },
+                  () => ['Trade', 'PERPTRADE']
+                )
+                .with(
+                  {
+                    LiquidationResult: P.any
+                  },
+                  () => ['Liquidation', 'LIQUIDATION']
+                )
+                .with(
+                  {
+                    SettlementResult: P.any
+                  },
+                  () => ['Pnl Settlement', 'SETTLEMENT']
+                )
+                .with(
+                  {
+                    AdlResult: P.any
+                  },
+                  () => ['Adl', 'ADL']
+                )
+                .exhaustive() as [string | undefined, EventType | 'ALL'];
               return (
                 <Button
                   className="p-1 h-auto bg-[--accent-5] hover:bg-[--accent-4]"
@@ -120,37 +113,37 @@ export function useRenderColumns(
             id: 'transaction',
             header: 'Transaction',
             columns: [
-              columnHelper.accessor('event.data.Transaction.account_id', {
+              columnHelper.accessor('data.Transaction.account_id', {
                 header: 'Account ID',
                 enableSorting: false,
                 cell: (info) => <Shortened value={info.getValue()} />
               }),
-              columnHelper.accessor('event.data.Transaction.broker_hash', {
+              columnHelper.accessor('data.Transaction.broker_hash', {
                 header: 'Broker Hash',
                 enableSorting: false,
                 cell: (info) => <Shortened value={info.getValue()} />
               }),
-              columnHelper.accessor('event.data.Transaction.chain_id', {
+              columnHelper.accessor('data.Transaction.chain_id', {
                 header: 'Chain ID',
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('event.data.Transaction.sender', {
+              columnHelper.accessor('data.Transaction.sender', {
                 header: 'Sender',
                 enableSorting: false,
                 cell: (info) => <Shortened value={info.getValue()} />
               }),
-              columnHelper.accessor('event.data.Transaction.receiver', {
+              columnHelper.accessor('data.Transaction.receiver', {
                 header: 'Receiver',
                 enableSorting: false,
                 cell: (info) => <Shortened value={info.getValue()} />
               }),
-              columnHelper.accessor('event.data.Transaction.side', {
+              columnHelper.accessor('data.Transaction.side', {
                 header: 'Side',
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('event.data.Transaction.token_amount', {
+              columnHelper.accessor('data.Transaction.token_amount', {
                 header: 'Token amount',
                 enableSorting: false,
                 cell: (info) =>
@@ -158,18 +151,18 @@ export function useRenderColumns(
                     maximumFractionDigits: 2
                   })
               }),
-              columnHelper.accessor('event.data.Transaction.status', {
+              columnHelper.accessor('data.Transaction.status', {
                 header: 'Status',
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('event.data.Transaction.fail_reason', {
+              columnHelper.accessor('data.Transaction.fail_reason', {
                 header: 'Fail Reason',
                 enableSorting: false,
 
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('event.data.Transaction.fee', {
+              columnHelper.accessor('data.Transaction.fee', {
                 header: 'Fee',
                 enableSorting: false,
                 cell: (info) =>
@@ -177,12 +170,12 @@ export function useRenderColumns(
                     maximumFractionDigits: 2
                   })
               }),
-              columnHelper.accessor('event.data.Transaction.withdraw_nonce', {
+              columnHelper.accessor('data.Transaction.withdraw_nonce', {
                 header: 'Withdraw Nonce',
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('event.data.Transaction.token_hash', {
+              columnHelper.accessor('data.Transaction.token_hash', {
                 header: 'Token',
                 enableSorting: false,
                 cell: (info) => getTokenName(info.getValue(), tokens)
@@ -197,15 +190,54 @@ export function useRenderColumns(
             id: 'perptrade',
             header: 'Trades',
             columns: [
-              columnHelper.accessor('event.data.ProcessedTrades.batch_id', {
+              columnHelper.accessor('data.ProcessedTrades.batch_id', {
                 header: 'Batch ID',
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('trade.account_id', {
-                header: 'Account ID',
+              columnHelper.accessor('trade.symbol_hash', {
+                header: 'Symbol',
                 enableSorting: false,
-                cell: (info) => <Shortened value={info.getValue()} />
+                cell: (info) => getSymbolName(info.getValue(), symbols)
+              }),
+              columnHelper.accessor('trade.side', {
+                header: 'Side',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  return (
+                    <span className={value === 'BUY' ? 'color-green-3' : 'color-red-3'}>
+                      {value}
+                    </span>
+                  );
+                }
+              }),
+              columnHelper.accessor('trade.trade_qty', {
+                header: 'Trade Qty',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  const res = new FixedNumber(value, 8);
+                  return (
+                    <span className={res.valueOf() > 0n ? 'color-green-3' : 'color-red-3'}>
+                      {res.format({
+                        maximumFractionDigits: 2
+                      })}
+                    </span>
+                  );
+                }
+              }),
+              columnHelper.accessor('trade.notional', {
+                header: 'Notional',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
               }),
               columnHelper.accessor('trade.executed_price', {
                 header: 'Executed Price',
@@ -232,26 +264,20 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => getTokenName(info.getValue(), tokens)
               }),
+              columnHelper.accessor('trade.timestamp', {
+                header: 'Timestamp',
+                enableSorting: false,
+                cell: (info) => <Timestamp timestamp={info.getValue()} />
+              }),
+              columnHelper.accessor('trade.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
               columnHelper.accessor('trade.match_id', {
                 header: 'Match ID',
                 enableSorting: false,
                 cell: (info) => <Shortened value={info.getValue()} displayCount={3} />
-              }),
-              columnHelper.accessor('trade.notional', {
-                header: 'Notional',
-                enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return new FixedNumber(value, 6).format({
-                    maximumFractionDigits: 2
-                  });
-                }
-              }),
-              columnHelper.accessor('trade.side', {
-                header: 'Side',
-                enableSorting: false,
-                cell: (info) => info.getValue()
               }),
               columnHelper.accessor('trade.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
@@ -265,31 +291,10 @@ export function useRenderColumns(
                   });
                 }
               }),
-              columnHelper.accessor('trade.timestamp', {
-                header: 'Timestamp',
-                enableSorting: false,
-                cell: (info) => <Timestamp timestamp={info.getValue()} />
-              }),
               columnHelper.accessor('trade.trade_id', {
                 header: 'Trade ID',
                 enableSorting: false,
                 cell: (info) => info.getValue()
-              }),
-              columnHelper.accessor('trade.trade_qty', {
-                header: 'Trade Qty',
-                enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
-                }
-              }),
-              columnHelper.accessor('trade.symbol_hash', {
-                header: 'Symbol',
-                enableSorting: false,
-                cell: (info) => getSymbolName(info.getValue(), symbols)
               })
             ]
           })
@@ -301,12 +306,17 @@ export function useRenderColumns(
             id: 'settlement',
             header: 'PnL Settlement',
             columns: [
-              columnHelper.accessor('event.data.SettlementResult.account_id', {
+              columnHelper.accessor('settlement.symbol_hash', {
+                header: 'Symbol',
+                enableSorting: false,
+                cell: (info) => getSymbolName(info.getValue(), symbols)
+              }),
+              columnHelper.accessor('data.SettlementResult.account_id', {
                 header: 'Account ID',
                 enableSorting: false,
                 cell: (info) => <Shortened value={info.getValue()} />
               }),
-              columnHelper.accessor('event.data.SettlementResult.settled_amount', {
+              columnHelper.accessor('data.SettlementResult.settled_amount', {
                 header: 'Settled Amount',
                 enableSorting: false,
                 cell: (info) => {
@@ -317,7 +327,7 @@ export function useRenderColumns(
                   });
                 }
               }),
-              columnHelper.accessor('event.data.SettlementResult.insurance_transfer_amount', {
+              columnHelper.accessor('data.SettlementResult.insurance_transfer_amount', {
                 header: 'Insurance Transfer Amount',
                 enableSorting: false,
                 cell: (info) => {
@@ -328,12 +338,12 @@ export function useRenderColumns(
                   });
                 }
               }),
-              columnHelper.accessor('event.data.SettlementResult.insurance_account_id', {
+              columnHelper.accessor('data.SettlementResult.insurance_account_id', {
                 header: 'Insurance Account ID',
                 enableSorting: false,
                 cell: (info) => <Shortened value={info.getValue()} />
               }),
-              columnHelper.accessor('event.data.SettlementResult.settled_asset_hash', {
+              columnHelper.accessor('data.SettlementResult.settled_asset_hash', {
                 header: 'Settled Asset',
                 enableSorting: false,
                 cell: (info) => getTokenName(info.getValue(), tokens)
@@ -372,11 +382,6 @@ export function useRenderColumns(
                     maximumFractionDigits: 2
                   });
                 }
-              }),
-              columnHelper.accessor('settlement.symbol_hash', {
-                header: 'Symbol',
-                enableSorting: false,
-                cell: (info) => getSymbolName(info.getValue(), symbols)
               })
             ]
           })
@@ -388,17 +393,17 @@ export function useRenderColumns(
             id: 'liquidation',
             header: 'Liquidation',
             columns: [
-              columnHelper.accessor('event.data.LiquidationResult.liquidated_account_id', {
+              columnHelper.accessor('data.LiquidationResult.liquidated_account_id', {
                 header: 'Liquidated Account ID',
                 enableSorting: false,
                 cell: (info) => <Shortened value={info.getValue()} />
               }),
-              columnHelper.accessor('event.data.LiquidationResult.insurance_account_id', {
+              columnHelper.accessor('data.LiquidationResult.insurance_account_id', {
                 header: 'Insurance Account ID',
                 enableSorting: false,
                 cell: (info) => <Shortened value={info.getValue()} />
               }),
-              columnHelper.accessor('event.data.LiquidationResult.insurance_transfer_amount', {
+              columnHelper.accessor('data.LiquidationResult.insurance_transfer_amount', {
                 header: 'Insurance Transfer Amount',
                 enableSorting: false,
                 cell: (info) => info.getValue()
@@ -497,27 +502,32 @@ export function useRenderColumns(
             id: 'adl',
             header: 'Adl',
             columns: [
-              columnHelper.accessor('event.data.AdlResult.account_id', {
+              columnHelper.accessor('data.AdlResult.symbol_hash', {
+                header: 'Symbol',
+                enableSorting: false,
+                cell: (info) => getSymbolName(info.getValue(), symbols)
+              }),
+              columnHelper.accessor('data.AdlResult.account_id', {
                 header: 'Account ID',
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('event.data.AdlResult.adl_price', {
+              columnHelper.accessor('data.AdlResult.adl_price', {
                 header: 'Adl Price',
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('event.data.AdlResult.cost_position_transfer', {
+              columnHelper.accessor('data.AdlResult.cost_position_transfer', {
                 header: 'Cost Position Transfer',
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('event.data.AdlResult.insurance_account_id', {
+              columnHelper.accessor('data.AdlResult.insurance_account_id', {
                 header: 'Insurance Account ID',
                 enableSorting: false,
                 cell: (info) => info.getValue()
               }),
-              columnHelper.accessor('event.data.AdlResult.position_qty_transfer', {
+              columnHelper.accessor('data.AdlResult.position_qty_transfer', {
                 header: 'Position Qty Transfer',
                 enableSorting: false,
                 cell: (info) => {
@@ -529,7 +539,7 @@ export function useRenderColumns(
                   });
                 }
               }),
-              columnHelper.accessor('event.data.AdlResult.sum_unitary_fundings', {
+              columnHelper.accessor('data.AdlResult.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
                 enableSorting: false,
                 cell: (info) => {
@@ -540,11 +550,6 @@ export function useRenderColumns(
                     maximumFractionDigits: 2
                   });
                 }
-              }),
-              columnHelper.accessor('event.data.AdlResult.symbol_hash', {
-                header: 'Symbol Hash',
-                enableSorting: false,
-                cell: (info) => getSymbolName(info.getValue(), symbols)
               })
             ]
           })

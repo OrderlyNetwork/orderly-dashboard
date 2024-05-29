@@ -23,7 +23,7 @@ import {
 import dayjs, { Dayjs } from 'dayjs';
 import { FC, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { P, match } from 'ts-pattern';
+import { match } from 'ts-pattern';
 
 import { useRenderColumns } from './address';
 
@@ -36,32 +36,33 @@ export function loader({ params }: LoaderFunctionArgs) {
 }
 
 const defaultVisibility = {
-  event_block_number: false,
-  'event_data.Transaction.account_id': false,
-  'event_data.Transaction.broker_hash': false,
-  'event_data.Transaction.fail_reason': false,
-  'event_data.Transaction.withdraw_nonce': false,
-  'event_data.ProcessedTrades.batch_id': false,
+  block_number: false,
+  'data_Transaction.account_id': false,
+  'data_Transaction.broker_hash': false,
+  'data_Transaction.fail_reason': false,
+  'data_Transaction.withdraw_nonce': false,
+  'data_ProcessedTrades.batch_id': false,
+  trade_timestamp: false,
   trade_account_id: false,
   trade_match_id: false,
   trade_sum_unitary_fundings: false,
   trade_trade_id: false,
-  'event_data.SettlementResult.account_id': false,
-  'event_data.SettlementResult.settled_amount': false,
-  'event_data.SettlementResult.insurance_transfer_amount': false,
-  'event_data.SettlementResult.insurance_account_id': false,
+  'data_SettlementResult.account_id': false,
+  'data_SettlementResult.settled_amount': false,
+  'data_SettlementResult.insurance_transfer_amount': false,
+  'data_SettlementResult.insurance_account_id': false,
   settlement_sum_unitary_fundings: false,
-  'event_data.LiquidationResult.liquidated_account_id': false,
-  'event_data.LiquidationResult.insurance_account_id': false,
-  'event_data.LiquidationResult.insurance_transfer_amount': false,
+  'data_LiquidationResult.liquidated_account_id': false,
+  'data_LiquidationResult.insurance_account_id': false,
+  'data_LiquidationResult.insurance_transfer_amount': false,
   liquidation_cost_position_transfer: false,
   liquidation_insurance_fee: false,
   liquidation_liquidation_transfer_id: false,
   liquidation_liquidator_fee: false,
   liquidation_sum_unitary_fundings: false,
-  'event_data.AdlResult.account_id': false,
-  'event_data.AdlResult.insurance_account_id': false,
-  'event_data.AdlResult.sum_unitary_fundings': false
+  'data_AdlResult.account_id': false,
+  'data_AdlResult.insurance_account_id': false,
+  'data_AdlResult.sum_unitary_fundings': false
 };
 
 export const Address: FC = () => {
@@ -71,7 +72,7 @@ export const Address: FC = () => {
   const [until, setUntil] = useState<Dayjs | null>(dayjs(new Date()));
   const [sorting, setSorting] = useState<SortingState>([
     {
-      id: 'event_block_timestamp',
+      id: 'block_timestamp',
       desc: true
     }
   ]);
@@ -132,29 +133,6 @@ export const Address: FC = () => {
       columnVisibility: defaultVisibility
     },
     onSortingChange: setSorting,
-    getSubRows: (row) =>
-      row.type === 'event'
-        ? match(row.event.data)
-            .with({ ProcessedTrades: P.select() }, (data) =>
-              data.trades.map((trade) => ({
-                type: 'trade' as const,
-                trade
-              }))
-            )
-            .with({ SettlementResult: P.select() }, (data) =>
-              data.settlement_executions.map((settlement) => ({
-                type: 'settlement' as const,
-                settlement
-              }))
-            )
-            .with({ LiquidationResult: P.select() }, (data) =>
-              data.liquidation_transfers.map((liquidation) => ({
-                type: 'liquidation' as const,
-                liquidation
-              }))
-            )
-            .otherwise(() => undefined)
-        : undefined,
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
