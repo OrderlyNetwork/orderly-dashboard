@@ -25,11 +25,13 @@ use crate::init::init_handler;
 use crate::server::webserver;
 use anyhow::Result;
 use clap::Parser;
+use dotenv::dotenv;
 
 use crate::consume_data_task::{consume_data_task, ORDERLY_DASHBOARD_INDEXER};
 
 fn main() -> Result<()> {
     openssl_probe::init_ssl_cert_env_vars();
+    dotenv().ok();
 
     let opts = Opts::parse();
     let raw_common_config =

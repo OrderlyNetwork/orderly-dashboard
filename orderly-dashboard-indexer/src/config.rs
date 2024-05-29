@@ -41,8 +41,8 @@ pub struct Opts {
 pub struct SubnetConfig {
     pub rpc_url: String, // evm chain rpc url
     pub rpc_url_fallback: String,
-    pub is_use_ws: bool,
-    pub ws_url: Option<String>,
+    // pub is_use_ws: bool,
+    // pub ws_url: Option<String>,
     pub pull_check_interval: u32, // seconds
     pub ledger_address: String,
     pub operator_manager_address: String,
@@ -95,8 +95,8 @@ impl Display for CommonConfigs {
         let subnet_cfg = &self.l2_config;
         write!(
             f,
-            "subnet config:[rpc_url:{}, rpc_url_fallback:{:?}, is_use_ws:{}, ws_url:{:?},pull_check_interval:{},ledger_address:{},operator_manager_address:{},user_ledger_abi_path:{},operator_manager_abi_path:{},market_manager_address:{},market_manager_abi_path:{},confirm_block_num:{:?},contract_deploy_height:{:?}];",
-            subnet_cfg.rpc_url, subnet_cfg.rpc_url_fallback, subnet_cfg.is_use_ws, subnet_cfg.ws_url, subnet_cfg.pull_check_interval,subnet_cfg.ledger_address, subnet_cfg.operator_manager_address,
+            "subnet config:[rpc_url:{}, rpc_url_fallback:{:?}, pull_check_interval:{},ledger_address:{},operator_manager_address:{},user_ledger_abi_path:{},operator_manager_abi_path:{},market_manager_address:{},market_manager_abi_path:{},confirm_block_num:{:?},contract_deploy_height:{:?}];",
+            subnet_cfg.rpc_url, subnet_cfg.rpc_url_fallback, subnet_cfg.pull_check_interval,subnet_cfg.ledger_address, subnet_cfg.operator_manager_address,
             subnet_cfg.user_ledger_abi_path, subnet_cfg.operator_manager_abi_path, subnet_cfg.market_manager_address, subnet_cfg.market_manager_abi_path, subnet_cfg.confirm_block_num, subnet_cfg.contract_deploy_height
         )?;
         let indexer_server = &self.indexer_server;

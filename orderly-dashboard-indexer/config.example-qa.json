@@ -1,10 +1,7 @@
 {
   "l2_config": {
-    "rpc_url": "https://testnet-rpc.orderly.org/8jbWg77mA6PCwHe13tEiv6rFqT1UJLPEB",
-    "rpc_url_fallback": "https://testnet-rpc.orderly.org/8jbWg77mA6PCwHe13tEiv6rFqT1UJLPEB",
-    "is_use_ws": true,
-    "ws_url": "wss://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
-    "pull_check_interval": 1,
+    "rpc_url": "https://testnet-rpc.orderly.org",
+    "pull_check_interval": 2,
     "ledger_address": "0x50F59504D3623Ad99302835da367676d1f7E3D44",
     "operator_manager_address": "0x7Cd1FBdA284997Be499D3294C9a50352Dd682155",
     "user_ledger_abi_path": "./abis/user_ledger.json",

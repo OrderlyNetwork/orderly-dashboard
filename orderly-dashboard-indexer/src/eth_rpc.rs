@@ -10,11 +10,16 @@ use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 pub(crate) static PROVIDER: OnceCell<Provider<Http>> = OnceCell::new();
 
 pub(crate) fn init_provider() -> Result<()> {
-    let rpc = unsafe { &COMMON_CONFIGS.get_unchecked().l2_config.rpc_url };
+    let rpc = if let Ok(orderly_rpc) = std::env::var("ORDERLY_RPC") {
+        orderly_rpc
+    } else {
+        unsafe { &COMMON_CONFIGS.get_unchecked().l2_config.rpc_url }.clone()
+    };
+    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "rpc wrapped: {}", rpc[0..8].to_string() + "***" + &rpc[rpc.len() - 5..]);
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()?;
-    let http_client = Http::new_with_client(url::Url::parse(rpc)?, client);
+    let http_client = Http::new_with_client(url::Url::parse(&rpc)?, client);
     let provider = Provider::new(http_client);
     PROVIDER.set(provider).ok();
     Ok(())
@@ -25,30 +30,24 @@ pub(crate) fn clone_provider() -> Provider<Http> {
 }
 
 pub async fn get_latest_block_num() -> Result<u64> {
-    Ok(get_block_with_id(BlockId::Number(BlockNumber::Latest))
-        .await?
-        .ok_or_else(|| anyhow::anyhow!("block not found in calling block api"))?
-        .number
-        .expect("block number should exist")
-        .as_u64())
+    Ok(get_blocknumber_with_timeout().await?)
 }
 
-pub async fn get_block_with_id(block_id: BlockId) -> Result<Option<Block<H256>>> {
+pub async fn get_blocknumber_with_timeout() -> Result<u64> {
     let provider = unsafe { PROVIDER.get_unchecked() };
 
-    // todo: replace to eth_getBlockByNumber
-    let result = timeout(Duration::from_secs(8), provider.get_block(block_id)).await;
+    let result = timeout(Duration::from_secs(3), provider.get_block_number()).await;
     match result {
         Err(_) => {
             return Err(anyhow::anyhow!("request elapsed"));
         }
-        Ok(Ok(block)) => {
-            return Ok(block);
+        Ok(Ok(number)) => {
+            return Ok(number.as_u64());
         }
         Ok(Err(err)) => {
             tracing::warn!(
                 target: ORDERLY_DASHBOARD_INDEXER,
-                "get_block_num query err: {}",
+                "get_blocknumber query err: {}",
                 err
             );
             return Err(anyhow::anyhow!("query err"));

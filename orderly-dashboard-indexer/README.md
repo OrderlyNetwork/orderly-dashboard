@@ -37,6 +37,12 @@ diesel migration run
 ```sql
 insert into settings (id,value) values (1,7976034);
 ```
+### set default in variable
+orderly-dashboard-indexer will read use rpc from environment variable or it will fallback to read `rpc_url` from config file.
+so set this `ORDERLY_RPC` as env variable or and it to `.env` file
+```shell
+export ORDERLY_RPC="orderly rpc url"
+```
 ### local run for test
 We can set `start-block` and `end-block` as params to pull blocks in this range, in fact we just need to set `end-block` because we have init `start-block` in config file
 ```shell

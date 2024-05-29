@@ -1,10 +1,7 @@
 {
   "l2_config": {
-    "rpc_url": "https://rpc.orderly.network/Gn5CvDkZXiirKPkTgxf2LkUQ5GYbQQGwV",
-    "rpc_url_fallback": "https://rpc.orderly.network/Gn5CvDkZXiirKPkTgxf2LkUQ5GYbQQGwV",
-    "is_use_ws": false,
-    "ws_url": "wss://l2-orderly-mainnet-0.t.conduit.xyz",
-    "pull_check_interval": 1,
+    "rpc_url": "https://rpc.orderly.network",
+    "pull_check_interval": 2,
     "ledger_address": "0x6F7a338F2aA472838dEFD3283eB360d4Dff5D203",
     "operator_manager_address": "0x7CC5B6433eb33164c88F6512f56C566CFC3420BF",
     "user_ledger_abi_path": "./abis/user_ledger.json",

@@ -12,7 +12,6 @@ pub mod transaction_events;
 
 use actix_diesel::Database;
 use diesel::PgConnection;
-use dotenv::dotenv;
 use once_cell::sync::{Lazy, OnceCell};
 use std::env;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -44,6 +43,5 @@ pub fn get_database_credentials() -> String {
     if let Some(db_url) = INITED_DATABASE_URL.get() {
         return db_url.to_string();
     }
-    dotenv().ok();
     env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file")
 }
