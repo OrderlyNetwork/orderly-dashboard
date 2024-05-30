@@ -82,6 +82,12 @@ export function useRenderColumns(
                 )
                 .with(
                   {
+                    LiquidationResultV2: P.any
+                  },
+                  () => ['LiquidationV2', 'LIQUIDATIONV2']
+                )
+                .with(
+                  {
                     SettlementResult: P.any
                   },
                   () => ['Pnl Settlement', 'SETTLEMENT']
@@ -91,6 +97,12 @@ export function useRenderColumns(
                     AdlResult: P.any
                   },
                   () => ['Adl', 'ADL']
+                )
+                .with(
+                  {
+                    AdlResultV2: P.any
+                  },
+                  () => ['AdlV2', 'ADLV2']
                 )
                 .exhaustive() as [string | undefined, EventType | 'ALL'];
               return (
@@ -496,6 +508,94 @@ export function useRenderColumns(
           })
         );
       })
+      .with('LIQUIDATIONV2', () => {
+        columns.push(
+          columnHelper.group({
+            id: 'liquidation',
+            header: 'Liquidation',
+            columns: [
+              columnHelper.accessor('data.LiquidationResultV2.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('liquidationv2.symbol_hash', {
+                header: 'Symbol',
+                enableSorting: false,
+                cell: (info) => getSymbolName(info.getValue(), symbols)
+              }),
+              columnHelper.accessor('liquidationv2.mark_price', {
+                header: 'Mark Price',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('liquidationv2.fee', {
+                header: 'Fee',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.LiquidationResultV2.insurance_transfer_amount', {
+                header: 'Insurance Transfer Amount',
+                enableSorting: false,
+                cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('liquidationv2.cost_position_transfer', {
+                header: 'Cost Position Transfer',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXME how many decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('liquidationv2.position_qty_transfer', {
+                header: 'Position Qty Transfer',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXME how many decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('liquidationv2.account_id', {
+                header: 'Liquidated Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('liquidationv2.sum_unitary_fundings', {
+                header: 'Sum Uni. Funding',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXME how many decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              })
+            ]
+          })
+        );
+      })
       .with('ADL', () => {
         columns.push(
           columnHelper.group({
@@ -554,7 +654,62 @@ export function useRenderColumns(
             ]
           })
         );
-      });
+      })
+      .with('ADLV2', () => {
+        columns.push(
+          columnHelper.group({
+            id: 'adl',
+            header: 'Adl',
+            columns: [
+              columnHelper.accessor('data.AdlResultV2.symbol_hash', {
+                header: 'Symbol',
+                enableSorting: false,
+                cell: (info) => getSymbolName(info.getValue(), symbols)
+              }),
+              columnHelper.accessor('data.AdlResultV2.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('data.AdlResultV2.adl_price', {
+                header: 'Adl Price',
+                enableSorting: false,
+                cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('data.AdlResultV2.cost_position_transfer', {
+                header: 'Cost Position Transfer',
+                enableSorting: false,
+                cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('data.AdlResultV2.position_qty_transfer', {
+                header: 'Position Qty Transfer',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXME how many decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.AdlResultV2.sum_unitary_fundings', {
+                header: 'Sum Uni. Funding',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  // FIXME how many decimals?
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              })
+            ]
+          })
+        );
+      })
+      .exhaustive();
     return columns;
   }, [columnHelper, eventType, setEventType, events, tokens, symbols]);
 

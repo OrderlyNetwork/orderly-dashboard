@@ -5,7 +5,14 @@ import { P, match } from 'ts-pattern';
 import { useAppState } from '~/App';
 import { types } from '~/types';
 
-export type EventType = 'TRANSACTION' | 'PERPTRADE' | 'SETTLEMENT' | 'LIQUIDATION' | 'ADL';
+export type EventType =
+  | 'TRANSACTION'
+  | 'PERPTRADE'
+  | 'SETTLEMENT'
+  | 'LIQUIDATION'
+  | 'LIQUIDATIONV2'
+  | 'ADL'
+  | 'ADLV2';
 
 export type EventTableData = types.TradingEvent &
   (
@@ -25,7 +32,14 @@ export type EventTableData = types.TradingEvent &
         liquidation: types.LiquidationTransfer;
       }
     | {
+        type: 'liquidationv2';
+        liquidationv2: types.LiquidationTransferV2;
+      }
+    | {
         type: 'adl';
+      }
+    | {
+        type: 'adlv2';
       }
   );
 
@@ -118,6 +132,16 @@ export function useEvents(query: EventsParams | null) {
               )
               .with(
                 {
+                  LiquidationResultV2: P.select()
+                },
+                (data) => {
+                  for (const liquidationv2 of data.liquidation_transfers) {
+                    flattenedEvents.push({ ...event, type: 'liquidationv2', liquidationv2 });
+                  }
+                }
+              )
+              .with(
+                {
                   SettlementResult: P.select()
                 },
                 (data) => {
@@ -132,6 +156,14 @@ export function useEvents(query: EventsParams | null) {
                 },
                 () => {
                   flattenedEvents.push({ ...event, type: 'adl' });
+                }
+              )
+              .with(
+                {
+                  AdlResultV2: P.select()
+                },
+                () => {
+                  flattenedEvents.push({ ...event, type: 'adlv2' });
                 }
               )
               .exhaustive();

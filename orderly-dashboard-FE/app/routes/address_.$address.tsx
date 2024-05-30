@@ -60,6 +60,11 @@ const defaultVisibility = {
   liquidation_liquidation_transfer_id: false,
   liquidation_liquidator_fee: false,
   liquidation_sum_unitary_fundings: false,
+  'data_LiquidationResultV2.account_id': false,
+  'data_LiquidationResultV2.insurance_transfer_amount': false,
+  liquidationv2_cost_position_transfer: false,
+  liquidationv2_account_id: false,
+  liquidationv2_sum_unitary_fundings: false,
   'data_AdlResult.account_id': false,
   'data_AdlResult.insurance_account_id': false,
   'data_AdlResult.sum_unitary_fundings': false
@@ -94,7 +99,9 @@ export const Address: FC = () => {
             broker_id,
             event_type: match(eventType)
               .with('ALL', () => undefined)
-              .otherwise((value) => value),
+              .with('LIQUIDATIONV2', () => 'LIQUIDATION')
+              .with('ADLV2', () => 'ADL')
+              .otherwise((value) => value) as EventType,
             from_time: from,
             to_time: until
           }
@@ -255,8 +262,10 @@ export const Address: FC = () => {
           <Tabs.Trigger value="TRANSACTION">Transactions</Tabs.Trigger>
           <Tabs.Trigger value="PERPTRADE">Trades</Tabs.Trigger>
           <Tabs.Trigger value="SETTLEMENT">Pnl Settlements</Tabs.Trigger>
-          <Tabs.Trigger value="LIQUIDATION">Liquidations</Tabs.Trigger>
-          <Tabs.Trigger value="ADL">ADL</Tabs.Trigger>
+          <Tabs.Trigger value="LIQUIDATIONV2">Liquidations</Tabs.Trigger>
+          <Tabs.Trigger value="LIQUIDATION">Liquidations (old)</Tabs.Trigger>
+          <Tabs.Trigger value="ADLV2">ADL</Tabs.Trigger>
+          <Tabs.Trigger value="ADL">ADL (old)</Tabs.Trigger>
         </Tabs.List>
       </Tabs.Root>
 
