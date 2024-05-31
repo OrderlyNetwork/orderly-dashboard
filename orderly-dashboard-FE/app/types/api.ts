@@ -92,6 +92,15 @@ export namespace types {
     };
     export type I64 = number;
     export type I16 = number;
+    export type LiquidationTransferV2 = {
+        "account_id": string;
+        "symbol_hash": string;
+        "position_qty_transfer": string;
+        "cost_position_transfer": string;
+        "fee": string;
+        "mark_price": string;
+        "sum_unitary_fundings": string;
+    };
     export type TradingEventInnerData = ({
         "Transaction": {
             "account_id": string;
@@ -133,6 +142,22 @@ export namespace types {
         "AdlResult": {
             "account_id": string;
             "insurance_account_id": string;
+            "symbol_hash": string;
+            "position_qty_transfer": string;
+            "cost_position_transfer": string;
+            "adl_price": string;
+            "sum_unitary_fundings": string;
+        };
+    } | {
+        "LiquidationResultV2": {
+            "account_id": string;
+            "liquidated_asset_hash": string;
+            "insurance_transfer_amount": string;
+            "liquidation_transfers": (types.LiquidationTransferV2)[];
+        };
+    } | {
+        "AdlResultV2": {
+            "account_id": string;
             "symbol_hash": string;
             "position_qty_transfer": string;
             "cost_position_transfer": string;
