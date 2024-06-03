@@ -1,9 +1,11 @@
+use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
+use std::ops::Div;
 
 use orderly_dashboard_indexer::formats_external::trading_events::*;
 
 use crate::analyzer::analyzer_context::AnalyzeContext;
-use crate::analyzer::{div_into_real, to_big_decimal};
+use crate::analyzer::get_cost_position_prec;
 use crate::db::broker_info::find_by_broker_hash;
 use crate::db::hourly_orderly_token::HourlyOrderlyTokenKey;
 use crate::db::hourly_user_token::HourlyUserTokenKey;
@@ -27,7 +29,8 @@ pub async fn analyzer_transaction(
     broker_hash: String,
 ) {
     tracing::info!(target:TRANSACTION_ANALYZER,"receive {:?} - account:{},amount:{}",side.clone(),account_id.clone(),token_amount.clone());
-    let fixed_amount = div_into_real(token_amount.parse().unwrap(), 1000000);
+    let token_amo: BigDecimal = token_amount.clone().parse().unwrap();
+    let fixed_amount = token_amo.div(get_cost_position_prec());
 
     let deposit;
     match side {
@@ -62,17 +65,9 @@ pub async fn analyzer_transaction(
         };
         let hourly_user_token = context.get_hourly_user_token(&key).await;
         if deposit {
-            hourly_user_token.deposit(
-                to_big_decimal(fixed_amount.clone()),
-                block_number,
-                block_time,
-            );
+            hourly_user_token.deposit(fixed_amount.clone(), block_number, block_time);
         } else {
-            hourly_user_token.withdraw(
-                to_big_decimal(fixed_amount.clone()),
-                block_number,
-                block_time,
-            );
+            hourly_user_token.withdraw(fixed_amount.clone(), block_number, block_time);
         }
     }
 
@@ -85,17 +80,9 @@ pub async fn analyzer_transaction(
 
         let hourly_orderly_token = context.get_hourly_orderly_token(&key).await;
         if deposit {
-            hourly_orderly_token.deposit(
-                to_big_decimal(fixed_amount.clone()),
-                block_number,
-                block_time,
-            );
+            hourly_orderly_token.deposit(fixed_amount.clone(), block_number, block_time);
         } else {
-            hourly_orderly_token.withdraw(
-                to_big_decimal(fixed_amount.clone()),
-                block_number,
-                block_time,
-            );
+            hourly_orderly_token.withdraw(fixed_amount.clone(), block_number, block_time);
         }
     }
 
@@ -106,17 +93,9 @@ pub async fn analyzer_transaction(
         };
         let orderly_token = context.get_orderly_token(&key).await;
         if deposit {
-            orderly_token.deposit(
-                to_big_decimal(fixed_amount.clone()),
-                block_number,
-                block_time,
-            );
+            orderly_token.deposit(fixed_amount.clone(), block_number, block_time);
         } else {
-            orderly_token.withdraw(
-                to_big_decimal(fixed_amount.clone()),
-                block_number,
-                block_time,
-            );
+            orderly_token.withdraw(fixed_amount.clone(), block_number, block_time);
         }
     }
     {
@@ -127,17 +106,9 @@ pub async fn analyzer_transaction(
         };
         let user_token = context.get_user_token(&key).await;
         if deposit {
-            user_token.deposit(
-                to_big_decimal(fixed_amount.clone()),
-                block_number,
-                block_time,
-            );
+            user_token.deposit(fixed_amount.clone(), block_number, block_time);
         } else {
-            user_token.withdraw(
-                to_big_decimal(fixed_amount.clone()),
-                block_number,
-                block_time,
-            );
+            user_token.withdraw(fixed_amount.clone(), block_number, block_time);
         }
     }
 }

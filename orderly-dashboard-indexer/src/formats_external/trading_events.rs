@@ -398,7 +398,7 @@ impl From<DbLiquidationTransfer> for LiquidationTransferV2 {
             symbol_hash: value.symbol_hash,
             position_qty_transfer: value.position_qty_transfer.to_string(),
             cost_position_transfer: value.cost_position_transfer.to_string(),
-            fee: value.liquidator_fee.to_string(),
+            fee: value.liquidation_fee.to_string(),
             mark_price: value.mark_price.to_string(),
             sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
         }

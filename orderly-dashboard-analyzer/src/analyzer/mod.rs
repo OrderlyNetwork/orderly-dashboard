@@ -1,10 +1,10 @@
-use bigdecimal::BigDecimal;
-use num_traits::FromPrimitive;
-use std::ops::Div;
+use std::str::FromStr;
 
-mod abalyer_gas_context;
+use bigdecimal::BigDecimal;
+
 pub mod adl_analyzer;
 pub mod analyzer_context;
+pub mod analyzer_gas_context;
 pub mod analyzer_gas_job;
 pub mod analyzer_job;
 pub mod calc;
@@ -13,12 +13,22 @@ pub mod perp_analyzer;
 pub mod settlement_analyzer;
 pub mod transaction_analyzer;
 
-pub(crate) fn div_into_real(dividend: i128, divisor: i128) -> BigDecimal {
-    let x = BigDecimal::from_i128(dividend).unwrap();
-    let k = BigDecimal::from_i128(divisor).unwrap();
-    x.div(k)
+pub fn get_qty_prec() -> BigDecimal {
+    BigDecimal::from(100_000_000)
 }
 
-pub(crate) fn to_big_decimal(num: BigDecimal) -> BigDecimal {
-    num
+pub fn get_price_prec() -> BigDecimal {
+    BigDecimal::from(100_000_000)
+}
+
+pub fn get_cost_position_prec() -> BigDecimal {
+    BigDecimal::from(1_000_000)
+}
+
+pub fn get_unitary_prec() -> BigDecimal {
+    BigDecimal::from_str("1_000_000_000_000_000").unwrap()
+}
+
+pub fn get_gas_prec() -> BigDecimal {
+    BigDecimal::from_str("1_000_000_000_000_000_000").unwrap()
 }
