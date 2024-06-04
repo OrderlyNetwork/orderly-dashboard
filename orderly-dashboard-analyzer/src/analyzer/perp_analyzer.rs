@@ -134,6 +134,7 @@ pub async fn analyzer_perp_trade(
     return max_perp_trade_id;
 }
 
+#[allow(deprecated)]
 fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
     let date_time = NaiveDateTime::from_timestamp_opt(block_timestamp / 1000, 0).unwrap();
     return date_time.with_second(0).unwrap().with_minute(0).unwrap();

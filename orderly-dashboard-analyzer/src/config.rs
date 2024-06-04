@@ -24,4 +24,5 @@ pub struct AnalyzerConfig {
     pub pull_interval: u64,
     pub batch_block_num: u64,
     pub server_port: u16,
+    pub get_broker_url: String,
 }

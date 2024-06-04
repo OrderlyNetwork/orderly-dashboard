@@ -21,6 +21,7 @@ use super::get_gas_prec;
 
 const ANALYZER_CONTEXT: &str = "Analyzer-Gas-Job";
 
+#[allow(deprecated)]
 pub fn start_analyzer_gas_job(
     interval_seconds: u64,
     base_url: String,
@@ -82,6 +83,7 @@ pub fn start_analyzer_gas_job(
     });
 }
 
+#[allow(deprecated)]
 async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
     let mut latest_block_height = 0i64;
@@ -141,6 +143,7 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
     (pulled_block_time, latest_block_height, latest_perp_trade_id)
 }
 
+#[allow(deprecated)]
 fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
     let date_time = NaiveDateTime::from_timestamp_opt(block_timestamp, 0).unwrap();
     return date_time.with_second(0).unwrap().with_minute(0).unwrap();

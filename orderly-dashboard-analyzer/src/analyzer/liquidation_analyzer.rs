@@ -222,14 +222,11 @@ async fn execute_for_liquidator(liquidation: &Liquidation, context: &mut Analyze
         liquidation.symbol_hash.clone(),
     );
 
-    let (mut liquidator_open_cost_diff, mut liquidator_pnl_diff) =
-        (Default::default(), Default::default());
-
     let user_perp = context.get_user_perp(&liquidator_key.clone()).await;
     user_perp.charge_funding_fee(liquidation.sum_unitry_funding.clone());
 
     let user_perp_snap = user_perp.clone();
-    (liquidator_open_cost_diff, liquidator_pnl_diff) = RealizedPnl::calc_realized_pnl(
+    let (liquidator_open_cost_diff, liquidator_pnl_diff) = RealizedPnl::calc_realized_pnl(
         liquidation.qty_transfer.clone(),
         -(liquidation.cost_position_transfer.clone() - (liquidation.liquidator_fee.clone())),
         user_perp_snap.holding.clone(),
@@ -258,12 +255,11 @@ async fn execute_for_liquidated(liquidation: &Liquidation, context: &mut Analyze
         liquidation.symbol_hash.clone(),
     );
 
-    let (mut open_cost_diff, mut pnl_diff) = (Default::default(), Default::default());
     let user_perp = context.get_user_perp(&key.clone()).await;
     user_perp.charge_funding_fee(liquidation.sum_unitry_funding.clone());
 
     let user_perp_snap = user_perp.clone();
-    (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
+    let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
         liquidation.qty_transfer.clone(),
         (liquidation.cost_position_transfer.clone())
             - ((liquidation.liquidator_fee.clone()) + (liquidation.insurnace_fee.clone())),
