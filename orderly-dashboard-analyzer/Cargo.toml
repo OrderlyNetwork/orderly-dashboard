@@ -10,6 +10,13 @@ crate-type = ["rlib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 futures = "0.3.29"
+ethers-core = "2.0.14"
+keccak-hash = "0.10.0"
+
+
+
+tiny-keccak = "2.0"
+
 
 actix-web = "4"
 tokio = { version = "1", features = ["full"] }
@@ -37,8 +44,6 @@ hex-literal = "0.4.1"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 clap = { version = "4.3.0", features = ["color", "derive", "env"] }
-
-tiny-keccak = "2.0"
 
 num-bigint = "0.4.4"
 num-traits = "0.2"

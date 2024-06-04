@@ -156,6 +156,7 @@ diesel::table! {
         total_liquidation_count -> Int8,
         pulled_block_height -> Int8,
         pulled_block_time -> Timestamp,
+        sum_unitary_fundings -> Numeric,
     }
 }
 

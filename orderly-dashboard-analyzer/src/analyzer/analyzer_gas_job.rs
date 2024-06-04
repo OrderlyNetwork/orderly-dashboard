@@ -1,25 +1,27 @@
 use std::cmp::{max, min};
+use std::ops::Div;
 use std::time::Duration;
 
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDateTime, Timelike, Utc};
-use num_traits::ToPrimitive;
-use tokio::time;
 
 use orderly_dashboard_indexer::formats_external::gas_consumption::{
     GasConsumptionResponse, TransactionGasCostData,
 };
 use orderly_dashboard_indexer::formats_external::Response;
+use tokio::time;
 
-use crate::analyzer::abalyer_gas_context::GasFeeContext;
+use crate::analyzer::analyzer_gas_context::GasFeeContext;
 use crate::analyzer::analyzer_job::HTTPException;
 use crate::analyzer::analyzer_job::HTTPException::Timeout;
-use crate::analyzer::div_into_real;
 use crate::db::block_summary::{create_or_update_block_summary, find_block_summary};
 use crate::db::hourly_gas_fee::HourlyGasFeeKey;
 
+use super::get_gas_prec;
+
 const ANALYZER_CONTEXT: &str = "Analyzer-Gas-Job";
 
+#[allow(deprecated)]
 pub fn start_analyzer_gas_job(
     interval_seconds: u64,
     base_url: String,
@@ -81,6 +83,7 @@ pub fn start_analyzer_gas_job(
     });
 }
 
+#[allow(deprecated)]
 async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
     let mut latest_block_height = 0i64;
@@ -107,10 +110,8 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
                         let gs = context.get_hourly_gas(&p_key).await;
                         let l1_fee: BigDecimal = gas_event.fee_data.clone().l1_fee.parse().unwrap();
                         let l2_fee: BigDecimal = gas_event.fee_data.clone().l2_fee.parse().unwrap();
-                        let fixed_l1_fee =
-                            div_into_real(l1_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
-                        let fixed_l2_fee =
-                            div_into_real(l2_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
+                        let fixed_l1_fee = l1_fee.div(get_gas_prec());
+                        let fixed_l2_fee = l2_fee.div(get_gas_prec());
                         gs.new_event(fixed_l1_fee + fixed_l2_fee, block_num, block_time.clone());
                     }
                     TransactionGasCostData::PerpTradesUpload { .. } => {
@@ -118,10 +119,8 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
                         let gs = context.get_hourly_gas(&p_key).await;
                         let l1_fee: BigDecimal = gas_event.fee_data.clone().l1_fee.parse().unwrap();
                         let l2_fee: BigDecimal = gas_event.fee_data.clone().l2_fee.parse().unwrap();
-                        let fixed_l1_fee =
-                            div_into_real(l1_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
-                        let fixed_l2_fee =
-                            div_into_real(l2_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
+                        let fixed_l1_fee = l1_fee.div(get_gas_prec());
+                        let fixed_l2_fee = l2_fee.div(get_gas_prec());
                         gs.new_event(fixed_l1_fee + fixed_l2_fee, block_num, block_time.clone());
                     }
 
@@ -131,10 +130,8 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
                         let gs = context.get_hourly_gas(&p_key).await;
                         let l1_fee: BigDecimal = gas_event.fee_data.clone().l1_fee.parse().unwrap();
                         let l2_fee: BigDecimal = gas_event.fee_data.clone().l2_fee.parse().unwrap();
-                        let fixed_l1_fee =
-                            div_into_real(l1_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
-                        let fixed_l2_fee =
-                            div_into_real(l2_fee.to_i128().unwrap(), 1000_000_000_000_000_000);
+                        let fixed_l1_fee = l1_fee.div(get_gas_prec());
+                        let fixed_l2_fee = l2_fee.div(get_gas_prec());
                         gs.new_event(fixed_l1_fee + fixed_l2_fee, block_num, block_time.clone());
                     }
                 }
@@ -146,6 +143,7 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
     (pulled_block_time, latest_block_height, latest_perp_trade_id)
 }
 
+#[allow(deprecated)]
 fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
     let date_time = NaiveDateTime::from_timestamp_opt(block_timestamp, 0).unwrap();
     return date_time.with_second(0).unwrap().with_minute(0).unwrap();

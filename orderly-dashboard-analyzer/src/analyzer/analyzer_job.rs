@@ -12,14 +12,16 @@ use orderly_dashboard_indexer::formats_external::Response;
 use crate::analyzer::adl_analyzer::analyzer_adl;
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::analyzer_job::HTTPException::Timeout;
-use crate::analyzer::liquidation_analyzer::analyzer_liquidation;
 use crate::analyzer::perp_analyzer::analyzer_perp_trade;
 use crate::analyzer::settlement_analyzer::analyzer_settlement;
 use crate::analyzer::transaction_analyzer::analyzer_transaction;
 use crate::db::block_summary::{create_or_update_block_summary, find_block_summary};
 
+use super::liquidation_analyzer::{analyzer_liquidation_v1, analyzer_liquidation_v2};
+
 const ANALYZER_CONTEXT: &str = "Analyzer-Job";
 
+#[allow(deprecated)]
 pub fn start_analyzer_trade_job(
     interval_seconds: u64,
     base_url: String,
@@ -90,6 +92,7 @@ pub fn start_analyzer_trade_job(
     });
 }
 
+#[allow(deprecated)]
 async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
     let mut latest_block_height = 0i64;
@@ -99,7 +102,6 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
     match response {
         Response::Success(success_event) => {
             let trading_event: TradingEventsResponse = success_event.into_data().unwrap();
-            // tracing::info!(target:ANALYZER_CONTEXT,"indexer-response: {:?}",trading_event.clone());
             latest_block_height = trading_event.last_block as i64;
 
             let events = trading_event.events;
@@ -174,18 +176,17 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                     }
                     TradingEventInnerData::LiquidationResult {
                         liquidated_account_id,
-                        insurance_account_id,
+                        insurance_account_id: _,
                         liquidated_asset_hash,
                         insurance_transfer_amount,
                         liquidation_transfers,
                     } => {
-                        analyzer_liquidation(
+                        analyzer_liquidation_v1(
                             liquidated_account_id,
-                            insurance_account_id,
                             liquidated_asset_hash,
                             insurance_transfer_amount,
                             liquidation_transfers,
-                            block_num.clone(),
+                            block_num,
                             block_hour.clone(),
                             block_time.clone(),
                             &mut context,
@@ -194,7 +195,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                     }
                     TradingEventInnerData::AdlResult {
                         account_id,
-                        insurance_account_id,
+                        insurance_account_id: _,
                         symbol_hash,
                         position_qty_transfer,
                         cost_position_transfer,
@@ -203,7 +204,6 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                     } => {
                         analyzer_adl(
                             account_id,
-                            insurance_account_id,
                             symbol_hash,
                             position_qty_transfer,
                             cost_position_transfer,
@@ -216,8 +216,45 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         )
                         .await;
                     }
-                    _ => {
-                        // todo: support LiquidationResultV2, AdlResultV2
+                    TradingEventInnerData::LiquidationResultV2 {
+                        account_id,
+                        liquidated_asset_hash,
+                        insurance_transfer_amount,
+                        liquidation_transfers,
+                    } => {
+                        analyzer_liquidation_v2(
+                            account_id,
+                            liquidated_asset_hash,
+                            insurance_transfer_amount,
+                            liquidation_transfers,
+                            block_num,
+                            block_hour.clone(),
+                            block_time.clone(),
+                            &mut context,
+                        )
+                        .await
+                    }
+                    TradingEventInnerData::AdlResultV2 {
+                        account_id,
+                        symbol_hash,
+                        position_qty_transfer,
+                        cost_position_transfer,
+                        adl_price,
+                        sum_unitary_fundings,
+                    } => {
+                        analyzer_adl(
+                            account_id,
+                            symbol_hash,
+                            position_qty_transfer,
+                            cost_position_transfer,
+                            adl_price,
+                            sum_unitary_fundings,
+                            block_hour,
+                            block_time.clone(),
+                            block_num,
+                            &mut context,
+                        )
+                        .await;
                     }
                 }
             }
@@ -229,6 +266,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
     (pulled_block_time, latest_block_height, latest_perp_trade_id)
 }
 
+#[allow(deprecated)]
 fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
     let date_time = NaiveDateTime::from_timestamp_opt(block_timestamp, 0).unwrap();
     return date_time.with_second(0).unwrap().with_minute(0).unwrap();

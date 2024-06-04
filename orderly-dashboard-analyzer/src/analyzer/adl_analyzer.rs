@@ -1,21 +1,17 @@
-use std::str::FromStr;
-
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use num_traits::ToPrimitive;
+use std::ops::Div;
 
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
-use crate::analyzer::div_into_real;
+use crate::analyzer::{get_cost_position_prec, get_price_prec, get_qty_prec, get_unitary_prec};
 use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
 use crate::db::hourly_user_perp::HourlyUserPerpKey;
 use crate::db::user_perp_summary::UserPerpSummaryKey;
 
 const ADL_ANALYZER: &str = "adl-analyzer";
-
 pub async fn analyzer_adl(
     account_id: String,
-    _insurance_account_id: String,
     symbol_hash: String,
     position_qty_transfer: String,
     cost_position_transfer: String,
@@ -29,10 +25,13 @@ pub async fn analyzer_adl(
     tracing::info!(target:ADL_ANALYZER,"receiver adl account_id:{},symbol:{},qty:{},cost_position:{}",account_id.clone(),symbol_hash.clone(),position_qty_transfer.clone(),cost_position_transfer.clone());
     let adl_qty: BigDecimal = position_qty_transfer.parse().unwrap();
     let adl_price: BigDecimal = adl_price.parse().unwrap();
+    let cpt: BigDecimal = cost_position_transfer.parse().unwrap();
+    let fsuf: BigDecimal = sum_unitary_fundings.parse().unwrap();
 
-    let fixed_adl_qty = div_into_real(adl_qty.to_i128().unwrap(), 100_000_000);
-    let fixed_adl_perice = div_into_real(adl_price.to_i128().unwrap(), 100_000_000);
-    let fixed_position_transfer = div_into_real(cost_position_transfer.parse().unwrap(), 1_000_000);
+    let fixed_adl_qty = adl_qty.clone().div(get_qty_prec());
+    let fixed_adl_perice = adl_price.clone().div(get_price_prec());
+    let fixed_position_transfer = cpt.clone().div(get_cost_position_prec());
+    let fixed_sum_unitary_fundings = fsuf.div(get_unitary_prec());
 
     {
         let key = HourlyOrderlyPerpKey::new_key(symbol_hash.clone(), block_hour.clone());
@@ -70,13 +69,15 @@ pub async fn analyzer_adl(
 
     {
         let user_perp_summary = context.get_user_perp(&user_perp_key).await;
+        user_perp_summary.charge_funding_fee(fixed_sum_unitary_fundings.clone());
+
         user_perp_summary.new_liquidation(
             adl_qty.clone(),
             adl_price.clone(),
             block_num,
             pulled_block_time.clone(),
-            BigDecimal::from_str(&*cost_position_transfer.clone()).unwrap(),
-            BigDecimal::from_str(&*sum_unitary_fundings.clone()).unwrap(),
+            cpt.clone(),
+            fixed_sum_unitary_fundings,
             open_cost_diff,
         );
     }

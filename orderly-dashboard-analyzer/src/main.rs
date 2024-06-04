@@ -1,10 +1,12 @@
 #![feature(unwrap_infallible)]
 #[macro_use]
+#[warn(deprecated)]
 extern crate diesel;
 
 use crate::analyzer::analyzer_gas_job::start_analyzer_gas_job;
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
+use orderly_dashboard_analyzer::sync_broker::start_sync_brokers;
 use serde_json::json;
 
 use crate::analyzer::analyzer_job::start_analyzer_trade_job;
@@ -12,7 +14,7 @@ use crate::config::{AnalyzerConfig, Opts};
 use crate::db::{get_database_credentials, init_database_url};
 
 #[allow(unused_assignments)]
-mod analyzer;
+pub mod analyzer;
 mod client;
 mod config;
 mod db;
@@ -63,6 +65,7 @@ async fn status() -> impl Responder {
     ))
 }
 
+#[warn(deprecated)]
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     openssl_probe::init_ssl_cert_env_vars();
@@ -74,7 +77,10 @@ async fn main() -> std::io::Result<()> {
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     init_database_url(get_database_credentials());
     let port = config.server_port;
-    start_analyze_job(config);
+    let sync_broker_url = config.get_broker_url.clone();
+
+    start_analyze_job(config.clone());
+    start_sync_brokers(sync_broker_url);
     HttpServer::new(|| App::new().service(health).service(status))
         .bind(("0.0.0.0", port))?
         .run()

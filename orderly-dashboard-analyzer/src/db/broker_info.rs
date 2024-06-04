@@ -1,5 +1,6 @@
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
+use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
 use diesel::result::Error;
 
@@ -28,5 +29,28 @@ pub async fn find_by_broker_hash(p_broker_hash: String) -> Result<BrokerInfo, DB
             AsyncError::Execute(Error::NotFound) => Err(QueryError),
             _ => Err(QueryError),
         },
+    }
+}
+
+#[allow(dead_code)]
+pub async fn create_or_update_broker_info(
+    broker_vec: Vec<BrokerInfo>,
+)  {
+    use crate::schema::broker_info::dsl::*;
+    for broker_data in broker_vec {
+        let update_result = diesel::insert_into(broker_info)
+            .values(broker_data.clone())
+            .on_conflict(on_constraint("pr_broker_id"))
+            .do_nothing()
+            .execute_async(&POOL)
+            .await;
+
+        match update_result {
+            Ok(_) => {
+            }
+            Err(erro) => {
+                println!(":{}", erro);
+            }
+        }
     }
 }

@@ -35,6 +35,8 @@ pub struct UserPerpSummary {
 
     pulled_block_height: i64,
     pulled_block_time: NaiveDateTime,
+
+    pub sum_unitary_fundings: BigDecimal,
 }
 
 impl UserPerpSummary {
@@ -56,9 +58,30 @@ impl UserPerpSummary {
         self.opening_cost += open_cost_diff;
     }
 
+    pub fn new_settlemnt(&mut self, settlement_amount: BigDecimal) {
+        self.cost_position += settlement_amount;
+    }
+
     pub fn new_liquidator(&mut self, holding_diff: BigDecimal, opening_cost_diff: BigDecimal) {
         self.holding -= holding_diff.clone();
         self.opening_cost += opening_cost_diff;
+    }
+
+    pub fn charge_funding_fee(&mut self, new_sum_unitary_fundings: BigDecimal) {
+        if new_sum_unitary_fundings.clone() == self.sum_unitary_fundings.clone() {
+            return;
+        }
+
+        if self.holding == BigDecimal::from(0) {
+            self.sum_unitary_fundings = new_sum_unitary_fundings;
+            return;
+        }
+
+        let funding_fee = self.holding.clone()
+            * (new_sum_unitary_fundings.clone() - self.sum_unitary_fundings.clone()).with_scale(6);
+
+        self.cost_position += funding_fee;
+        self.sum_unitary_fundings = new_sum_unitary_fundings;
     }
 }
 
@@ -133,6 +156,7 @@ pub async fn find_user_perp_summary(
                     total_liquidation_count: 0,
                     pulled_block_height: 0,
                     pulled_block_time: Default::default(),
+                    sum_unitary_fundings: BigDecimal::from(0),
                 };
 
                 Ok(new_perp)
@@ -166,6 +190,7 @@ pub async fn create_or_update_user_perp_summary(
                 total_liquidation_count.eq(summary.total_liquidation_count.clone()),
                 pulled_block_height.eq(summary.pulled_block_height.clone()),
                 pulled_block_time.eq(summary.pulled_block_time.clone()),
+                sum_unitary_fundings.eq(summary.sum_unitary_fundings.clone()),
             ))
             .execute_async(&POOL)
             .await;
