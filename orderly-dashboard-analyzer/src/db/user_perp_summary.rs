@@ -50,7 +50,7 @@ impl UserPerpSummary {
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
     ) {
-        self.holding -= qty.clone();
+        self.holding += qty.clone();
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
         self.pulled_block_height = block_num;
