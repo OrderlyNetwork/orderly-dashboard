@@ -27,17 +27,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```shell
 cargo install diesel_cli --git https://github.com/diesel-rs/diesel.git --tag v2.1.3 --no-default-features --features "postgres"
 ```
-create database on your host, put url in `.env` file
-```shell
-echo DATABASE_URL=postgres://username:password@localhost/diesel_demo > .env
-```
-create table
-```shell
-diesel migration generate table_name
-```
-execute sql in database by diesel
-```shell
-diesel migration run
+
 ```
 At this point, we can build the workspace by running `cargo build --release` command. The files in your add directory should look like this:
 ```text
@@ -45,6 +35,7 @@ At this point, we can build the workspace by running `cargo build --release` com
 ├── Cargo.toml
 ├── README.md
 ├── orderly-dashboard-indexer
+...
 └── target
 ```
 The executable binary are here in target/release directory:
@@ -56,7 +47,55 @@ target/release
 └── ...
 ```
 
-## Docker run
+## Option1: Run without Docker
+### orderly dashboard indexer
+```shell
+cd orderly-dashboard-indexer
+```
+create database on your host, put postgres url in `.env` file
+```shell
+echo DATABASE_URL=postgres://username:password@localhost/indexer_dbname > .env
+```
+execute sql in database by diesel
+```shell
+diesel migration run
+```
+run:
+```shell
+../target/release/orderly-dashboard-indexer -c config.example-staging.json
+```
+### orderly dashboard analyzer
+```shell
+cd orderly-dashboard-analyzer
+```
+create database on your host, put postgres url in `.env` file
+```shell
+echo DATABASE_URL=postgres://username:password@localhost/analyzer_dbname > .env
+```
+execute sql in database by diesel
+```shell
+diesel migration run
+```
+run: 
+```shell
+../target/release/orderly-dashboard-analyzer -c config-dev.json
+```
+
+### orderly dashboard query service
+```shell
+cd orderly-dashboard-query-service
+```
+create database on your host, put postgres url in `.env` file
+```shell
+echo INDEXER_DATABASE_URL=postgres://username:password@localhost/indexer_dbname > .env
+echo ANALYZER_DATABASE_URL=postgres://username:password@localhost/analyzer_dbname >> .env
+```
+run: 
+```shell
+../target/release/orderly-dashboard-query-service -c config.example-staging.json
+```
+
+## Option2: Run with Docker
 ### Build images
 orderly dashboard indexer:
 ```shell
@@ -86,7 +125,7 @@ docker run --rm -it -p 8019:8019 --name orderly-dashboard-analyzer -e DATABASE_U
 ```
 - [orderly dashboard query service](./orderly-dashboard-query-service)
 ```shell
-docker run --rm -it -p 8020:8020 --name orderly-dashboard-query-service -e INDEXER_DATABASE_URL=postgresql://[user[:password]@][netloc][:port][/indexer_dbname][?param1=value1&...]
+docker run --rm -it -p 8020:8020 --name orderly-dashboard-query-service -e INDEXER_DATABASE_URL=postgresql://[user[:password]@][netloc][:port][/indexer_dbname][?param1=value1&...] -e ANALYZER_DATABASE_URL=postgresql://[user[:password]@][netloc][:port][/analyzer_dbname][?param1=value1&...]
 ```
 - [orderly dashboard FE](./orderly-dashboard-FE)
 ```shell
