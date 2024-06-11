@@ -4,85 +4,14 @@ Orderly Dashboard is aim to be a web-based data analyze platform that will prese
 * [Orderly dashboard indexer](./orderly-dashboard-indexer)
   * Indexing orderly blockchain's tx and events and decode them, save them to database, provide api to query them by sequence
 * [Orderly dashboard analyzer](./orderly-dashboard-analyzer)
-* [Orderly dashboard FE](./orderly-dashboard-FE)
-  * A web front end for query and present data from orderly dashboard indexer or analyzer
 * [Orderly dashboard query service](./orderly-dashboard-query-service)
   * Provide query api for orderly dashboard FE, source data generate by [Orderly dashboard analyzer](./orderly-dashboard-analyzer) or [Orderly dashboard indexer](./orderly-dashboard-indexer)
-## Repository structure
-This Repository is organized by rust [cargo workspace](https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html)
-It will start with a [workspace] section that will allow us to add members to the workspace by specifying the path to the package with our binary crate; in this case, that path is adder:  
-Filename: [Cargo.toml](./Cargo.toml)
-```toml
-[workspace]
-members = [
-    "orderly-dashboard-indexer",
-]
-```
-Each executable binary or library of rust need to change the top level [Cargo.toml](./Cargo.toml) to specify the `add_one` path in the members list:
-```toml
-[workspace]
-members = [
-    "orderly-dashboard-indexer",
-    "add_one",
-]
-```
-## Prerequisites
-[install rust](https://www.rust-lang.org/tools/install)
-```shell
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-[install postgres db](https://www.runoob.com/postgresql/mac-install-postgresql.html)  
-[install diesel tool](https://diesel.rs/guides/getting-started)
-```shell
-cargo install diesel_cli --git https://github.com/diesel-rs/diesel.git --tag v2.1.3 --no-default-features --features "postgres"
-```
-create database on your host, put url in `.env` file
-```shell
-echo DATABASE_URL=postgres://username:password@localhost/diesel_demo > .env
-```
-create table
-```shell
-diesel migration generate table_name
-```
-execute sql in database by diesel
-```shell
-diesel migration run
-```
-At this point, we can build the workspace by running `cargo build --release` command. The files in your add directory should look like this:
-```text
-├── Cargo.lock
-├── Cargo.toml
-├── README.md
-├── orderly-dashboard-indexer
-└── target
-```
-The executable binary are here in target/release directory:
-```text
-tree target/release -L 1
-target/release
-├── ...
-├── orderly-dashboard-indexer
-└── ...
-```
-## Tools
-### explorer
-* testnet: https://testnet-explorer.orderly.org/
-* mainnet: https://explorer.orderly.network
+* [Orderly dashboard FE](./orderly-dashboard-FE)
+  * A web front end for query and present data from orderly dashboard indexer or analyzer
+## Documentation
+- [Build and run](./BUILD_AND_RUN.md) will help you to deploy orderly dashboard if you want to deploy orderly dashboard project
+- [How to indexing contract events](./orderly-dashboard-indexer/doc/How-to-indexing-data.md) will help you to know how index can index all events from smart contract with contract upgrade
 
-## Build images
-orderly dashboard indexer:
-```shell
-docker build . -t orderly-dashboard-indexer -f dockerfiles/Dockerfile-indexer
-```
-orderly dashboard analyzer:
-```shell
-docker build . -t orderly-dashboard-indexer -f dockerfiles/Dockerfile-analyzer
-```
-orderly dashboard query service:
-```shell
-docker build . -t orderly-dashboard-indexer -f dockerfiles/Dockerfile-query-service
-```
-orderly dashboard FE:
-```shell
-docker build . -t orderly-dashboard-fe -f dockerfiles/Dockerfile-FE
-```
+## Service
+- [prod](https://orderly-dashboard.orderly.network)
+- [testnet](https://dev-orderly-dashboard.orderly.network)
