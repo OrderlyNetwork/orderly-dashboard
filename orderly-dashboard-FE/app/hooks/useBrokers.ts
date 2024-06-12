@@ -17,7 +17,10 @@ const allowedBrokers = [
   'vooi',
   'sharpe_ai',
   'coolwallet',
-  'quick_perps'
+  'quick_perps',
+  'prime_protocol',
+  'fusionx_pro',
+  'xade_finance'
 ];
 
 export function useBrokers() {
