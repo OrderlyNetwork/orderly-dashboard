@@ -11,6 +11,7 @@ Orderly Dashboard is aim to be a web-based data analyze platform that will prese
 ## Documentation
 - [Build and run](./BUILD_AND_RUN.md) will help you to deploy orderly dashboard if you want to deploy orderly dashboard project
 - [How to indexing contract events](./orderly-dashboard-indexer/doc/How-to-indexing-data.md) will help you to know how index can index all events from smart contract with contract upgrade
+- [Project structure]() will help you to know those module's relationship.
 
 ## Service
 - [prod](https://orderly-dashboard.orderly.network)
