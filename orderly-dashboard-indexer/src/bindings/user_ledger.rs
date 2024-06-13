@@ -7,7 +7,7 @@ pub use user_ledger::*;
     clippy::upper_case_acronyms,
     clippy::type_complexity,
     dead_code,
-    non_camel_case_types,
+    non_camel_case_types
 )]
 pub mod user_ledger {
     #[allow(deprecated)]
@@ -3659,9 +3659,8 @@ pub mod user_ledger {
         }
     }
     ///The parsed JSON ABI of the contract.
-    pub static USER_LEDGER_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> = ::ethers::contract::Lazy::new(
-        __abi,
-    );
+    pub static USER_LEDGER_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> =
+        ::ethers::contract::Lazy::new(__abi);
     pub struct user_ledger<M>(::ethers::contract::Contract<M>);
     impl<M> ::core::clone::Clone for user_ledger<M> {
         fn clone(&self) -> Self {
@@ -3693,13 +3692,11 @@ pub mod user_ledger {
             address: T,
             client: ::std::sync::Arc<M>,
         ) -> Self {
-            Self(
-                ::ethers::contract::Contract::new(
-                    address.into(),
-                    USER_LEDGER_ABI.clone(),
-                    client,
-                ),
-            )
+            Self(::ethers::contract::Contract::new(
+                address.into(),
+                USER_LEDGER_ABI.clone(),
+                client,
+            ))
         }
         ///Calls the contract's `accountDeposit` (0x11e0cff4) function
         pub fn account_deposit(
@@ -3732,10 +3729,8 @@ pub mod user_ledger {
         pub fn batch_get_user_ledger(
             &self,
             account_ids: ::std::vec::Vec<[u8; 32]>,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::std::vec::Vec<AccountSnapshot>,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::std::vec::Vec<AccountSnapshot>>
+        {
             self.0
                 .method_hash([23, 87, 203, 55], account_ids)
                 .expect("method not found (this should never happen)")
@@ -3746,10 +3741,8 @@ pub mod user_ledger {
             account_ids: ::std::vec::Vec<[u8; 32]>,
             tokens: ::std::vec::Vec<[u8; 32]>,
             symbols: ::std::vec::Vec<[u8; 32]>,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::std::vec::Vec<AccountSnapshot>,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::std::vec::Vec<AccountSnapshot>>
+        {
             self.0
                 .method_hash([95, 34, 87, 153], (account_ids, tokens, symbols))
                 .expect("method not found (this should never happen)")
@@ -3769,10 +3762,7 @@ pub mod user_ledger {
         ///Calls the contract's `crossChainManagerAddress` (0xb182dc69) function
         pub fn cross_chain_manager_address(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([177, 130, 220, 105], ())
                 .expect("method not found (this should never happen)")
@@ -3897,10 +3887,7 @@ pub mod user_ledger {
         ///Calls the contract's `feeManager` (0xd0fb0203) function
         pub fn fee_manager(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([208, 251, 2, 3], ())
                 .expect("method not found (this should never happen)")
@@ -3920,17 +3907,13 @@ pub mod user_ledger {
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `globalDepositId` (0xaae2844b) function
-        pub fn global_deposit_id(
-            &self,
-        ) -> ::ethers::contract::builders::ContractCall<M, u64> {
+        pub fn global_deposit_id(&self) -> ::ethers::contract::builders::ContractCall<M, u64> {
             self.0
                 .method_hash([170, 226, 132, 75], ())
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `globalEventId` (0x08b85a26) function
-        pub fn global_event_id(
-            &self,
-        ) -> ::ethers::contract::builders::ContractCall<M, u64> {
+        pub fn global_event_id(&self) -> ::ethers::contract::builders::ContractCall<M, u64> {
             self.0
                 .method_hash([8, 184, 90, 38], ())
                 .expect("method not found (this should never happen)")
@@ -3944,10 +3927,7 @@ pub mod user_ledger {
         ///Calls the contract's `marketManager` (0x41ed2c12) function
         pub fn market_manager(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([65, 237, 44, 18], ())
                 .expect("method not found (this should never happen)")
@@ -3955,10 +3935,7 @@ pub mod user_ledger {
         ///Calls the contract's `operatorManagerAddress` (0x75bf9f6d) function
         pub fn operator_manager_address(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([117, 191, 159, 109], ())
                 .expect("method not found (this should never happen)")
@@ -3966,10 +3943,7 @@ pub mod user_ledger {
         ///Calls the contract's `owner` (0x8da5cb5b) function
         pub fn owner(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([141, 165, 203, 91], ())
                 .expect("method not found (this should never happen)")
@@ -3993,9 +3967,7 @@ pub mod user_ledger {
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `renounceOwnership` (0x715018a6) function
-        pub fn renounce_ownership(
-            &self,
-        ) -> ::ethers::contract::builders::ContractCall<M, ()> {
+        pub fn renounce_ownership(&self) -> ::ethers::contract::builders::ContractCall<M, ()> {
             self.0
                 .method_hash([113, 80, 24, 166], ())
                 .expect("method not found (this should never happen)")
@@ -4066,10 +4038,7 @@ pub mod user_ledger {
         ///Calls the contract's `vaultManager` (0x8a4adf24) function
         pub fn vault_manager(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([138, 74, 223, 36], ())
                 .expect("method not found (this should never happen)")
@@ -4077,41 +4046,29 @@ pub mod user_ledger {
         ///Gets the contract's `AccountDeposit` event
         pub fn account_deposit_1_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AccountDeposit1Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AccountDeposit1Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `AccountDeposit` event
         pub fn account_deposit_2_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AccountDeposit2Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AccountDeposit2Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `AccountRegister` event
         pub fn account_register_1_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AccountRegister1Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AccountRegister1Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `AccountRegister` event
         pub fn account_register_2_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AccountRegister2Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AccountRegister2Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `AccountWithdrawApprove` event
@@ -4137,61 +4094,42 @@ pub mod user_ledger {
         ///Gets the contract's `AccountWithdrawFail` event
         pub fn account_withdraw_fail_1_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AccountWithdrawFail1Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AccountWithdrawFail1Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `AccountWithdrawFail` event
         pub fn account_withdraw_fail_2_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AccountWithdrawFail2Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AccountWithdrawFail2Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `AccountWithdrawFinish` event
         pub fn account_withdraw_finish_1_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AccountWithdrawFinish1Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AccountWithdrawFinish1Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `AccountWithdrawFinish` event
         pub fn account_withdraw_finish_2_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AccountWithdrawFinish2Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AccountWithdrawFinish2Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `AdlResult` event
         pub fn adl_result_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AdlResultFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AdlResultFilter> {
             self.0.event()
         }
         ///Gets the contract's `AdlResultV2` event
         pub fn adl_result_v2_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            AdlResultV2Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, AdlResultV2Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ChangeCrossChainManager` event
@@ -4207,131 +4145,92 @@ pub mod user_ledger {
         ///Gets the contract's `ChangeFeeManager` event
         pub fn change_fee_manager_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeFeeManagerFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeFeeManagerFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ChangeLedgerImplA` event
         pub fn change_ledger_impl_a_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeLedgerImplAFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeLedgerImplAFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ChangeMarketManager` event
         pub fn change_market_manager_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeMarketManagerFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeMarketManagerFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ChangeOperatorManager` event
         pub fn change_operator_manager_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeOperatorManagerFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeOperatorManagerFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ChangeVaultManager` event
         pub fn change_vault_manager_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeVaultManagerFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeVaultManagerFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `DelegateSigner` event
         pub fn delegate_signer_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            DelegateSignerFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, DelegateSignerFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `FeeDistribution` event
         pub fn fee_distribution_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            FeeDistributionFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, FeeDistributionFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `Initialized` event
         pub fn initialized_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            InitializedFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, InitializedFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `LiquidationResult` event
         pub fn liquidation_result_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            LiquidationResultFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, LiquidationResultFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `LiquidationResultV2` event
         pub fn liquidation_result_v2_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            LiquidationResultV2Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, LiquidationResultV2Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `LiquidationTransfer` event
         pub fn liquidation_transfer_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            LiquidationTransferFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, LiquidationTransferFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `LiquidationTransferV2` event
         pub fn liquidation_transfer_v2_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            LiquidationTransferV2Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, LiquidationTransferV2Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `OwnershipTransferred` event
         pub fn ownership_transferred_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            OwnershipTransferredFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, OwnershipTransferredFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ProcessValidatedFutures` event
@@ -4357,36 +4256,27 @@ pub mod user_ledger {
         ///Gets the contract's `SettlementExecution` event
         pub fn settlement_execution_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            SettlementExecutionFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, SettlementExecutionFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `SettlementResult` event
         pub fn settlement_result_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            SettlementResultFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, SettlementResultFilter>
+        {
             self.0.event()
         }
         /// Returns an `Event` builder for all the events of this contract.
         pub fn events(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            user_ledgerEvents,
-        > {
-            self.0.event_with_filter(::core::default::Default::default())
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, user_ledgerEvents>
+        {
+            self.0
+                .event_with_filter(::core::default::Default::default())
         }
     }
-    impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>>
-    for user_ledger<M> {
+    impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>> for user_ledger<M> {
         fn from(contract: ::ethers::contract::Contract<M>) -> Self {
             Self::new(contract.address(), contract.client())
         }
@@ -4400,7 +4290,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "AccountIdInvalid", abi = "AccountIdInvalid()")]
     pub struct AccountIdInvalid;
@@ -4413,7 +4303,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "AddressZero", abi = "AddressZero()")]
     pub struct AddressZero;
@@ -4426,7 +4316,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "BalanceNotEnough", abi = "BalanceNotEnough(uint128,int128)")]
     pub struct BalanceNotEnough {
@@ -4442,7 +4332,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "BatchIdNotMatch", abi = "BatchIdNotMatch(uint64,uint64)")]
     pub struct BatchIdNotMatch {
@@ -4458,7 +4348,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "BrokerNotAllowed", abi = "BrokerNotAllowed()")]
     pub struct BrokerNotAllowed;
@@ -4471,7 +4361,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "Bytes32Zero", abi = "Bytes32Zero()")]
     pub struct Bytes32Zero;
@@ -4484,7 +4374,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "CountNotMatch", abi = "CountNotMatch(uint256,uint256)")]
     pub struct CountNotMatch {
@@ -4500,7 +4390,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "DelegateChainIdNotMatch",
@@ -4520,7 +4410,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "DelegateReceiverNotMatch",
@@ -4539,7 +4429,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "DelegateSignerNotMatch",
@@ -4559,7 +4449,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "DelegatecallFail", abi = "DelegatecallFail()")]
     pub struct DelegatecallFail;
@@ -4572,7 +4462,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "EnumerableSetError", abi = "EnumerableSetError()")]
     pub struct EnumerableSetError;
@@ -4585,9 +4475,12 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
-    #[etherror(name = "FrozenBalanceInconsistent", abi = "FrozenBalanceInconsistent()")]
+    #[etherror(
+        name = "FrozenBalanceInconsistent",
+        abi = "FrozenBalanceInconsistent()"
+    )]
     pub struct FrozenBalanceInconsistent;
     ///Custom Error type `InsurancePositionQtyInvalid` with signature `InsurancePositionQtyInvalid(int128,int128)` and selector `0xc7536dca`
     #[derive(
@@ -4598,7 +4491,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "InsurancePositionQtyInvalid",
@@ -4617,7 +4510,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "InsuranceTransferAmountInvalid",
@@ -4637,7 +4530,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "InsuranceTransferToSelf", abi = "InsuranceTransferToSelf()")]
     pub struct InsuranceTransferToSelf;
@@ -4650,7 +4543,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "InvalidBizType", abi = "InvalidBizType(uint8)")]
     pub struct InvalidBizType {
@@ -4665,7 +4558,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "InvalidFeeCollectorType", abi = "InvalidFeeCollectorType()")]
     pub struct InvalidFeeCollectorType;
@@ -4678,7 +4571,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "LedgerAddressZero", abi = "LedgerAddressZero()")]
     pub struct LedgerAddressZero;
@@ -4691,7 +4584,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "OnlyCrossChainManagerCanCall",
@@ -4707,7 +4600,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "OnlyLedgerCanCall", abi = "OnlyLedgerCanCall()")]
     pub struct OnlyLedgerCanCall;
@@ -4720,7 +4613,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "OnlyOperatorCanCall", abi = "OnlyOperatorCanCall()")]
     pub struct OnlyOperatorCanCall;
@@ -4733,7 +4626,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "OnlyOperatorManagerCanCall",
@@ -4749,7 +4642,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "OperatorManagerAddressZero",
@@ -4765,7 +4658,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "RebalanceAlreadySucc", abi = "RebalanceAlreadySucc()")]
     pub struct RebalanceAlreadySucc;
@@ -4778,7 +4671,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "RebalanceChainIdInvalid",
@@ -4796,9 +4689,12 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
-    #[etherror(name = "RebalanceIdNotMatch", abi = "RebalanceIdNotMatch(uint64,uint64)")]
+    #[etherror(
+        name = "RebalanceIdNotMatch",
+        abi = "RebalanceIdNotMatch(uint64,uint64)"
+    )]
     pub struct RebalanceIdNotMatch {
         pub given_id: u64,
         pub want_id: u64,
@@ -4812,7 +4708,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "RebalanceMintUnexpected", abi = "RebalanceMintUnexpected()")]
     pub struct RebalanceMintUnexpected;
@@ -4825,7 +4721,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "RebalanceStillPending", abi = "RebalanceStillPending()")]
     pub struct RebalanceStillPending;
@@ -4838,7 +4734,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "RebalanceTokenNotSupported",
@@ -4857,7 +4753,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "SafeCastOverflow", abi = "SafeCastOverflow()")]
     pub struct SafeCastOverflow;
@@ -4870,7 +4766,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "SafeCastUnderflow", abi = "SafeCastUnderflow()")]
     pub struct SafeCastUnderflow;
@@ -4883,7 +4779,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "SignatureNotMatch", abi = "SignatureNotMatch()")]
     pub struct SignatureNotMatch;
@@ -4896,7 +4792,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "SymbolNotAllowed", abi = "SymbolNotAllowed()")]
     pub struct SymbolNotAllowed;
@@ -4909,7 +4805,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "SymbolNotRegister", abi = "SymbolNotRegister()")]
     pub struct SymbolNotRegister;
@@ -4922,7 +4818,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "TokenNotAllowed", abi = "TokenNotAllowed(bytes32,uint256)")]
     pub struct TokenNotAllowed {
@@ -4938,7 +4834,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "TotalSettleAmountNotMatch",
@@ -4956,7 +4852,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "UserPerpPositionQtyZero",
@@ -4975,7 +4871,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "WithdrawBalanceNotEnough",
@@ -4994,7 +4890,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "WithdrawFeeTooLarge",
@@ -5013,7 +4909,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "WithdrawToAddressZero", abi = "WithdrawToAddressZero()")]
     pub struct WithdrawToAddressZero;
@@ -5026,7 +4922,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "WithdrawVaultBalanceNotEnough",
@@ -5045,7 +4941,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "ZeroChainId", abi = "ZeroChainId()")]
     pub struct ZeroChainId;
@@ -5058,7 +4954,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "ZeroDelegateContract", abi = "ZeroDelegateContract()")]
     pub struct ZeroDelegateContract;
@@ -5071,7 +4967,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "ZeroDelegateSigner", abi = "ZeroDelegateSigner()")]
     pub struct ZeroDelegateSigner;
@@ -5132,234 +5028,209 @@ pub mod user_ledger {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded) = <::std::string::String as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <::std::string::String as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RevertString(decoded));
             }
-            if let Ok(decoded) = <AccountIdInvalid as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <AccountIdInvalid as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::AccountIdInvalid(decoded));
             }
-            if let Ok(decoded) = <AddressZero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <AddressZero as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::AddressZero(decoded));
             }
-            if let Ok(decoded) = <BalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <BalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::BalanceNotEnough(decoded));
             }
-            if let Ok(decoded) = <BatchIdNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <BatchIdNotMatch as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::BatchIdNotMatch(decoded));
             }
-            if let Ok(decoded) = <BrokerNotAllowed as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <BrokerNotAllowed as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::BrokerNotAllowed(decoded));
             }
-            if let Ok(decoded) = <Bytes32Zero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <Bytes32Zero as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Bytes32Zero(decoded));
             }
-            if let Ok(decoded) = <CountNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <CountNotMatch as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::CountNotMatch(decoded));
             }
-            if let Ok(decoded) = <DelegateChainIdNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <DelegateChainIdNotMatch as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::DelegateChainIdNotMatch(decoded));
             }
-            if let Ok(decoded) = <DelegateReceiverNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <DelegateReceiverNotMatch as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::DelegateReceiverNotMatch(decoded));
             }
-            if let Ok(decoded) = <DelegateSignerNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <DelegateSignerNotMatch as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::DelegateSignerNotMatch(decoded));
             }
-            if let Ok(decoded) = <DelegatecallFail as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <DelegatecallFail as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::DelegatecallFail(decoded));
             }
-            if let Ok(decoded) = <EnumerableSetError as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <EnumerableSetError as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::EnumerableSetError(decoded));
             }
-            if let Ok(decoded) = <FrozenBalanceInconsistent as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <FrozenBalanceInconsistent as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::FrozenBalanceInconsistent(decoded));
             }
-            if let Ok(decoded) = <InsurancePositionQtyInvalid as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <InsurancePositionQtyInvalid as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::InsurancePositionQtyInvalid(decoded));
             }
-            if let Ok(decoded) = <InsuranceTransferAmountInvalid as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <InsuranceTransferAmountInvalid as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::InsuranceTransferAmountInvalid(decoded));
             }
-            if let Ok(decoded) = <InsuranceTransferToSelf as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <InsuranceTransferToSelf as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::InsuranceTransferToSelf(decoded));
             }
-            if let Ok(decoded) = <InvalidBizType as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <InvalidBizType as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::InvalidBizType(decoded));
             }
-            if let Ok(decoded) = <InvalidFeeCollectorType as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <InvalidFeeCollectorType as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::InvalidFeeCollectorType(decoded));
             }
-            if let Ok(decoded) = <LedgerAddressZero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <LedgerAddressZero as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::LedgerAddressZero(decoded));
             }
-            if let Ok(decoded) = <OnlyCrossChainManagerCanCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OnlyCrossChainManagerCanCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OnlyCrossChainManagerCanCall(decoded));
             }
-            if let Ok(decoded) = <OnlyLedgerCanCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <OnlyLedgerCanCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OnlyLedgerCanCall(decoded));
             }
-            if let Ok(decoded) = <OnlyOperatorCanCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OnlyOperatorCanCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OnlyOperatorCanCall(decoded));
             }
-            if let Ok(decoded) = <OnlyOperatorManagerCanCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OnlyOperatorManagerCanCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OnlyOperatorManagerCanCall(decoded));
             }
-            if let Ok(decoded) = <OperatorManagerAddressZero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OperatorManagerAddressZero as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OperatorManagerAddressZero(decoded));
             }
-            if let Ok(decoded) = <RebalanceAlreadySucc as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RebalanceAlreadySucc as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RebalanceAlreadySucc(decoded));
             }
-            if let Ok(decoded) = <RebalanceChainIdInvalid as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RebalanceChainIdInvalid as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RebalanceChainIdInvalid(decoded));
             }
-            if let Ok(decoded) = <RebalanceIdNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RebalanceIdNotMatch as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RebalanceIdNotMatch(decoded));
             }
-            if let Ok(decoded) = <RebalanceMintUnexpected as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RebalanceMintUnexpected as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RebalanceMintUnexpected(decoded));
             }
-            if let Ok(decoded) = <RebalanceStillPending as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RebalanceStillPending as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RebalanceStillPending(decoded));
             }
-            if let Ok(decoded) = <RebalanceTokenNotSupported as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RebalanceTokenNotSupported as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RebalanceTokenNotSupported(decoded));
             }
-            if let Ok(decoded) = <SafeCastOverflow as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SafeCastOverflow as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SafeCastOverflow(decoded));
             }
-            if let Ok(decoded) = <SafeCastUnderflow as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SafeCastUnderflow as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SafeCastUnderflow(decoded));
             }
-            if let Ok(decoded) = <SignatureNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SignatureNotMatch as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SignatureNotMatch(decoded));
             }
-            if let Ok(decoded) = <SymbolNotAllowed as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SymbolNotAllowed as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SymbolNotAllowed(decoded));
             }
-            if let Ok(decoded) = <SymbolNotRegister as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SymbolNotRegister as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SymbolNotRegister(decoded));
             }
-            if let Ok(decoded) = <TokenNotAllowed as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <TokenNotAllowed as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::TokenNotAllowed(decoded));
             }
-            if let Ok(decoded) = <TotalSettleAmountNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <TotalSettleAmountNotMatch as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::TotalSettleAmountNotMatch(decoded));
             }
-            if let Ok(decoded) = <UserPerpPositionQtyZero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <UserPerpPositionQtyZero as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::UserPerpPositionQtyZero(decoded));
             }
-            if let Ok(decoded) = <WithdrawBalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <WithdrawBalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::WithdrawBalanceNotEnough(decoded));
             }
-            if let Ok(decoded) = <WithdrawFeeTooLarge as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <WithdrawFeeTooLarge as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::WithdrawFeeTooLarge(decoded));
             }
-            if let Ok(decoded) = <WithdrawToAddressZero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <WithdrawToAddressZero as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::WithdrawToAddressZero(decoded));
             }
-            if let Ok(decoded) = <WithdrawVaultBalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <WithdrawVaultBalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::WithdrawVaultBalanceNotEnough(decoded));
             }
-            if let Ok(decoded) = <ZeroChainId as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <ZeroChainId as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::ZeroChainId(decoded));
             }
-            if let Ok(decoded) = <ZeroDelegateContract as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ZeroDelegateContract as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ZeroDelegateContract(decoded));
             }
-            if let Ok(decoded) = <ZeroDelegateSigner as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ZeroDelegateSigner as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ZeroDelegateSigner(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -5368,27 +5239,13 @@ pub mod user_ledger {
     impl ::ethers::core::abi::AbiEncode for user_ledgerErrors {
         fn encode(self) -> ::std::vec::Vec<u8> {
             match self {
-                Self::AccountIdInvalid(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::AddressZero(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::BalanceNotEnough(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::BatchIdNotMatch(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::BrokerNotAllowed(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::Bytes32Zero(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::CountNotMatch(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::AccountIdInvalid(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::AddressZero(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::BalanceNotEnough(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::BatchIdNotMatch(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::BrokerNotAllowed(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::Bytes32Zero(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::CountNotMatch(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::DelegateChainIdNotMatch(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -5398,9 +5255,7 @@ pub mod user_ledger {
                 Self::DelegateSignerNotMatch(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::DelegatecallFail(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::DelegatecallFail(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::EnumerableSetError(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -5416,21 +5271,15 @@ pub mod user_ledger {
                 Self::InsuranceTransferToSelf(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::InvalidBizType(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::InvalidBizType(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::InvalidFeeCollectorType(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::LedgerAddressZero(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::LedgerAddressZero(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::OnlyCrossChainManagerCanCall(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::OnlyLedgerCanCall(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::OnlyLedgerCanCall(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::OnlyOperatorCanCall(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -5458,24 +5307,12 @@ pub mod user_ledger {
                 Self::RebalanceTokenNotSupported(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::SafeCastOverflow(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SafeCastUnderflow(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SignatureNotMatch(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SymbolNotAllowed(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SymbolNotRegister(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::TokenNotAllowed(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::SafeCastOverflow(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SafeCastUnderflow(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SignatureNotMatch(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SymbolNotAllowed(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SymbolNotRegister(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::TokenNotAllowed(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::TotalSettleAmountNotMatch(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -5494,9 +5331,7 @@ pub mod user_ledger {
                 Self::WithdrawVaultBalanceNotEnough(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::ZeroChainId(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::ZeroChainId(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::ZeroDelegateContract(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -5699,98 +5534,50 @@ pub mod user_ledger {
                 Self::BrokerNotAllowed(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Bytes32Zero(element) => ::core::fmt::Display::fmt(element, f),
                 Self::CountNotMatch(element) => ::core::fmt::Display::fmt(element, f),
-                Self::DelegateChainIdNotMatch(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::DelegateReceiverNotMatch(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::DelegateSignerNotMatch(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::DelegateChainIdNotMatch(element) => ::core::fmt::Display::fmt(element, f),
+                Self::DelegateReceiverNotMatch(element) => ::core::fmt::Display::fmt(element, f),
+                Self::DelegateSignerNotMatch(element) => ::core::fmt::Display::fmt(element, f),
                 Self::DelegatecallFail(element) => ::core::fmt::Display::fmt(element, f),
-                Self::EnumerableSetError(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::FrozenBalanceInconsistent(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::InsurancePositionQtyInvalid(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::EnumerableSetError(element) => ::core::fmt::Display::fmt(element, f),
+                Self::FrozenBalanceInconsistent(element) => ::core::fmt::Display::fmt(element, f),
+                Self::InsurancePositionQtyInvalid(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InsuranceTransferAmountInvalid(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::InsuranceTransferToSelf(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::InsuranceTransferToSelf(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidBizType(element) => ::core::fmt::Display::fmt(element, f),
-                Self::InvalidFeeCollectorType(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::InvalidFeeCollectorType(element) => ::core::fmt::Display::fmt(element, f),
                 Self::LedgerAddressZero(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OnlyCrossChainManagerCanCall(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::OnlyLedgerCanCall(element) => ::core::fmt::Display::fmt(element, f),
-                Self::OnlyOperatorCanCall(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::OnlyOperatorManagerCanCall(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::OperatorManagerAddressZero(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::RebalanceAlreadySucc(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::RebalanceChainIdInvalid(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::RebalanceIdNotMatch(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::RebalanceMintUnexpected(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::RebalanceStillPending(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::RebalanceTokenNotSupported(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::OnlyOperatorCanCall(element) => ::core::fmt::Display::fmt(element, f),
+                Self::OnlyOperatorManagerCanCall(element) => ::core::fmt::Display::fmt(element, f),
+                Self::OperatorManagerAddressZero(element) => ::core::fmt::Display::fmt(element, f),
+                Self::RebalanceAlreadySucc(element) => ::core::fmt::Display::fmt(element, f),
+                Self::RebalanceChainIdInvalid(element) => ::core::fmt::Display::fmt(element, f),
+                Self::RebalanceIdNotMatch(element) => ::core::fmt::Display::fmt(element, f),
+                Self::RebalanceMintUnexpected(element) => ::core::fmt::Display::fmt(element, f),
+                Self::RebalanceStillPending(element) => ::core::fmt::Display::fmt(element, f),
+                Self::RebalanceTokenNotSupported(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SafeCastOverflow(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SafeCastUnderflow(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SignatureNotMatch(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SymbolNotAllowed(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SymbolNotRegister(element) => ::core::fmt::Display::fmt(element, f),
                 Self::TokenNotAllowed(element) => ::core::fmt::Display::fmt(element, f),
-                Self::TotalSettleAmountNotMatch(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::UserPerpPositionQtyZero(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::WithdrawBalanceNotEnough(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::WithdrawFeeTooLarge(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::WithdrawToAddressZero(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::TotalSettleAmountNotMatch(element) => ::core::fmt::Display::fmt(element, f),
+                Self::UserPerpPositionQtyZero(element) => ::core::fmt::Display::fmt(element, f),
+                Self::WithdrawBalanceNotEnough(element) => ::core::fmt::Display::fmt(element, f),
+                Self::WithdrawFeeTooLarge(element) => ::core::fmt::Display::fmt(element, f),
+                Self::WithdrawToAddressZero(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawVaultBalanceNotEnough(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::ZeroChainId(element) => ::core::fmt::Display::fmt(element, f),
-                Self::ZeroDelegateContract(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ZeroDelegateSigner(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ZeroDelegateContract(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ZeroDelegateSigner(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RevertString(s) => ::core::fmt::Display::fmt(s, f),
             }
         }
@@ -6033,7 +5820,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountDeposit",
@@ -6061,7 +5848,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountDeposit",
@@ -6090,7 +5877,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountRegister",
@@ -6112,7 +5899,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountRegister",
@@ -6135,7 +5922,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountWithdrawApprove",
@@ -6164,7 +5951,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountWithdrawApprove",
@@ -6194,7 +5981,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountWithdrawFail",
@@ -6224,7 +6011,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountWithdrawFail",
@@ -6255,7 +6042,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountWithdrawFinish",
@@ -6284,7 +6071,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AccountWithdrawFinish",
@@ -6314,7 +6101,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AdlResult",
@@ -6341,7 +6128,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "AdlResultV2",
@@ -6367,7 +6154,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "ChangeCrossChainManager",
@@ -6385,7 +6172,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "ChangeFeeManager", abi = "ChangeFeeManager(address,address)")]
     pub struct ChangeFeeManagerFilter {
@@ -6400,7 +6187,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "ChangeLedgerImplA", abi = "ChangeLedgerImplA(address,address)")]
     pub struct ChangeLedgerImplAFilter {
@@ -6415,7 +6202,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "ChangeMarketManager",
@@ -6433,7 +6220,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "ChangeOperatorManager",
@@ -6451,9 +6238,12 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
-    #[ethevent(name = "ChangeVaultManager", abi = "ChangeVaultManager(address,address)")]
+    #[ethevent(
+        name = "ChangeVaultManager",
+        abi = "ChangeVaultManager(address,address)"
+    )]
     pub struct ChangeVaultManagerFilter {
         pub old_address: ::ethers::core::types::Address,
         pub new_address: ::ethers::core::types::Address,
@@ -6466,7 +6256,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "DelegateSigner",
@@ -6491,7 +6281,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "FeeDistribution",
@@ -6515,7 +6305,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "Initialized", abi = "Initialized(uint8)")]
     pub struct InitializedFilter {
@@ -6529,7 +6319,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "LiquidationResult",
@@ -6554,7 +6344,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "LiquidationResultV2",
@@ -6577,7 +6367,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "LiquidationTransfer",
@@ -6606,7 +6396,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "LiquidationTransferV2",
@@ -6631,7 +6421,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "OwnershipTransferred",
@@ -6651,7 +6441,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "ProcessValidatedFutures",
@@ -6681,7 +6471,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "ProcessValidatedFutures",
@@ -6711,7 +6501,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "SettlementExecution",
@@ -6732,7 +6522,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "SettlementResult",
@@ -6884,30 +6674,18 @@ pub mod user_ledger {
     impl ::core::fmt::Display for user_ledgerEvents {
         fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
             match self {
-                Self::AccountDeposit1Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::AccountDeposit2Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::AccountRegister1Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::AccountRegister2Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::AccountDeposit1Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::AccountDeposit2Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::AccountRegister1Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::AccountRegister2Filter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::AccountWithdrawApprove1Filter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::AccountWithdrawApprove2Filter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::AccountWithdrawFail1Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::AccountWithdrawFail2Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::AccountWithdrawFail1Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::AccountWithdrawFail2Filter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::AccountWithdrawFinish1Filter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
@@ -6919,55 +6697,27 @@ pub mod user_ledger {
                 Self::ChangeCrossChainManagerFilter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::ChangeFeeManagerFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ChangeLedgerImplAFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ChangeMarketManagerFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ChangeOperatorManagerFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ChangeVaultManagerFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::DelegateSignerFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::FeeDistributionFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ChangeFeeManagerFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ChangeLedgerImplAFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ChangeMarketManagerFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ChangeOperatorManagerFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ChangeVaultManagerFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::DelegateSignerFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::FeeDistributionFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InitializedFilter(element) => ::core::fmt::Display::fmt(element, f),
-                Self::LiquidationResultFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::LiquidationResultV2Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::LiquidationTransferFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::LiquidationTransferV2Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::OwnershipTransferredFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::LiquidationResultFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::LiquidationResultV2Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::LiquidationTransferFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::LiquidationTransferV2Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::OwnershipTransferredFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ProcessValidatedFutures1Filter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::ProcessValidatedFutures2Filter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::SettlementExecutionFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::SettlementResultFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::SettlementExecutionFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::SettlementResultFilter(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -7130,7 +6880,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "accountDeposit",
@@ -7148,7 +6898,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "accountWithDrawFinish",
@@ -7166,7 +6916,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "accountWithdrawFail",
@@ -7184,7 +6934,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "batchGetUserLedger", abi = "batchGetUserLedger(bytes32[])")]
     pub struct BatchGetUserLedgerCall {
@@ -7199,7 +6949,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "batchGetUserLedger",
@@ -7219,7 +6969,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "contractSigner", abi = "contractSigner(bytes32)")]
     pub struct ContractSignerCall(pub [u8; 32]);
@@ -7232,7 +6982,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "crossChainManagerAddress", abi = "crossChainManagerAddress()")]
     pub struct CrossChainManagerAddressCall;
@@ -7245,7 +6995,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeAdl",
@@ -7264,7 +7014,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeAdlV2",
@@ -7283,7 +7033,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeDelegateSigner",
@@ -7312,7 +7062,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeFeeDistribution",
@@ -7331,7 +7081,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeLiquidation",
@@ -7350,7 +7100,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeLiquidationV2",
@@ -7369,7 +7119,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeProcessValidatedFutures",
@@ -7387,7 +7137,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeRebalanceBurn",
@@ -7405,7 +7155,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeRebalanceMint",
@@ -7423,7 +7173,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "executeSettlement",
@@ -7452,7 +7202,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "feeManager", abi = "feeManager()")]
     pub struct FeeManagerCall;
@@ -7465,7 +7215,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "getFrozenWithdrawNonce",
@@ -7485,7 +7235,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "globalDepositId", abi = "globalDepositId()")]
     pub struct GlobalDepositIdCall;
@@ -7498,7 +7248,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "globalEventId", abi = "globalEventId()")]
     pub struct GlobalEventIdCall;
@@ -7511,7 +7261,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "initialize", abi = "initialize()")]
     pub struct InitializeCall;
@@ -7524,7 +7274,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "marketManager", abi = "marketManager()")]
     pub struct MarketManagerCall;
@@ -7537,7 +7287,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "operatorManagerAddress", abi = "operatorManagerAddress()")]
     pub struct OperatorManagerAddressCall;
@@ -7550,7 +7300,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "owner", abi = "owner()")]
     pub struct OwnerCall;
@@ -7563,7 +7313,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "rebalanceBurnFinish",
@@ -7581,7 +7331,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "rebalanceMintFinish",
@@ -7599,7 +7349,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "renounceOwnership", abi = "renounceOwnership()")]
     pub struct RenounceOwnershipCall;
@@ -7612,7 +7362,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setCrossChainManager", abi = "setCrossChainManager(address)")]
     pub struct SetCrossChainManagerCall {
@@ -7627,7 +7377,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setFeeManager", abi = "setFeeManager(address)")]
     pub struct SetFeeManagerCall {
@@ -7642,7 +7392,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setLedgerImplA", abi = "setLedgerImplA(address)")]
     pub struct SetLedgerImplACall {
@@ -7657,7 +7407,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setMarketManager", abi = "setMarketManager(address)")]
     pub struct SetMarketManagerCall {
@@ -7672,7 +7422,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "setOperatorManagerAddress",
@@ -7690,7 +7440,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setVaultManager", abi = "setVaultManager(address)")]
     pub struct SetVaultManagerCall {
@@ -7705,7 +7455,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "transferOwnership", abi = "transferOwnership(address)")]
     pub struct TransferOwnershipCall {
@@ -7720,7 +7470,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "vaultManager", abi = "vaultManager()")]
     pub struct VaultManagerCall;
@@ -7771,194 +7521,181 @@ pub mod user_ledger {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded) = <AccountDepositCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <AccountDepositCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::AccountDeposit(decoded));
             }
-            if let Ok(decoded) = <AccountWithDrawFinishCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <AccountWithDrawFinishCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::AccountWithDrawFinish(decoded));
             }
-            if let Ok(decoded) = <AccountWithdrawFailCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <AccountWithdrawFailCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::AccountWithdrawFail(decoded));
             }
-            if let Ok(decoded) = <BatchGetUserLedgerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <BatchGetUserLedgerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::BatchGetUserLedger(decoded));
             }
-            if let Ok(decoded) = <BatchGetUserLedgerWithTokensCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <BatchGetUserLedgerWithTokensCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::BatchGetUserLedgerWithTokens(decoded));
             }
-            if let Ok(decoded) = <ContractSignerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ContractSignerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ContractSigner(decoded));
             }
-            if let Ok(decoded) = <CrossChainManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <CrossChainManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::CrossChainManagerAddress(decoded));
             }
-            if let Ok(decoded) = <ExecuteAdlCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <ExecuteAdlCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::ExecuteAdl(decoded));
             }
-            if let Ok(decoded) = <ExecuteAdlV2Call as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <ExecuteAdlV2Call as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteAdlV2(decoded));
             }
-            if let Ok(decoded) = <ExecuteDelegateSignerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteDelegateSignerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteDelegateSigner(decoded));
             }
-            if let Ok(decoded) = <ExecuteDelegateWithdrawActionCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteDelegateWithdrawActionCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteDelegateWithdrawAction(decoded));
             }
-            if let Ok(decoded) = <ExecuteFeeDistributionCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteFeeDistributionCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteFeeDistribution(decoded));
             }
-            if let Ok(decoded) = <ExecuteLiquidationCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteLiquidationCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteLiquidation(decoded));
             }
-            if let Ok(decoded) = <ExecuteLiquidationV2Call as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteLiquidationV2Call as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteLiquidationV2(decoded));
             }
-            if let Ok(decoded) = <ExecuteProcessValidatedFuturesCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteProcessValidatedFuturesCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteProcessValidatedFutures(decoded));
             }
-            if let Ok(decoded) = <ExecuteRebalanceBurnCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteRebalanceBurnCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteRebalanceBurn(decoded));
             }
-            if let Ok(decoded) = <ExecuteRebalanceMintCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteRebalanceMintCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteRebalanceMint(decoded));
             }
-            if let Ok(decoded) = <ExecuteSettlementCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteSettlementCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteSettlement(decoded));
             }
-            if let Ok(decoded) = <ExecuteWithdrawActionCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <ExecuteWithdrawActionCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ExecuteWithdrawAction(decoded));
             }
-            if let Ok(decoded) = <FeeManagerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <FeeManagerCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::FeeManager(decoded));
             }
-            if let Ok(decoded) = <GetFrozenWithdrawNonceCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <GetFrozenWithdrawNonceCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::GetFrozenWithdrawNonce(decoded));
             }
-            if let Ok(decoded) = <GlobalDepositIdCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <GlobalDepositIdCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::GlobalDepositId(decoded));
             }
-            if let Ok(decoded) = <GlobalEventIdCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <GlobalEventIdCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::GlobalEventId(decoded));
             }
-            if let Ok(decoded) = <InitializeCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <InitializeCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Initialize(decoded));
             }
-            if let Ok(decoded) = <MarketManagerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <MarketManagerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::MarketManager(decoded));
             }
-            if let Ok(decoded) = <OperatorManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OperatorManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OperatorManagerAddress(decoded));
             }
-            if let Ok(decoded) = <OwnerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <OwnerCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Owner(decoded));
             }
-            if let Ok(decoded) = <RebalanceBurnFinishCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RebalanceBurnFinishCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RebalanceBurnFinish(decoded));
             }
-            if let Ok(decoded) = <RebalanceMintFinishCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RebalanceMintFinishCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RebalanceMintFinish(decoded));
             }
-            if let Ok(decoded) = <RenounceOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RenounceOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RenounceOwnership(decoded));
             }
-            if let Ok(decoded) = <SetCrossChainManagerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetCrossChainManagerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetCrossChainManager(decoded));
             }
-            if let Ok(decoded) = <SetFeeManagerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SetFeeManagerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetFeeManager(decoded));
             }
-            if let Ok(decoded) = <SetLedgerImplACall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetLedgerImplACall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetLedgerImplA(decoded));
             }
-            if let Ok(decoded) = <SetMarketManagerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetMarketManagerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetMarketManager(decoded));
             }
-            if let Ok(decoded) = <SetOperatorManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetOperatorManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetOperatorManagerAddress(decoded));
             }
-            if let Ok(decoded) = <SetVaultManagerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetVaultManagerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetVaultManager(decoded));
             }
-            if let Ok(decoded) = <TransferOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <TransferOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::TransferOwnership(decoded));
             }
-            if let Ok(decoded) = <VaultManagerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <VaultManagerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::VaultManager(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -7967,9 +7704,7 @@ pub mod user_ledger {
     impl ::ethers::core::abi::AbiEncode for user_ledgerCalls {
         fn encode(self) -> Vec<u8> {
             match self {
-                Self::AccountDeposit(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::AccountDeposit(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::AccountWithDrawFinish(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -7982,18 +7717,12 @@ pub mod user_ledger {
                 Self::BatchGetUserLedgerWithTokens(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::ContractSigner(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::ContractSigner(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::CrossChainManagerAddress(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::ExecuteAdl(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::ExecuteAdlV2(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::ExecuteAdl(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::ExecuteAdlV2(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::ExecuteDelegateSigner(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -8018,30 +7747,18 @@ pub mod user_ledger {
                 Self::ExecuteRebalanceMint(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::ExecuteSettlement(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::ExecuteSettlement(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::ExecuteWithdrawAction(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::FeeManager(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::FeeManager(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::GetFrozenWithdrawNonce(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::GlobalDepositId(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::GlobalEventId(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::Initialize(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::MarketManager(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::GlobalDepositId(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::GlobalEventId(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::Initialize(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::MarketManager(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::OperatorManagerAddress(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -8052,33 +7769,19 @@ pub mod user_ledger {
                 Self::RebalanceMintFinish(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::RenounceOwnership(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::RenounceOwnership(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::SetCrossChainManager(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::SetFeeManager(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SetLedgerImplA(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SetMarketManager(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::SetFeeManager(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SetLedgerImplA(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SetMarketManager(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::SetOperatorManagerAddress(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::SetVaultManager(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::TransferOwnership(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::VaultManager(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::SetVaultManager(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::TransferOwnership(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::VaultManager(element) => ::ethers::core::abi::AbiEncode::encode(element),
             }
         }
     }
@@ -8086,80 +7789,46 @@ pub mod user_ledger {
         fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
             match self {
                 Self::AccountDeposit(element) => ::core::fmt::Display::fmt(element, f),
-                Self::AccountWithDrawFinish(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::AccountWithdrawFail(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::BatchGetUserLedger(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::AccountWithDrawFinish(element) => ::core::fmt::Display::fmt(element, f),
+                Self::AccountWithdrawFail(element) => ::core::fmt::Display::fmt(element, f),
+                Self::BatchGetUserLedger(element) => ::core::fmt::Display::fmt(element, f),
                 Self::BatchGetUserLedgerWithTokens(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::ContractSigner(element) => ::core::fmt::Display::fmt(element, f),
-                Self::CrossChainManagerAddress(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::CrossChainManagerAddress(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ExecuteAdl(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ExecuteAdlV2(element) => ::core::fmt::Display::fmt(element, f),
-                Self::ExecuteDelegateSigner(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ExecuteDelegateSigner(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ExecuteDelegateWithdrawAction(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::ExecuteFeeDistribution(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ExecuteLiquidation(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ExecuteLiquidationV2(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ExecuteFeeDistribution(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ExecuteLiquidation(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ExecuteLiquidationV2(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ExecuteProcessValidatedFutures(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::ExecuteRebalanceBurn(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ExecuteRebalanceMint(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ExecuteRebalanceBurn(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ExecuteRebalanceMint(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ExecuteSettlement(element) => ::core::fmt::Display::fmt(element, f),
-                Self::ExecuteWithdrawAction(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ExecuteWithdrawAction(element) => ::core::fmt::Display::fmt(element, f),
                 Self::FeeManager(element) => ::core::fmt::Display::fmt(element, f),
-                Self::GetFrozenWithdrawNonce(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::GetFrozenWithdrawNonce(element) => ::core::fmt::Display::fmt(element, f),
                 Self::GlobalDepositId(element) => ::core::fmt::Display::fmt(element, f),
                 Self::GlobalEventId(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Initialize(element) => ::core::fmt::Display::fmt(element, f),
                 Self::MarketManager(element) => ::core::fmt::Display::fmt(element, f),
-                Self::OperatorManagerAddress(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::OperatorManagerAddress(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Owner(element) => ::core::fmt::Display::fmt(element, f),
-                Self::RebalanceBurnFinish(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::RebalanceMintFinish(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::RebalanceBurnFinish(element) => ::core::fmt::Display::fmt(element, f),
+                Self::RebalanceMintFinish(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RenounceOwnership(element) => ::core::fmt::Display::fmt(element, f),
-                Self::SetCrossChainManager(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::SetCrossChainManager(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetFeeManager(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetLedgerImplA(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetMarketManager(element) => ::core::fmt::Display::fmt(element, f),
-                Self::SetOperatorManagerAddress(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::SetOperatorManagerAddress(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetVaultManager(element) => ::core::fmt::Display::fmt(element, f),
                 Self::TransferOwnership(element) => ::core::fmt::Display::fmt(element, f),
                 Self::VaultManager(element) => ::core::fmt::Display::fmt(element, f),
@@ -8365,7 +8034,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct BatchGetUserLedgerReturn(pub ::std::vec::Vec<AccountSnapshot>);
     ///Container type for all return fields from the `batchGetUserLedger` function with signature `batchGetUserLedger(bytes32[],bytes32[],bytes32[])` and selector `0x5f225799`
@@ -8377,7 +8046,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct BatchGetUserLedgerWithTokensReturn {
         pub account_snapshots: ::std::vec::Vec<AccountSnapshot>,
@@ -8391,7 +8060,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct ContractSignerReturn {
         pub chain_id: ::ethers::core::types::U256,
@@ -8406,7 +8075,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct CrossChainManagerAddressReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `feeManager` function with signature `feeManager()` and selector `0xd0fb0203`
@@ -8418,7 +8087,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct FeeManagerReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `getFrozenWithdrawNonce` function with signature `getFrozenWithdrawNonce(bytes32,uint64,bytes32)` and selector `0x782e97e3`
@@ -8430,7 +8099,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct GetFrozenWithdrawNonceReturn(pub u128);
     ///Container type for all return fields from the `globalDepositId` function with signature `globalDepositId()` and selector `0xaae2844b`
@@ -8442,7 +8111,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct GlobalDepositIdReturn(pub u64);
     ///Container type for all return fields from the `globalEventId` function with signature `globalEventId()` and selector `0x08b85a26`
@@ -8454,7 +8123,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct GlobalEventIdReturn(pub u64);
     ///Container type for all return fields from the `marketManager` function with signature `marketManager()` and selector `0x41ed2c12`
@@ -8466,7 +8135,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct MarketManagerReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `operatorManagerAddress` function with signature `operatorManagerAddress()` and selector `0x75bf9f6d`
@@ -8478,7 +8147,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct OperatorManagerAddressReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `owner` function with signature `owner()` and selector `0x8da5cb5b`
@@ -8490,7 +8159,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct OwnerReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `vaultManager` function with signature `vaultManager()` and selector `0x8a4adf24`
@@ -8502,7 +8171,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct VaultManagerReturn(pub ::ethers::core::types::Address);
     ///`AccountDeposit(bytes32,bytes32,address,bytes32,uint256,uint128,uint64)`
@@ -8514,7 +8183,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct AccountDeposit {
         pub account_id: [u8; 32],
@@ -8534,7 +8203,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct AccountPerpPositions {
         pub symbol_hash: [u8; 32],
@@ -8556,7 +8225,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct AccountSnapshot {
         pub account_id: [u8; 32],
@@ -8578,7 +8247,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct AccountTokenBalances {
         pub token_hash: [u8; 32],
@@ -8594,7 +8263,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct AccountWithdraw {
         pub account_id: [u8; 32],
@@ -8616,7 +8285,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct Adl {
         pub account_id: [u8; 32],
@@ -8637,7 +8306,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct AdlV2 {
         pub account_id: [u8; 32],
@@ -8658,7 +8327,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct DelegateSigner {
         pub delegate_signer: ::ethers::core::types::Address,
@@ -8675,7 +8344,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct FeeDistribution {
         pub from_account_id: [u8; 32],
@@ -8692,7 +8361,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct Liquidation {
         pub liquidated_account_id: [u8; 32],
@@ -8711,7 +8380,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct LiquidationTransfer {
         pub liquidator_account_id: [u8; 32],
@@ -8734,7 +8403,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct LiquidationTransferV2 {
         pub symbol_hash: [u8; 32],
@@ -8753,7 +8422,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct LiquidationV2 {
         pub account_id: [u8; 32],
@@ -8772,7 +8441,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct Settlement {
         pub account_id: [u8; 32],
@@ -8792,7 +8461,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct SettlementExecution {
         pub symbol_hash: [u8; 32],
@@ -8809,7 +8478,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct WithdrawData {
         pub token_amount: u128,
@@ -8835,7 +8504,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct FuturesTradeUpload {
         pub account_id: [u8; 32],
@@ -8860,7 +8529,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct RebalanceBurnCCFinishData {
         pub success: bool,
@@ -8879,7 +8548,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct RebalanceBurnUploadData {
         pub r: [u8; 32],
@@ -8900,7 +8569,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct RebalanceMintCCFinishData {
         pub success: bool,
@@ -8919,7 +8588,7 @@ pub mod user_ledger {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct RebalanceMintUploadData {
         pub r: [u8; 32],

@@ -1,4 +1,3 @@
-#![feature(unwrap_infallible)]
 #[macro_use]
 #[warn(deprecated)]
 extern crate diesel;

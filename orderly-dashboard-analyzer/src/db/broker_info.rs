@@ -33,9 +33,7 @@ pub async fn find_by_broker_hash(p_broker_hash: String) -> Result<BrokerInfo, DB
 }
 
 #[allow(dead_code)]
-pub async fn create_or_update_broker_info(
-    broker_vec: Vec<BrokerInfo>,
-)  {
+pub async fn create_or_update_broker_info(broker_vec: Vec<BrokerInfo>) {
     use crate::schema::broker_info::dsl::*;
     for broker_data in broker_vec {
         let update_result = diesel::insert_into(broker_info)
@@ -46,8 +44,7 @@ pub async fn create_or_update_broker_info(
             .await;
 
         match update_result {
-            Ok(_) => {
-            }
+            Ok(_) => {}
             Err(erro) => {
                 println!(":{}", erro);
             }

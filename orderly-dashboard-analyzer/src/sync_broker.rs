@@ -8,22 +8,21 @@ use tokio::time;
 use tiny_keccak::{Hasher, Keccak};
 pub fn start_sync_brokers(url: String) {
     tokio::spawn(async move {
-            let brokers = list_brokers(url).await;
-            let mut broker_vec: Vec<BrokerInfo> = vec![];
-            for broker in brokers {
-                let mut hasher = Keccak::v256();
-                hasher.update(broker.broker_id.clone().as_bytes());
-                let mut output = [0u8; 32];
-                hasher.finalize(&mut output);
-                let hex_output: String = output.iter().map(|byte| format!("{:02x}", byte)).collect();
-                broker_vec.push(BrokerInfo {
-                    broker_id: broker.broker_id.clone(),
-                    broker_hash: format!("0x{}",hex_output),
-                });
-            }
-            create_or_update_broker_info(broker_vec).await;
-            time::sleep(Duration::from_secs(60)).await;
-        
+        let brokers = list_brokers(url).await;
+        let mut broker_vec: Vec<BrokerInfo> = vec![];
+        for broker in brokers {
+            let mut hasher = Keccak::v256();
+            hasher.update(broker.broker_id.clone().as_bytes());
+            let mut output = [0u8; 32];
+            hasher.finalize(&mut output);
+            let hex_output: String = output.iter().map(|byte| format!("{:02x}", byte)).collect();
+            broker_vec.push(BrokerInfo {
+                broker_id: broker.broker_id.clone(),
+                broker_hash: format!("0x{}", hex_output),
+            });
+        }
+        create_or_update_broker_info(broker_vec).await;
+        time::sleep(Duration::from_secs(60)).await;
     });
 }
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
