@@ -20,7 +20,9 @@ const allowedBrokers = [
   'quick_perps',
   'prime_protocol',
   'fusionx_pro',
-  'xade_finance'
+  'xade_finance',
+  'dfyn',
+  'sable'
 ];
 
 export function useBrokers() {
