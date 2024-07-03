@@ -22,7 +22,8 @@ const allowedBrokers = [
   'fusionx_pro',
   'xade_finance',
   'dfyn',
-  'sable'
+  'sable',
+  'ox_markets'
 ];
 
 export function useBrokers() {
