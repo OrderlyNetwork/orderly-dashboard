@@ -7,6 +7,7 @@ use anyhow::{Context, Result};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::str::FromStr;
+use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 
 // 31 days, one month
 pub const QUERY_RANGE_S: i64 = 31 * 24 * 3600;
@@ -56,6 +57,11 @@ pub async fn pull_perp_trading_events_by_account(
         now
     };
     if to_time < from_time {
+        tracing::info!(
+            target: ORDERLY_DASHBOARD_INDEXER,
+            "to_time: {} smaller than from_time: {}",
+            to_time, from_time,
+        );
         return Ok(Response::Success(SuccessResponse::new(
             AccountTradingEventsResponse::default(),
         )));
@@ -83,6 +89,9 @@ pub async fn pull_perp_trading_events_by_account(
     } else {
         None
     };
+    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
+        "account_id: {}, from_time: {}, to_time: {}, e_type: {:?}", account_id, from_time, to_time, e_type
+    );
     let response =
         filter_join::account_perp_trading_join_events(account_id, from_time, to_time, e_type)
             .await?;

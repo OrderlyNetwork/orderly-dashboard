@@ -3,12 +3,13 @@ use crate::schema::settlement_execution;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use anyhow::Result;
-use bigdecimal::{BigDecimal, FromPrimitive};
+use bigdecimal::{BigDecimal};
 use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
 use std::time::Instant;
+use diesel::sql_types::{BigInt, Integer, Numeric, Text, Nullable};
 
 #[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "settlement_execution"]
@@ -32,6 +33,36 @@ impl DbSettlementExecution {
 
     pub fn is_result_log_set(&self) -> bool {
         self.settlement_result_log_idx >= 0
+    }
+}
+
+#[derive(Debug, Clone, QueryableByName)]
+pub struct DbSettlementExecutionView {
+    #[sql_type = "BigInt"]
+    pub block_number: i64,
+    #[sql_type = "Integer"]
+    pub transaction_index: i32,
+    #[sql_type = "Integer"]
+    pub log_index: i32,
+    #[sql_type = "Integer"]
+    pub settlement_result_log_idx: i32,
+    #[sql_type = "Text"]
+    pub transaction_id: String,
+    #[sql_type = "Text"]
+    pub symbol_hash: String,
+    #[sql_type = "Numeric"]
+    pub sum_unitary_fundings: BigDecimal,
+    #[sql_type = "Numeric"]
+    pub mark_price: BigDecimal,
+    #[sql_type = "Numeric"]
+    pub settled_amount: BigDecimal,
+    #[sql_type = "Nullable<Numeric>"]
+    pub block_time: Option<BigDecimal>,
+}
+
+impl DbSettlementExecutionView {
+    pub fn get_batch_key(&self) -> (i64, i32) {
+        (self.block_number, self.settlement_result_log_idx)
     }
 }
 
@@ -103,21 +134,45 @@ pub async fn query_settlement_executions(
 }
 
 pub async fn query_account_settlement_executions(
+    account_id_: String,
     from_time: i64,
     to_time: i64,
-) -> Result<Vec<DbSettlementExecution>> {
-    use crate::schema::settlement_execution::dsl::*;
+) -> Result<Vec<DbSettlementExecutionView>> {
+    use diesel::sql_query;
     tracing::info!(
         target: DB_CONTEXT,
         "query_account_settlement_executions start",
     );
     let start_time = Instant::now();
-
-    let result = settlement_execution
-        .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
-        .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
-        .load_async::<DbSettlementExecution>(&POOL)
+    let result = sql_query(
+        "select
+                executions.block_number as block_number,
+                executions.transaction_index as transaction_index,
+                executions.log_index as log_index,
+                executions.settlement_result_log_idx as settlement_result_log_idx,
+                executions.transaction_id as transaction_id,
+                executions.symbol_hash as symbol_hash,
+                executions.sum_unitary_fundings as sum_unitary_fundings,
+                executions.mark_price as mark_price,
+                executions.settled_amount as settled_amount,
+                executions.block_time as block_time
+              from
+                settlement_result result
+                left join settlement_execution executions on result.block_number = executions.block_number
+                and result.log_index = executions.settlement_result_log_idx
+              where
+                result.block_time >= $1
+                and result.block_time <= $2
+                and result.account_id = $3
+                and executions.block_time >= $1
+                and executions.block_time <= $2;",
+    )
+        .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
+        .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
+        .bind::<diesel::sql_types::Text, _>(account_id_)
+        .get_results_async::<DbSettlementExecutionView>(&POOL)
         .await;
+
     let dur_ms = (Instant::now() - start_time).as_millis();
 
     let events = match result {
