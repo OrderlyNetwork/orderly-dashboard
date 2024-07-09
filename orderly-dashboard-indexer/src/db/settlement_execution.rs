@@ -161,9 +161,9 @@ pub async fn query_account_settlement_executions(
                 left join settlement_execution executions on result.block_number = executions.block_number
                 and result.log_index = executions.settlement_result_log_idx
               where
-                result.block_time >= $1
+                result.account_id = $3
+                and result.block_time >= $1
                 and result.block_time <= $2
-                and result.account_id = $3
                 and executions.block_time >= $1
                 and executions.block_time <= $2;",
     )
