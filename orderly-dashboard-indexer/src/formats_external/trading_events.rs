@@ -3,8 +3,8 @@ use crate::db::adl_result::DbAdlResult;
 use crate::db::executed_trades::DbExecutedTrades;
 use crate::db::liquidation_result::{DbLiquidationResult, LiquidationResultVersion};
 use crate::db::liquidation_transfer::DbLiquidationTransfer;
-use crate::db::serial_batches::DbSerialBatches;
-use crate::db::settlement_execution::DbSettlementExecution;
+use crate::db::serial_batches::{DbSerialBatches, DbSerialBatchesView};
+use crate::db::settlement_execution::{DbSettlementExecution, DbSettlementExecutionView};
 use crate::db::settlement_result::DbSettlementResult;
 use crate::db::transaction_events::DbTransactionEvent;
 use bigdecimal::ToPrimitive;
@@ -109,6 +109,25 @@ impl TradingEvent {
         }
     }
 
+    pub fn from_view_serial_batch_and_trades(
+        value: DbSerialBatchesView,
+        mut trades: Vec<DbExecutedTrades>,
+    ) -> TradingEvent {
+        trades.sort_by(|a, b| a.log_index.cmp(&b.log_index));
+        let trades: Vec<Trade> = trades.into_iter().map(Into::into).collect::<Vec<_>>();
+        TradingEvent {
+            block_number: value.block_number as u64,
+            transaction_index: value.transaction_index as u32,
+            log_index: value.log_index as u32,
+            transaction_id: value.transaction_id.clone(),
+            block_timestamp: value.block_time.to_u64().unwrap_or_default(),
+            data: TradingEventInnerData::ProcessedTrades {
+                batch_id: value.batch_id as u64,
+                trades,
+            },
+        }
+    }
+
     pub fn from_balance_transaction(value: DbTransactionEvent) -> TradingEvent {
         TradingEvent {
             block_number: value.block_number as u64,
@@ -137,6 +156,31 @@ impl TradingEvent {
     pub fn from_settlement(
         settlement_res: DbSettlementResult,
         executions: Vec<DbSettlementExecution>,
+    ) -> TradingEvent {
+        let settlement_executions = executions
+            .into_iter()
+            .map(SettlementExecution::from)
+            .collect::<Vec<_>>();
+        TradingEvent {
+            block_number: settlement_res.block_number as u64,
+            transaction_index: settlement_res.transaction_index as u32,
+            log_index: settlement_res.log_index as u32,
+            transaction_id: settlement_res.transaction_id,
+            block_timestamp: settlement_res.block_time.to_u64().unwrap(),
+            data: TradingEventInnerData::SettlementResult {
+                account_id: settlement_res.account_id,
+                settled_amount: settlement_res.settled_amount.to_string(),
+                settled_asset_hash: settlement_res.settled_asset_hash,
+                insurance_account_id: settlement_res.insurance_account_id,
+                insurance_transfer_amount: settlement_res.insurance_transfer_amount.to_string(),
+                settlement_executions,
+            },
+        }
+    }
+
+    pub fn from_settlement_view(
+        settlement_res: DbSettlementResult,
+        executions: Vec<DbSettlementExecutionView>,
     ) -> TradingEvent {
         let settlement_executions = executions
             .into_iter()
@@ -349,6 +393,17 @@ impl From<DbSettlementExecution> for SettlementExecution {
     }
 }
 
+impl From<DbSettlementExecutionView> for SettlementExecution {
+    fn from(value: DbSettlementExecutionView) -> Self {
+        SettlementExecution {
+            symbol_hash: value.symbol_hash,
+            mark_price: value.mark_price.to_string(),
+            sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
+            settled_amount: value.settled_amount.to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
 pub struct LiquidationTransfer {
     pub liquidation_transfer_id: String,
@@ -470,6 +525,7 @@ pub struct AccountTradingEventsResponse {
     pub events: Vec<TradingEvent>,
 }
 
+#[allow(dead_code)]
 pub type Events = (
     TransactionSide,
     TransactionStatus,

@@ -3,12 +3,13 @@ use crate::schema::serial_batches;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use anyhow::Result;
-use bigdecimal::{BigDecimal, FromPrimitive};
+use bigdecimal::{BigDecimal};
 use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
 use std::time::Instant;
+use diesel::sql_types::{BigInt, Integer, Numeric, Text, SmallInt};
 
 #[derive(Debug, Clone, Copy)]
 pub enum SerialBatchType {
@@ -41,6 +42,30 @@ pub struct DbSerialBatches {
 }
 
 impl DbSerialBatches {
+    pub fn get_batch_key(&self) -> (i64, i32) {
+        (self.block_number, self.transaction_index)
+    }
+}
+
+#[derive(Debug, Clone, QueryableByName)]
+pub struct DbSerialBatchesView {
+    #[sql_type = "BigInt"]
+    pub block_number: i64,
+    #[sql_type = "Integer"]
+    pub transaction_index: i32,
+    #[sql_type = "Integer"]
+    pub log_index: i32,
+    #[sql_type = "Text"]
+    pub transaction_id: String,
+    #[sql_type = "Numeric"]
+    pub block_time: BigDecimal,
+    #[sql_type = "BigInt"]
+    pub batch_id: i64,
+    #[sql_type = "SmallInt"]
+    pub event_type: i16,
+}
+
+impl DbSerialBatchesView {
     pub fn get_batch_key(&self) -> (i64, i32) {
         (self.block_number, self.transaction_index)
     }
@@ -114,21 +139,44 @@ pub async fn query_serial_batches_with_type(
 pub async fn query_serial_batches_with_type_by_time(
     from_time: i64,
     to_time: i64,
+    account_id_: String,
     serial_typ: SerialBatchType,
-) -> Result<Vec<DbSerialBatches>> {
-    use crate::schema::serial_batches::dsl::*;
+) -> Result<Vec<DbSerialBatchesView>> {
+    use diesel::sql_query;
     tracing::info!(
         target: DB_CONTEXT,
         "query_serial_batches_with_type_by_time start",
     );
     let start_time = Instant::now();
-
-    let result = serial_batches
-        .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
-        .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
-        .filter(event_type.eq(serial_typ.value()))
-        .load_async::<DbSerialBatches>(&POOL)
-        .await;
+    let result = sql_query(
+        "select
+                serial_t.block_number as block_number,
+                serial_t.transaction_index as transaction_index,
+                serial_t.log_index as log_index,
+                serial_t.transaction_id as transaction_id,
+                serial_t.block_time as block_time,
+                serial_t.batch_id as batch_id,
+                serial_t.event_type as event_type
+              from
+                serial_batches serial_t
+                left join executed_trades exec_t on serial_t.block_number = exec_t.block_number
+                and serial_t.transaction_index = exec_t.transaction_index
+              where
+                serial_t.block_time >= $1
+                and serial_t.block_time <= $2
+                and serial_t.event_type = $3
+                and exec_t.account_id = $4
+                and exec_t.block_time >= $5
+                and exec_t.block_time <= $6;",
+    )
+    .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
+    .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
+    .bind::<diesel::sql_types::SmallInt, _>(serial_typ.value())
+    .bind::<diesel::sql_types::Text, _>(account_id_)
+    .bind::<diesel::sql_types::BigInt, _>(from_time)
+    .bind::<diesel::sql_types::BigInt, _>(to_time)
+    .get_results_async::<DbSerialBatchesView>(&POOL)
+    .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
     let events = match result {

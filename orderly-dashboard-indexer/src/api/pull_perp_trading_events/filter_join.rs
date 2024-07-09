@@ -10,9 +10,7 @@ use crate::db::serial_batches::{
     query_serial_batches_with_type, query_serial_batches_with_type_by_time, SerialBatchType,
 };
 use crate::db::settings::get_last_rpc_processed_height;
-use crate::db::settlement_execution::{
-    query_account_settlement_executions, query_settlement_executions, DbSettlementExecution,
-};
+use crate::db::settlement_execution::{query_account_settlement_executions, query_settlement_executions, DbSettlementExecution, DbSettlementExecutionView};
 use crate::db::settlement_result::{query_account_settlement_results, query_settlement_results};
 use crate::db::transaction_events::{
     query_account_balance_transaction_executions, query_balance_transaction_executions,
@@ -23,6 +21,7 @@ use crate::formats_external::trading_events::{
 use anyhow::Result;
 use std::cmp::min;
 use std::collections::BTreeMap;
+use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 
 pub async fn perp_trading_join_events(
     from_block: i64,
@@ -152,7 +151,9 @@ pub async fn join_account_perp_trades(
     from_time: i64,
     to_time: i64,
 ) -> Result<Vec<TradingEvent>> {
-    let executed_trades = query_account_executed_trades(account_id, from_time, to_time).await?;
+    let executed_trades =
+        query_account_executed_trades(account_id.clone(), from_time, to_time).await?;
+    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "executed_trades length: {}", executed_trades.len());
     let mut executed_trades_map: BTreeMap<(i64, i32), Vec<DbExecutedTrades>> = BTreeMap::new();
     executed_trades.into_iter().for_each(|trade| {
         let batch_key = trade.get_batch_key();
@@ -163,14 +164,18 @@ pub async fn join_account_perp_trades(
             executed_trades_map.insert(batch_key, vec);
         }
     });
-    let serial_batches =
-        query_serial_batches_with_type_by_time(from_time, to_time, SerialBatchType::PerpTrade)
-            .await?;
+    let serial_batches = query_serial_batches_with_type_by_time(
+        from_time,
+        to_time,
+        account_id,
+        SerialBatchType::PerpTrade,
+    )
+    .await?;
     let mut trading_event_vec: Vec<TradingEvent> = vec![];
     for serial_batch in serial_batches {
         let bath_key = serial_batch.get_batch_key();
         if let Some(trades) = executed_trades_map.remove(&bath_key) {
-            trading_event_vec.push(TradingEvent::from_serial_batch_and_trades(
+            trading_event_vec.push(TradingEvent::from_view_serial_batch_and_trades(
                 serial_batch,
                 trades,
             ));
@@ -238,8 +243,8 @@ pub async fn join_account_settlements(
     from_time: i64,
     to_time: i64,
 ) -> Result<Vec<TradingEvent>> {
-    let settlement_executions = query_account_settlement_executions(from_time, to_time).await?;
-    let mut settlement_execution_map: BTreeMap<(i64, i32), Vec<DbSettlementExecution>> =
+    let settlement_executions = query_account_settlement_executions(account_id.clone(), from_time, to_time).await?;
+    let mut settlement_execution_map: BTreeMap<(i64, i32), Vec<DbSettlementExecutionView>> =
         BTreeMap::new();
     settlement_executions
         .into_iter()
@@ -260,7 +265,7 @@ pub async fn join_account_settlements(
         let bath_key = settlement_result.get_batch_key();
         if let Some(executions) = settlement_execution_map.remove(&bath_key) {
             settlement_result_vec
-                .push(TradingEvent::from_settlement(settlement_result, executions));
+                .push(TradingEvent::from_settlement_view(settlement_result, executions));
         }
     }
     Ok(settlement_result_vec)
