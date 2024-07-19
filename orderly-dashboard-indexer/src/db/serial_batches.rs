@@ -3,13 +3,13 @@ use crate::schema::serial_batches;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use anyhow::Result;
-use bigdecimal::{BigDecimal};
+use bigdecimal::BigDecimal;
 use diesel::result::Error;
+use diesel::sql_types::{BigInt, Integer, Numeric, SmallInt, Text};
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
 use std::time::Instant;
-use diesel::sql_types::{BigInt, Integer, Numeric, Text, SmallInt};
 
 #[derive(Debug, Clone, Copy)]
 pub enum SerialBatchType {

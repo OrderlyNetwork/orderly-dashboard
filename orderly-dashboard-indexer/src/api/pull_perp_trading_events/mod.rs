@@ -1,4 +1,5 @@
 mod filter_join;
+use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 use crate::formats_external::trading_events::{AccountTradingEventsResponse, TradingEventType};
 use crate::formats_external::{
     trading_events::TradingEventsResponse, FailureResponse, Response, SuccessResponse,
@@ -7,7 +8,6 @@ use anyhow::{Context, Result};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::str::FromStr;
-use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 
 // 31 days, one month
 pub const QUERY_RANGE_S: i64 = 31 * 24 * 3600;

@@ -3,13 +3,13 @@ use crate::schema::settlement_execution;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use anyhow::Result;
-use bigdecimal::{BigDecimal};
+use bigdecimal::BigDecimal;
 use diesel::result::Error;
+use diesel::sql_types::{BigInt, Integer, Nullable, Numeric, Text};
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
 use std::time::Instant;
-use diesel::sql_types::{BigInt, Integer, Numeric, Text, Nullable};
 
 #[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "settlement_execution"]
