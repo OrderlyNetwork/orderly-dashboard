@@ -42,4 +42,5 @@ pub fn get_database_credentials() -> String {
     env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file")
 }
 
+#[allow(dead_code)]
 pub trait PrimaryKey: PartialEq + Eq + Hash {}

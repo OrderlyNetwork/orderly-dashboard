@@ -1,7 +1,29 @@
-use crate::config::COMMON_CONFIGS;
+use crate::{
+    bindings::{
+        market_manager::{FundingDataFilter, MarketDataFilter},
+        operator_manager::{
+            EventUpload1Filter, EventUpload2Filter, FuturesTradeUpload1Filter,
+            FuturesTradeUpload2Filter,
+        },
+        user_ledger::{
+            AccountDeposit1Filter, AccountDeposit2Filter, AccountWithdrawApprove1Filter,
+            AccountWithdrawApprove2Filter, AccountWithdrawFail1Filter, AccountWithdrawFail2Filter,
+            AccountWithdrawFinish1Filter, AccountWithdrawFinish2Filter,
+            AccountWithdrawSolFailFilter, AccountWithdrawSolFinishFilter, FeeDistributionFilter,
+            LiquidationResultFilter, LiquidationResultV2Filter, LiquidationTransferFilter,
+            LiquidationTransferV2Filter, ProcessValidatedFutures1Filter,
+            ProcessValidatedFutures2Filter, SettlementExecutionFilter, SettlementResultFilter,
+        },
+    },
+    config::COMMON_CONFIGS,
+    contract::TARGET_ADDRS,
+};
 use anyhow::Result;
-use ethers::prelude::{Block, BlockId, BlockNumber, Transaction, TransactionReceipt, H256};
+use ethers::prelude::{
+    Block, BlockId, BlockNumber, Filter, Log, Transaction, TransactionReceipt, H256,
+};
 use ethers::providers::{Http, Middleware, Provider};
+use ethers_contract::EthEvent;
 use once_cell::sync::OnceCell;
 use std::time::Duration;
 use tokio::time::timeout;
@@ -120,6 +142,60 @@ pub async fn get_block_receipts(block_num: u64) -> Result<Vec<TransactionReceipt
         provider.get_block_receipts(BlockNumber::Number(block_num.into())),
     )
     .await;
+    match result {
+        Err(_) => {
+            return Err(anyhow::anyhow!("get_block_receipts request elapsed"));
+        }
+        Ok(Ok(receipts)) => {
+            return Ok(receipts);
+        }
+        Ok(Err(err)) => {
+            tracing::warn!(
+                target: ORDERLY_DASHBOARD_INDEXER,
+                "get_block_receipts query err: {}",
+                err
+            );
+            return Err(anyhow::anyhow!("get_block_receipts query err:{}", err));
+        }
+    }
+}
+
+pub async fn get_block_logs(block_num: u64) -> Result<Vec<Log>> {
+    let provider = unsafe { PROVIDER.get_unchecked() };
+    let topic0 = vec![
+        AccountDeposit1Filter::signature(),
+        AccountDeposit2Filter::signature(),
+        AccountWithdrawFinish1Filter::signature(),
+        AccountWithdrawFinish2Filter::signature(),
+        AccountWithdrawApprove1Filter::signature(),
+        AccountWithdrawApprove2Filter::signature(),
+        AccountWithdrawSolFinishFilter::signature(),
+        AccountWithdrawSolFailFilter::signature(),
+        AccountWithdrawFail1Filter::signature(),
+        AccountWithdrawFail2Filter::signature(),
+        ProcessValidatedFutures1Filter::signature(),
+        ProcessValidatedFutures2Filter::signature(),
+        EventUpload1Filter::signature(),
+        EventUpload2Filter::signature(),
+        FuturesTradeUpload1Filter::signature(),
+        FuturesTradeUpload2Filter::signature(),
+        MarketDataFilter::signature(),
+        FundingDataFilter::signature(),
+        FeeDistributionFilter::signature(),
+        SettlementResultFilter::signature(),
+        SettlementExecutionFilter::signature(),
+        LiquidationTransferFilter::signature(),
+        LiquidationResultFilter::signature(),
+        LiquidationResultV2Filter::signature(),
+        LiquidationTransferV2Filter::signature(),
+    ];
+    let address = unsafe { TARGET_ADDRS.get_unchecked() }.clone();
+    let filter = Filter::new()
+        .from_block(block_num)
+        .to_block(block_num)
+        .address(address)
+        .topic0(topic0);
+    let result = timeout(Duration::from_secs(8), provider.get_logs(&filter)).await;
     match result {
         Err(_) => {
             return Err(anyhow::anyhow!("get_block_receipts request elapsed"));

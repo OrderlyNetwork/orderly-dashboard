@@ -291,7 +291,7 @@ mod tests {
             println!(
                 "insert batches len: {} spent: {} micros, avg_elapse_rate: {}",
                 len,
-                elapse_2, 
+                elapse_2,
                 avg_elapse_rate,
             );
 

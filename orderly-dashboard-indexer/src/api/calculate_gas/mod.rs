@@ -4,7 +4,7 @@ use bigdecimal::ToPrimitive;
 use ethers::prelude::TransactionReceipt;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct FeeStruct {
     pub l2_gas_used: u128,
     pub l1_gas_used: u128,
