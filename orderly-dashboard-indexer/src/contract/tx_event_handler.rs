@@ -766,6 +766,7 @@ pub(crate) async fn handle_log(
                         }
                     }
                     user_ledgerEvents::ProcessValidatedFutures1Filter(trade) => {
+                        // todo: update to write in batches
                         let db_trade = DbExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -791,6 +792,7 @@ pub(crate) async fn handle_log(
                         create_executed_trades(vec![db_trade]).await?;
                     }
                     user_ledgerEvents::ProcessValidatedFutures2Filter(trade) => {
+                        // todo: update to write in batches
                         let db_trade = DbExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()

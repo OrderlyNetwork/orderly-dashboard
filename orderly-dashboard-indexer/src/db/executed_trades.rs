@@ -201,3 +201,103 @@ pub async fn query_account_executed_trades(
 
     Ok(events)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[ignore]
+    #[test]
+    fn test_create_executed_trades() {
+        dotenv::dotenv().ok();
+        let system = actix::System::new();
+        system.block_on(async move {
+            create_executed_trades(vec![DbExecutedTrades {
+                block_number: 1,
+                transaction_index: 1,
+                log_index: 1,
+                typ: 1,
+                account_id: "0x2c9fb1ecc28408943f182b644b4d07ae68e8cc87b41b8cf15f89c0065cb45631".to_string(),
+                symbol_hash: "0x4db998531f1de048a3a9e0793099604c3fa2aa7626f913b3242e6006afe1007e".to_string(),
+                fee_asset_hash: "0xd6aca1be9729c13d677335161321649cccae6a591554772516700f986f942eaa".to_string(),
+                trade_qty: 1.into(),
+                notional: 1_000_0000_000_u64.into(),
+                executed_price: 100_0000_000_000_u64.into(),
+                fee: 100_0000_000_u64.into(),
+                sum_unitary_fundings: 100_0000_000_000_u64.into(),
+                trade_id: 1.into(),
+                match_id: 100.into(),
+                timestamp: 1722785206000_u64.into(),
+                side: true,
+                block_time: 1722785206,
+            }])
+            .await
+            .unwrap();
+
+            let inst = Instant::now();
+            create_executed_trades(vec![DbExecutedTrades {
+                block_number: 2,
+                transaction_index: 1,
+                log_index: 1,
+                typ: 1,
+                account_id: "0x2c9fb1ecc28408943f182b644b4d07ae68e8cc87b41b8cf15f89c0065cb45631".to_string(),
+                symbol_hash: "0x4db998531f1de048a3a9e0793099604c3fa2aa7626f913b3242e6006afe1007e".to_string(),
+                fee_asset_hash: "0xd6aca1be9729c13d677335161321649cccae6a591554772516700f986f942eaa".to_string(),
+                trade_qty: 1.into(),
+                notional: 1_000_0000_000_u64.into(),
+                executed_price: 100_0000_000_000_u64.into(),
+                fee: 100_0000_000_u64.into(),
+                sum_unitary_fundings: 100_0000_000_000_u64.into(),
+                trade_id: 2.into(),
+                match_id: 100.into(),
+                timestamp: 1722785206000_u64.into(),
+                side: true,
+                block_time: 1722785206,
+            }])
+            .await
+            .unwrap();
+
+            let elapse_1 = inst.elapsed().as_micros();
+            println!("insert one key spend: {} micros", elapse_1);
+
+            let inst = Instant::now();
+            let mut batches: Vec<DbExecutedTrades> = vec![];
+            (0..2000).into_iter().for_each(|i| {
+                batches.push(DbExecutedTrades {
+                    block_number: 3,
+                    transaction_index: 1,
+                    log_index: i,
+                    typ: 1,
+                    account_id: "0x2c9fb1ecc28408943f182b644b4d07ae68e8cc87b41b8cf15f89c0065cb45631".to_string(),
+                    symbol_hash: "0x4db998531f1de048a3a9e0793099604c3fa2aa7626f913b3242e6006afe1007e".to_string(),
+                    fee_asset_hash: "0xd6aca1be9729c13d677335161321649cccae6a591554772516700f986f942eaa".to_string(),
+                    trade_qty: 1.into(),
+                    notional: 1_000_0000_000_u64.into(),
+                    executed_price: 100_0000_000_000_u64.into(),
+                    fee: 100_0000_000_u64.into(),
+                    sum_unitary_fundings: 100_0000_000_000_u64.into(),
+                    trade_id: (1_000_000 + i).into(),
+                    match_id: 100.into(),
+                    timestamp: 1722785206000_u64.into(),
+                    side: true,
+                    block_time: 1722785206,
+                });
+            });
+            let len = batches.len();
+            create_executed_trades(batches).await.unwrap();
+
+            let elapse_2 = inst.elapsed().as_micros();
+            let avg_elapse_rate = elapse_2 as f64 / len as f64 / elapse_1 as f64;
+            println!(
+                "insert batches len: {} spent: {} micros, avg_elapse_rate: {}",
+                len,
+                elapse_2, 
+                avg_elapse_rate,
+            );
+
+            actix::System::current().stop();
+        });
+
+        system.run().unwrap();
+    }
+}
