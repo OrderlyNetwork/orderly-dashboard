@@ -148,7 +148,7 @@ pub async fn query_and_filter_block_data_logs(
     });
     tracing::info!(
         target: HANDLE_LOG,
-        "block_height: {}, block tx length {}, receipt length: {},block hash: {:?}",
+        "block_height: {}, block tx length {}, tx_log_vec length: {},block hash: {:?}",
         block_height,
         block.transactions.len(),
         tx_log_vec.len(),
