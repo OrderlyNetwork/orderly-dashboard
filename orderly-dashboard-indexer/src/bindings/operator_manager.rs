@@ -7,7 +7,7 @@ pub use operator_manager::*;
     clippy::upper_case_acronyms,
     clippy::type_complexity,
     dead_code,
-    non_camel_case_types,
+    non_camel_case_types
 )]
 pub mod operator_manager {
     #[allow(deprecated)]
@@ -17,477 +17,387 @@ pub mod operator_manager {
             functions: ::core::convert::From::from([
                 (
                     ::std::borrow::ToOwned::to_owned("checkCefiDown"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("checkCefiDown"),
-                            inputs: ::std::vec![],
-                            outputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::string::String::new(),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Bool,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("bool"),
-                                    ),
-                                },
-                            ],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("checkCefiDown"),
+                        inputs: ::std::vec![],
+                        outputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::string::String::new(),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Bool,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("bool"),
+                            ),
+                        },],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("eventUpload"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("eventUpload"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("data"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Tuple(
-                                        ::std::vec![
-                                            ::ethers::core::abi::ethabi::ParamType::Array(
-                                                ::std::boxed::Box::new(
-                                                    ::ethers::core::abi::ethabi::ParamType::Tuple(
-                                                        ::std::vec![
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Bytes,
-                                                        ],
-                                                    ),
-                                                ),
-                                            ),
-                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("eventUpload"),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("data"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
+                                ::ethers::core::abi::ethabi::ParamType::Array(
+                                    ::std::boxed::Box::new(
+                                        ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
                                             ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
                                             ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                        ],
+                                            ::ethers::core::abi::ethabi::ParamType::Bytes,
+                                        ],),
                                     ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned(
-                                            "struct EventTypes.EventUpload",
-                                        ),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                                ),
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                            ],),
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("struct EventTypes.EventUpload",),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("futuresTradeUpload"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("futuresTradeUpload"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("data"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Tuple(
-                                        ::std::vec![
-                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Array(
-                                                ::std::boxed::Box::new(
-                                                    ::ethers::core::abi::ethabi::ParamType::Tuple(
-                                                        ::std::vec![
-                                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Bool,
-                                                        ],
-                                                    ),
-                                                ),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("futuresTradeUpload"),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("data"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                ::ethers::core::abi::ethabi::ParamType::Array(
+                                    ::std::boxed::Box::new(
+                                        ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                                32usize
                                             ),
-                                        ],
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                                32usize
+                                            ),
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                                32usize
+                                            ),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Bool,
+                                        ],),
                                     ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned(
-                                            "struct PerpTypes.FuturesTradeUploadData",
-                                        ),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                                ),
+                            ],),
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned(
+                                    "struct PerpTypes.FuturesTradeUploadData",
+                                ),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("initialize"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("initialize"),
-                            inputs: ::std::vec![],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("initialize"),
+                        inputs: ::std::vec![],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("operatorPing"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("operatorPing"),
-                            inputs: ::std::vec![],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("operatorPing"),
+                        inputs: ::std::vec![],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("perpPriceUpload"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("perpPriceUpload"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("data"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Tuple(
-                                        ::std::vec![
-                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Array(
-                                                ::std::boxed::Box::new(
-                                                    ::ethers::core::abi::ethabi::ParamType::Tuple(
-                                                        ::std::vec![
-                                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                                        ],
-                                                    ),
-                                                ),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("perpPriceUpload"),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("data"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                ::ethers::core::abi::ethabi::ParamType::Array(
+                                    ::std::boxed::Box::new(
+                                        ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                                32usize
                                             ),
-                                        ],
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                        ],),
                                     ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned(
-                                            "struct MarketTypes.UploadPerpPrice",
-                                        ),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                                ),
+                            ],),
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned(
+                                    "struct MarketTypes.UploadPerpPrice",
+                                ),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("setCefiEventUploadAddress"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "setCefiEventUploadAddress",
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("setCefiEventUploadAddress",),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("_cefiEventUploadAddress",),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
                             ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned(
-                                        "_cefiEventUploadAddress",
-                                    ),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("setCefiMarketUploadAddress"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "setCefiMarketUploadAddress",
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("setCefiMarketUploadAddress",),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("_cefiMarketUploadAddress",),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
                             ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned(
-                                        "_cefiMarketUploadAddress",
-                                    ),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("setCefiPerpTradeUploadAddress"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "setCefiPerpTradeUploadAddress",
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("setCefiPerpTradeUploadAddress",),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("_cefiPerpTradeUploadAddress",),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
                             ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned(
-                                        "_cefiPerpTradeUploadAddress",
-                                    ),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("setCefiSpotTradeUploadAddress"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "setCefiSpotTradeUploadAddress",
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("setCefiSpotTradeUploadAddress",),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("_cefiSpotTradeUploadAddress",),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
                             ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned(
-                                        "_cefiSpotTradeUploadAddress",
-                                    ),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("setLedger"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("setLedger"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("_ledger"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("setLedger"),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("_ledger"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("setMarketManager"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("setMarketManager"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned(
-                                        "_marketManagerAddress",
-                                    ),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("setMarketManager"),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("_marketManagerAddress",),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("setOperator"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned("setOperator"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("_operatorAddress"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("address"),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("setOperator"),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("_operatorAddress"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("sumUnitaryFundingsUpload"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Function {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "sumUnitaryFundingsUpload",
-                            ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("data"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Tuple(
-                                        ::std::vec![
-                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                            ::ethers::core::abi::ethabi::ParamType::Array(
-                                                ::std::boxed::Box::new(
-                                                    ::ethers::core::abi::ethabi::ParamType::Tuple(
-                                                        ::std::vec![
-                                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
-                                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                                        ],
-                                                    ),
-                                                ),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("sumUnitaryFundingsUpload",),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("data"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                ::ethers::core::abi::ethabi::ParamType::Array(
+                                    ::std::boxed::Box::new(
+                                        ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                                32usize
                                             ),
-                                        ],
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                        ],),
                                     ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned(
-                                            "struct MarketTypes.UploadSumUnitaryFundings",
-                                        ),
-                                    ),
-                                },
-                            ],
-                            outputs: ::std::vec![],
-                            constant: ::core::option::Option::None,
-                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
-                        },
-                    ],
+                                ),
+                            ],),
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned(
+                                    "struct MarketTypes.UploadSumUnitaryFundings",
+                                ),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
                 ),
             ]),
             events: ::core::convert::From::from([
                 (
                     ::std::borrow::ToOwned::to_owned("ChangeCefiUpload"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Event {
-                            name: ::std::borrow::ToOwned::to_owned("ChangeCefiUpload"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("types"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
-                                    indexed: true,
-                                },
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("oldAddress"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    indexed: false,
-                                },
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("newAddress"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    indexed: false,
-                                },
-                            ],
-                            anonymous: false,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Event {
+                        name: ::std::borrow::ToOwned::to_owned("ChangeCefiUpload"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("types"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                indexed: true,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("oldAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("newAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                        ],
+                        anonymous: false,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("ChangeLedger"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Event {
-                            name: ::std::borrow::ToOwned::to_owned("ChangeLedger"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("oldAddress"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    indexed: false,
-                                },
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("newAddress"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    indexed: false,
-                                },
-                            ],
-                            anonymous: false,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Event {
+                        name: ::std::borrow::ToOwned::to_owned("ChangeLedger"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("oldAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("newAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                        ],
+                        anonymous: false,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("ChangeMarketManager"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Event {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "ChangeMarketManager",
-                            ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("oldAddress"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    indexed: false,
-                                },
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("newAddress"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    indexed: false,
-                                },
-                            ],
-                            anonymous: false,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Event {
+                        name: ::std::borrow::ToOwned::to_owned("ChangeMarketManager",),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("oldAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("newAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                        ],
+                        anonymous: false,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("ChangeOperator"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::Event {
-                            name: ::std::borrow::ToOwned::to_owned("ChangeOperator"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("types"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
-                                    indexed: true,
-                                },
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("oldAddress"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    indexed: false,
-                                },
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("newAddress"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Address,
-                                    indexed: false,
-                                },
-                            ],
-                            anonymous: false,
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::Event {
+                        name: ::std::borrow::ToOwned::to_owned("ChangeOperator"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("types"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                indexed: true,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("oldAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("newAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                        ],
+                        anonymous: false,
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("EventUpload"),
@@ -502,9 +412,7 @@ pub mod operator_manager {
                                 },
                                 ::ethers::core::abi::ethabi::EventParam {
                                     name: ::std::borrow::ToOwned::to_owned("blocktime"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        256usize,
-                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
                                     indexed: false,
                                 },
                             ],
@@ -512,13 +420,11 @@ pub mod operator_manager {
                         },
                         ::ethers::core::abi::ethabi::Event {
                             name: ::std::borrow::ToOwned::to_owned("EventUpload"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("batchId"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                    indexed: true,
-                                },
-                            ],
+                            inputs: ::std::vec![::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("batchId"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                indexed: true,
+                            },],
                             anonymous: false,
                         },
                     ],
@@ -536,9 +442,7 @@ pub mod operator_manager {
                                 },
                                 ::ethers::core::abi::ethabi::EventParam {
                                     name: ::std::borrow::ToOwned::to_owned("blocktime"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        256usize,
-                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
                                     indexed: false,
                                 },
                             ],
@@ -546,13 +450,11 @@ pub mod operator_manager {
                         },
                         ::ethers::core::abi::ethabi::Event {
                             name: ::std::borrow::ToOwned::to_owned("FuturesTradeUpload"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("batchId"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                    indexed: true,
-                                },
-                            ],
+                            inputs: ::std::vec![::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("batchId"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                indexed: true,
+                            },],
                             anonymous: false,
                         },
                     ],
@@ -561,322 +463,246 @@ pub mod operator_manager {
             errors: ::core::convert::From::from([
                 (
                     ::std::borrow::ToOwned::to_owned("AccountIdInvalid"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("AccountIdInvalid"),
-                            inputs: ::std::vec![],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("AccountIdInvalid"),
+                        inputs: ::std::vec![],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("AddressZero"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("AddressZero"),
-                            inputs: ::std::vec![],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("AddressZero"),
+                        inputs: ::std::vec![],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("BalanceNotEnough"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("BalanceNotEnough"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("balance"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        128usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint128"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("amount"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("int128"),
-                                    ),
-                                },
-                            ],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("BalanceNotEnough"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("balance"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(128usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint128"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("amount"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("int128"),
+                                ),
+                            },
+                        ],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("BatchIdNotMatch"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("BatchIdNotMatch"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("batchId"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint64"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned(
-                                        "futuresUploadBatchId",
-                                    ),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint64"),
-                                    ),
-                                },
-                            ],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("BatchIdNotMatch"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("batchId"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint64"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("futuresUploadBatchId",),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint64"),
+                                ),
+                            },
+                        ],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("BrokerNotAllowed"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("BrokerNotAllowed"),
-                            inputs: ::std::vec![],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("BrokerNotAllowed"),
+                        inputs: ::std::vec![],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("CountNotMatch"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("CountNotMatch"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("length"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        256usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint256"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("count"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        256usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint256"),
-                                    ),
-                                },
-                            ],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("CountNotMatch"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("length"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint256"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("count"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint256"),
+                                ),
+                            },
+                        ],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("InsurancePositionQtyInvalid"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "InsurancePositionQtyInvalid",
-                            ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned(
-                                        "adlPositionQtyTransfer",
-                                    ),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("int128"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("userPositionQty"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("int128"),
-                                    ),
-                                },
-                            ],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("InsurancePositionQtyInvalid",),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("adlPositionQtyTransfer",),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("int128"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("userPositionQty"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("int128"),
+                                ),
+                            },
+                        ],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("InsuranceTransferAmountInvalid"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "InsuranceTransferAmountInvalid",
-                            ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("balance"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        128usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint128"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned(
-                                        "insuranceTransferAmount",
-                                    ),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        128usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint128"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("settledAmount"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("int128"),
-                                    ),
-                                },
-                            ],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("InsuranceTransferAmountInvalid",),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("balance"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(128usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint128"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("insuranceTransferAmount",),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(128usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint128"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("settledAmount"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("int128"),
+                                ),
+                            },
+                        ],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("InsuranceTransferToSelf"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "InsuranceTransferToSelf",
-                            ),
-                            inputs: ::std::vec![],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("InsuranceTransferToSelf",),
+                        inputs: ::std::vec![],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("InvalidBizType"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("InvalidBizType"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("bizType"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint8"),
-                                    ),
-                                },
-                            ],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("InvalidBizType"),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("bizType"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("uint8"),
+                            ),
+                        },],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("OnlyCrossChainManagerCanCall"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "OnlyCrossChainManagerCanCall",
-                            ),
-                            inputs: ::std::vec![],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("OnlyCrossChainManagerCanCall",),
+                        inputs: ::std::vec![],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("OnlyOperatorCanCall"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "OnlyOperatorCanCall",
-                            ),
-                            inputs: ::std::vec![],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("OnlyOperatorCanCall",),
+                        inputs: ::std::vec![],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("SignatureNotMatch"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("SignatureNotMatch"),
-                            inputs: ::std::vec![],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("SignatureNotMatch"),
+                        inputs: ::std::vec![],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("SymbolNotAllowed"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("SymbolNotAllowed"),
-                            inputs: ::std::vec![],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("SymbolNotAllowed"),
+                        inputs: ::std::vec![],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("TokenNotAllowed"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned("TokenNotAllowed"),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("tokenHash"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
-                                        32usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("bytes32"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("chainId"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
-                                        256usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("uint256"),
-                                    ),
-                                },
-                            ],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("TokenNotAllowed"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("tokenHash"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("bytes32"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("chainId"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint256"),
+                                ),
+                            },
+                        ],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("TotalSettleAmountNotMatch"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "TotalSettleAmountNotMatch",
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("TotalSettleAmountNotMatch",),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("amount"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("int128"),
                             ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("amount"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("int128"),
-                                    ),
-                                },
-                            ],
-                        },
-                    ],
+                        },],
+                    },],
                 ),
                 (
                     ::std::borrow::ToOwned::to_owned("UserPerpPositionQtyZero"),
-                    ::std::vec![
-                        ::ethers::core::abi::ethabi::AbiError {
-                            name: ::std::borrow::ToOwned::to_owned(
-                                "UserPerpPositionQtyZero",
-                            ),
-                            inputs: ::std::vec![
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("accountId"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
-                                        32usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("bytes32"),
-                                    ),
-                                },
-                                ::ethers::core::abi::ethabi::Param {
-                                    name: ::std::borrow::ToOwned::to_owned("symbolHash"),
-                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
-                                        32usize,
-                                    ),
-                                    internal_type: ::core::option::Option::Some(
-                                        ::std::borrow::ToOwned::to_owned("bytes32"),
-                                    ),
-                                },
-                            ],
-                        },
-                    ],
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("UserPerpPositionQtyZero",),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("accountId"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("bytes32"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("symbolHash"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("bytes32"),
+                                ),
+                            },
+                        ],
+                    },],
                 ),
             ]),
             receive: false,
@@ -884,9 +710,8 @@ pub mod operator_manager {
         }
     }
     ///The parsed JSON ABI of the contract.
-    pub static OPERATOR_MANAGER_ABI: ::ethers::contract::Lazy<
-        ::ethers::core::abi::Abi,
-    > = ::ethers::contract::Lazy::new(__abi);
+    pub static OPERATOR_MANAGER_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> =
+        ::ethers::contract::Lazy::new(__abi);
     pub struct operator_manager<M>(::ethers::contract::Contract<M>);
     impl<M> ::core::clone::Clone for operator_manager<M> {
         fn clone(&self) -> Self {
@@ -918,18 +743,14 @@ pub mod operator_manager {
             address: T,
             client: ::std::sync::Arc<M>,
         ) -> Self {
-            Self(
-                ::ethers::contract::Contract::new(
-                    address.into(),
-                    OPERATOR_MANAGER_ABI.clone(),
-                    client,
-                ),
-            )
+            Self(::ethers::contract::Contract::new(
+                address.into(),
+                OPERATOR_MANAGER_ABI.clone(),
+                client,
+            ))
         }
         ///Calls the contract's `checkCefiDown` (0x1118582d) function
-        pub fn check_cefi_down(
-            &self,
-        ) -> ::ethers::contract::builders::ContractCall<M, bool> {
+        pub fn check_cefi_down(&self) -> ::ethers::contract::builders::ContractCall<M, bool> {
             self.0
                 .method_hash([17, 24, 88, 45], ())
                 .expect("method not found (this should never happen)")
@@ -959,9 +780,7 @@ pub mod operator_manager {
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `operatorPing` (0x6ecb9886) function
-        pub fn operator_ping(
-            &self,
-        ) -> ::ethers::contract::builders::ContractCall<M, ()> {
+        pub fn operator_ping(&self) -> ::ethers::contract::builders::ContractCall<M, ()> {
             self.0
                 .method_hash([110, 203, 152, 134], ())
                 .expect("method not found (this should never happen)")
@@ -1050,96 +869,71 @@ pub mod operator_manager {
         ///Gets the contract's `ChangeCefiUpload` event
         pub fn change_cefi_upload_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeCefiUploadFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeCefiUploadFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ChangeLedger` event
         pub fn change_ledger_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeLedgerFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeLedgerFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ChangeMarketManager` event
         pub fn change_market_manager_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeMarketManagerFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeMarketManagerFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ChangeOperator` event
         pub fn change_operator_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeOperatorFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeOperatorFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `EventUpload` event
         pub fn event_upload_1_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            EventUpload1Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, EventUpload1Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `EventUpload` event
         pub fn event_upload_2_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            EventUpload2Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, EventUpload2Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `FuturesTradeUpload` event
         pub fn futures_trade_upload_1_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            FuturesTradeUpload1Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, FuturesTradeUpload1Filter>
+        {
             self.0.event()
         }
         ///Gets the contract's `FuturesTradeUpload` event
         pub fn futures_trade_upload_2_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            FuturesTradeUpload2Filter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, FuturesTradeUpload2Filter>
+        {
             self.0.event()
         }
         /// Returns an `Event` builder for all the events of this contract.
         pub fn events(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            operator_managerEvents,
-        > {
-            self.0.event_with_filter(::core::default::Default::default())
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, operator_managerEvents>
+        {
+            self.0
+                .event_with_filter(::core::default::Default::default())
         }
     }
     impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>>
-    for operator_manager<M> {
+        for operator_manager<M>
+    {
         fn from(contract: ::ethers::contract::Contract<M>) -> Self {
             Self::new(contract.address(), contract.client())
         }
@@ -1153,7 +947,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "AccountIdInvalid", abi = "AccountIdInvalid()")]
     pub struct AccountIdInvalid;
@@ -1166,7 +960,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "AddressZero", abi = "AddressZero()")]
     pub struct AddressZero;
@@ -1179,7 +973,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "BalanceNotEnough", abi = "BalanceNotEnough(uint128,int128)")]
     pub struct BalanceNotEnough {
@@ -1195,7 +989,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "BatchIdNotMatch", abi = "BatchIdNotMatch(uint64,uint64)")]
     pub struct BatchIdNotMatch {
@@ -1211,7 +1005,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "BrokerNotAllowed", abi = "BrokerNotAllowed()")]
     pub struct BrokerNotAllowed;
@@ -1224,7 +1018,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "CountNotMatch", abi = "CountNotMatch(uint256,uint256)")]
     pub struct CountNotMatch {
@@ -1240,7 +1034,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "InsurancePositionQtyInvalid",
@@ -1259,7 +1053,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "InsuranceTransferAmountInvalid",
@@ -1279,7 +1073,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "InsuranceTransferToSelf", abi = "InsuranceTransferToSelf()")]
     pub struct InsuranceTransferToSelf;
@@ -1292,7 +1086,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "InvalidBizType", abi = "InvalidBizType(uint8)")]
     pub struct InvalidBizType {
@@ -1307,7 +1101,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "OnlyCrossChainManagerCanCall",
@@ -1323,7 +1117,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "OnlyOperatorCanCall", abi = "OnlyOperatorCanCall()")]
     pub struct OnlyOperatorCanCall;
@@ -1336,7 +1130,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "SignatureNotMatch", abi = "SignatureNotMatch()")]
     pub struct SignatureNotMatch;
@@ -1349,7 +1143,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "SymbolNotAllowed", abi = "SymbolNotAllowed()")]
     pub struct SymbolNotAllowed;
@@ -1362,7 +1156,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "TokenNotAllowed", abi = "TokenNotAllowed(bytes32,uint256)")]
     pub struct TokenNotAllowed {
@@ -1378,7 +1172,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "TotalSettleAmountNotMatch",
@@ -1396,7 +1190,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "UserPerpPositionQtyZero",
@@ -1435,94 +1229,79 @@ pub mod operator_manager {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded) = <::std::string::String as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <::std::string::String as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RevertString(decoded));
             }
-            if let Ok(decoded) = <AccountIdInvalid as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <AccountIdInvalid as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::AccountIdInvalid(decoded));
             }
-            if let Ok(decoded) = <AddressZero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <AddressZero as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::AddressZero(decoded));
             }
-            if let Ok(decoded) = <BalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <BalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::BalanceNotEnough(decoded));
             }
-            if let Ok(decoded) = <BatchIdNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <BatchIdNotMatch as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::BatchIdNotMatch(decoded));
             }
-            if let Ok(decoded) = <BrokerNotAllowed as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <BrokerNotAllowed as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::BrokerNotAllowed(decoded));
             }
-            if let Ok(decoded) = <CountNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <CountNotMatch as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::CountNotMatch(decoded));
             }
-            if let Ok(decoded) = <InsurancePositionQtyInvalid as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <InsurancePositionQtyInvalid as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::InsurancePositionQtyInvalid(decoded));
             }
-            if let Ok(decoded) = <InsuranceTransferAmountInvalid as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <InsuranceTransferAmountInvalid as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::InsuranceTransferAmountInvalid(decoded));
             }
-            if let Ok(decoded) = <InsuranceTransferToSelf as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <InsuranceTransferToSelf as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::InsuranceTransferToSelf(decoded));
             }
-            if let Ok(decoded) = <InvalidBizType as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <InvalidBizType as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::InvalidBizType(decoded));
             }
-            if let Ok(decoded) = <OnlyCrossChainManagerCanCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OnlyCrossChainManagerCanCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OnlyCrossChainManagerCanCall(decoded));
             }
-            if let Ok(decoded) = <OnlyOperatorCanCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OnlyOperatorCanCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OnlyOperatorCanCall(decoded));
             }
-            if let Ok(decoded) = <SignatureNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SignatureNotMatch as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SignatureNotMatch(decoded));
             }
-            if let Ok(decoded) = <SymbolNotAllowed as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SymbolNotAllowed as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SymbolNotAllowed(decoded));
             }
-            if let Ok(decoded) = <TokenNotAllowed as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <TokenNotAllowed as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::TokenNotAllowed(decoded));
             }
-            if let Ok(decoded) = <TotalSettleAmountNotMatch as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <TotalSettleAmountNotMatch as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::TotalSettleAmountNotMatch(decoded));
             }
-            if let Ok(decoded) = <UserPerpPositionQtyZero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <UserPerpPositionQtyZero as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::UserPerpPositionQtyZero(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -1531,24 +1310,12 @@ pub mod operator_manager {
     impl ::ethers::core::abi::AbiEncode for operator_managerErrors {
         fn encode(self) -> ::std::vec::Vec<u8> {
             match self {
-                Self::AccountIdInvalid(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::AddressZero(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::BalanceNotEnough(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::BatchIdNotMatch(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::BrokerNotAllowed(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::CountNotMatch(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::AccountIdInvalid(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::AddressZero(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::BalanceNotEnough(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::BatchIdNotMatch(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::BrokerNotAllowed(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::CountNotMatch(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::InsurancePositionQtyInvalid(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -1558,24 +1325,16 @@ pub mod operator_manager {
                 Self::InsuranceTransferToSelf(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::InvalidBizType(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::InvalidBizType(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::OnlyCrossChainManagerCanCall(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::OnlyOperatorCanCall(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::SignatureNotMatch(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SymbolNotAllowed(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::TokenNotAllowed(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::SignatureNotMatch(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SymbolNotAllowed(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::TokenNotAllowed(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::TotalSettleAmountNotMatch(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -1669,31 +1428,21 @@ pub mod operator_manager {
                 Self::BatchIdNotMatch(element) => ::core::fmt::Display::fmt(element, f),
                 Self::BrokerNotAllowed(element) => ::core::fmt::Display::fmt(element, f),
                 Self::CountNotMatch(element) => ::core::fmt::Display::fmt(element, f),
-                Self::InsurancePositionQtyInvalid(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::InsurancePositionQtyInvalid(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InsuranceTransferAmountInvalid(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::InsuranceTransferToSelf(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::InsuranceTransferToSelf(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidBizType(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OnlyCrossChainManagerCanCall(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::OnlyOperatorCanCall(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::OnlyOperatorCanCall(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SignatureNotMatch(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SymbolNotAllowed(element) => ::core::fmt::Display::fmt(element, f),
                 Self::TokenNotAllowed(element) => ::core::fmt::Display::fmt(element, f),
-                Self::TotalSettleAmountNotMatch(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::UserPerpPositionQtyZero(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::TotalSettleAmountNotMatch(element) => ::core::fmt::Display::fmt(element, f),
+                Self::UserPerpPositionQtyZero(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RevertString(s) => ::core::fmt::Display::fmt(s, f),
             }
         }
@@ -1738,8 +1487,7 @@ pub mod operator_manager {
             Self::InsurancePositionQtyInvalid(value)
         }
     }
-    impl ::core::convert::From<InsuranceTransferAmountInvalid>
-    for operator_managerErrors {
+    impl ::core::convert::From<InsuranceTransferAmountInvalid> for operator_managerErrors {
         fn from(value: InsuranceTransferAmountInvalid) -> Self {
             Self::InsuranceTransferAmountInvalid(value)
         }
@@ -1797,7 +1545,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "ChangeCefiUpload",
@@ -1817,7 +1565,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "ChangeLedger", abi = "ChangeLedger(address,address)")]
     pub struct ChangeLedgerFilter {
@@ -1832,7 +1580,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "ChangeMarketManager",
@@ -1850,7 +1598,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "ChangeOperator", abi = "ChangeOperator(uint8,address,address)")]
     pub struct ChangeOperatorFilter {
@@ -1867,7 +1615,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "EventUpload", abi = "EventUpload(uint64,uint256)")]
     pub struct EventUpload1Filter {
@@ -1883,7 +1631,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "EventUpload", abi = "EventUpload(uint64)")]
     pub struct EventUpload2Filter {
@@ -1898,9 +1646,12 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
-    #[ethevent(name = "FuturesTradeUpload", abi = "FuturesTradeUpload(uint64,uint256)")]
+    #[ethevent(
+        name = "FuturesTradeUpload",
+        abi = "FuturesTradeUpload(uint64,uint256)"
+    )]
     pub struct FuturesTradeUpload1Filter {
         #[ethevent(indexed)]
         pub batch_id: u64,
@@ -1914,7 +1665,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "FuturesTradeUpload", abi = "FuturesTradeUpload(uint64)")]
     pub struct FuturesTradeUpload2Filter {
@@ -1967,30 +1718,14 @@ pub mod operator_manager {
     impl ::core::fmt::Display for operator_managerEvents {
         fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
             match self {
-                Self::ChangeCefiUploadFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ChangeLedgerFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ChangeMarketManagerFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ChangeOperatorFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::EventUpload1Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::EventUpload2Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::FuturesTradeUpload1Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::FuturesTradeUpload2Filter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ChangeCefiUploadFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ChangeLedgerFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ChangeMarketManagerFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ChangeOperatorFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::EventUpload1Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::EventUpload2Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::FuturesTradeUpload1Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::FuturesTradeUpload2Filter(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -2043,7 +1778,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "checkCefiDown", abi = "checkCefiDown()")]
     pub struct CheckCefiDownCall;
@@ -2056,7 +1791,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "eventUpload",
@@ -2074,7 +1809,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "futuresTradeUpload",
@@ -2092,7 +1827,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "initialize", abi = "initialize()")]
     pub struct InitializeCall;
@@ -2105,7 +1840,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "operatorPing", abi = "operatorPing()")]
     pub struct OperatorPingCall;
@@ -2118,7 +1853,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "perpPriceUpload",
@@ -2136,7 +1871,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "setCefiEventUploadAddress",
@@ -2154,7 +1889,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "setCefiMarketUploadAddress",
@@ -2172,7 +1907,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "setCefiPerpTradeUploadAddress",
@@ -2190,7 +1925,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "setCefiSpotTradeUploadAddress",
@@ -2208,7 +1943,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setLedger", abi = "setLedger(address)")]
     pub struct SetLedgerCall {
@@ -2223,7 +1958,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setMarketManager", abi = "setMarketManager(address)")]
     pub struct SetMarketManagerCall {
@@ -2238,7 +1973,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setOperator", abi = "setOperator(address)")]
     pub struct SetOperatorCall {
@@ -2253,7 +1988,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "sumUnitaryFundingsUpload",
@@ -2285,74 +2020,64 @@ pub mod operator_manager {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded) = <CheckCefiDownCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <CheckCefiDownCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::CheckCefiDown(decoded));
             }
-            if let Ok(decoded) = <EventUploadCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <EventUploadCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::EventUpload(decoded));
             }
-            if let Ok(decoded) = <FuturesTradeUploadCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <FuturesTradeUploadCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::FuturesTradeUpload(decoded));
             }
-            if let Ok(decoded) = <InitializeCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <InitializeCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Initialize(decoded));
             }
-            if let Ok(decoded) = <OperatorPingCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <OperatorPingCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OperatorPing(decoded));
             }
-            if let Ok(decoded) = <PerpPriceUploadCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <PerpPriceUploadCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::PerpPriceUpload(decoded));
             }
-            if let Ok(decoded) = <SetCefiEventUploadAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetCefiEventUploadAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetCefiEventUploadAddress(decoded));
             }
-            if let Ok(decoded) = <SetCefiMarketUploadAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetCefiMarketUploadAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetCefiMarketUploadAddress(decoded));
             }
-            if let Ok(decoded) = <SetCefiPerpTradeUploadAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetCefiPerpTradeUploadAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetCefiPerpTradeUploadAddress(decoded));
             }
-            if let Ok(decoded) = <SetCefiSpotTradeUploadAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetCefiSpotTradeUploadAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetCefiSpotTradeUploadAddress(decoded));
             }
-            if let Ok(decoded) = <SetLedgerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SetLedgerCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::SetLedger(decoded));
             }
-            if let Ok(decoded) = <SetMarketManagerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetMarketManagerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetMarketManager(decoded));
             }
-            if let Ok(decoded) = <SetOperatorCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <SetOperatorCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::SetOperator(decoded));
             }
-            if let Ok(decoded) = <SumUnitaryFundingsUploadCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SumUnitaryFundingsUploadCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SumUnitaryFundingsUpload(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -2361,24 +2086,14 @@ pub mod operator_manager {
     impl ::ethers::core::abi::AbiEncode for operator_managerCalls {
         fn encode(self) -> Vec<u8> {
             match self {
-                Self::CheckCefiDown(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::EventUpload(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::CheckCefiDown(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::EventUpload(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::FuturesTradeUpload(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::Initialize(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::OperatorPing(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::PerpPriceUpload(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::Initialize(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::OperatorPing(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::PerpPriceUpload(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::SetCefiEventUploadAddress(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -2391,15 +2106,9 @@ pub mod operator_manager {
                 Self::SetCefiSpotTradeUploadAddress(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::SetLedger(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SetMarketManager(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SetOperator(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::SetLedger(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SetMarketManager(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SetOperator(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::SumUnitaryFundingsUpload(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -2411,18 +2120,12 @@ pub mod operator_manager {
             match self {
                 Self::CheckCefiDown(element) => ::core::fmt::Display::fmt(element, f),
                 Self::EventUpload(element) => ::core::fmt::Display::fmt(element, f),
-                Self::FuturesTradeUpload(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::FuturesTradeUpload(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Initialize(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OperatorPing(element) => ::core::fmt::Display::fmt(element, f),
                 Self::PerpPriceUpload(element) => ::core::fmt::Display::fmt(element, f),
-                Self::SetCefiEventUploadAddress(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::SetCefiMarketUploadAddress(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::SetCefiEventUploadAddress(element) => ::core::fmt::Display::fmt(element, f),
+                Self::SetCefiMarketUploadAddress(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetCefiPerpTradeUploadAddress(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
@@ -2432,9 +2135,7 @@ pub mod operator_manager {
                 Self::SetLedger(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetMarketManager(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetOperator(element) => ::core::fmt::Display::fmt(element, f),
-                Self::SumUnitaryFundingsUpload(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::SumUnitaryFundingsUpload(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -2473,20 +2174,17 @@ pub mod operator_manager {
             Self::SetCefiEventUploadAddress(value)
         }
     }
-    impl ::core::convert::From<SetCefiMarketUploadAddressCall>
-    for operator_managerCalls {
+    impl ::core::convert::From<SetCefiMarketUploadAddressCall> for operator_managerCalls {
         fn from(value: SetCefiMarketUploadAddressCall) -> Self {
             Self::SetCefiMarketUploadAddress(value)
         }
     }
-    impl ::core::convert::From<SetCefiPerpTradeUploadAddressCall>
-    for operator_managerCalls {
+    impl ::core::convert::From<SetCefiPerpTradeUploadAddressCall> for operator_managerCalls {
         fn from(value: SetCefiPerpTradeUploadAddressCall) -> Self {
             Self::SetCefiPerpTradeUploadAddress(value)
         }
     }
-    impl ::core::convert::From<SetCefiSpotTradeUploadAddressCall>
-    for operator_managerCalls {
+    impl ::core::convert::From<SetCefiSpotTradeUploadAddressCall> for operator_managerCalls {
         fn from(value: SetCefiSpotTradeUploadAddressCall) -> Self {
             Self::SetCefiSpotTradeUploadAddress(value)
         }
@@ -2520,7 +2218,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct CheckCefiDownReturn(pub bool);
     ///`EventUpload((uint8,uint64,bytes)[],bytes32,bytes32,uint8,uint8,uint64)`
@@ -2532,7 +2230,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct EventUpload {
         pub events: ::std::vec::Vec<EventUploadData>,
@@ -2551,7 +2249,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct EventUploadData {
         pub biz_type: u8,
@@ -2567,7 +2265,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct PerpPrice {
         pub symbol_hash: [u8; 32],
@@ -2584,7 +2282,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct SumUnitaryFunding {
         pub symbol_hash: [u8; 32],
@@ -2600,7 +2298,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct UploadPerpPrice {
         pub r: [u8; 32],
@@ -2618,7 +2316,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct UploadSumUnitaryFundings {
         pub r: [u8; 32],
@@ -2636,7 +2334,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct FuturesTradeUpload {
         pub account_id: [u8; 32],
@@ -2661,7 +2359,7 @@ pub mod operator_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct FuturesTradeUploadData {
         pub r: [u8; 32],

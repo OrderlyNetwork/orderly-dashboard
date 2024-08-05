@@ -41,6 +41,7 @@ hex = "0.4.3"
 hex-literal = "0.4.1"
 openssl-probe = "0.1.5"
 typescript-type-def = "0.5"
+ethers-contract = { version = "2.0.10", features= ["abigen"]}
 
 [build-dependencies]
 ethers = { version = "2.0.10", features = ["abigen"]}

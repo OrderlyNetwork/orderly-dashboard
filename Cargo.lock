@@ -2651,6 +2651,7 @@ dependencies = [
  "diesel",
  "dotenv",
  "ethers",
+ "ethers-contract",
  "futures",
  "hex",
  "hex-literal",
