@@ -9,7 +9,7 @@ use orderly_dashboard_analyzer::db::user_info::UserInfo;
 use orderly_dashboard_analyzer::db::POOL;
 use orderly_dashboard_analyzer::schema::user_info::dsl::*;
 use orderly_dashboard_indexer::formats_external::trading_events::AccountTradingEventsResponse;
-use orderly_dashboard_indexer::formats_external::{FailureResponse, Response};
+use orderly_dashboard_indexer::formats_external::{FailureResponse, Response, SuccessResponse};
 
 pub(crate) const QUERY_ACCOUNT_EVENT_CONTEXT: &str = "query_account_event_context";
 
@@ -86,7 +86,8 @@ pub async fn list_events(
             };
         }
         Err(_) => {
-            let resp = FailureResponse::new(1000, "user not found".to_string());
+            let resp: Response<AccountTradingEventsResponse> =
+                Response::Success(SuccessResponse::new(AccountTradingEventsResponse::default()));
             return Ok(HttpResponse::Ok().json(resp));
         }
     };
