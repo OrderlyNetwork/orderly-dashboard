@@ -2,11 +2,12 @@ import { DatePicker } from '@mui/x-date-pickers';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  CopyIcon,
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
   MixerHorizontalIcon
 } from '@radix-ui/react-icons';
-import { Button, Popover, Table, Tabs } from '@radix-ui/themes';
+import { Button, IconButton, Popover, Table, Tabs } from '@radix-ui/themes';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { json, useLoaderData, useSearchParams } from '@remix-run/react';
 import {
@@ -223,6 +224,17 @@ export const Address: FC = () => {
           <div>Account ID:</div>
           <div>
             {accountId.substring(0, 7)}...{accountId.substr(-7)}
+            <IconButton
+              className="ml-1"
+              size="1"
+              variant="soft"
+              onClick={async () => {
+                if (accountId == null) return;
+                navigator.clipboard.writeText(accountId);
+              }}
+            >
+              <CopyIcon height="12" />
+            </IconButton>
           </div>
         </div>
       )}
