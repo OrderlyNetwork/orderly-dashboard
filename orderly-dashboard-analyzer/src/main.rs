@@ -18,6 +18,7 @@ mod client;
 mod config;
 mod db;
 mod schema;
+mod sync_broker;
 
 #[allow(dead_code)]
 const ORDERLY_DASHBOARD_ANALYZER: &str = "orderly-dashboard-analyzer";

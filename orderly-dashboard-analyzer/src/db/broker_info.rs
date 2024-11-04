@@ -46,7 +46,7 @@ pub async fn create_or_update_broker_info(broker_vec: Vec<BrokerInfo>) {
         match update_result {
             Ok(_) => {}
             Err(erro) => {
-                println!(":{}", erro);
+                tracing::warn!("create_or_update_broker_info: {}", erro);
             }
         }
     }
