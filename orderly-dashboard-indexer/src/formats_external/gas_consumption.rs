@@ -9,6 +9,7 @@ use std::cmp::Ordering;
 pub struct GasConsumptionResponse {
     pub transactions: Vec<TransactionGasCost>,
     pub last_block: u64,
+    pub last_timestamp: i64,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

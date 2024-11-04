@@ -1,12 +1,15 @@
 use crate::config::{get_common_cfg, COMMON_CONFIGS};
 use crate::contract::consume_data_on_block;
-use crate::db::settings::{get_last_rpc_processed_height, update_last_rpc_processed_height};
+use crate::db::settings::{
+    get_last_rpc_processed_height, update_last_rpc_processed_height,
+    update_last_rpc_processed_timestamp,
+};
 use crate::eth_rpc::get_latest_block_num;
 use crate::service_base::runtime::raw_spawn_future;
 use anyhow::Result;
 use chrono::Utc;
 use futures::future::join_all;
-use std::cmp::min;
+use std::cmp::{max, min};
 use std::time::Duration;
 pub const ORDERLY_DASHBOARD_INDEXER: &str = "orderly_dashboard_indexer";
 
@@ -127,56 +130,68 @@ pub async fn consume_data_inner(
                 start_height, gap, last_processed, target_block
             );
         }
-        if let Err(err) = parallel_consume_blocks(start_height, gap).await {
-            tokio::time::sleep(Duration::from_secs(5)).await;
-            tracing::warn!(
-                target: ORDERLY_DASHBOARD_INDEXER,
-                "parallel_consume_blocks err: {}",
-                err
-            );
-        } else {
-            if update_cursor {
-                if let Err(err) = update_last_rpc_processed_height(last_processed).await {
-                    tracing::info!(
-                        target: ORDERLY_DASHBOARD_INDEXER,
-                        "update_last_rpc_processed_height failed with err: {}",
-                        err
-                    );
-                }
+        match parallel_consume_blocks(start_height, gap).await {
+            Err(err) => {
+                tokio::time::sleep(Duration::from_secs(5)).await;
+                tracing::warn!(
+                    target: ORDERLY_DASHBOARD_INDEXER,
+                    "parallel_consume_blocks err: {}",
+                    err
+                );
             }
-            if let Some(end_block) = end_block {
-                if start_height > end_block {
-                    tracing::info!(
-                        target: ORDERLY_DASHBOARD_INDEXER,
-                        "reach end_block height: {}, exit consume block",
-                        end_block
-                    );
-                    break;
+            Ok(block_timestamp) => {
+                if update_cursor {
+                    if let Err(err) = update_last_rpc_processed_height(last_processed).await {
+                        tracing::warn!(
+                            target: ORDERLY_DASHBOARD_INDEXER,
+                            "update_last_rpc_processed_height failed with err: {}",
+                            err
+                        );
+                    }
+                    if let Err(err) = update_last_rpc_processed_timestamp(block_timestamp).await {
+                        tracing::warn!(
+                            target: ORDERLY_DASHBOARD_INDEXER,
+                            "update_last_rpc_processed_timestamp failed with err: {},block_timestamp:{}",
+                            err, block_timestamp
+                        );
+                    }
                 }
+                if let Some(end_block) = end_block {
+                    if start_height > end_block {
+                        tracing::info!(
+                            target: ORDERLY_DASHBOARD_INDEXER,
+                            "reach end_block height: {}, exit consume block",
+                            end_block
+                        );
+                        break;
+                    }
+                }
+                // may be bigger than target_block here
+                start_height = last_processed + 1;
             }
-            // may be bigger than target_block here
-            start_height = last_processed + 1;
         }
     }
     Ok(())
 }
 
-pub async fn parallel_consume_blocks(start_height: u64, gap: u64) -> Result<()> {
+// returning value is block timestamp
+pub async fn parallel_consume_blocks(start_height: u64, gap: u64) -> Result<i64> {
     let mut futs = Vec::with_capacity(gap as usize);
     (start_height..=(start_height + gap)).for_each(|block_height| {
         futs.push(consume_data_on_block(block_height));
     });
     let res = raw_spawn_future(join_all(futs)).await?;
-    return if res.iter().any(|r| {
-        r.as_ref()
-            .map_err(|r| {
-                tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "consume block task err:{}", r);
-                r
-            })
-            .is_err()
-    }) {
-        Err(anyhow::anyhow!("Some task failed to be executed."))
-    } else {
-        Ok(())
-    };
+    let mut timestamp = 0;
+    for r in res {
+        match r {
+            Ok(block_timestamp) => {
+                timestamp = max(timestamp, block_timestamp);
+            }
+            Err(err) => {
+                tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "consume block task err:{}", err);
+                return Err(anyhow::anyhow!("Some task failed to be executed."));
+            }
+        }
+    }
+    Ok(timestamp)
 }

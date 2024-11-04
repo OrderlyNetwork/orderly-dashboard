@@ -52,6 +52,7 @@ pub struct SubnetConfig {
     pub market_manager_abi_path: String,
     pub confirm_block_num: Option<u32>,
     pub contract_deploy_height: Option<u64>,
+    pub contract_deploy_timestamp: i64,
     pub explorer_url: String,
     pub vault_manager_address: String,
     pub vault_manager_abi_path: String,

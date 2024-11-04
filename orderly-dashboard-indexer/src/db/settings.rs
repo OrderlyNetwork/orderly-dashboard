@@ -13,6 +13,7 @@ use diesel::{Insertable, Queryable};
 pub enum SettingsKey {
     LastRpcProcessHeight = 1,
     NetworkInfo = 2,
+    LastRpcProcessTimeStamp = 3,
 }
 
 #[derive(Insertable, Queryable, Debug)]
@@ -46,6 +47,30 @@ pub async fn update_last_rpc_processed_height(block_height: u64) -> Result<()> {
         return Ok(());
     }
     update_setting(SettingsKey::LastRpcProcessHeight, block_height.to_string()).await?;
+    Ok(())
+}
+
+pub async fn get_last_rpc_processed_timestamp() -> Result<Option<i64>> {
+    let key = SettingsKey::LastRpcProcessTimeStamp as i32;
+    let result = get_setting(key).await?;
+    match result {
+        Some(settings) => Ok(Some(settings.value.parse::<i64>()?)),
+        None => Ok(None),
+    }
+}
+
+pub async fn update_last_rpc_processed_timestamp(block_timestamp: i64) -> Result<()> {
+    let timestamp = get_last_rpc_processed_timestamp()
+        .await?
+        .unwrap_or_default();
+    if timestamp > block_timestamp {
+        return Ok(());
+    }
+    update_setting(
+        SettingsKey::LastRpcProcessTimeStamp,
+        block_timestamp.to_string(),
+    )
+    .await?;
     Ok(())
 }
 

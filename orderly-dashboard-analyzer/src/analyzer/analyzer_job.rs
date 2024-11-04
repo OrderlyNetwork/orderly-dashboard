@@ -26,6 +26,7 @@ pub fn start_analyzer_trade_job(
     interval_seconds: u64,
     base_url: String,
     start_block: i64,
+    start_timestamp: i64,
     batch_block_num: u64,
 ) {
     let mut interval_ms = interval_seconds * 1000;
@@ -33,7 +34,9 @@ pub fn start_analyzer_trade_job(
         let mut block_summary = find_block_summary("trade".to_string()).await.unwrap();
         let mut from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
         let mut max_block = block_summary.latest_block_height;
-
+        // to ensure from_time and to_time has covered the block range
+        let mut from_time = max(block_summary.pulled_block_time.timestamp(), start_timestamp);
+        let mut to_time = cal_to_time(from_time, batch_block_num);
         loop {
             let round_from_block = from_block;
             let round_to_block = max(
@@ -42,7 +45,7 @@ pub fn start_analyzer_trade_job(
             );
             let timestamp = Utc::now().timestamp_millis();
             let response_str =
-                get_indexer_data(round_from_block, round_to_block, base_url.clone()).await;
+                get_indexer_data(round_from_block, round_to_block, from_time, to_time, base_url.clone()).await;
             match response_str {
                 Ok(json_str) => {
                     let result: Result<Response<TradingEventsResponse>, serde_json::Error> =
@@ -70,6 +73,8 @@ pub fn start_analyzer_trade_job(
 
                     max_block = latest_block_height;
                     from_block = round_to_block + 1;
+                    from_time = pulled_block_time;
+                    to_time = cal_to_time(from_time, batch_block_num);
 
                     block_summary.pulled_block_height = round_to_block;
                     block_summary.pulled_block_time =
@@ -92,6 +97,10 @@ pub fn start_analyzer_trade_job(
     });
 }
 
+fn cal_to_time(from_time: i64, batch_block_num: u64) -> i64 {
+    from_time + batch_block_num as i64 * 4 + 100
+}
+
 #[allow(deprecated)]
 async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
@@ -102,6 +111,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
     match response {
         Response::Success(success_event) => {
             let trading_event: TradingEventsResponse = success_event.into_data().unwrap();
+            pulled_block_time = trading_event.last_block_timestamp;
             latest_block_height = trading_event.last_block as i64;
 
             let events = trading_event.events;
@@ -111,7 +121,6 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                 let block_time =
                     NaiveDateTime::from_timestamp_opt(event.block_timestamp as i64, 0).unwrap();
 
-                pulled_block_time = max(pulled_block_time, block_time.timestamp());
                 let event_data = event.data;
                 match event_data.clone() {
                     TradingEventInnerData::Transaction {
@@ -280,11 +289,13 @@ pub enum HTTPException {
 async fn get_indexer_data(
     from_block: i64,
     to_block: i64,
+    from_timme: i64,
+    to_time: i64,
     base_url: String,
 ) -> Result<String, HTTPException> {
     let indexer_url = format!(
-        "{}/pull_perp_trading_events?from_block={}&to_block={}",
-        base_url, from_block, to_block
+        "{}/pull_perp_trading_events?from_block={}&to_block={}&from_time={}&to_time={}",
+        base_url, from_block, to_block, from_timme, to_time,
     );
     let response = reqwest::get(indexer_url).await;
 
