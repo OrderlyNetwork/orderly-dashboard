@@ -37,6 +37,7 @@ fn start_analyze_job(config: AnalyzerConfig) {
         config.pull_interval,
         config.indexer_address.clone(),
         config.start_block,
+        config.start_block_timestamp,
         config.batch_block_num,
     );
     start_analyzer_gas_job(

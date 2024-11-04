@@ -10,6 +10,7 @@
     "market_manager_abi_path": "./abis/market_manager.json",
     "confirm_block_num": 3,
     "contract_deploy_height": 965813,
+    "contract_deploy_timestamp": 1693463998,
     "explorer_url": "https://testnet-explorer.orderly.org",
     "vault_manager_address": "0x873c120b42C80D528389d85cEA9d4dC0197974aD",
     "vault_manager_abi_path": "./abis/vault_manager.json",

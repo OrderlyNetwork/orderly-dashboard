@@ -57,6 +57,8 @@ pub fn start_analyzer_gas_job(
 
                     if round_to_block > latest_block_height {
                         tracing::info!(target: ANALYZER_CONTEXT,"continue to pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
+                        // to avoid cpu usage too high
+                        tokio::time::sleep(Duration::from_millis(1)).await;
                         continue;
                     }
 
@@ -92,6 +94,7 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
     match response {
         Response::Success(success_event) => {
             let trading_event: GasConsumptionResponse = success_event.into_data().unwrap();
+            pulled_block_time = trading_event.last_timestamp;
             latest_block_height = trading_event.last_block as i64;
 
             let mut context: GasFeeContext = GasFeeContext::new_context();
@@ -102,7 +105,6 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
                 let block_time =
                     NaiveDateTime::from_timestamp_opt(gas_event.block_timestamp as i64, 0).unwrap();
 
-                pulled_block_time = max(pulled_block_time, block_time.timestamp());
                 let event_data = gas_event.transaction_gas_data;
                 match event_data {
                     TransactionGasCostData::Deposit { .. } => {

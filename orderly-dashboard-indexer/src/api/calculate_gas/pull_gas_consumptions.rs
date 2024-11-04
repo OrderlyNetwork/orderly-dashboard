@@ -1,5 +1,5 @@
 use crate::db::serial_batches::get_serial_batches;
-use crate::db::settings::get_last_rpc_processed_height;
+use crate::db::settings::{get_last_rpc_processed_height, get_last_rpc_processed_timestamp};
 use crate::db::transaction_events::query_balance_transaction_executions;
 use crate::formats_external::gas_consumption::{GasConsumptionResponse, TransactionGasCost};
 use crate::formats_external::{Response, SuccessResponse};
@@ -24,6 +24,9 @@ pub async fn gas_consumption_data(
     to_block: i64,
 ) -> Result<GasConsumptionResponse> {
     let last_block = get_last_rpc_processed_height().await?.unwrap_or_default();
+    let last_timestamp = get_last_rpc_processed_timestamp()
+        .await?
+        .unwrap_or_default();
     let to_block = min(last_block as i64, to_block);
     let mut response = GasConsumptionResponse::default();
     if last_block == 0 {
@@ -35,6 +38,7 @@ pub async fn gas_consumption_data(
     gas_cost_data.sort();
     response.transactions = gas_cost_data;
     response.last_block = last_block;
+    response.last_timestamp = last_timestamp;
     Ok(response)
 }
 

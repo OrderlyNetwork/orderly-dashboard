@@ -10,7 +10,7 @@ use crate::db::liquidation_transfer::{
 use crate::db::serial_batches::{
     query_serial_batches_with_type, query_serial_batches_with_type_by_time, SerialBatchType,
 };
-use crate::db::settings::get_last_rpc_processed_height;
+use crate::db::settings::{get_last_rpc_processed_height, get_last_rpc_processed_timestamp};
 use crate::db::settlement_execution::{
     query_account_settlement_executions, query_settlement_executions, DbSettlementExecution,
     DbSettlementExecutionView,
@@ -32,6 +32,9 @@ pub async fn perp_trading_join_events(
     event_type: Option<TradingEventType>,
 ) -> Result<TradingEventsResponse> {
     let last_block = get_last_rpc_processed_height().await?.unwrap_or_default();
+    let last_timestamp = get_last_rpc_processed_timestamp()
+        .await?
+        .unwrap_or_default();
     let to_block = min(last_block as i64, to_block);
     let mut response = TradingEventsResponse::default();
     if last_block == 0 {
@@ -59,6 +62,7 @@ pub async fn perp_trading_join_events(
         trading_events.sort();
         response.events = trading_events;
         response.last_block = last_block;
+        response.last_block_timestamp = last_timestamp;
         return Ok(response);
     }
     let balance_trans = join_balance_transactions(from_block, to_block).await?;
@@ -70,6 +74,7 @@ pub async fn perp_trading_join_events(
     trading_events.sort();
     response.events = trading_events;
     response.last_block = last_block;
+    response.last_block_timestamp = last_timestamp;
     Ok(response)
 }
 
