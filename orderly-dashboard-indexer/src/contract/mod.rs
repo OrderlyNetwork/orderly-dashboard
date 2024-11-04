@@ -45,23 +45,26 @@ pub(crate) fn init_addr_set() -> anyhow::Result<()> {
 
     Ok(())
 }
-pub(crate) async fn consume_data_on_block(block_height: u64) -> anyhow::Result<()> {
+pub(crate) async fn consume_data_on_block(block_height: u64) -> anyhow::Result<i64> {
     tracing::info!(
         target: HANDLE_LOG,
         "consume_data_on_block block_height: {}",
         block_height
     );
     // todo: configurate it
+    let block_timestamp: i64;
     let consume_logs = true;
     if consume_logs {
         let (block, tx_logs_vec) = query_and_filter_block_data_logs(block_height).await?;
+        block_timestamp = block.timestamp.as_u64() as i64;
         consume_tx_and_logs(block, &tx_logs_vec).await?;
     } else {
         let (block, tx_receipt_vec) = query_and_filter_block_data_info(block_height).await?;
+        block_timestamp = block.timestamp.as_u64() as i64;
         consume_logs_from_tx_receipts(block, &tx_receipt_vec).await?;
     }
 
-    Ok(())
+    Ok(block_timestamp)
 }
 
 pub async fn query_and_filter_block_data_info(

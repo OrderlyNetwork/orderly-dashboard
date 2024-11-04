@@ -4,6 +4,7 @@ use crate::db::POOL;
 use crate::schema::user_info;
 use actix_diesel::dsl::AsyncRunQueryDsl;
 use diesel::pg::upsert::on_constraint;
+use crate::sync_broker::{cal_account_id, cal_broker_hash};
 
 #[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "user_info"]
@@ -12,6 +13,21 @@ pub struct UserInfo {
     pub broker_id: String,
     pub broker_hash: String,
     pub address: String,
+}
+
+impl UserInfo {
+    pub fn try_new(
+        broker_id: String,
+        address: String,
+    ) -> anyhow::Result<UserInfo> {
+        let broker_hash = cal_broker_hash(&broker_id);
+        Ok(UserInfo {
+            account_id: cal_account_id(&broker_id, &address)?,
+            broker_id,
+            broker_hash,
+            address,
+        })
+    }
 }
 
 pub async fn create_user_info(p_user: &UserInfo) -> Result<usize, DBException> {

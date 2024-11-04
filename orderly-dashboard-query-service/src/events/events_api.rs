@@ -38,11 +38,28 @@ pub async fn list_events(
     param: web::Query<GetAccountEventsRequest>,
 ) -> actix_web::Result<impl Responder> {
     tracing::info!(target: QUERY_ACCOUNT_EVENT_CONTEXT, "query account events params: {:?}", param);
-    let select_result: Result<UserInfo, _> = user_info
+    let mut select_result: Result<UserInfo, _> = user_info
         .filter(address.eq(param.address.clone()))
         .filter(broker_id.eq(param.broker_id.clone()))
         .first_async::<UserInfo>(&POOL)
         .await;
+    if select_result.is_err() {
+        match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
+            Err(err) => {
+                let resp = FailureResponse::new(
+                    1000,
+                    format!(
+                        "parse account_id failed with err: {}",
+                        err
+                    ),
+                );
+                return Ok(HttpResponse::Ok().json(resp));                
+            }
+            Ok(user_info_) => {
+                select_result = Ok(user_info_);
+            }
+        }
+    }
 
     match select_result {
         Ok(user_info_res) => {

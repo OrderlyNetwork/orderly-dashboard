@@ -12,7 +12,7 @@ crate-type = ["rlib"]
 futures = "0.3.29"
 ethers-core = "2.0.14"
 keccak-hash = "0.10.0"
-
+anyhow = "1.0.75"
 
 
 tiny-keccak = "2.0"

@@ -39,6 +39,7 @@ impl fmt::Display for TradingEventType {
 pub struct TradingEventsResponse {
     pub events: Vec<TradingEvent>,
     pub last_block: u64,
+    pub last_block_timestamp: i64,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
