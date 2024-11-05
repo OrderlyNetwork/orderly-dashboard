@@ -96,9 +96,9 @@ impl Display for CommonConfigs {
         let subnet_cfg = &self.l2_config;
         write!(
             f,
-            "subnet config:[rpc_url:{}, pull_check_interval:{},ledger_address:{},operator_manager_address:{},user_ledger_abi_path:{},operator_manager_abi_path:{},market_manager_address:{},market_manager_abi_path:{},confirm_block_num:{:?},contract_deploy_height:{:?}];",
+            "subnet config:[rpc_url:{}, pull_check_interval:{},ledger_address:{},operator_manager_address:{},user_ledger_abi_path:{},operator_manager_abi_path:{},market_manager_address:{},market_manager_abi_path:{},confirm_block_num:{:?},contract_deploy_height:{:?},contract_deploy_timestamp:{}];",
             subnet_cfg.rpc_url, subnet_cfg.pull_check_interval,subnet_cfg.ledger_address, subnet_cfg.operator_manager_address,
-            subnet_cfg.user_ledger_abi_path, subnet_cfg.operator_manager_abi_path, subnet_cfg.market_manager_address, subnet_cfg.market_manager_abi_path, subnet_cfg.confirm_block_num, subnet_cfg.contract_deploy_height
+            subnet_cfg.user_ledger_abi_path, subnet_cfg.operator_manager_abi_path, subnet_cfg.market_manager_address, subnet_cfg.market_manager_abi_path, subnet_cfg.confirm_block_num, subnet_cfg.contract_deploy_height, subnet_cfg.contract_deploy_timestamp
         )?;
         let indexer_server = &self.indexer_server;
         write!(
