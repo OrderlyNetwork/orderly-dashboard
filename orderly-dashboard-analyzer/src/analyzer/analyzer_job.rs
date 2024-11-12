@@ -44,8 +44,14 @@ pub fn start_analyzer_trade_job(
                 min(round_from_block + batch_block_num as i64, max_block),
             );
             let timestamp = Utc::now().timestamp_millis();
-            let response_str =
-                get_indexer_data(round_from_block, round_to_block, from_time, to_time, base_url.clone()).await;
+            let response_str = get_indexer_data(
+                round_from_block,
+                round_to_block,
+                from_time,
+                to_time,
+                base_url.clone(),
+            )
+            .await;
             match response_str {
                 Ok(json_str) => {
                     let result: Result<Response<TradingEventsResponse>, serde_json::Error> =

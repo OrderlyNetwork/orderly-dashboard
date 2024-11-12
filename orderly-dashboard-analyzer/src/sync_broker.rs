@@ -90,13 +90,16 @@ pub fn cal_broker_hash(broker_id: &str) -> String {
 }
 
 pub fn cal_account_id(broker_id: &str, address: &str) -> anyhow::Result<String> {
-    use std::str::FromStr;
     use ethers_core::abi::Token;
+    use std::str::FromStr;
     let mut hasher = Keccak::v256();
     hasher.update(broker_id.as_bytes());
     let mut output = [0u8; 32];
     hasher.finalize(&mut output);
-    let account_id = ethers_core::abi::encode(&[Token::Address(Address::from_str(address)?), Token::FixedBytes(output.to_vec())]);
+    let account_id = ethers_core::abi::encode(&[
+        Token::Address(Address::from_str(address)?),
+        Token::FixedBytes(output.to_vec()),
+    ]);
     let mut hasher = Keccak::v256();
     hasher.update(&account_id);
     hasher.finalize(&mut output);
@@ -105,19 +108,26 @@ pub fn cal_account_id(broker_id: &str, address: &str) -> anyhow::Result<String> 
 
 #[cfg(test)]
 mod tests {
-    use super::{cal_broker_hash, cal_account_id};
+    use super::{cal_account_id, cal_broker_hash};
 
     #[test]
     fn test_broker_hash() {
         let hash = cal_broker_hash("ape_terminal");
         println!("broker hash is: {}", hash);
-        assert_eq!(hash, "0x7aab5f0962136383bce11533727a379fb73b71d861f00adb3e3b020a1c7302fe");
+        assert_eq!(
+            hash,
+            "0x7aab5f0962136383bce11533727a379fb73b71d861f00adb3e3b020a1c7302fe"
+        );
     }
 
     #[test]
     fn test_cal_account_id() {
-        let account_id = cal_account_id("ape_terminal", "0x8975E0746f0842f015A5D08639E4bb1C6203952c").unwrap();
+        let account_id =
+            cal_account_id("ape_terminal", "0x8975E0746f0842f015A5D08639E4bb1C6203952c").unwrap();
         println!("account_id is: {}", account_id);
-        assert_eq!(account_id, "0xed612d1901647232514a778494285fef073fd06a79cd12212026f22f2bd886ee");
+        assert_eq!(
+            account_id,
+            "0xed612d1901647232514a778494285fef073fd06a79cd12212026f22f2bd886ee"
+        );
     }
 }

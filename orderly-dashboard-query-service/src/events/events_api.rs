@@ -48,12 +48,9 @@ pub async fn list_events(
             Err(err) => {
                 let resp = FailureResponse::new(
                     1000,
-                    format!(
-                        "parse account_id failed with err: {}",
-                        err
-                    ),
+                    format!("parse account_id failed with err: {}", err),
                 );
-                return Ok(HttpResponse::Ok().json(resp));                
+                return Ok(HttpResponse::Ok().json(resp));
             }
             Ok(user_info_) => {
                 select_result = Ok(user_info_);
