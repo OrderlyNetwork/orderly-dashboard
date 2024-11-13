@@ -1,6 +1,6 @@
 use crate::api;
 use crate::config::CommonConfigs;
-use crate::formats_external::RecoveryBlockRequest;
+use crate::formats_external::{RecoveryBlockRequest, RecoverySolEventRequest};
 use anyhow::{Context, Result};
 use hyper::{
     body::Buf,
@@ -186,6 +186,14 @@ impl Service {
                 let recovery_block_response =
                     api::recovery::recovery_block(recovery_block_request).await?;
                 serde_json::to_string(&recovery_block_response)
+            }
+            "/recover/sol_events" => {
+                let recovery_sol_events_request: RecoverySolEventRequest =
+                    serde_json::from_str(&body_as_string)?;
+
+                let recovery_sol_events_response =
+                    api::recovery::recovery_sol_events(recovery_sol_events_request).await?;
+                serde_json::to_string(&recovery_sol_events_response)
             }
             _ => {
                 let mut not_found = Response::default();

@@ -63,3 +63,7 @@ pub fn format_hash_160(hash: H160) -> String {
 pub fn u256_to_i128(n: U256) -> i128 {
     I256::from_raw(n).as_i128()
 }
+
+pub fn hex_bytes(bytes: &[u8]) -> String {
+    "0x".to_string() + &hex::encode(bytes)
+}

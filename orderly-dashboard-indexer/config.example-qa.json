@@ -27,5 +27,13 @@
     "scan_url": "https://api-testnet.layerzero-scan.com",
     "graphql_url": "https://gcp3p2q0l5.execute-api.us-east-1.amazonaws.com/prod/graphql"
   },
-  "perp_symbols_config": ["PERP_APT_USDC", "PERP_ARB_USDC", "PERP_BCH_USDC", "PERP_BNB_USDC", "PERP_BTC_USDC", "PERP_ETH_USDC", "PERP_LINK_USDC", "PERP_MATIC_USDC", "PERP_OP_USDC", "PERP_SOL_USDC", "PERP_SUI_USDC", "PERP_TIA_USDC", "PERP_WOO_USDC", "PERP_XRP_USDC"]
+  "perp_symbols_config": ["PERP_APT_USDC", "PERP_ARB_USDC", "PERP_BCH_USDC", "PERP_BNB_USDC", "PERP_BTC_USDC", "PERP_ETH_USDC", "PERP_LINK_USDC", "PERP_MATIC_USDC", "PERP_OP_USDC", "PERP_SOL_USDC", "PERP_SUI_USDC", "PERP_TIA_USDC", "PERP_WOO_USDC", "PERP_XRP_USDC"],
+  "sol_chain_config": {
+    "is_enable": true,
+    "chain_id": 901901901,
+    "rpc_url": "https://api.devnet.solana.com",
+    "start_sig": "4sEF84j4h4MLD2hEm2t97edyrzxb6cmWuphgx8pi77GhGM7zrcWVyNNgcatQmXZE25PsSzpcLpjUyDX6HWADR8tW",
+    "program_address": "5zBjLor7vEraAt4zp2H82sy9MSqFoDnNa1Lx6EYKTYRZ",
+    "vault_usdc": "BQrWyAQN4YVbopcYpMYqD5vNgucVY4iJNQB7SkJEVnBJ"
+  }
 }

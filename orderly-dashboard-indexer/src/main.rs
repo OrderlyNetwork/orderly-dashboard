@@ -27,7 +27,13 @@ use anyhow::Result;
 use clap::Parser;
 use dotenv::dotenv;
 
-use crate::consume_data_task::{consume_data_task, ORDERLY_DASHBOARD_INDEXER};
+use crate::{
+    consume_data_task::{consume_data_task, ORDERLY_DASHBOARD_INDEXER},
+    db::settings::update_last_sol_syn_signature,
+    handler::solana::solana_program_log_processor::{
+        get_starting_signature, handle_sol_program_logs, SolanaProgramLogProcessor,
+    },
+};
 
 fn main() -> Result<()> {
     openssl_probe::init_ssl_cert_env_vars();
@@ -44,6 +50,18 @@ fn main() -> Result<()> {
     system.block_on(async move {
         tokio::spawn(webserver(config.clone()));
         tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "Orderly Dashboard Indexer started! with opts:{:?}, config: {}", opts, config);
+        let sol_config = &config.sol_chain_config;
+        if sol_config.is_enable {
+            actix::spawn(handler::solana::solana_program_log_processor::process_solana_logs(
+                SolanaProgramLogProcessor::new(
+                    sol_config,
+                    sol_config.program_address.clone(),
+                    get_starting_signature,
+                    handle_sol_program_logs,
+                    update_last_sol_syn_signature,
+                )
+            ));
+        }
         let early_stop = opts.end_block.is_some() && opts.start_block.is_none() && opts.end_block.unwrap_or_default() < opts.start_block.unwrap_or_default();
         if early_stop {
             tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "end_block: {:?} < start_block: {:?} , not need to consume data", opts.end_block, opts.start_block);

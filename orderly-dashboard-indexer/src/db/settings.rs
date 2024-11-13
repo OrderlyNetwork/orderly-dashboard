@@ -8,12 +8,15 @@ use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone)]
 pub enum SettingsKey {
     LastRpcProcessHeight = 1,
     NetworkInfo = 2,
     LastRpcProcessTimeStamp = 3,
+    SolSyncSignature = 4,
+    SolSyncBlockTime = 5,
 }
 
 #[derive(Insertable, Queryable, Debug)]
@@ -29,6 +32,18 @@ impl DbSettings {
             id: key as i32,
             value,
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+pub struct SolSyncSignature {
+    pub signature: String,
+    pub slot: u64,
+}
+
+impl SolSyncSignature {
+    pub fn new(signature: String, slot: u64) -> SolSyncSignature {
+        SolSyncSignature { signature, slot }
     }
 }
 
@@ -86,6 +101,46 @@ pub async fn get_db_network_info() -> Result<NetworkInfo> {
         Some(settings) => Ok(serde_json::from_str(&settings.value)?),
         None => Ok(NetworkInfo::default()),
     }
+}
+
+pub async fn get_sol_sync_signature() -> Result<Option<SolSyncSignature>> {
+    let key = SettingsKey::SolSyncSignature as i32;
+    let result = get_setting(key).await?;
+    match result {
+        Some(settings) => Ok(Some(serde_json::from_str::<SolSyncSignature>(
+            &settings.value,
+        )?)),
+        None => Ok(None),
+    }
+}
+
+pub async fn update_last_sol_syn_signature(info: SolSyncSignature) -> Result<()> {
+    let last_sync = get_sol_sync_signature().await?.unwrap_or_default();
+    if last_sync.slot > info.slot {
+        return Ok(());
+    }
+    update_setting(SettingsKey::SolSyncSignature, serde_json::to_string(&info)?).await?;
+
+    Ok(())
+}
+
+pub async fn get_sol_sync_block_time() -> Result<Option<i64>> {
+    let key = SettingsKey::SolSyncBlockTime as i32;
+    let result = get_setting(key).await?;
+    match result {
+        Some(settings) => Ok(Some(settings.value.parse::<i64>()?)),
+        None => Ok(None),
+    }
+}
+
+pub async fn update_last_sol_syn_block_time(block_time: i64) -> Result<()> {
+    let last_block_time = get_sol_sync_block_time().await?.unwrap_or_default();
+    if last_block_time > block_time {
+        return Ok(());
+    }
+    update_setting(SettingsKey::SolSyncBlockTime, block_time.to_string()).await?;
+
+    Ok(())
 }
 
 async fn get_setting(key: i32) -> Result<Option<DbSettings>> {

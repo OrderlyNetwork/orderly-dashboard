@@ -1,3 +1,4 @@
+pub(crate) mod sol_events;
 mod tx_event_handler;
 
 use crate::config::COMMON_CONFIGS;
