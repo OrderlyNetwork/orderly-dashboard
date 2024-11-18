@@ -116,6 +116,12 @@ impl FromStr for Pubkey {
     }
 }
 
+impl Pubkey {
+    pub const fn to_bytes(self) -> [u8; 32] {
+        self.0
+    }
+}
+
 impl From<[u8; 32]> for Pubkey {
     #[inline]
     fn from(from: [u8; 32]) -> Self {

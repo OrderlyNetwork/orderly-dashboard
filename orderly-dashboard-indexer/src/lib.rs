@@ -9,6 +9,7 @@ pub mod constants;
 pub mod db;
 mod service_base;
 pub use service_base::runtime;
+pub use service_base::sdk;
 pub mod config;
 #[allow(dead_code)]
 pub mod contract;

@@ -158,7 +158,7 @@ where
                 tokio::time::sleep(Duration::from_millis(SOL_API_CALL_INTERVAL_MS)).await;
             } else {
                 crate::db::settings::update_last_sol_syn_block_time(block_time - 1).await?;
-                tokio::time::sleep(Duration::from_secs(2)).await;
+                tokio::time::sleep(Duration::from_secs(4)).await;
             }
         }
     }

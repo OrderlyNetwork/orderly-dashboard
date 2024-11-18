@@ -4,6 +4,7 @@ use ethers_core::abi::Address;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time;
+use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
 
 use tiny_keccak::{Hasher, Keccak};
 
@@ -106,9 +107,29 @@ pub fn cal_account_id(broker_id: &str, address: &str) -> anyhow::Result<String> 
     Ok(format!("0x{}", hex::encode(output)))
 }
 
+pub fn get_sol_account_id(user_account: &Pubkey, broker_id: &str) -> anyhow::Result<String> {
+    use ethers_core::abi::Token;
+    let decoded_user_account = user_account.to_bytes();
+    let mut hasher = Keccak::v256();
+    hasher.update(broker_id.as_bytes());
+    let mut output = [0u8; 32];
+    hasher.finalize(&mut output);
+    let bytes = ethers_core::abi::encode(&[
+        Token::FixedBytes(decoded_user_account.to_vec()),
+        Token::FixedBytes(output.to_vec()),
+    ]);
+    let mut h = Keccak::v256();
+    h.update(&bytes);
+    let mut output = [0u8; 32];
+    h.finalize(&mut output);
+    Ok(format!("0x{}", hex::encode(output)))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{cal_account_id, cal_broker_hash};
+    use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
+    use super::{cal_account_id, cal_broker_hash, get_sol_account_id};
+    use std::str::FromStr;
 
     #[test]
     fn test_broker_hash() {
@@ -128,6 +149,17 @@ mod tests {
         assert_eq!(
             account_id,
             "0xed612d1901647232514a778494285fef073fd06a79cd12212026f22f2bd886ee"
+        );
+    }
+
+    #[test]
+    fn test_get_sol_cal_account_id() {
+        let account_id =
+            get_sol_account_id(&Pubkey::from_str("Bm7g7u9bEVynrr69T7nepNAW6dW499eCER87g4ydrHaR").unwrap(), "raydium").unwrap();
+        println!("account_id is: {}", account_id);
+        assert_eq!(
+            account_id,
+            "0xec32f797363b2b3638089f13f8254aa09d530cb937d917732e17adfa89c67488"
         );
     }
 }
