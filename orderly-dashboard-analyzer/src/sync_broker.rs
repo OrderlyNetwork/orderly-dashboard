@@ -1,10 +1,10 @@
 use crate::db::broker_info::create_or_update_broker_info;
 use crate::db::broker_info::BrokerInfo;
 use ethers_core::abi::Address;
+use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time;
-use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
 
 use tiny_keccak::{Hasher, Keccak};
 
@@ -127,8 +127,8 @@ pub fn get_sol_account_id(user_account: &Pubkey, broker_id: &str) -> anyhow::Res
 
 #[cfg(test)]
 mod tests {
-    use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
     use super::{cal_account_id, cal_broker_hash, get_sol_account_id};
+    use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
     use std::str::FromStr;
 
     #[test]
@@ -154,8 +154,11 @@ mod tests {
 
     #[test]
     fn test_get_sol_cal_account_id() {
-        let account_id =
-            get_sol_account_id(&Pubkey::from_str("Bm7g7u9bEVynrr69T7nepNAW6dW499eCER87g4ydrHaR").unwrap(), "raydium").unwrap();
+        let account_id = get_sol_account_id(
+            &Pubkey::from_str("Bm7g7u9bEVynrr69T7nepNAW6dW499eCER87g4ydrHaR").unwrap(),
+            "raydium",
+        )
+        .unwrap();
         println!("account_id is: {}", account_id);
         assert_eq!(
             account_id,

@@ -401,39 +401,6 @@ impl Instruction {
     ///
     /// `program_id` is the address of the program that will execute the instruction.
     /// `accounts` contains a description of all accounts that may be accessed by the program.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use solana_program::{
-    /// #     pubkey::Pubkey,
-    /// #     instruction::{AccountMeta, Instruction},
-    /// # };
-    /// # use serde::{Serialize, Deserialize};
-    /// #
-    /// #[derive(Serialize, Deserialize)]
-    /// pub struct MyInstruction {
-    ///     pub lamports: u64,
-    /// }
-    ///
-    /// pub fn create_instruction(
-    ///     program_id: &Pubkey,
-    ///     from: &Pubkey,
-    ///     to: &Pubkey,
-    ///     lamports: u64,
-    /// ) -> Instruction {
-    ///     let instr = MyInstruction { lamports };
-    ///
-    ///     Instruction::new_with_bincode(
-    ///         *program_id,
-    ///         &instr,
-    ///         vec![
-    ///             AccountMeta::new(*from, true),
-    ///             AccountMeta::new(*to, false),
-    ///         ],
-    ///    )
-    /// }
-    /// ```
     pub fn new_with_bincode<T: Serialize>(
         program_id: Pubkey,
         data: &T,
@@ -454,43 +421,6 @@ impl Instruction {
     ///
     /// The caller is responsible for ensuring the correct encoding of `data` as expected
     /// by the callee program.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use solana_program::{
-    /// #     pubkey::Pubkey,
-    /// #     instruction::{AccountMeta, Instruction},
-    /// # };
-    /// # use borsh::{io::Error, BorshSerialize, BorshDeserialize};
-    /// #
-    /// #[derive(BorshSerialize, BorshDeserialize)]
-    /// # #[borsh(crate = "borsh")]
-    /// pub struct MyInstruction {
-    ///     pub lamports: u64,
-    /// }
-    ///
-    /// pub fn create_instruction(
-    ///     program_id: &Pubkey,
-    ///     from: &Pubkey,
-    ///     to: &Pubkey,
-    ///     lamports: u64,
-    /// ) -> Result<Instruction, Error> {
-    ///     let instr = MyInstruction { lamports };
-    ///
-    ///     let mut instr_in_bytes: Vec<u8> = Vec::new();
-    ///     instr.serialize(&mut instr_in_bytes)?;
-    ///
-    ///     Ok(Instruction::new_with_bytes(
-    ///         *program_id,
-    ///         &instr_in_bytes,
-    ///         vec![
-    ///             AccountMeta::new(*from, true),
-    ///             AccountMeta::new(*to, false),
-    ///         ],
-    ///    ))
-    /// }
-    /// ```
     pub fn new_with_bytes(program_id: Pubkey, data: &[u8], accounts: Vec<AccountMeta>) -> Self {
         Self {
             program_id,
@@ -535,33 +465,6 @@ pub struct AccountMeta {
 
 impl AccountMeta {
     /// Construct metadata for a writable account.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use solana_program::{
-    /// #     pubkey::Pubkey,
-    /// #     instruction::{AccountMeta, Instruction},
-    /// # };
-    /// # use borsh::{BorshSerialize, BorshDeserialize};
-    /// #
-    /// # #[derive(BorshSerialize, BorshDeserialize)]
-    /// # #[borsh(crate = "borsh")]
-    /// # pub struct MyInstruction;
-    /// #
-    /// # let instruction = MyInstruction;
-    /// # let from = Pubkey::new_unique();
-    /// # let to = Pubkey::new_unique();
-    /// # let program_id = Pubkey::new_unique();
-    /// let instr = Instruction::new_with_borsh(
-    ///     program_id,
-    ///     &instruction,
-    ///     vec![
-    ///         AccountMeta::new(from, true),
-    ///         AccountMeta::new(to, false),
-    ///     ],
-    /// );
-    /// ```
     pub fn new(pubkey: Pubkey, is_signer: bool) -> Self {
         Self {
             pubkey,
@@ -571,35 +474,6 @@ impl AccountMeta {
     }
 
     /// Construct metadata for a read-only account.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use solana_program::{
-    /// #     pubkey::Pubkey,
-    /// #     instruction::{AccountMeta, Instruction},
-    /// # };
-    /// # use borsh::{BorshSerialize, BorshDeserialize};
-    /// #
-    /// # #[derive(BorshSerialize, BorshDeserialize)]
-    /// # #[borsh(crate = "borsh")]
-    /// # pub struct MyInstruction;
-    /// #
-    /// # let instruction = MyInstruction;
-    /// # let from = Pubkey::new_unique();
-    /// # let to = Pubkey::new_unique();
-    /// # let from_account_storage = Pubkey::new_unique();
-    /// # let program_id = Pubkey::new_unique();
-    /// let instr = Instruction::new_with_borsh(
-    ///     program_id,
-    ///     &instruction,
-    ///     vec![
-    ///         AccountMeta::new(from, true),
-    ///         AccountMeta::new(to, false),
-    ///         AccountMeta::new_readonly(from_account_storage, false),
-    ///     ],
-    /// );
-    /// ```
     pub fn new_readonly(pubkey: Pubkey, is_signer: bool) -> Self {
         Self {
             pubkey,

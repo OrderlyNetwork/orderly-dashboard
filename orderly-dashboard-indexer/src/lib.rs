@@ -19,6 +19,8 @@ pub mod eth_rpc;
 #[allow(dead_code)]
 pub mod bindings;
 pub mod handler;
+#[allow(dead_code)]
+pub(crate) mod init;
 pub mod transform;
 pub mod utils;
 pub use formats_external::trading_events::Events;
