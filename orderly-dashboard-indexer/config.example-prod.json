@@ -27,5 +27,13 @@
     "scan_url": "https://api-mainnet.layerzero-scan.com",
     "graphql_url": "https://qtrhqncfi4.execute-api.us-east-1.amazonaws.com/prod/graphql"
   },
-  "perp_symbols_config": ["PERP_ARB_USDC", "PERP_BTC_USDC", "PERP_ETH_USDC", "PERP_SOL_USDC", "PERP_TIA_USDC"]
+  "perp_symbols_config": ["PERP_ARB_USDC", "PERP_BTC_USDC", "PERP_ETH_USDC", "PERP_SOL_USDC", "PERP_TIA_USDC"],
+  "sol_chain_config": {
+    "is_enable": false,
+    "chain_id": 900900900,
+    "rpc_url": "https://api.mainnet-beta.solana.com",
+    "start_sig": "",
+    "program_address": "",
+    "vault_usdc": ""
+  }
 }

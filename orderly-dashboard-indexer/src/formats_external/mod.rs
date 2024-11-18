@@ -160,3 +160,9 @@ pub struct RecoveryBlockRequest {
 pub struct NetworkInfo {
     pub finalized_height: Option<u64>,
 }
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct RecoverySolEventRequest {
+    pub start_sigature: String,
+    pub end_slot: u64,
+}

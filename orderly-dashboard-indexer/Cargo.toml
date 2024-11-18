@@ -42,6 +42,23 @@ hex-literal = "0.4.1"
 openssl-probe = "0.1.5"
 typescript-type-def = "0.5"
 ethers-contract = { version = "2.0.10", features= ["abigen"]}
+bincode = "1.3.3"
+bs58 = "0.5.1"
+base58 = "0.2.0"
+bytemuck_derive = "1.7.0"
+num-derive = "0.4"
+num-traits = { version = "0.2", features = ["i128"]}
+bytemuck = { version = "1.16.1" }
+generic-array = { version = "0.14.7", features = ["serde", "more_lengths"]}
+thiserror = "1.0.61"
+tokio-stream = "0.1.16"
+tokio-tungstenite = { version = "0.20.1", features = ["rustls-tls-webpki-roots"] }
+tungstenite = { version = "0.20.1", features = ["rustls-tls-webpki-roots"] }
+semver = "1.0.23"
+crossbeam-channel = "0.5.13"
+futures-util = "0.3.30"
+borsh = { version = "1.5.1", features = ["derive"]}
+anchor-syn = { version = "0.30.1", features = ["hash"]}
 
 [build-dependencies]
 ethers = { version = "2.0.10", features = ["abigen"]}

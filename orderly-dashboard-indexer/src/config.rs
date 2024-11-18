@@ -82,6 +82,21 @@ pub struct LayerzeroConfig {
     pub graphql_url: String,
 }
 
+fn empty_string() -> String {
+    "".to_string()
+}
+
+#[derive(Clone, Deserialize, Default, Debug)]
+pub struct SolChainConfig {
+    pub is_enable: bool,
+    pub chain_id: u64,
+    pub rpc_url: String,
+    pub start_sig: String,
+    pub program_address: String,
+    #[serde(default = "empty_string")]
+    pub vault_usdc: String,
+}
+
 #[derive(Clone, Deserialize, Default)]
 pub struct CommonConfigs {
     pub l2_config: SubnetConfig,
@@ -89,6 +104,7 @@ pub struct CommonConfigs {
     pub sync_block_strategy: SyncBlockStrategy,
     pub layerzero: LayerzeroConfig,
     pub perp_symbols_config: Vec<String>,
+    pub sol_chain_config: SolChainConfig,
 }
 
 impl Display for CommonConfigs {
@@ -114,9 +130,10 @@ impl Display for CommonConfigs {
         let layerzero_config = &self.layerzero;
         write!(
             f,
-            "layerzero_config:[scan_url:{}].",
+            "layerzero_config:[scan_url:{}];",
             layerzero_config.scan_url,
         )?;
-        write!(f, "perp_symbols:{:?}.", self.perp_symbols_config,)
+        write!(f, "perp_symbols:{:?};", self.perp_symbols_config,)?;
+        write!(f, "sol_chain_config:{:?}.", self.sol_chain_config,)
     }
 }
