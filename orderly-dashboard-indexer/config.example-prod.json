@@ -29,11 +29,11 @@
   },
   "perp_symbols_config": ["PERP_ARB_USDC", "PERP_BTC_USDC", "PERP_ETH_USDC", "PERP_SOL_USDC", "PERP_TIA_USDC"],
   "sol_chain_config": {
-    "is_enable": false,
+    "is_enable": true,
     "chain_id": 900900900,
     "rpc_url": "https://api.mainnet-beta.solana.com",
-    "start_sig": "",
-    "program_address": "",
-    "vault_usdc": ""
+    "start_sig": "3KqRD6KA76a8mBUYkALMhYSLMJePrG9u7Hxg16fxmYskA8urWsxGAMhDePWBvNHgoyvhZHuhPS3xCmUAgAbpwaTb",
+    "program_address": "ErBmAD61mGFKvrFNaTJuxoPwqrS8GgtwtqJTJVjFWx9Q",
+    "vault_usdc": "77puyQ4K4ov82qzBuda4q9iMh2Ux49YnnBNWqxQkcrXE"
   }
 }

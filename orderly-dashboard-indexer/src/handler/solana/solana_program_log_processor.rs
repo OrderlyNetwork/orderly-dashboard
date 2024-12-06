@@ -35,8 +35,8 @@ use crate::{
 const SOL_LOG_PROCESSOR: &str = "sol_log_processor";
 const SOL_SIG_GET_LIMIT: usize = 1000;
 const SOL_SIG_FETCH_LIMIT: usize = 100_000;
-const SOL_API_CALL_INTERVAL_MS: u64 = 600;
-const SOL_GET_TX_RETRY_LIMIT: usize = 3;
+const SOL_API_CALL_INTERVAL_MS: u64 = 1000;
+const SOL_GET_TX_RETRY_LIMIT: usize = 5;
 
 pub(crate) struct SolanaProgramLogData {
     pub program_address: String,
@@ -226,7 +226,7 @@ where
                         return Err(err);
                     }
                     tracing::warn!(target: SOL_LOG_PROCESSOR, "Failed to fetch transaction: {}. Retrying...", err);
-                    tokio::time::sleep(Duration::from_millis(SOL_API_CALL_INTERVAL_MS)).await;
+                    tokio::time::sleep(Duration::from_millis(SOL_API_CALL_INTERVAL_MS * (1 + 2 * retry_count as u64))).await;
                 }
             }
         }
