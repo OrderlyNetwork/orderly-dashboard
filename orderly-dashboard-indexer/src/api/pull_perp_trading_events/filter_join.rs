@@ -10,12 +10,18 @@ use crate::db::liquidation_transfer::{
 use crate::db::serial_batches::{
     query_serial_batches_with_type, query_serial_batches_with_type_by_time, SerialBatchType,
 };
-use crate::db::settings::{get_last_rpc_processed_height, get_last_rpc_processed_timestamp};
+use crate::db::settings::{
+    get_last_rpc_processed_height, get_last_rpc_processed_timestamp, get_sol_sync_block_time,
+    get_sol_sync_signature,
+};
 use crate::db::settlement_execution::{
     query_account_settlement_executions, query_settlement_executions, DbSettlementExecution,
     DbSettlementExecutionView,
 };
 use crate::db::settlement_result::{query_account_settlement_results, query_settlement_results};
+use crate::db::sol_transaction_events::{
+    query_account_sol_balance_transaction_executions, query_sol_balance_transaction_executions,
+};
 use crate::db::transaction_events::{
     query_account_balance_transaction_executions, query_balance_transaction_executions,
 };
@@ -78,6 +84,40 @@ pub async fn perp_trading_join_events(
     Ok(response)
 }
 
+pub async fn sol_join_events(
+    from_block: i64,
+    to_block: i64,
+    event_type: Option<TradingEventType>,
+) -> Result<TradingEventsResponse> {
+    let last_block = get_sol_sync_signature().await?.unwrap_or_default().slot;
+    let last_timestamp = get_sol_sync_block_time().await?.unwrap_or_default();
+    let to_block = min(last_block as i64, to_block);
+    let mut response = TradingEventsResponse::default();
+    if last_block == 0 {
+        return Ok(response);
+    }
+    if let Some(event_type) = event_type {
+        let mut trading_events: Vec<TradingEvent> = vec![];
+        match event_type {
+            TradingEventType::TRANSACTION => {
+                trading_events = join_sol_balance_transactions(from_block, to_block).await?;
+            }
+            _ => {}
+        }
+        trading_events.sort();
+        response.events = trading_events;
+        response.last_block = last_block;
+        response.last_block_timestamp = last_timestamp;
+        return Ok(response);
+    }
+    let mut balance_trans = join_sol_balance_transactions(from_block, to_block).await?;
+    balance_trans.sort();
+    response.events = balance_trans;
+    response.last_block = last_block;
+    response.last_block_timestamp = last_timestamp;
+    Ok(response)
+}
+
 pub async fn account_perp_trading_join_events(
     account_id: &str,
     from_time: i64,
@@ -124,6 +164,37 @@ pub async fn account_perp_trading_join_events(
     let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
     trading_events.sort();
     response.events = trading_events;
+    Ok(response)
+}
+
+pub async fn account_sol_join_events(
+    account_id: &str,
+    from_time: i64,
+    to_time: i64,
+    event_type: Option<TradingEventType>,
+) -> Result<AccountTradingEventsResponse> {
+    let mut response = AccountTradingEventsResponse::default();
+    if let Some(event_type) = event_type {
+        let mut trading_events: Vec<TradingEvent> = vec![];
+        match event_type {
+            TradingEventType::TRANSACTION => {
+                trading_events = join_sol_account_balance_transactions(
+                    account_id.to_string(),
+                    from_time,
+                    to_time,
+                )
+                .await?;
+            }
+            _ => {}
+        }
+        trading_events.sort();
+        response.events = trading_events;
+        return Ok(response);
+    }
+    let mut balance_trans =
+        join_sol_account_balance_transactions(account_id.to_string(), from_time, to_time).await?;
+    balance_trans.sort();
+    response.events = balance_trans;
     Ok(response)
 }
 
@@ -204,6 +275,19 @@ pub async fn join_balance_transactions(
     Ok(trading_event_vec)
 }
 
+pub async fn join_sol_balance_transactions(
+    from_block: i64,
+    to_block: i64,
+) -> Result<Vec<TradingEvent>> {
+    let balance_transactions =
+        query_sol_balance_transaction_executions(from_block, to_block).await?;
+    let trading_event_vec: Vec<TradingEvent> = balance_transactions
+        .into_iter()
+        .map(TradingEvent::from_sol_balance_transaction)
+        .collect::<Vec<_>>();
+    Ok(trading_event_vec)
+}
+
 pub async fn join_account_balance_transactions(
     account_id: String,
     from_time: i64,
@@ -214,6 +298,20 @@ pub async fn join_account_balance_transactions(
     let trading_event_vec: Vec<TradingEvent> = balance_transactions
         .into_iter()
         .map(TradingEvent::from_balance_transaction)
+        .collect::<Vec<_>>();
+    Ok(trading_event_vec)
+}
+
+pub async fn join_sol_account_balance_transactions(
+    account_id: String,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<TradingEvent>> {
+    let balance_transactions =
+        query_account_sol_balance_transaction_executions(account_id, from_time, to_time).await?;
+    let trading_event_vec: Vec<TradingEvent> = balance_transactions
+        .into_iter()
+        .map(TradingEvent::from_sol_balance_transaction)
         .collect::<Vec<_>>();
     Ok(trading_event_vec)
 }

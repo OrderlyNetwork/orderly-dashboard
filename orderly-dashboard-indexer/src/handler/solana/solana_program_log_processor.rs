@@ -6,15 +6,15 @@ use bigdecimal::BigDecimal;
 use borsh::BorshDeserialize;
 use num_traits::FromPrimitive;
 
+use crate::db::sol_transaction_events::{
+    create_sol_balance_transaction_executions, DbSolTransactionEvent,
+};
 use crate::{
     config::{get_common_cfg, SolChainConfig},
     contract::sol_events::VaultWithdrawn,
     db::{
         settings::{get_sol_sync_signature, SolSyncSignature},
-        transaction_events::{
-            create_balance_transaction_executions, DbTransactionEvent, DbTransactionSide,
-            DbTransactionStatus,
-        },
+        transaction_events::{DbTransactionSide, DbTransactionStatus},
     },
     service_base::sdk::solana::{
         commitment_config::CommitmentConfig,
@@ -35,7 +35,7 @@ use crate::{
 const SOL_LOG_PROCESSOR: &str = "sol_log_processor";
 const SOL_SIG_GET_LIMIT: usize = 1000;
 const SOL_SIG_FETCH_LIMIT: usize = 100_000;
-const SOL_API_CALL_INTERVAL_MS: u64 = 550;
+const SOL_API_CALL_INTERVAL_MS: u64 = 600;
 const SOL_GET_TX_RETRY_LIMIT: usize = 3;
 
 pub(crate) struct SolanaProgramLogData {
@@ -336,7 +336,7 @@ pub(crate) async fn handle_sol_program_logs(log_data: SolanaProgramLogData) -> a
                 let block_time = log_data.block_time;
                 let withdraw_data = VaultWithdrawn::deserialize(&mut &data[..])?;
                 tracing::info!(target: SOL_LOG_PROCESSOR, "signature: {}, decoded vault withdrawn: {:?}", log_data.tx_signature, withdraw_data);
-                let withdraw_event = DbTransactionEvent {
+                let withdraw_event = DbSolTransactionEvent {
                     block_number: slot,
                     transaction_index: 0,
                     log_index: log_idx as i32,
@@ -354,15 +354,9 @@ pub(crate) async fn handle_sol_program_logs(log_data: SolanaProgramLogData) -> a
                     status: DbTransactionStatus::Succeed.value(),
                     withdraw_nonce: Some(i64::try_from(withdraw_data.withdraw_nonce)?),
                     fail_reason: None,
-                    effective_gas_price: None,
-                    gas_used: None,
-                    l1_fee: None,
-                    l1_fee_scalar: None,
-                    l1_gas_price: None,
-                    l1_gas_used: None,
                 };
 
-                create_balance_transaction_executions(vec![withdraw_event]).await?;
+                create_sol_balance_transaction_executions(vec![withdraw_event]).await?;
             }
         }
     }
