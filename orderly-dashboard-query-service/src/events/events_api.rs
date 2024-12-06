@@ -107,6 +107,62 @@ pub async fn list_events(
     };
 }
 
+#[get("/sol_events")] // <- define path parameters
+pub async fn list_sol_events(
+    param: web::Query<GetAccountEventsRequest>,
+) -> actix_web::Result<impl Responder> {
+    tracing::info!(target: QUERY_ACCOUNT_EVENT_CONTEXT, "query sol account events params: {:?}", param);
+    let user_info_res = match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
+        Ok(user_info_res) => user_info_res,
+        Err(err) => {
+            let resp = FailureResponse::new(
+                1000,
+                format!("parse account_id failed with err: {}", err),
+            );
+            return Ok(HttpResponse::Ok().json(resp));
+        }
+    };
+
+            let indexer_data = get_indexer_sol_data(
+                param.from_time,
+                param.to_time,
+                user_info_res.account_id,
+                param.event_type.as_deref().map(str::to_uppercase),
+                get_common_cfg().indexer_address.clone(),
+            )
+                .await;
+
+            match indexer_data {
+                Ok(res_json_str) => {
+                    let result: Result<Response<AccountTradingEventsResponse>, serde_json::Error> =
+                        serde_json::from_str(&*res_json_str);
+
+                    match result {
+                        Ok(response) => {
+                            return Ok(HttpResponse::Ok().json(response));
+                        }
+                        Err(err) => {
+                            let resp = FailureResponse::new(
+                                1000,
+                                format!(
+                                    "get_indexer_sol_data parse event_type failed with err: {}",
+                                    err
+                                ),
+                            );
+                            return Ok(HttpResponse::Ok().json(resp));
+                        }
+                    }
+                }
+                Err(err) => {
+                    let resp = FailureResponse::new(
+                        1000,
+                        format!("get user info failed with err: {}", err),
+                    );
+                    return Ok(HttpResponse::Ok().json(resp));
+                }
+            };
+}
+
 async fn get_indexer_data(
     from_time: i64,
     to_time: i64,
@@ -122,6 +178,31 @@ async fn get_indexer_data(
     } else {
         format!(
             "{}/pull_account_trading_events?account_id={}&from_time={}&to_time={}",
+            base_url, p_account_id, from_time, to_time,
+        )
+    };
+    let response = reqwest::get(indexer_url).await;
+    match response {
+        Ok(res) => Ok(res.text().await?),
+        Err(err) => Err(anyhow::anyhow!("reqwest failed with: {}", err)),
+    }
+}
+
+async fn get_indexer_sol_data(
+    from_time: i64,
+    to_time: i64,
+    p_account_id: String,
+    event_type: Option<String>,
+    base_url: String,
+) -> anyhow::Result<String> {
+    let indexer_url = if let Some(event_type) = event_type {
+        format!(
+            "{}/pull_account_sol_events?account_id={}&from_time={}&to_time={}&event_type={}",
+            base_url, p_account_id, from_time, to_time, event_type
+        )
+    } else {
+        format!(
+            "{}/pull_account_sol_events?account_id={}&from_time={}&to_time={}",
             base_url, p_account_id, from_time, to_time,
         )
     };

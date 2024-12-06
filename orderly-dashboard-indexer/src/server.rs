@@ -110,9 +110,21 @@ impl Service {
                 }
                 Either::Right(response) => return Ok(response),
             },
+            "/pull_sol_events" => match get_query_params(&req) {
+                Either::Left(params) => {
+                    serde_json::to_string(&api::pull_sol_events(&params).await?)
+                }
+                Either::Right(response) => return Ok(response),
+            },
             "/pull_account_trading_events" => match get_query_params(&req) {
                 Either::Left(params) => {
                     serde_json::to_string(&api::pull_perp_trading_events_by_account(&params).await?)
+                }
+                Either::Right(response) => return Ok(response),
+            },
+            "/pull_account_sol_events" => match get_query_params(&req) {
+                Either::Left(params) => {
+                    serde_json::to_string(&api::pull_sol_events_by_account(&params).await?)
                 }
                 Either::Right(response) => return Ok(response),
             },

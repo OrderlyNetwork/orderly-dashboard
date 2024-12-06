@@ -6,6 +6,7 @@ use crate::db::liquidation_transfer::DbLiquidationTransfer;
 use crate::db::serial_batches::{DbSerialBatches, DbSerialBatchesView};
 use crate::db::settlement_execution::{DbSettlementExecution, DbSettlementExecutionView};
 use crate::db::settlement_result::DbSettlementResult;
+use crate::db::sol_transaction_events::DbSolTransactionEvent;
 use crate::db::transaction_events::DbTransactionEvent;
 use bigdecimal::ToPrimitive;
 use serde::{Deserialize, Serialize};
@@ -130,6 +131,31 @@ impl TradingEvent {
     }
 
     pub fn from_balance_transaction(value: DbTransactionEvent) -> TradingEvent {
+        TradingEvent {
+            block_number: value.block_number as u64,
+            transaction_index: value.transaction_index as u32,
+            log_index: value.log_index as u32,
+            transaction_id: value.transaction_id,
+            block_timestamp: value.block_time.to_u64().unwrap_or_default(),
+            data: TradingEventInnerData::Transaction {
+                account_id: value.account_id,
+                sender: value.sender,
+                receiver: value.receiver,
+                token_hash: value.token_hash,
+                broker_hash: value.broker_hash,
+                chain_id: value.chain_id.to_string(),
+                side: TransactionSide::try_from(value.side).unwrap_or(TransactionSide::Deposit),
+                token_amount: value.amount.to_string(),
+                withdraw_nonce: value.withdraw_nonce,
+                status: TransactionStatus::try_from(value.status)
+                    .unwrap_or(TransactionStatus::Succeed),
+                fail_reason: value.fail_reason,
+                fee: value.fee.to_string(),
+            },
+        }
+    }
+
+    pub fn from_sol_balance_transaction(value: DbSolTransactionEvent) -> TradingEvent {
         TradingEvent {
             block_number: value.block_number as u64,
             transaction_index: value.transaction_index as u32,

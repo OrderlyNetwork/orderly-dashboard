@@ -7,9 +7,9 @@ pub mod serial_batches;
 pub mod settings;
 pub mod settlement_execution;
 pub mod settlement_result;
+pub mod sol_transaction_events;
 pub mod symbols_config;
 pub mod transaction_events;
-
 use actix_diesel::Database;
 use diesel::PgConnection;
 use once_cell::sync::{Lazy, OnceCell};

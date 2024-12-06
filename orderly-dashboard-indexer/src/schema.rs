@@ -148,6 +148,28 @@ diesel::table! {
 }
 
 diesel::table! {
+    sol_transaction_events (block_number, transaction_index, log_index) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        transaction_id -> Text,
+        block_time -> Numeric,
+        account_id -> Text,
+        sender -> Nullable<Text>,
+        receiver -> Text,
+        token_hash -> Text,
+        broker_hash -> Text,
+        chain_id -> Numeric,
+        side -> Int2,
+        amount -> Numeric,
+        fee -> Numeric,
+        status -> Int2,
+        withdraw_nonce -> Nullable<Int8>,
+        fail_reason -> Nullable<Int2>,
+    }
+}
+
+diesel::table! {
     symbols_config (symbol) {
         symbol -> Text,
         symbol_hash -> Text,
@@ -199,6 +221,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     settings,
     settlement_execution,
     settlement_result,
+    sol_transaction_events,
     symbols_config,
     transaction_events,
 );
