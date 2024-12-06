@@ -21,7 +21,7 @@ psql -U {your databse account} -d {your databse} -f ../../scripts/init_data.sql
 
 ### Daily volume
 ```
-GET http://localhost:8089/daily_volume?from_day=2023-01-01&end_day=2024-01-01
+GET /daily_volume?from_day=2023-01-01&end_day=2024-01-01
 ```
 
 Response
@@ -45,7 +45,7 @@ Response
 
 ### Daily trading fee
 ```
-GET http://localhost:8089/daily_trading_fee?from_day=2023-01-01&end_day=2024-01-01
+GET /daily_trading_fee?from_day=2023-01-01&end_day=2024-01-01
 ```
 ```json
 {
@@ -67,7 +67,7 @@ GET http://localhost:8089/daily_trading_fee?from_day=2023-01-01&end_day=2024-01-
 
 ### Average trading count
 ```
-GET http://localhost:8089/average_trading_count
+GET /average_trading_count
 ```
 ```json
 {
@@ -84,7 +84,7 @@ GET http://localhost:8089/average_trading_count
 
 ### Average trading fee
 ```
-GET http://localhost:8089/average_trading_fee
+GET /average_trading_fee
 ```
 ```json
 {
@@ -101,7 +101,7 @@ GET http://localhost:8089/average_trading_fee
 
 ### Average opening count
 ```
-GET http://localhost:8089/average_opening_count
+GET /average_opening_count
 ```
 ```json
 {
@@ -118,7 +118,7 @@ GET http://localhost:8089/average_opening_count
 
 ### Average trading volume
 ```
-GET http://localhost:8089/average_trading_volume
+GET /average_trading_volume
 ```
 ```json
 {
@@ -135,7 +135,7 @@ GET http://localhost:8089/average_trading_volume
 
 ### Ranking of trading volume
 ```
-GET http://localhost:8089/ranking/trading_volume?days=3&size=10
+GET /ranking/trading_volume?days=3&size=10
 ```
 * days: trading volume ranking in past {days} days
 * size: ranking data size
@@ -160,7 +160,7 @@ GET http://localhost:8089/ranking/trading_volume?days=3&size=10
 
 ### Ranking of perp holding
 ```
-GET http://localhost:8089/ranking/perp_holding?symbol=test&size=10
+GET /ranking/perp_holding?symbol=test&size=10
 ```
 ```json
 {
@@ -178,6 +178,16 @@ GET http://localhost:8089/ranking/perp_holding?symbol=test&size=10
     ]
   }
 }
+```
+
+### Pull trading events on EVM
+```shell
+GET /events?broker_id=woofi_pro&address=0x9e15a53b9dfa30e6b220d0e3c93253bea7191769&from_time=1711123200&to_time=1713801600
+```
+
+### Pull trading events on Solana
+```shell
+GET /sol_events?broker_id=raydium&address=3nrWg4GJijT1NnxrmupFD7CJjshZnHyRAAYEmLizMqBc
 ```
 
 
