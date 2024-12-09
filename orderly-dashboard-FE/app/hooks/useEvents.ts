@@ -44,12 +44,19 @@ export type EventTableData = types.TradingEvent &
   );
 
 export type EventsParams = {
-  address: string;
+  address: ChainAddress;
   broker_id: string;
   event_type?: EventType;
   from_time?: Dayjs | null;
   to_time?: Dayjs | null;
 };
+
+export type ChainAddress = {
+  address: string;
+  chain_namespace: ChainNamespace;
+};
+
+export type ChainNamespace = 'evm' | 'sol';
 
 export function useEvents(query: EventsParams | null) {
   const { queryServiceUrl } = useAppState();
@@ -58,7 +65,7 @@ export function useEvents(query: EventsParams | null) {
       if (query == null) return null;
 
       const searchParams = new URLSearchParams();
-      searchParams.set('address', query.address);
+      searchParams.set('address', query.address.address);
       searchParams.set('broker_id', query.broker_id);
       if (query.event_type != null) {
         searchParams.set('event_type', query.event_type);
@@ -68,7 +75,10 @@ export function useEvents(query: EventsParams | null) {
         if (index > 0) {
           return null;
         }
-        return `${queryServiceUrl}/events?${searchParams.toString()}`;
+        return `${queryServiceUrl}/${match(query.address.chain_namespace)
+          .with('evm', () => 'events')
+          .with('sol', () => 'sol_events')
+          .exhaustive()}?${searchParams.toString()}`;
       }
 
       const minFromTime = query.from_time;
@@ -85,91 +95,15 @@ export function useEvents(query: EventsParams | null) {
       searchParams.set('from_time', String(Math.trunc(fromTime.valueOf() / 1_000)));
       searchParams.set('to_time', String(Math.trunc(toTime.valueOf() / 1_000)));
       // we add `from` and `to` params here to invalidate SWR cache
-      const url = `${queryServiceUrl}/events?${searchParams.toString()}&from=${query.from_time.format('L')}&to=${query.to_time.format('L')}`;
-      return url;
+      return `${queryServiceUrl}/${match(query.address.chain_namespace)
+        .with('evm', () => 'events')
+        .with('sol', () => 'sol_events')
+        .exhaustive()}?${searchParams.toString()}&from=${query.from_time.format('L')}&to=${query.to_time.format('L')}`;
     },
     (url: string) =>
       fetch(url)
         .then((r) => r.json())
-        .then((val) => {
-          if (!val.success) {
-            const error = new Error('');
-            console.log('val', val);
-            error.message = val.message;
-            throw error;
-          }
-          const events: types.TradingEvent[] = val.data.events;
-          const flattenedEvents: EventTableData[] = [];
-          events.forEach((event) => {
-            match(event.data)
-              .with(
-                {
-                  Transaction: P.select()
-                },
-                () => {
-                  flattenedEvents.push({ ...event, type: 'transaction' });
-                }
-              )
-              .with(
-                {
-                  ProcessedTrades: P.select()
-                },
-                (data) => {
-                  for (const trade of data.trades) {
-                    flattenedEvents.push({ ...event, type: 'trade', trade });
-                  }
-                }
-              )
-              .with(
-                {
-                  LiquidationResult: P.select()
-                },
-                (data) => {
-                  for (const liquidation of data.liquidation_transfers) {
-                    flattenedEvents.push({ ...event, type: 'liquidation', liquidation });
-                  }
-                }
-              )
-              .with(
-                {
-                  LiquidationResultV2: P.select()
-                },
-                (data) => {
-                  for (const liquidationv2 of data.liquidation_transfers) {
-                    flattenedEvents.push({ ...event, type: 'liquidationv2', liquidationv2 });
-                  }
-                }
-              )
-              .with(
-                {
-                  SettlementResult: P.select()
-                },
-                (data) => {
-                  for (const settlement of data.settlement_executions) {
-                    flattenedEvents.push({ ...event, type: 'settlement', settlement });
-                  }
-                }
-              )
-              .with(
-                {
-                  AdlResult: P.select()
-                },
-                () => {
-                  flattenedEvents.push({ ...event, type: 'adl' });
-                }
-              )
-              .with(
-                {
-                  AdlResultV2: P.select()
-                },
-                () => {
-                  flattenedEvents.push({ ...event, type: 'adlv2' });
-                }
-              )
-              .exhaustive();
-          });
-          return flattenedEvents;
-        }),
+        .then(handleFetchEvents),
     {
       parallel: true,
       initialSize: 100,
@@ -177,4 +111,87 @@ export function useEvents(query: EventsParams | null) {
       revalidateOnFocus: false
     }
   );
+}
+
+function handleFetchEvents(val: {
+  success: boolean;
+  message: string;
+  data: { events: types.TradingEvent[] };
+}) {
+  if (!val.success) {
+    const error = new Error('');
+    error.message = val.message;
+    throw error;
+  }
+  const events: types.TradingEvent[] = val.data.events;
+  const flattenedEvents: EventTableData[] = [];
+  events.forEach((event) => {
+    match(event.data)
+      .with(
+        {
+          Transaction: P.select()
+        },
+        () => {
+          flattenedEvents.push({ ...event, type: 'transaction' });
+        }
+      )
+      .with(
+        {
+          ProcessedTrades: P.select()
+        },
+        (data) => {
+          for (const trade of data.trades) {
+            flattenedEvents.push({ ...event, type: 'trade', trade });
+          }
+        }
+      )
+      .with(
+        {
+          LiquidationResult: P.select()
+        },
+        (data) => {
+          for (const liquidation of data.liquidation_transfers) {
+            flattenedEvents.push({ ...event, type: 'liquidation', liquidation });
+          }
+        }
+      )
+      .with(
+        {
+          LiquidationResultV2: P.select()
+        },
+        (data) => {
+          for (const liquidationv2 of data.liquidation_transfers) {
+            flattenedEvents.push({ ...event, type: 'liquidationv2', liquidationv2 });
+          }
+        }
+      )
+      .with(
+        {
+          SettlementResult: P.select()
+        },
+        (data) => {
+          for (const settlement of data.settlement_executions) {
+            flattenedEvents.push({ ...event, type: 'settlement', settlement });
+          }
+        }
+      )
+      .with(
+        {
+          AdlResult: P.select()
+        },
+        () => {
+          flattenedEvents.push({ ...event, type: 'adl' });
+        }
+      )
+      .with(
+        {
+          AdlResultV2: P.select()
+        },
+        () => {
+          flattenedEvents.push({ ...event, type: 'adlv2' });
+        }
+      )
+      .exhaustive();
+  });
+  return flattenedEvents;
 }

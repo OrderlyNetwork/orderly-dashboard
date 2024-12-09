@@ -30,7 +30,7 @@ import { useRenderColumns } from './address';
 
 import { useAppState } from '~/App';
 import { Spinner } from '~/components';
-import { EventTableData, EventType } from '~/hooks';
+import { ChainAddress, EventsParams, EventTableData, EventType } from '~/hooks';
 
 export function loader({ params }: LoaderFunctionArgs) {
   return json({ address: params.address });
@@ -83,7 +83,22 @@ export const Address: FC = () => {
     }
   ]);
 
-  const { address }: { address: string } = useLoaderData<typeof loader>();
+  const { address: rawAddress }: { address: string } = useLoaderData<typeof loader>();
+  const address: ChainAddress = useMemo(() => {
+    if (rawAddress.match(/^0x[0-9a-fA-F]{40}$/)) {
+      return {
+        address: rawAddress,
+        chain_namespace: 'evm'
+      };
+    } else if (rawAddress.match(/^[0-9a-zA-Z]{44}$/)) {
+      return {
+        address: rawAddress,
+        chain_namespace: 'sol'
+      };
+    }
+    throw new Error(`Could not match address ${rawAddress}`);
+  }, [rawAddress]);
+
   const [searchParams] = useSearchParams();
   const broker_id = searchParams.get('broker_id');
 
@@ -95,7 +110,7 @@ export const Address: FC = () => {
   const eventsParams = useMemo(
     () =>
       broker_id != null
-        ? {
+        ? ({
             address,
             broker_id,
             event_type: match(eventType)
@@ -105,7 +120,7 @@ export const Address: FC = () => {
               .otherwise((value) => value) as EventType,
             from_time: from,
             to_time: until
-          }
+          } satisfies EventsParams)
         : null,
     [broker_id, address, eventType, from, until]
   );
@@ -113,7 +128,7 @@ export const Address: FC = () => {
   const { evmApiUrl } = useAppState();
   const { data: accountId } = useSWR<string>(
     broker_id != null
-      ? `${evmApiUrl}/v1/get_account?address=${address}&broker_id=${broker_id}`
+      ? `${evmApiUrl}/v1/get_account?address=${address.address}&broker_id=${broker_id}&chain_type=${address.chain_namespace.toUpperCase()}`
       : undefined,
     (url: string) =>
       fetch(url)
@@ -217,7 +232,7 @@ export const Address: FC = () => {
 
   return (
     <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full [&>*]:max-w-[50rem]">
-      <h2 className="mb-2">{address}</h2>
+      <h2 className="mb-2">{address.address}</h2>
 
       {accountId != null && (
         <div className="flex flex-col [&>*:first-child]:font-bold">
@@ -238,6 +253,16 @@ export const Address: FC = () => {
           </div>
         </div>
       )}
+
+      <div className="flex flex-col [&>*:first-child]:font-bold">
+        <div>Chain Namespace:</div>
+        <div>
+          {match(address.chain_namespace)
+            .with('evm', () => 'EVM')
+            .with('sol', () => 'Solana')
+            .exhaustive()}
+        </div>
+      </div>
 
       <div className="flex flex-items-center gap-2">
         <DatePicker

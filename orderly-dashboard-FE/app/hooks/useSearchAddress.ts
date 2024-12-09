@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { P, match } from 'ts-pattern';
 
@@ -19,10 +19,14 @@ export const useSearchAddress = (
   const [urls, setUrls] = useState<string[]>([]);
   const [addressData, setAddressData] = useState<AddressData[]>();
 
+  const isEvm = useMemo(() => query != null && !!query.match(/^0x[0-9a-fA-F]{40}$/), [query]);
+  const isSol = useMemo(() => query != null && !!query.match(/^[0-9a-zA-Z]{44}$/), [query]);
+  const isAccountId = useMemo(() => query != null && !!query.match(/^0x[0-9a-fA-F]{66}$/), [query]);
+
   let searchType: SearchType;
-  if (query?.length === 42) {
+  if (isEvm || isSol) {
     searchType = 'address';
-  } else if (query?.length === 66) {
+  } else if (isAccountId) {
     searchType = 'accountId';
   } else {
     searchType = undefined;
@@ -49,14 +53,14 @@ export const useSearchAddress = (
             .with('address', () =>
               brokers.map(
                 (broker) =>
-                  `${evmApiUrl}/v1/get_account?address=${query}&broker_id=${broker.broker_id}`
+                  `${evmApiUrl}/v1/get_account?address=${query}&broker_id=${broker.broker_id}${isSol ? '&chain_type=SOL' : ''}`
               )
             )
             .with(undefined, () => [])
             .exhaustive()
         )
     );
-  }, [searchType, evmApiUrl, query, brokers]);
+  }, [searchType, evmApiUrl, query, brokers, isSol]);
 
   useEffect(() => {
     setIndex(0);
