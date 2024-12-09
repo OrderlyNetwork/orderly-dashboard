@@ -1,14 +1,24 @@
 import { Card } from '@radix-ui/themes';
 import { useNavigate, useSearchParams } from '@remix-run/react';
 import { FC } from 'react';
+import { match } from 'ts-pattern';
 
 import { Spinner } from '~/components';
-import { useSearchAddress } from '~/hooks';
+import { ChainNamespace, useSearchAddress } from '~/hooks';
+import { base64UrlSafeDecode } from '~/util';
 
 export const Search: FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const address = searchParams.get('q');
+  const rawAddress = searchParams.get('q');
+  const chainNamespace: ChainNamespace = match(searchParams.get('chain_namespace'))
+    .with('evm', () => 'evm' as const)
+    .with('sol', () => 'sol' as const)
+    .otherwise(() => 'evm' as const);
+  const address = match(chainNamespace)
+    .with('evm', () => rawAddress)
+    .with('sol', () => base64UrlSafeDecode(rawAddress ?? ''))
+    .exhaustive();
   const { addressData, loading } = useSearchAddress(address);
 
   if (address == null) {
