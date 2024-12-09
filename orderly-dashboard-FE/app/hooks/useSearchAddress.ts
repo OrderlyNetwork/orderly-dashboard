@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
-import { P, match } from 'ts-pattern';
-
-import { useBrokers } from './useBrokers';
+import { match } from 'ts-pattern';
 
 import { useAppState } from '~/App';
 
@@ -12,11 +10,10 @@ export type AddressData = { address: string; account_id: string; broker_id: stri
 export const useSearchAddress = (
   query: string | null
 ): { addressData?: AddressData[]; loading: boolean } => {
-  const { data: brokers } = useBrokers();
   const { evmApiUrl } = useAppState();
   const [index, setIndex] = useState(0);
-  const [loadingCount, setLoadingCount] = useState(0);
-  const [urls, setUrls] = useState<string[]>([]);
+  const [loadingCount, setLoadingCount] = useState(1_000);
+  const [urls, setUrls] = useState<string[] | undefined>();
   const [addressData, setAddressData] = useState<AddressData[]>();
 
   const isEvm = useMemo(() => query != null && !!query.match(/^0x[0-9a-fA-F]{40}$/), [query]);
@@ -44,31 +41,35 @@ export const useSearchAddress = (
   }, [loadingCount, addressData, setAddressData]);
 
   useEffect(() => {
-    setUrls(
-      match(brokers)
-        .with(P.nullish, () => [])
-        .otherwise((brokers) =>
-          match(searchType)
-            .with('accountId', () => [`${evmApiUrl}/v1/public/account?account_id=${query}`])
-            .with('address', () =>
-              brokers.map(
-                (broker) =>
-                  `${evmApiUrl}/v1/get_account?address=${query}&broker_id=${broker.broker_id}${isSol ? '&chain_type=SOL' : ''}`
+    match(searchType)
+      .with('accountId', () => {
+        setUrls([`${evmApiUrl}/v1/public/account?account_id=${query}`]);
+      })
+      .with('address', () =>
+        fetch(`${evmApiUrl}/v1/get_broker?address=${query}${isSol ? '&chain_type=SOL' : ''}`)
+          .then((res) => res.json())
+          .then((res) => {
+            const brokerIds: string[] = res.data.broker_id;
+            setUrls(
+              brokerIds.map(
+                (brokerId) =>
+                  `${evmApiUrl}/v1/get_account?address=${query}&broker_id=${brokerId}${isSol ? '&chain_type=SOL' : ''}`
               )
-            )
-            .with(undefined, () => [])
-            .exhaustive()
-        )
-    );
-  }, [searchType, evmApiUrl, query, brokers, isSol]);
+            );
+          })
+      )
+      .with(undefined, () => [])
+      .exhaustive();
+  }, [searchType, evmApiUrl, query, isSol]);
 
   useEffect(() => {
+    if (!urls) return;
     setIndex(0);
     setLoadingCount(urls.length);
   }, [urls]);
 
   useSWR(
-    urls[index],
+    (urls ?? [])[index],
     (url: string) =>
       fetch(url)
         .then((r) => r.json())
@@ -82,14 +83,19 @@ export const useSearchAddress = (
             setIndex(index + 1);
             throw new Error(val.message);
           }
-          const data: AddressData | undefined = match([searchType, brokers])
+          const data: AddressData | undefined = match(searchType)
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            .with(['address', P.not(P.nullish)], ([_, brokers]) => ({
-              address: query!,
-              broker_id: brokers[index].broker_id,
-              account_id: val.data.account_id
-            }))
-            .with(['accountId', P.not(P.nullish)], () => ({ ...val.data, account_id: query! }))
+            .with('address', () => {
+              const uri = new URL(url);
+              const broker_id = uri.searchParams.get('broker_id');
+              if (!broker_id) throw new Error();
+              return {
+                address: query!,
+                broker_id,
+                account_id: val.data.account_id
+              };
+            })
+            .with('accountId', () => ({ ...val.data, account_id: query! }))
             .otherwise(() => undefined);
           if (!data) throw new Error();
           setAddressData((cur) => [...(cur ?? []), data]);
