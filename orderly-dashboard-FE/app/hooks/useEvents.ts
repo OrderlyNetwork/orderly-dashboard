@@ -75,10 +75,10 @@ export function useEvents(query: EventsParams | null) {
         if (index > 0) {
           return null;
         }
-        return `${queryServiceUrl}/${match(query.address.chain_namespace)
-          .with('evm', () => 'events')
-          .with('sol', () => 'sol_events')
-          .exhaustive()}?${searchParams.toString()}`;
+        return match(query.address.chain_namespace)
+          .with('evm', () => [`${queryServiceUrl}/events`])
+          .with('sol', () => [`${queryServiceUrl}/events`, `${queryServiceUrl}/sol_events`])
+          .exhaustive();
       }
 
       const minFromTime = query.from_time;
@@ -95,15 +95,26 @@ export function useEvents(query: EventsParams | null) {
       searchParams.set('from_time', String(Math.trunc(fromTime.valueOf() / 1_000)));
       searchParams.set('to_time', String(Math.trunc(toTime.valueOf() / 1_000)));
       // we add `from` and `to` params here to invalidate SWR cache
-      return `${queryServiceUrl}/${match(query.address.chain_namespace)
-        .with('evm', () => 'events')
-        .with('sol', () => 'sol_events')
-        .exhaustive()}?${searchParams.toString()}&from=${query.from_time.format('L')}&to=${query.to_time.format('L')}`;
+      return match(query.address.chain_namespace)
+        .with('evm', () => [
+          `${queryServiceUrl}/events?${searchParams.toString()}&from=${query.from_time!.format('L')}&to=${query.to_time!.format('L')}`
+        ])
+        .with('sol', () => [
+          `${queryServiceUrl}/events?${searchParams.toString()}&from=${query.from_time!.format('L')}&to=${query.to_time!.format('L')}`,
+          `${queryServiceUrl}/sol_events?${searchParams.toString()}&from=${query.from_time!.format('L')}&to=${query.to_time!.format('L')}`
+        ])
+        .exhaustive();
     },
-    (url: string) =>
-      fetch(url)
-        .then((r) => r.json())
-        .then(handleFetchEvents),
+    (urls: string[]) =>
+      Promise.all(
+        urls.map((url) =>
+          fetch(url)
+            .then((r) => r.json())
+            .then(handleFetchEvents)
+        )
+      ).then((data: EventTableData[][]) =>
+        data.flat().sort((dataA, dataB) => dataA.block_timestamp - dataB.block_timestamp)
+      ),
     {
       parallel: true,
       initialSize: 100,
