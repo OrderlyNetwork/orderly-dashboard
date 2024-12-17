@@ -226,7 +226,10 @@ where
                         return Err(err);
                     }
                     tracing::warn!(target: SOL_LOG_PROCESSOR, "Failed to fetch transaction: {}. Retrying...", err);
-                    tokio::time::sleep(Duration::from_millis(SOL_API_CALL_INTERVAL_MS * (1 + 2 * retry_count as u64))).await;
+                    tokio::time::sleep(Duration::from_millis(
+                        SOL_API_CALL_INTERVAL_MS * (1 + 2 * retry_count as u64),
+                    ))
+                    .await;
                 }
             }
         }

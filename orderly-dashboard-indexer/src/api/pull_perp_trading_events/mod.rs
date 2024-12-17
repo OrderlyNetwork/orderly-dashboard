@@ -117,13 +117,7 @@ pub async fn pull_perp_trading_events_by_account(
     } else {
         None
     };
-    let sol_block_time = crate::db::settings::get_sol_sync_block_time().await?;
-    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
-        "account_id: {}, from_time: {}, to_time: {}, sol_block_time: {:?}, e_type: {:?}", account_id, from_time, to_time, sol_block_time, e_type
-    );
-    if let Some(sol_block_time) = sol_block_time {
-        to_time = min(sol_block_time, to_time);
-    }
+
     let response =
         filter_join::account_perp_trading_join_events(account_id, from_time, to_time, e_type)
             .await?;
