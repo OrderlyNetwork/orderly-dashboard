@@ -115,52 +115,48 @@ pub async fn list_sol_events(
     let user_info_res = match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
         Ok(user_info_res) => user_info_res,
         Err(err) => {
-            let resp = FailureResponse::new(
-                1000,
-                format!("parse account_id failed with err: {}", err),
-            );
+            let resp =
+                FailureResponse::new(1000, format!("parse account_id failed with err: {}", err));
             return Ok(HttpResponse::Ok().json(resp));
         }
     };
 
-            let indexer_data = get_indexer_sol_data(
-                param.from_time,
-                param.to_time,
-                user_info_res.account_id,
-                param.event_type.as_deref().map(str::to_uppercase),
-                get_common_cfg().indexer_address.clone(),
-            )
-                .await;
+    let indexer_data = get_indexer_sol_data(
+        param.from_time,
+        param.to_time,
+        user_info_res.account_id,
+        param.event_type.as_deref().map(str::to_uppercase),
+        get_common_cfg().indexer_address.clone(),
+    )
+    .await;
 
-            match indexer_data {
-                Ok(res_json_str) => {
-                    let result: Result<Response<AccountTradingEventsResponse>, serde_json::Error> =
-                        serde_json::from_str(&*res_json_str);
+    match indexer_data {
+        Ok(res_json_str) => {
+            let result: Result<Response<AccountTradingEventsResponse>, serde_json::Error> =
+                serde_json::from_str(&*res_json_str);
 
-                    match result {
-                        Ok(response) => {
-                            return Ok(HttpResponse::Ok().json(response));
-                        }
-                        Err(err) => {
-                            let resp = FailureResponse::new(
-                                1000,
-                                format!(
-                                    "get_indexer_sol_data parse event_type failed with err: {}",
-                                    err
-                                ),
-                            );
-                            return Ok(HttpResponse::Ok().json(resp));
-                        }
-                    }
+            match result {
+                Ok(response) => {
+                    return Ok(HttpResponse::Ok().json(response));
                 }
                 Err(err) => {
                     let resp = FailureResponse::new(
                         1000,
-                        format!("get user info failed with err: {}", err),
+                        format!(
+                            "get_indexer_sol_data parse event_type failed with err: {}",
+                            err
+                        ),
                     );
                     return Ok(HttpResponse::Ok().json(resp));
                 }
-            };
+            }
+        }
+        Err(err) => {
+            let resp =
+                FailureResponse::new(1000, format!("get user info failed with err: {}", err));
+            return Ok(HttpResponse::Ok().json(resp));
+        }
+    };
 }
 
 async fn get_indexer_data(
