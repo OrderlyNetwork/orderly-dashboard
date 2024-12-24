@@ -117,6 +117,14 @@ pub async fn pull_perp_trading_events_by_account(
     } else {
         None
     };
+    if let Some(orderly_processed_time) =
+        crate::db::settings::get_last_rpc_processed_timestamp().await?
+    {
+        to_time = min(orderly_processed_time, to_time);
+    }
+    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
+        "account_id: {}, from_time: {}, to_time: {} e_type: {:?}", account_id, from_time, to_time, e_type
+    );
 
     let response =
         filter_join::account_perp_trading_join_events(account_id, from_time, to_time, e_type)
