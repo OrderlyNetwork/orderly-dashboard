@@ -71,6 +71,11 @@ pub async fn list_events(
             }
         }
         Err(err) => {
+            tracing::warn!(
+                "get_indexer_sol_data in evm_events failed with error: {} and params: {:?}",
+                err,
+                param
+            );
             let resp =
                 FailureResponse::new(1000, format!("get user info failed with err: {}", err));
             return Ok(HttpResponse::Ok().json(resp));
@@ -123,6 +128,11 @@ pub async fn list_sol_events(
             }
         }
         Err(err) => {
+            tracing::warn!(
+                "get_indexer_sol_data in sol_events failed with error: {} and params: {:?}",
+                err,
+                param
+            );
             let resp =
                 FailureResponse::new(1000, format!("get user info failed with err: {}", err));
             return Ok(HttpResponse::Ok().json(resp));
