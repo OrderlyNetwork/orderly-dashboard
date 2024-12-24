@@ -1,6 +1,6 @@
 {
   "port": 8020,
-  "is_debug": true,
+  "is_debug": false,
   "indexer_address": "http://localhost:8018",
   "is_raw_query_allow": false
 }
