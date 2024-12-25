@@ -28,12 +28,12 @@ pub fn establish_connection() -> Database<PgConnection> {
 }
 
 pub static INITED_DATABASE_URL: OnceCell<String> = OnceCell::new();
-pub static POOL_SIZE_CONFIG: AtomicU32 = AtomicU32::new(8);
+pub static POOL_SIZE_CONFIG: AtomicU32 = AtomicU32::new(90);
 
 #[allow(dead_code)]
 pub fn init_database_setting(database_url: String, pool_size: u32) {
     INITED_DATABASE_URL.set(database_url).ok();
-    if pool_size > 30 {
+    if pool_size > 180 {
         tracing::warn!(target: DB_CONTEXT, "pool size too big");
     }
     POOL_SIZE_CONFIG.store(pool_size, Ordering::Relaxed);
