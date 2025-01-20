@@ -38,4 +38,10 @@ pub struct CommonConfig {
     pub is_debug: bool,
     pub indexer_address: String,
     pub is_raw_query_allow: bool,
+    #[serde(default = "default_thread_num")]
+    pub thread_num: usize,
+}
+
+fn default_thread_num() -> usize {
+    4
 }

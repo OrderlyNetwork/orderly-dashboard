@@ -132,7 +132,7 @@ async fn main() -> std::io::Result<()> {
             .service(list_sol_events)
             .route("/hey", web::get().to(manual_hello))
     })
-    .workers(8)
+    .workers(config.thread_num)
     .bind(("0.0.0.0", config.port))?
     .run()
     .await
