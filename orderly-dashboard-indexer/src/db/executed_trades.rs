@@ -151,9 +151,9 @@ pub async fn query_account_executed_trades(
     let start_time = Instant::now();
 
     let result = executed_trades
-        .filter(account_id.eq(account))
         .filter(block_time.ge(from_time))
         .filter(block_time.le(to_time))
+        .filter(account_id.eq(account))
         .load_async::<DbExecutedTrades>(&POOL)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
