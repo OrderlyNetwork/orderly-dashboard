@@ -38,6 +38,12 @@ impl DbSettlementExecution {
 
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DbSettlementExecutionView {
+    #[sql_type = "Numeric"]
+    pub result_settled_amount: BigDecimal,
+    #[sql_type = "Text"]
+    pub insurance_account_id: String,
+    #[sql_type = "Numeric"]
+    pub insurance_transfer_amount: BigDecimal,
     #[sql_type = "BigInt"]
     pub block_number: i64,
     #[sql_type = "Integer"]
@@ -137,6 +143,8 @@ pub async fn query_account_settlement_executions(
     account_id_: String,
     from_time: i64,
     to_time: i64,
+    offset: Option<u32>,
+    limit: Option<u32>,
 ) -> Result<Vec<DbSettlementExecutionView>> {
     use diesel::sql_query;
     tracing::info!(
@@ -144,34 +152,76 @@ pub async fn query_account_settlement_executions(
         "query_account_settlement_executions start",
     );
     let start_time = Instant::now();
-    let result = sql_query(
-        "select
-                executions.block_number as block_number,
-                executions.transaction_index as transaction_index,
-                executions.log_index as log_index,
-                executions.settlement_result_log_idx as settlement_result_log_idx,
-                executions.transaction_id as transaction_id,
-                executions.symbol_hash as symbol_hash,
-                executions.sum_unitary_fundings as sum_unitary_fundings,
-                executions.mark_price as mark_price,
-                executions.settled_amount as settled_amount,
-                executions.block_time as block_time
-              from
-                settlement_result result
-                left join settlement_execution executions on result.block_number = executions.block_number
-                and result.log_index = executions.settlement_result_log_idx
-              where
-                result.account_id = $3
-                and result.block_time >= $1
-                and result.block_time <= $2
-                and executions.block_time >= $1
-                and executions.block_time <= $2;",
-    )
-        .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
-        .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
-        .bind::<diesel::sql_types::Text, _>(account_id_)
-        .get_results_async::<DbSettlementExecutionView>(&POOL)
-        .await;
+    let result = if let Some(offset) = offset {
+        sql_query(
+            "select
+                    result.settled_amount as result_settled_amount,
+                    result.insurance_account_id as insurance_account_id,
+                    result.insurance_transfer_amount as insurance_transfer_amount,
+                    executions.block_number as block_number,
+                    executions.transaction_index as transaction_index,
+                    executions.log_index as log_index,
+                    executions.settlement_result_log_idx as settlement_result_log_idx,
+                    executions.transaction_id as transaction_id,
+                    executions.symbol_hash as symbol_hash,
+                    executions.sum_unitary_fundings as sum_unitary_fundings,
+                    executions.mark_price as mark_price,
+                    executions.settled_amount as settled_amount,
+                    executions.block_time as block_time
+                  from
+                    settlement_result result
+                    left join settlement_execution executions on result.block_number = executions.block_number
+                    and result.log_index = executions.settlement_result_log_idx
+                  where
+                    result.account_id = $3
+                    and result.block_time >= $1
+                    and result.block_time <= $2
+                    and executions.block_time >= $1
+                    and executions.block_time <= $2
+                    order by block_number, transaction_index, log_index
+                    offset $4 limit $5
+                    ;",
+        )
+            .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
+            .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
+            .bind::<diesel::sql_types::Text, _>(account_id_)
+            .bind::<diesel::sql_types::BigInt, _>(offset as i64)
+            .bind::<diesel::sql_types::BigInt, _>(limit.unwrap_or_default() as i64)
+            .get_results_async::<DbSettlementExecutionView>(&POOL)
+            .await
+    } else {
+        sql_query(
+            "select
+                    result.settled_amount as result_settled_amount,
+                    result.insurance_account_id as insurance_account_id,
+                    result.insurance_transfer_amount as insurance_transfer_amount,
+                    executions.block_number as block_number,
+                    executions.transaction_index as transaction_index,
+                    executions.log_index as log_index,
+                    executions.settlement_result_log_idx as settlement_result_log_idx,
+                    executions.transaction_id as transaction_id,
+                    executions.symbol_hash as symbol_hash,
+                    executions.sum_unitary_fundings as sum_unitary_fundings,
+                    executions.mark_price as mark_price,
+                    executions.settled_amount as settled_amount,
+                    executions.block_time as block_time
+                  from
+                    settlement_result result
+                    left join settlement_execution executions on result.block_number = executions.block_number
+                    and result.log_index = executions.settlement_result_log_idx
+                  where
+                    result.account_id = $3
+                    and result.block_time >= $1
+                    and result.block_time <= $2
+                    and executions.block_time >= $1
+                    and executions.block_time <= $2;",
+        )
+            .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
+            .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
+            .bind::<diesel::sql_types::Text, _>(account_id_)
+            .get_results_async::<DbSettlementExecutionView>(&POOL)
+            .await
+    };
 
     let dur_ms = (Instant::now() - start_time).as_millis();
 

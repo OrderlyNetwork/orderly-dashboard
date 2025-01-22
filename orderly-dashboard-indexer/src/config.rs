@@ -69,6 +69,8 @@ pub struct CefiServerConfig {
 pub struct IndexerServerConfig {
     pub indexer_address: String, // indexer url
     pub public_key: String,
+    #[serde(default = "default_query_limit")]
+    pub query_limit: u32,
 }
 
 #[derive(Clone, Deserialize, Default)]
@@ -84,6 +86,10 @@ pub struct LayerzeroConfig {
 
 fn empty_string() -> String {
     "".to_string()
+}
+
+fn default_query_limit() -> u32 {
+    1000
 }
 
 #[derive(Clone, Deserialize, Default, Debug)]

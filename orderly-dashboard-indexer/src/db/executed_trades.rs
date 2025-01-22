@@ -142,6 +142,8 @@ pub async fn query_account_executed_trades(
     account: String,
     from_time: i64,
     to_time: i64,
+    offset: Option<u32>,
+    limit: Option<u32>,
 ) -> Result<Vec<DbExecutedTrades>> {
     use crate::schema::executed_trades::dsl::*;
     tracing::info!(
@@ -149,13 +151,21 @@ pub async fn query_account_executed_trades(
         "query_account_executed_trades start",
     );
     let start_time = Instant::now();
-
-    let result = executed_trades
-        .filter(account_id.eq(account))
+    let query = executed_trades
         .filter(block_time.ge(from_time))
         .filter(block_time.le(to_time))
-        .load_async::<DbExecutedTrades>(&POOL)
-        .await;
+        .filter(account_id.eq(account));
+
+    let result = if let Some(offset) = offset {
+        query
+            .order_by((block_time, log_index))
+            .offset(offset as i64)
+            .limit(limit.unwrap_or_default() as i64)
+            .load_async::<DbExecutedTrades>(&POOL)
+            .await
+    } else {
+        query.load_async::<DbExecutedTrades>(&POOL).await
+    };
     let dur_ms = (Instant::now() - start_time).as_millis();
 
     let events = match result {

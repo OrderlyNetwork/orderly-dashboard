@@ -1,5 +1,6 @@
 mod filter_join;
 
+use crate::config::get_common_cfg;
 use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 use crate::formats_external::trading_events::{AccountTradingEventsResponse, TradingEventType};
 use crate::formats_external::{
@@ -129,6 +130,80 @@ pub async fn pull_perp_trading_events_by_account(
     let response =
         filter_join::account_perp_trading_join_events(account_id, from_time, to_time, e_type)
             .await?;
+
+    Ok(Response::Success(SuccessResponse::new(response)))
+}
+
+pub async fn pull_perp_trading_events_by_account_v2(
+    params: &HashMap<String, String>,
+) -> Result<Response<AccountTradingEventsResponse>> {
+    let account_id = params
+        .get("account_id")
+        .context("param account_id not found")?;
+    let now = Utc::now().timestamp();
+    let from_time = if let Some(from_time) = params.get("from_time") {
+        i64::from_str(from_time)?
+    } else {
+        now - QUERY_RANGE_S
+    };
+    let mut to_time = if let Some(to_time) = params.get("to_time") {
+        i64::from_str(to_time)?
+    } else {
+        now
+    };
+    if to_time < from_time {
+        tracing::info!(
+            target: ORDERLY_DASHBOARD_INDEXER,
+            "to_time: {} smaller than from_time: {}",
+            to_time, from_time,
+        );
+        return Ok(Response::Success(SuccessResponse::new(
+            AccountTradingEventsResponse::default(),
+        )));
+    }
+    if to_time - from_time > QUERY_RANGE_S {
+        return Ok(Response::Failure(FailureResponse::new(
+            1000,
+            format!(
+                "to_time - from_time should less than {} days",
+                QUERY_RANGE_S as f64 / (24 * 3600) as f64
+            ),
+        )));
+    }
+    let e_type = if let Some(event_type) = params.get("event_type") {
+        let event_type = "\"".to_string() + event_type + "\"";
+        match serde_json::from_str::<TradingEventType>(&event_type) {
+            Ok(event_type) => Some(event_type),
+            Err(err) => {
+                return Ok(Response::Failure(FailureResponse::new(
+                    1000,
+                    format!("parse event_type failed with err: {}", err),
+                )))
+            }
+        }
+    } else {
+        None
+    };
+    let offset = if let Some(offset) = params.get("offset") {
+        u32::from_str(offset)?
+    } else {
+        0
+    };
+    let limit = get_common_cfg().indexer_server.query_limit;
+
+    if let Some(orderly_processed_time) =
+        crate::db::settings::get_last_rpc_processed_timestamp().await?
+    {
+        to_time = min(orderly_processed_time, to_time);
+    }
+    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
+        "account_id: {}, from_time: {}, to_time: {} e_type: {:?}", account_id, from_time, to_time, e_type
+    );
+
+    let response = filter_join::account_perp_trading_join_events_v2(
+        account_id, from_time, to_time, e_type, offset, limit,
+    )
+    .await?;
 
     Ok(Response::Success(SuccessResponse::new(response)))
 }
