@@ -206,9 +206,10 @@ impl TradingEvent {
     }
 
     pub fn from_settlement_view(
-        settlement_res: DbSettlementResult,
+        account_id: String,
         executions: Vec<DbSettlementExecutionView>,
     ) -> TradingEvent {
+        let settlement_res = executions.first().cloned().unwrap();
         let settlement_executions = executions
             .into_iter()
             .map(SettlementExecution::from)
@@ -218,11 +219,15 @@ impl TradingEvent {
             transaction_index: settlement_res.transaction_index as u32,
             log_index: settlement_res.log_index as u32,
             transaction_id: settlement_res.transaction_id,
-            block_timestamp: settlement_res.block_time.to_u64().unwrap(),
+            block_timestamp: settlement_res
+                .block_time
+                .unwrap_or_default()
+                .to_u64()
+                .unwrap(),
             data: TradingEventInnerData::SettlementResult {
-                account_id: settlement_res.account_id,
+                account_id,
                 settled_amount: settlement_res.settled_amount.to_string(),
-                settled_asset_hash: settlement_res.settled_asset_hash,
+                settled_asset_hash: settlement_res.symbol_hash,
                 insurance_account_id: settlement_res.insurance_account_id,
                 insurance_transfer_amount: settlement_res.insurance_transfer_amount.to_string(),
                 settlement_executions,
@@ -550,6 +555,7 @@ pub enum TradingEventInnerData {
 #[derive(Debug, Deserialize, Serialize, Clone, Default, TypeDef)]
 pub struct AccountTradingEventsResponse {
     pub events: Vec<TradingEvent>,
+    pub next_offset: Option<u32>,
 }
 
 #[allow(dead_code)]

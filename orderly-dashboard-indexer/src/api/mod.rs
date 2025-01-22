@@ -8,8 +8,8 @@ use crate::formats_external::{Response, SuccessResponse};
 use anyhow::Result;
 pub use network_info::get_network_info;
 pub use pull_perp_trading_events::{
-    pull_perp_trading_events, pull_perp_trading_events_by_account, pull_sol_events,
-    pull_sol_events_by_account,
+    pull_perp_trading_events, pull_perp_trading_events_by_account,
+    pull_perp_trading_events_by_account_v2, pull_sol_events, pull_sol_events_by_account,
 };
 pub use symbols_config::get_symbols_data;
 pub async fn get_status() -> Result<Response<serde_json::Value>> {

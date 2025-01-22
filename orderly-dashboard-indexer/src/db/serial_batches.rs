@@ -5,10 +5,11 @@ use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
 use diesel::result::Error;
-use diesel::sql_types::{BigInt, Integer, Numeric, SmallInt, Text};
+use diesel::sql_types::*;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use std::collections::BTreeSet;
 use std::time::Instant;
 
 #[derive(Debug, Clone, Copy)]
@@ -136,6 +137,7 @@ pub async fn query_serial_batches_with_type(
     Ok(events)
 }
 
+#[allow(dead_code)]
 pub async fn query_serial_batches_with_type_by_time(
     from_time: i64,
     to_time: i64,
@@ -202,6 +204,81 @@ pub async fn query_serial_batches_with_type_by_time(
                 tracing::warn!(
                     target: DB_CONTEXT,
                     "query_serial_batches_with_type_by_time fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
+pub async fn query_serial_batches_by_time_and_key(
+    from_time: i64,
+    to_time: i64,
+    blcoknum_tx_idx_vec: BTreeSet<(i64, i32)>,
+) -> Result<Vec<DbSerialBatchesView>> {
+    use diesel::sql_query;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_serial_batches_by_time_and_key start",
+    );
+    if blcoknum_tx_idx_vec.is_empty() {
+        return Ok(vec![]);
+    }
+    let start_time = Instant::now();
+
+    let conditions = blcoknum_tx_idx_vec
+        .iter()
+        .map(|(block, tx)| format!("({}, {})", block, tx))
+        .collect::<Vec<_>>()
+        .join(",");
+    tracing::info!(
+        "query_serial_batches_by_time_and_key conditions: {}",
+        conditions
+    );
+
+    let query = format!(
+        "select block_number, transaction_index, log_index, transaction_id, block_time, batch_id, event_type 
+         from serial_batches 
+         where block_time >= $1 and block_time <= $2 
+         and (block_number, transaction_index) in ({})", 
+        conditions
+    );
+    tracing::info!("query_serial_batches_by_time_and_key query: {}", query);
+
+    let result = sql_query(&query)
+        .bind::<Numeric, _>(BigDecimal::from(from_time))
+        .bind::<Numeric, _>(BigDecimal::from(to_time))
+        .get_results_async::<DbSerialBatchesView>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_serial_batches_by_time_and_key success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_serial_batches_by_time_and_key success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_serial_batches_by_time_and_key fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );

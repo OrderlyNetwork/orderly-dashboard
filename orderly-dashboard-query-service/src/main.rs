@@ -11,7 +11,9 @@ use orderly_dashboard_query_service::trading_metrics::{
 use orderly_dashboard_query_service::{add_base_header, ORDERLY_DASHBOARD_CONTEXT};
 
 use orderly_dashboard_query_service::db::init_analyzer_db_url;
-use orderly_dashboard_query_service::events::events_api::{list_events, list_sol_events};
+use orderly_dashboard_query_service::events::events_api::{
+    list_events, list_events_v2, list_sol_events,
+};
 use orderly_dashboard_query_service::network_info::{get_network_info, init_indexer_db_url};
 use orderly_dashboard_query_service::raw_query::analyzer_raw_query;
 use orderly_dashboard_query_service::service_base::runtime::spawn_future;
@@ -130,6 +132,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_status)
             .service(list_events)
             .service(list_sol_events)
+            .service(list_events_v2)
             .route("/hey", web::get().to(manual_hello))
     })
     .workers(config.thread_num)

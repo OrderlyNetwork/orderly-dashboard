@@ -90,6 +90,7 @@ pub async fn query_settlement_results(
     Ok(events)
 }
 
+#[allow(dead_code)]
 pub async fn query_account_settlement_results(
     account: String,
     from_time: i64,
@@ -99,9 +100,9 @@ pub async fn query_account_settlement_results(
     let start_time = Instant::now();
 
     let result = settlement_result
-        .filter(account_id.eq(account))
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
+        .filter(account_id.eq(account))
         .load_async::<DbSettlementResult>(&POOL)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
