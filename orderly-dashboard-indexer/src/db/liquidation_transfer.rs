@@ -5,12 +5,14 @@ use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
 use diesel::result::Error;
-use diesel::ExpressionMethods;
+use diesel::sql_types::Numeric;
 use diesel::QueryDsl;
+use diesel::{sql_query, ExpressionMethods};
 use diesel::{Insertable, Queryable};
+use std::collections::BTreeSet;
 use std::time::Instant;
 
-#[derive(Insertable, Queryable, Debug, Clone)]
+#[derive(Insertable, Queryable, QueryableByName, Debug, Clone)]
 #[table_name = "liquidation_transfer"]
 pub struct DbLiquidationTransfer {
     pub block_number: i64,
@@ -137,13 +139,19 @@ pub async fn query_liquidation_transfers(
 pub async fn query_account_liquidation_transfers_by_time(
     from_time: i64,
     to_time: i64,
+    account_id: String,
+    offset: Option<u32>,
 ) -> Result<Vec<DbLiquidationTransfer>> {
+    if offset.unwrap_or_default() != 0 {
+        return Ok(vec![]);
+    }
     use crate::schema::liquidation_transfer::dsl::*;
     let start_time = Instant::now();
 
     let result = liquidation_transfer
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
+        .filter(liquidator_account_id.eq(account_id))
         .load_async::<DbLiquidationTransfer>(&POOL)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
@@ -171,6 +179,70 @@ pub async fn query_account_liquidation_transfers_by_time(
                 tracing::warn!(
                     target: DB_CONTEXT,
                     "query_account_liquidation_transfers_by_time fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
+pub async fn query_account_liquidation_transfers_by_time_and_result_keys(
+    from_time: i64,
+    to_time: i64,
+    liquidation_result_keys: BTreeSet<(i64, i32)>,
+) -> Result<Vec<DbLiquidationTransfer>> {
+    let start_time = Instant::now();
+    if liquidation_result_keys.is_empty() {
+        return Ok(vec![]);
+    }
+    let conditions = liquidation_result_keys
+        .iter()
+        .map(|(block, idx)| format!("({}, {})", block, idx))
+        .collect::<Vec<_>>()
+        .join(",");
+    let query = format!(
+        "SELECT * FROM liquidation_transfer 
+         WHERE block_time >= $1 
+         AND block_time <= $2 
+         AND (block_number, liquidation_result_log_idx) in [{}]",
+        conditions
+    );
+
+    let result = sql_query(&query)
+        .bind::<Numeric, _>(BigDecimal::from(from_time))
+        .bind::<Numeric, _>(BigDecimal::from(to_time))
+        .load_async::<DbLiquidationTransfer>(&POOL)
+        .await;
+
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_account_liquidation_transfers_by_time_and_result_keys success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_account_liquidation_transfers_by_time_and_result_keys success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_account_liquidation_transfers_by_time_and_result_keys fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );
