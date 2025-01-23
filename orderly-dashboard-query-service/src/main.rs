@@ -1,3 +1,5 @@
+mod monitor;
+
 use actix_cors::Cors;
 use actix_web::http::header;
 use actix_web::{get, options, post, web, App, HttpResponse, HttpServer, Responder};
@@ -90,6 +92,12 @@ async fn main() -> std::io::Result<()> {
     std::thread::spawn(|| {
         spawn_future(async {
             tracing::info!(target: ORDERLY_DASHBOARD_CONTEXT, "start new thread pool");
+            let monitor = crate::monitor::memory::MemoryMonitor::new(
+                12288.0, // 12GB
+                8192.0,  // 8GB
+                std::time::Duration::from_secs(60),
+            );
+            monitor.start_monitoring().await;
             Ok(())
         });
     });
