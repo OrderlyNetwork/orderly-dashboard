@@ -297,3 +297,28 @@ async fn get_indexer_v2_data(
         Err(err) => Err(anyhow::anyhow!("reqwest failed with: {}", err)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    #[ignore]
+    #[tokio::test]
+    async fn test_get_user_trading_events() {
+        let mut counter = 0;
+        loop {
+            let fut = async {
+                print!("task start.....................");
+                let indexer_url = "http://127.0.0.1:8020/events?address=0xd51C5283b8727206bf9Be2b2DB4e5673EfAF519C&broker_id=woofi_pro&from_time=1733834818&to_time=1735044418&from=12/10/2024&to=12/24/2024";
+                let response = reqwest::get(indexer_url).await;
+                println!("response: {:?}", response);
+            };
+            tokio::spawn(fut);
+            tokio::time::sleep(tokio::time::Duration::from_millis(33)).await;
+            counter += 1;
+            println!("counter: {}", counter);
+            if counter > 1000 {
+                break;
+            }
+        }
+    }
+}
