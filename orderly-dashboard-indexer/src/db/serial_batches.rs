@@ -223,7 +223,8 @@ pub async fn query_serial_batches_by_time_and_key(
 ) -> Result<Vec<DbSerialBatchesView>> {
     tracing::info!(
         target: DB_CONTEXT,
-        "query_serial_batches_by_time_and_key start",
+        "query_serial_batches_by_time_and_key start with length:{}",
+        blcoknum_tx_idx_vec.len(),
     );
     if blcoknum_tx_idx_vec.is_empty() {
         return Ok(vec![]);
@@ -292,10 +293,6 @@ async fn query_serial_batches_by_time_and_key_page(
         .map(|(block, tx)| format!("({}, {})", block, tx))
         .collect::<Vec<_>>()
         .join(",");
-    tracing::info!(
-        "query_serial_batches_by_time_and_key_page conditions: {}",
-        conditions
-    );
 
     let query = format!(
         "select block_number, transaction_index, log_index, transaction_id, block_time, batch_id, event_type 
