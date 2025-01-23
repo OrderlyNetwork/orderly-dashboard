@@ -52,7 +52,7 @@ Response:
 | `data` | object{events: array[object], next_offset: Optional(integer)} | Y | return events and next offset, if there is no more events, next_offset will be null, and you need to set offset to the value of next_offset to get the next page |
 
 For example:
-request: https://dev-orderly-dashboard-query-service.orderly.network/events_v2?address=0x9cccf6a1c43552bceddbf81155ef54699fe4f946&broker_id=orderly&from_time=1736152774&to_time=1737362374&from=01/06/2025&to=01/20/2025&offset=0
+request: https://dev-orderly-dashboard-query-service.orderly.network/events_v2?address=0x9cccf6a1c43552bceddbf81155ef54699fe4f946&broker_id=orderly&from_time=1736152774&to_time=1737362374&offset=0
 
 response:
 ```json
