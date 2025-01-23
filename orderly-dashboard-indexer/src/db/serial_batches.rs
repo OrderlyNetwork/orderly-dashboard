@@ -9,6 +9,7 @@ use diesel::sql_types::*;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use std::cmp::min;
 use std::collections::BTreeSet;
 use std::time::Instant;
 
@@ -220,10 +221,65 @@ pub async fn query_serial_batches_by_time_and_key(
     to_time: i64,
     blcoknum_tx_idx_vec: BTreeSet<(i64, i32)>,
 ) -> Result<Vec<DbSerialBatchesView>> {
-    use diesel::sql_query;
     tracing::info!(
         target: DB_CONTEXT,
         "query_serial_batches_by_time_and_key start",
+    );
+    if blcoknum_tx_idx_vec.is_empty() {
+        return Ok(vec![]);
+    }
+    let start_time = Instant::now();
+
+    if blcoknum_tx_idx_vec.len() > 5000 {
+        // page query
+        let mut page_idx = 0;
+        let mut events: Vec<DbSerialBatchesView> = vec![];
+        while page_idx < blcoknum_tx_idx_vec.len() {
+            let page_size = min(5000, blcoknum_tx_idx_vec.len() - page_idx);
+            let page_vec: Vec<(i64, i32)> = blcoknum_tx_idx_vec
+                .iter()
+                .skip(page_idx)
+                .take(page_size)
+                .cloned()
+                .collect();
+            let page_events = query_serial_batches_by_time_and_key_page(
+                from_time,
+                to_time,
+                page_vec.into_iter().collect(),
+            )
+            .await?;
+            events.extend(page_events);
+            page_idx += page_size;
+        }
+        tracing::info!(
+            target: DB_CONTEXT,
+            "query_serial_batches_by_time_and_key success. length:{}, used time:{} ms",
+            events.len(),
+            (Instant::now() - start_time).as_millis()
+        );
+        return Ok(events);
+    }
+
+    let events =
+        query_serial_batches_by_time_and_key_page(from_time, to_time, blcoknum_tx_idx_vec).await?;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_serial_batches_by_time_and_key success. length:{}, used time:{} ms",
+        events.len(),
+        (Instant::now() - start_time).as_millis()
+    );
+    Ok(events)
+}
+
+async fn query_serial_batches_by_time_and_key_page(
+    from_time: i64,
+    to_time: i64,
+    blcoknum_tx_idx_vec: BTreeSet<(i64, i32)>,
+) -> Result<Vec<DbSerialBatchesView>> {
+    use diesel::sql_query;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_serial_batches_by_time_and_key_page start",
     );
     if blcoknum_tx_idx_vec.is_empty() {
         return Ok(vec![]);
@@ -236,7 +292,7 @@ pub async fn query_serial_batches_by_time_and_key(
         .collect::<Vec<_>>()
         .join(",");
     tracing::info!(
-        "query_serial_batches_by_time_and_key conditions: {}",
+        "query_serial_batches_by_time_and_key_page conditions: {}",
         conditions
     );
 
@@ -247,7 +303,6 @@ pub async fn query_serial_batches_by_time_and_key(
          and (block_number, transaction_index) in ({})", 
         conditions
     );
-    tracing::info!("query_serial_batches_by_time_and_key query: {}", query);
 
     let result = sql_query(&query)
         .bind::<Numeric, _>(BigDecimal::from(from_time))
@@ -260,7 +315,7 @@ pub async fn query_serial_batches_by_time_and_key(
         Ok(events) => {
             tracing::info!(
                 target: DB_CONTEXT,
-                "query_serial_batches_by_time_and_key success. length:{}, used time:{} ms",
+                "query_serial_batches_by_time_and_key_page success. length:{}, used time:{} ms",
                 events.len(),
                 dur_ms
             );
@@ -270,7 +325,7 @@ pub async fn query_serial_batches_by_time_and_key(
             AsyncError::Execute(Error::NotFound) => {
                 tracing::info!(
                     target: DB_CONTEXT,
-                    "query_serial_batches_by_time_and_key success. length:0, used time:{} ms",
+                    "query_serial_batches_by_time_and_key_page success. length:0, used time:{} ms",
                     dur_ms
                 );
                 vec![]
@@ -278,7 +333,7 @@ pub async fn query_serial_batches_by_time_and_key(
             _ => {
                 tracing::warn!(
                     target: DB_CONTEXT,
-                    "query_serial_batches_by_time_and_key fail. err:{:?}, used time:{} ms",
+                    "query_serial_batches_by_time_and_key_page fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );
