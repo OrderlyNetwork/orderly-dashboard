@@ -230,12 +230,13 @@ pub async fn query_serial_batches_by_time_and_key(
     }
     let start_time = Instant::now();
 
-    if blcoknum_tx_idx_vec.len() > 5000 {
+    let page_size = 1000;
+    if blcoknum_tx_idx_vec.len() > page_size {
         // page query
         let mut page_idx = 0;
         let mut events: Vec<DbSerialBatchesView> = vec![];
         while page_idx < blcoknum_tx_idx_vec.len() {
-            let page_size = min(5000, blcoknum_tx_idx_vec.len() - page_idx);
+            let page_size = min(page_size, blcoknum_tx_idx_vec.len() - page_idx);
             let page_vec: Vec<(i64, i32)> = blcoknum_tx_idx_vec
                 .iter()
                 .skip(page_idx)
