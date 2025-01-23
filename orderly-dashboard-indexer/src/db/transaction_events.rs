@@ -147,16 +147,27 @@ pub async fn query_account_balance_transaction_executions(
     account: String,
     from_time: i64,
     to_time: i64,
+    offset: Option<u32>,
+    limit: Option<u32>,
 ) -> Result<Vec<DbTransactionEvent>> {
     use crate::schema::transaction_events::dsl::*;
     let start_time = Instant::now();
 
-    let result = transaction_events
-        .filter(account_id.eq(account))
+    let query = transaction_events
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
-        .load_async::<DbTransactionEvent>(&POOL)
-        .await;
+        .filter(account_id.eq(account));
+    let result = if let Some(offset) = offset {
+        query
+            .order_by((block_time, log_index))
+            .offset(offset as i64)
+            .limit(limit.unwrap_or_default() as i64)
+            .load_async::<DbTransactionEvent>(&POOL)
+            .await
+    } else {
+        query.load_async::<DbTransactionEvent>(&POOL).await
+    };
+
     let dur_ms = (Instant::now() - start_time).as_millis();
 
     let events = match result {

@@ -6,12 +6,14 @@ use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
 use diesel::result::Error;
+use diesel::sql_types::Numeric;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use std::collections::BTreeSet;
 use std::time::Instant;
 
-#[derive(Insertable, Queryable, Debug)]
+#[derive(Insertable, Queryable, QueryableByName, Debug)]
 #[table_name = "liquidation_result"]
 pub struct DbLiquidationResult {
     pub block_number: i64,
@@ -119,6 +121,7 @@ pub async fn query_liquidation_results(
     Ok(events)
 }
 
+#[allow(dead_code)]
 pub async fn query_liquidation_results_by_time(
     from_time: i64,
     to_time: i64,
@@ -156,6 +159,122 @@ pub async fn query_liquidation_results_by_time(
                 tracing::warn!(
                     target: DB_CONTEXT,
                     "query_liquidation_results_by_time fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
+pub async fn query_liquidation_results_by_time_and_account(
+    from_time: i64,
+    to_time: i64,
+    account_id: String,
+) -> Result<Vec<DbLiquidationResult>> {
+    use crate::schema::liquidation_result::dsl::*;
+    let start_time = Instant::now();
+
+    let result = liquidation_result
+        .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
+        .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
+        .filter(liquidated_account_id.eq(account_id))
+        .load_async::<DbLiquidationResult>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_liquidation_results_by_time success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_liquidation_results success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_liquidation_results_by_time fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
+pub async fn query_liquidation_results_by_time_and_keys(
+    from_time: i64,
+    to_time: i64,
+    keys: BTreeSet<(i64, i32)>,
+) -> Result<Vec<DbLiquidationResult>> {
+    use diesel::sql_query;
+    let start_time = Instant::now();
+    if keys.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let conditions = keys
+        .iter()
+        .map(|(block, idx)| format!("({}, {})", block, idx))
+        .collect::<Vec<_>>()
+        .join(",");
+
+    let query = format!(
+        "SELECT * FROM liquidation_result 
+         WHERE block_time >= $1 
+         AND block_time <= $2 
+         AND (block_number, log_index) in ({})",
+        conditions
+    );
+
+    let result = sql_query(&query)
+        .bind::<Numeric, _>(BigDecimal::from(from_time))
+        .bind::<Numeric, _>(BigDecimal::from(to_time))
+        .load_async::<DbLiquidationResult>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_liquidation_results_by_time_and_keys success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_liquidation_results_by_time_and_keys success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_liquidation_results_by_time_and_keys fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );

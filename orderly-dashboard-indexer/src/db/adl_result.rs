@@ -122,9 +122,9 @@ pub async fn query_account_adl_results(
     let start_time = Instant::now();
 
     let result = adl_result
-        .filter(account_id.eq(account))
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
+        .filter(account_id.eq(account))
         .load_async::<DbAdlResult>(&POOL)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
