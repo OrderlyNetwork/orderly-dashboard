@@ -19,168 +19,7 @@ Insert test data
 psql -U {your databse account} -d {your databse} -f ../../scripts/init_data.sql
 ```
 
-### Daily volume
-```
-GET /daily_volume?from_day=2023-01-01&end_day=2024-01-01
-```
-
-Response
-```json
-{
-  "success": true,
-  "err_code": 0,
-  "err_msg": null,
-  "data": {
-    "daytime": [
-      "20231213",
-      "20231214"
-    ],
-    "volume": [
-      1950000.0,
-      2120000.0
-    ]
-  }
-}
-```
-
-### Daily trading fee
-```
-GET /daily_trading_fee?from_day=2023-01-01&end_day=2024-01-01
-```
-```json
-{
-  "success": true,
-  "err_code": 0,
-  "err_msg": null,
-  "data": {
-    "daytime": [
-      "20231213",
-      "20231214"
-    ],
-    "fee_amount": [
-      1950000.0,
-      2120000.0
-    ]
-  }
-}
-```
-
-### Average trading count
-```
-GET /average_trading_count
-```
-```json
-{
-  "success": true,
-  "err_code": 0,
-  "err_msg": null,
-  "data": {
-    "latest_day_metric": 3.0,
-    "latest_week_metric": 2.0,
-    "latest_month_metric": 1.0
-  }
-}
-```
-
-### Average trading fee
-```
-GET /average_trading_fee
-```
-```json
-{
-  "success": true,
-  "err_code": 0,
-  "err_msg": null,
-  "data": {
-    "latest_day_metric": 3.0,
-    "latest_week_metric": 2.0,
-    "latest_month_metric": 1.0
-  }
-}
-```
-
-### Average opening count
-```
-GET /average_opening_count
-```
-```json
-{
-  "success": true,
-  "err_code": 0,
-  "err_msg": null,
-  "data": {
-    "latest_day_metric": 3.0,
-    "latest_week_metric": 2.0,
-    "latest_month_metric": 1.0
-  }
-}
-```
-
-### Average trading volume
-```
-GET /average_trading_volume
-```
-```json
-{
-  "success": true,
-  "err_code": 0,
-  "err_msg": null,
-  "data": {
-    "latest_day_metric": 3.0,
-    "latest_week_metric": 2.0,
-    "latest_month_metric": 1.0
-  }
-}
-```
-
-### Ranking of trading volume
-```
-GET /ranking/trading_volume?days=3&size=10
-```
-* days: trading volume ranking in past {days} days
-* size: ranking data size
-
-```json
-{
-  "success": true,
-  "err_code": 0,
-  "err_msg": null,
-  "data": {
-    "account_ids": [
-      "0x8yhyjhg88iu",
-      "0x8yhyjhg88i7"
-    ],
-    "volume": [
-      1950000.0,
-      2120000.0
-    ]
-  }
-}
-```
-
-### Ranking of perp holding
-```
-GET /ranking/perp_holding?symbol=test&size=10
-```
-```json
-{
-  "success": true,
-  "err_code": 0,
-  "err_msg": null,
-  "data": {
-    "account_ids": [
-      "0x8yhyjhg88iu",
-      "0x8yhyjhg88i7"
-    ],
-    "holding": [
-      1950000.0,
-      2120000.0
-    ]
-  }
-}
-```
-
-### Pull trading events on EVM
+### Pull trading events on EVM(will be disabled recently)
 ```shell
 GET /events?broker_id=woofi_pro&address=0x9e15a53b9dfa30e6b220d0e3c93253bea7191769&from_time=1711123200&to_time=1713801600
 ```
@@ -190,4 +29,121 @@ GET /events?broker_id=woofi_pro&address=0x9e15a53b9dfa30e6b220d0e3c93253bea71917
 GET /sol_events?broker_id=raydium&address=3nrWg4GJijT1NnxrmupFD7CJjshZnHyRAAYEmLizMqBc
 ```
 
+### Pull trading events api v2 on EVM
+```shell
+GET /events_v2?address=0x9cccf6a1c43552bceddbf81155ef54699fe4f946&broker_id=orderly&from_time=1736152774&to_time=1737362374&event_type=PERPTRADE&offset=0
+```
+Parameters:
 
+| Name | Type | Required | Description |
+|-----|--------|-------------|------------|
+| `address` | String | Y | user wallet address |
+| `broker_id` | String | Y | broker name |
+| `from_time` | Integer | N | from time, default two weeks ago |
+| `to_time` | Integer | N | to time, default now |
+| `event_type` | String | N | there are `PERPTRADE`, `SETTLEMENT`, `LIQUIDATION`, `ADL`, `TRANSACTION` for selecting events, if not set, all kinds of events will be returned |
+| `offset` | Integer | N | this api is paginated, offset is the offset of the page, default is 0 |
+
+Response:
+
+| Name | Type | Required | Description |
+|-----|--------|-------------|------------|
+| `success` | Bool | Y | success status |
+| `data` | object{events: array[object], next_offset: Optional(integer)} | Y | return events and next offset, if there is no more events, next_offset will be null, and you need to set offset to the value of next_offset to get the next page |
+
+For example:
+request: https://dev-orderly-dashboard-query-service.orderly.network/events_v2?address=0x9cccf6a1c43552bceddbf81155ef54699fe4f946&broker_id=orderly&from_time=1736152774&to_time=1737362374&from=01/06/2025&to=01/20/2025&offset=0
+
+response:
+```json
+{
+    "success": true,
+    "data": {
+        "events": [...],
+        "next_offset": 1000
+    }
+}
+```
+The single event object is like this:
+```json
+{
+    "block_number": 123456,
+    "transaction_index": 1,
+    "log_index": 1,
+    "transaction_id": "0x1234567890",
+    "block_timestamp": 1736152774,
+    "data": {...}
+}
+```
+The single event's data struture in rust is like this [TradingEvent](https://github.com/OrderlyNetwork/orderly-dashboard/blob/main/orderly-dashboard-indexer/src/formats_external/trading_events.rs#L47):
+```rust
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
+pub struct TradingEvent {
+    pub block_number: u64,
+    pub transaction_index: u32,
+    pub log_index: u32,
+    pub transaction_id: String,
+    pub block_timestamp: u64,
+    pub data: TradingEventInnerData,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
+pub enum TradingEventInnerData {
+    Transaction {
+        account_id: String,
+        sender: Option<String>,
+        receiver: String, // receiver address
+        token_hash: String,
+        broker_hash: String,
+        chain_id: String,
+        side: TransactionSide, // “deposit｜withdraw"
+        token_amount: String,
+        withdraw_nonce: Option<i64>, // optional
+        status: TransactionStatus,   // "succeed|failed"
+        fail_reason: Option<i16>,    // optional
+        fee: String,                 // zero fee for deposit
+    },
+    ProcessedTrades {
+        batch_id: u64,
+        trades: Vec<Trade>,
+    },
+    SettlementResult {
+        account_id: String,
+        settled_amount: String,
+        settled_asset_hash: String,
+        insurance_account_id: String,
+        insurance_transfer_amount: String,
+        settlement_executions: Vec<SettlementExecution>,
+    },
+    LiquidationResult {
+        liquidated_account_id: String,
+        insurance_account_id: String,
+        liquidated_asset_hash: String,
+        insurance_transfer_amount: String,
+        liquidation_transfers: Vec<LiquidationTransfer>,
+    },
+    AdlResult {
+        account_id: String,
+        insurance_account_id: String,
+        symbol_hash: String,
+        position_qty_transfer: String,
+        cost_position_transfer: String,
+        adl_price: String,
+        sum_unitary_fundings: String,
+    },
+    LiquidationResultV2 {
+        account_id: String,
+        liquidated_asset_hash: String,
+        insurance_transfer_amount: String,
+        liquidation_transfers: Vec<LiquidationTransferV2>,
+    },
+    AdlResultV2 {
+        account_id: String,
+        symbol_hash: String,
+        position_qty_transfer: String,
+        cost_position_transfer: String,
+        adl_price: String,
+        sum_unitary_fundings: String,
+    },
+}
+```
