@@ -11,7 +11,6 @@ use chrono::Utc;
 use std::cmp::min;
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::time::Instant;
 
 // 31 days, one month
 pub const QUERY_RANGE_S: i64 = 31 * 24 * 3600;
@@ -127,15 +126,10 @@ pub async fn pull_perp_trading_events_by_account(
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
         "account_id events: {}, from_time: {}, to_time: {} e_type: {:?}", account_id, from_time, to_time, e_type
     );
-    let inst = Instant::now();
 
     let response =
         filter_join::account_perp_trading_join_events(account_id, from_time, to_time, e_type)
             .await?;
-
-    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
-        "events sucs account_id: {}, from_time: {}, to_time: {}, events len: {}, elapsed: {} ms", account_id, from_time, to_time, response.events.len(), inst.elapsed().as_millis()
-    );
 
     Ok(Response::Success(SuccessResponse::new(response)))
 }
@@ -205,7 +199,6 @@ pub async fn pull_perp_trading_events_by_account_v2(
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
         "events v2 account_id: {}, from_time: {}, to_time: {} e_type: {:?}, offset: {}, limit: {}", account_id, from_time, to_time, e_type, offset, limit as u32
     );
-    let inst = Instant::now();
 
     let response = filter_join::account_perp_trading_join_events_v2(
         account_id,
@@ -216,10 +209,6 @@ pub async fn pull_perp_trading_events_by_account_v2(
         limit as u32,
     )
     .await?;
-
-    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
-        "events v2 sucs account_id: {}, from_time: {}, to_time: {}, offset: {}, limit: {}, events len: {}, elapsed: {} ms", account_id, from_time, to_time, offset, limit as u32, response.events.len(), inst.elapsed().as_millis()
-    );
 
     Ok(Response::Success(SuccessResponse::new(response)))
 }
