@@ -61,6 +61,7 @@ pub async fn list_events(
             return Ok(HttpResponse::Ok().json(resp));
         }
     };
+    let elapsed_new_user = inst.elapsed().as_millis();
 
     let indexer_data = get_indexer_data(
         param.from_time,
@@ -70,6 +71,7 @@ pub async fn list_events(
         get_common_cfg().indexer_address.clone(),
     )
     .await;
+    let elapse_get_data = inst.elapsed().as_millis() - elapsed_new_user;
 
     match indexer_data {
         Ok(response) => {
@@ -82,8 +84,8 @@ pub async fn list_events(
             };
             tracing::info!(
                 target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query account events sucs broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms",
-                param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis()
+                "query account events sucs broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
+                param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis(), elapsed_new_user, elapse_get_data,
             );
             return Ok(HttpResponse::Ok().json(response));
         }
@@ -120,6 +122,7 @@ pub async fn list_events_v2(
             return Ok(HttpResponse::Ok().json(resp));
         }
     };
+    let elapsed_new_user = inst.elapsed().as_millis();
 
     let indexer_data = get_indexer_v2_data(
         param.from_time,
@@ -130,6 +133,7 @@ pub async fn list_events_v2(
         get_common_cfg().indexer_address.clone(),
     )
     .await;
+    let elapse_get_data = inst.elapsed().as_millis() - elapsed_new_user;
 
     match indexer_data {
         Ok(response) => {
@@ -142,8 +146,8 @@ pub async fn list_events_v2(
             };
             tracing::info!(
                 target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query account events sucs broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms",
-                param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis()
+                "query account events sucs broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
+                param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis(), elapsed_new_user, elapse_get_data,
             );
             return Ok(HttpResponse::Ok().json(response));
         }
