@@ -40,7 +40,7 @@ Parameters:
 | `address` | String | Y | user wallet address |
 | `broker_id` | String | Y | broker name |
 | `from_time` | Integer | N | from time, default two weeks ago |
-| `to_time` | Integer | N | to time, default now |
+| `to_time` | Integer | N | to time, default now. The max time range between from_time and to_time is 31 days |
 | `event_type` | String | N | there are `PERPTRADE`, `SETTLEMENT`, `LIQUIDATION`, `ADL`, `TRANSACTION` for selecting events, if not set, all kinds of events will be returned |
 | `offset` | Integer | N | this api is paginated, offset is the offset of the page, default is 0 |
 
