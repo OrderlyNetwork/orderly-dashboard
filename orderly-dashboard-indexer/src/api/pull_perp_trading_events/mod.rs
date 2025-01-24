@@ -189,7 +189,7 @@ pub async fn pull_perp_trading_events_by_account_v2(
     } else {
         0
     };
-    let limit = get_common_cfg().indexer_server.query_limit;
+    let limit = get_common_cfg().db_query_limit;
 
     if let Some(orderly_processed_time) =
         crate::db::settings::get_last_rpc_processed_timestamp().await?
@@ -201,7 +201,12 @@ pub async fn pull_perp_trading_events_by_account_v2(
     );
 
     let response = filter_join::account_perp_trading_join_events_v2(
-        account_id, from_time, to_time, e_type, offset, limit,
+        account_id,
+        from_time,
+        to_time,
+        e_type,
+        offset,
+        limit as u32,
     )
     .await?;
 

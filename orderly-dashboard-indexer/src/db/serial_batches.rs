@@ -1,3 +1,4 @@
+use crate::config::get_common_cfg;
 use crate::db::{DB_CONTEXT, POOL};
 use crate::schema::serial_batches;
 use actix_diesel::dsl::AsyncRunQueryDsl;
@@ -231,7 +232,7 @@ pub async fn query_serial_batches_by_time_and_key(
     }
     let start_time = Instant::now();
 
-    let page_size = 1000;
+    let page_size = get_common_cfg().db_query_limit;
     if blcoknum_tx_idx_vec.len() > page_size {
         // page query
         let mut page_idx = 0;

@@ -19,15 +19,21 @@ impl MemoryMonitor {
     pub async fn start_monitoring(&self) {
         let mut sys = System::new_all();
         let pid = std::process::id();
+        let mut peak_memory = 0.0f64;
 
         loop {
             sys.refresh_all();
 
             if let Some(process) = sys.process((pid as usize).into()) {
                 let memory_mb = process.memory() as f64 / 1024.0 / 1024.0;
+                peak_memory = peak_memory.max(memory_mb);
 
-                // Record current memory usage
-                tracing::info!("Current memory usage: {:.2} MB", memory_mb);
+                tracing::info!(
+                    "Memory stats: current={:.2}MB, peak={:.2}MB, virtual={:.2}MB",
+                    memory_mb,
+                    peak_memory,
+                    process.virtual_memory() as f64 / 1024.0 / 1024.0
+                );
 
                 // Check if memory usage exceeds the warning threshold
                 if memory_mb >= self.warning_threshold_mb {
