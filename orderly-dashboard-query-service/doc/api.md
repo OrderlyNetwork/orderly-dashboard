@@ -49,7 +49,7 @@ Response:
 | Name | Type | Required | Description |
 |-----|--------|-------------|------------|
 | `success` | Bool | Y | success status |
-| `data` | object{events: array[object], next_offset: Optional(integer)} | Y | return events and next offset, if there is no more events, next_offset will be null, and you need to set offset to the value of next_offset to get the next page |
+| `data` | object{events: array[object], next_offset: Optional(integer)} | Y | return events and next offset, if there is no more events, next_offset will be null, and you need to set offset to the value of next_offset to get the next page. Those events can be sorted by block_time and log_index. Events of single event_type are already sorted in each page, but if you want to sort all events of this time range between from_time and to_time, you need to fetch all pages of this time range between from_time and to_time and resort them by block_time and log_index |
 
 For example:
 request: https://dev-orderly-dashboard-query-service.orderly.network/events_v2?address=0x9cccf6a1c43552bceddbf81155ef54699fe4f946&broker_id=orderly&from_time=1736152774&to_time=1737362374&offset=0
