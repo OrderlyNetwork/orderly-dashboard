@@ -149,7 +149,7 @@ pub async fn list_events_v2(
             };
             tracing::info!(
                 target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query account events sucs broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
+                "query account v2 events sucs broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
                 param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis(), elapsed_new_user, elapse_get_data,
             );
             return Ok(HttpResponse::Ok().json(response));

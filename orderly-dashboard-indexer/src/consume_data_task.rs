@@ -10,8 +10,11 @@ use anyhow::Result;
 use chrono::Utc;
 use futures::future::join_all;
 use std::cmp::{max, min};
+use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::time::Duration;
 pub const ORDERLY_DASHBOARD_INDEXER: &str = "orderly_dashboard_indexer";
+pub(crate) static ORDERLY_PROCESSED_BLOCK_HEIGHT: AtomicU64 = AtomicU64::new(0);
+pub(crate) static ORDERLY_PROCESSED_TIMESTAMP: AtomicI64 = AtomicI64::new(0);
 
 pub async fn consume_data_task(mut start_block: Option<u64>, end_block: Option<u64>) -> Result<()> {
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "start consume_data_task");
@@ -155,6 +158,8 @@ pub async fn consume_data_inner(
                             err, block_timestamp
                         );
                     }
+                    ORDERLY_PROCESSED_BLOCK_HEIGHT.store(last_processed, Ordering::Relaxed);
+                    ORDERLY_PROCESSED_TIMESTAMP.store(block_timestamp, Ordering::Relaxed);  
                 }
                 if let Some(end_block) = end_block {
                     if start_height > end_block {

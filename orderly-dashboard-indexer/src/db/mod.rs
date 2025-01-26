@@ -28,7 +28,7 @@ pub fn establish_connection() -> Database<PgConnection> {
 }
 
 pub static INITED_DATABASE_URL: OnceCell<String> = OnceCell::new();
-pub static POOL_SIZE_CONFIG: AtomicU32 = AtomicU32::new(90);
+pub static POOL_SIZE_CONFIG: AtomicU32 = AtomicU32::new(160);
 
 #[allow(dead_code)]
 pub fn init_database_setting(database_url: String, pool_size: u32) {

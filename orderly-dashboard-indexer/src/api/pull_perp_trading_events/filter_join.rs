@@ -16,7 +16,7 @@ use crate::db::serial_batches::{
     query_serial_batches_by_time_and_key, query_serial_batches_with_type, SerialBatchType,
 };
 use crate::db::settings::{
-    get_last_rpc_processed_height, get_last_rpc_processed_timestamp, get_sol_sync_block_time,
+    get_sol_sync_block_time,
     get_sol_sync_signature,
 };
 use crate::db::settlement_execution::{
@@ -42,10 +42,8 @@ pub async fn perp_trading_join_events(
     to_block: i64,
     event_type: Option<TradingEventType>,
 ) -> Result<TradingEventsResponse> {
-    let last_block = get_last_rpc_processed_height().await?.unwrap_or_default();
-    let last_timestamp = get_last_rpc_processed_timestamp()
-        .await?
-        .unwrap_or_default();
+    let last_block = crate::api::get_may_cached_orderly_last_rpc_processed_height().await?;
+    let last_timestamp = crate::api::get_may_cached_orderly_last_rpc_processed_timestamp().await?;
     let to_block = min(last_block as i64, to_block);
     let mut response = TradingEventsResponse::default();
     if last_block == 0 {
