@@ -27,12 +27,14 @@ impl MemoryMonitor {
             if let Some(process) = sys.process((pid as usize).into()) {
                 let memory_mb = process.memory() as f64 / 1024.0 / 1024.0;
                 peak_memory = peak_memory.max(memory_mb);
+                let cpu_usage = process.cpu_usage();
 
                 tracing::info!(
-                    "Memory stats: current={:.2}MB, peak={:.2}MB, virtual={:.2}MB",
+                    "Memory stats: current={:.2}MB, peak={:.2}MB, virtual={:.2}MB, cpu_usage={:.2}%",
                     memory_mb,
                     peak_memory,
-                    process.virtual_memory() as f64 / 1024.0 / 1024.0
+                    process.virtual_memory() as f64 / 1024.0 / 1024.0,
+                    cpu_usage
                 );
 
                 // Check if memory usage exceeds the warning threshold

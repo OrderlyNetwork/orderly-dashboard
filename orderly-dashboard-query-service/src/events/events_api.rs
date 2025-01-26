@@ -5,11 +5,14 @@ use chrono::{Duration, Utc};
 use serde_derive::Deserialize;
 
 use crate::config::get_common_cfg;
+use once_cell::sync::Lazy;
 use orderly_dashboard_analyzer::db::user_info::UserInfo;
 use orderly_dashboard_indexer::formats_external::trading_events::AccountTradingEventsResponse;
 use orderly_dashboard_indexer::formats_external::{FailureResponse, Response};
+use reqwest::Client;
 
 pub(crate) const QUERY_ACCOUNT_EVENT_CONTEXT: &str = "query_account_event_context";
+pub(crate) static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GetAccountEventsRequest {
@@ -241,7 +244,9 @@ async fn get_indexer_data(
             base_url, p_account_id, from_time, to_time,
         )
     };
-    let response = reqwest::get(indexer_url).await;
+
+    // let response = reqwest::get(indexer_url).await;
+    let response = CLIENT.get(indexer_url).send().await;
     match response {
         Ok(res) => Ok(res.json().await?),
         Err(err) => Err(anyhow::anyhow!("reqwest failed with: {}", err)),
@@ -266,7 +271,7 @@ async fn get_indexer_sol_data(
             base_url, p_account_id, from_time, to_time,
         )
     };
-    let response = reqwest::get(indexer_url).await;
+    let response = CLIENT.get(indexer_url).send().await;
     match response {
         Ok(res) => Ok(res.json().await?),
         Err(err) => Err(anyhow::anyhow!("reqwest failed with: {}", err)),
@@ -295,7 +300,7 @@ async fn get_indexer_v2_data(
     if let Some(offset) = offset {
         indexer_url = format!("{}&offset={}", indexer_url, offset);
     }
-    let response = reqwest::get(indexer_url).await;
+    let response = CLIENT.get(indexer_url).send().await;
     match response {
         Ok(res) => Ok(res.json().await?),
         Err(err) => Err(anyhow::anyhow!("reqwest failed with: {}", err)),
@@ -304,6 +309,7 @@ async fn get_indexer_v2_data(
 
 #[cfg(test)]
 mod tests {
+    use reqwest::Client;
 
     #[ignore]
     #[tokio::test]
@@ -324,5 +330,24 @@ mod tests {
                 break;
             }
         }
+    }
+
+    #[test]
+    fn test_new_client() {
+        let inst = std::time::Instant::now();
+        let _client = Client::new();
+        println!("elapsed: {:?}", inst.elapsed());
+
+        let inst2 = std::time::Instant::now();
+        let _client2 = Client::new();
+        println!("elapsed2: {:?}", inst2.elapsed());
+    }
+
+    #[test]
+    fn test_printlog_time() {
+        let inst = std::time::Instant::now();
+        println!("test log");
+        let elapsed = inst.elapsed();
+        println!("elapsed: {:?}", elapsed);
     }
 }

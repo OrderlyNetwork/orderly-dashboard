@@ -88,7 +88,7 @@ async fn main() -> std::io::Result<()> {
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     init(config.is_debug);
     init_config(config.clone());
-    tracing::info!(target: ORDERLY_DASHBOARD_CONTEXT, "orderly dashboard config info: {:?}", config);
+    tracing::info!(target: ORDERLY_DASHBOARD_CONTEXT, "orderly dashboard config info: {:?}, cpu num: {}", config, num_cpus::get());
     std::thread::spawn(|| {
         spawn_future(async {
             tracing::info!(target: ORDERLY_DASHBOARD_CONTEXT, "start new thread pool");
@@ -143,7 +143,8 @@ async fn main() -> std::io::Result<()> {
             .service(list_events_v2)
             .route("/hey", web::get().to(manual_hello))
     })
-    .workers(config.thread_num)
+    .workers(num_cpus::get() * 2)
+    .backlog(1024)
     .bind(("0.0.0.0", config.port))?
     .run()
     .await
