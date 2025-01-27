@@ -159,7 +159,7 @@ pub async fn consume_data_inner(
                         );
                     }
                     ORDERLY_PROCESSED_BLOCK_HEIGHT.store(last_processed, Ordering::Relaxed);
-                    ORDERLY_PROCESSED_TIMESTAMP.store(block_timestamp, Ordering::Relaxed);  
+                    ORDERLY_PROCESSED_TIMESTAMP.store(block_timestamp, Ordering::Relaxed);
                 }
                 if let Some(end_block) = end_block {
                     if start_height > end_block {

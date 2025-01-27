@@ -15,10 +15,7 @@ use crate::db::liquidation_transfer::{
 use crate::db::serial_batches::{
     query_serial_batches_by_time_and_key, query_serial_batches_with_type, SerialBatchType,
 };
-use crate::db::settings::{
-    get_sol_sync_block_time,
-    get_sol_sync_signature,
-};
+use crate::db::settings::{get_sol_sync_block_time, get_sol_sync_signature};
 use crate::db::settlement_execution::{
     query_account_settlement_executions, query_settlement_executions, DbSettlementExecution,
     DbSettlementExecutionView,

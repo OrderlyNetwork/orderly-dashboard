@@ -120,9 +120,9 @@ pub async fn pull_perp_trading_events_by_account(
     };
     let orderly_processed_time =
         crate::api::get_may_cached_orderly_last_rpc_processed_timestamp().await?;
-    
-        to_time = min(orderly_processed_time, to_time);
-    
+
+    to_time = min(orderly_processed_time, to_time);
+
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
         "account_id events: {}, from_time: {}, to_time: {} e_type: {:?}", account_id, from_time, to_time, e_type
     );
@@ -191,9 +191,9 @@ pub async fn pull_perp_trading_events_by_account_v2(
     };
     let limit = get_common_cfg().db_query_limit;
 
-    let orderly_processed_time=
+    let orderly_processed_time =
         crate::api::get_may_cached_orderly_last_rpc_processed_timestamp().await?;
-        to_time = min(orderly_processed_time, to_time);
+    to_time = min(orderly_processed_time, to_time);
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
         "events v2 account_id: {}, from_time: {}, to_time: {} e_type: {:?}, offset: {}, limit: {}", account_id, from_time, to_time, e_type, offset, limit as u32
     );
