@@ -19,15 +19,29 @@ Insert test data
 psql -U {your databse account} -d {your databse} -f ../../scripts/init_data.sql
 ```
 
-### Pull trading events on EVM(will be disabled recently)
+### Pull trading events on EVM
 ```shell
 GET /events?broker_id=woofi_pro&address=0x9e15a53b9dfa30e6b220d0e3c93253bea7191769&from_time=1711123200&to_time=1713801600
 ```
+Parameters:
 
-### Pull trading events on Solana
-```shell
-GET /sol_events?broker_id=raydium&address=3nrWg4GJijT1NnxrmupFD7CJjshZnHyRAAYEmLizMqBc
-```
+| Name | Type | Required | Description |
+|-----|--------|-------------|------------|
+| `address` | String | Y | user wallet address |
+| `broker_id` | String | Y | broker name |
+| `from_time` | Integer | N | from time, default two weeks ago |
+| `to_time` | Integer | N | to time, default now. The max time range between from_time and to_time is 31 days |
+| `event_type` | String | N | there are `PERPTRADE`, `SETTLEMENT`, `LIQUIDATION`, `ADL`, `TRANSACTION` for selecting events, if not set, all kinds of events will be returned |
+
+Response:
+
+| Name | Type | Required | Description |
+|-----|--------|-------------|------------|
+| `success` | Bool | Y | success status |
+| `data` | object{events: array[object]} | Y | return events array between `from_time` to `to_time` |
+
+For example: https://orderly-dashboard-query-service.orderly.network/events?broker_id=woofi_pro&address=0x9e15a53b9dfa30e6b220d0e3c93253bea7191769&from_time=1711123200&to_time=1713801600
+
 
 ### Pull trading events api v2 on EVM
 ```shell
@@ -146,4 +160,9 @@ pub enum TradingEventInnerData {
         sum_unitary_fundings: String,
     },
 }
+```
+
+### Pull trading events on Solana
+```shell
+GET /sol_events?broker_id=raydium&address=3nrWg4GJijT1NnxrmupFD7CJjshZnHyRAAYEmLizMqBc
 ```
