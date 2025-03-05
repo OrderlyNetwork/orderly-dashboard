@@ -1,7 +1,7 @@
 import { Button } from '@radix-ui/themes';
 import { GroupColumnDef, createColumnHelper } from '@tanstack/react-table';
 import { FixedNumber } from '@tarnadas/fixed-number';
-import { Dispatch, SetStateAction, useMemo } from 'react';
+import { Dispatch, SetStateAction, useMemo, useState } from 'react';
 import { P, match } from 'ts-pattern';
 
 import { Shortened } from './Shortened';
@@ -23,8 +23,18 @@ export function useRenderColumns(
   eventType: EventType | 'ALL',
   setEventType: Dispatch<SetStateAction<EventType | 'ALL'>>
 ) {
-  const { data, error, isLoading, setSize, mutate } = useEvents(query);
-  const events = useMemo(() => data?.flat(), [data]);
+  // State for pagination
+  const [offset, setOffset] = useState<number>(0);
+
+  // Update query to include offset
+  const queryWithOffset = query ? { ...query, offset } : null;
+
+  // Use the updated hook
+  const { data, error, isLoading, mutate } = useEvents(queryWithOffset);
+
+  // Extract events and nextOffset from data
+  const events = data?.events || [];
+  const nextOffset = data?.nextOffset;
 
   const columnHelper = createColumnHelper<EventTableData>();
 
@@ -713,5 +723,26 @@ export function useRenderColumns(
     return columns;
   }, [columnHelper, eventType, setEventType, events, tokens, symbols]);
 
-  return { columns, events, error, isLoading, setSize, mutate };
+  // Return the updated values including pagination controls
+  return {
+    columns,
+    events,
+    error,
+    isLoading,
+    mutate,
+    // Pagination helpers
+    pagination: {
+      nextOffset,
+      offset,
+      hasMore: nextOffset != null,
+      loadMore: () => {
+        if (nextOffset != null) {
+          setOffset(nextOffset);
+        }
+      },
+      reset: () => {
+        setOffset(0);
+      }
+    }
+  };
 }
