@@ -36,6 +36,7 @@ impl DbSettlementExecution {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DbSettlementExecutionView {
     #[sql_type = "Numeric"]
