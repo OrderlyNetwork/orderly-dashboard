@@ -18,7 +18,7 @@ export const useSearchAddress = (
 
   const isEvm = useMemo(() => query != null && !!query.match(/^0x[0-9a-fA-F]{40}$/), [query]);
   const isSol = useMemo(() => query != null && !!query.match(/^[0-9a-zA-Z]{44}$/), [query]);
-  const isAccountId = useMemo(() => query != null && !!query.match(/^0x[0-9a-fA-F]{66}$/), [query]);
+  const isAccountId = useMemo(() => query != null && !!query.match(/^0x[0-9a-fA-F]{64}$/), [query]);
 
   let searchType: SearchType;
   if (isEvm || isSol) {
