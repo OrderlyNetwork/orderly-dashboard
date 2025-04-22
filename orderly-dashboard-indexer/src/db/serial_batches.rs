@@ -50,6 +50,7 @@ impl DbSerialBatches {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DbSerialBatchesView {
     #[sql_type = "BigInt"]

@@ -37,6 +37,7 @@ pub struct Opts {
     pub end_block: Option<u64>,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Deserialize, Default)]
 pub struct SubnetConfig {
     pub rpc_url: String, // evm chain rpc url
@@ -76,6 +77,7 @@ pub struct SyncBlockStrategy {
     pub parallel_limit: u32,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Deserialize, Default)]
 pub struct LayerzeroConfig {
     pub scan_url: String,
@@ -90,6 +92,7 @@ fn default_db_query_limit() -> usize {
     1000
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Deserialize, Default, Debug)]
 pub struct SolChainConfig {
     pub is_enable: bool,
