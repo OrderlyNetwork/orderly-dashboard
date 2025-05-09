@@ -12,7 +12,7 @@ use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
 use std::time::Instant;
 
-#[derive(Insertable, Queryable, Debug)]
+#[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "executed_trades"]
 pub struct DbExecutedTrades {
     pub block_number: i64,
@@ -75,6 +75,31 @@ pub async fn create_executed_trades(trades: Vec<DbExecutedTrades>) -> Result<usi
     Ok(num_rows)
 }
 
+pub async fn delete_oldest_executed_trades(limit: i64) -> Result<usize> {
+    use crate::schema::executed_trades::dsl::*;
+    let ids: Vec<i64> = executed_trades
+        .select(block_number)
+        .order(block_number.asc())
+        .limit(limit)
+        .load_async::<i64>(&POOL)
+        .await?;
+    if ids.is_empty() {
+        return Ok(0);
+    }
+    // ids.dedup();
+    let min_val = ids.first().cloned().unwrap_or_default();
+    let max_val = ids.last().cloned().unwrap_or_default();
+
+    let deleted_num = diesel::delete(
+        executed_trades
+            .filter(block_number.ge(min_val))
+            .filter(block_number.le(max_val)),
+    )
+    .execute_async(&POOL)
+    .await?;
+    Ok(deleted_num)
+}
+
 pub async fn query_executed_trades(
     from_block: i64,
     to_block: i64,
@@ -82,13 +107,79 @@ pub async fn query_executed_trades(
     use crate::schema::executed_trades::dsl::*;
     tracing::info!(
         target: DB_CONTEXT,
-        "query_executed_trades start",
+        "query_executed_trades start with from: {} to: {}", from_block, to_block,
     );
     let start_time = Instant::now();
 
     let result = executed_trades
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
+        .load_async::<DbExecutedTrades>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            if dur_ms >= 100 {
+                tracing::warn!(
+                    target: ALERT_CONTEXT,
+                    "query_executed_trades slow query. from:{}, to:{} length:{}, used time:{} ms",
+                        from_block,
+                        to_block,
+                    events.len(),
+                    dur_ms
+                );
+            }
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_executed_trades success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_executed_trades success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_executed_trades fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
+pub async fn query_executed_trades_with_time(
+    from_block: i64,
+    to_block: i64,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<DbExecutedTrades>> {
+    use crate::schema::executed_trades::dsl::*;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_executed_trades start with from: {} to: {}", from_block, to_block,
+    );
+    let start_time = Instant::now();
+
+    let result = executed_trades
+        .filter(block_number.ge(from_block))
+        .filter(block_number.le(to_block))
+        .filter(block_time.ge(from_time))
+        .filter(block_time.le(to_time))
         .load_async::<DbExecutedTrades>(&POOL)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
@@ -148,7 +239,8 @@ pub async fn query_account_executed_trades(
     use crate::schema::executed_trades::dsl::*;
     tracing::info!(
         target: DB_CONTEXT,
-        "query_account_executed_trades start",
+        "query_account_executed_trades start with account: {}, from_time: {}, to_time: {}",
+        account, from_time, to_time,
     );
     let start_time = Instant::now();
     let query = executed_trades
@@ -214,6 +306,12 @@ pub async fn query_account_executed_trades(
 
 #[cfg(test)]
 mod tests {
+    use chrono::Datelike;
+    use chrono::Timelike;
+
+    use crate::db::settings::update_last_rpc_processed_height;
+    use crate::init::init_log;
+
     use super::*;
 
     #[ignore]
@@ -309,5 +407,78 @@ mod tests {
         });
 
         system.run().unwrap();
+    }
+
+    #[ignore]
+    #[test]
+    fn test_insert_trades_for_migration() {
+        dotenv::dotenv().ok();
+        init_log();
+        let system = actix::System::new();
+        system.block_on(async move {
+            let data_time = chrono::Utc::now();
+            for (year, q) in [
+                (2023, 1),
+                (2024, 1),
+                (2024, 2),
+                (2024, 3),
+                (2024, 4),
+                (2025, 1),
+                (2025, 2),
+                (2025, 3),
+            ] {
+                let data_time = data_time.with_year(year).unwrap();
+                let data_time = data_time
+                    .with_month(q * 3)
+                    .unwrap()
+                    .with_hour(10)
+                    .unwrap()
+                    .with_minute(30)
+                    .unwrap()
+                    .with_second(36)
+                    .unwrap();
+                let timestamp = data_time.timestamp();
+                update_last_rpc_processed_height(1_999).await.unwrap();
+                for blocknum in 0..2_000 {
+                    let inst = Instant::now();
+                    let mut trades = vec![];
+                    for i in 0..100 {
+                        trades.push(DbExecutedTrades {
+                            block_number: blocknum,
+                            transaction_index: 1,
+                            log_index: i,
+                            typ: 0,
+                            account_id: "0x100000".to_string() + &i.to_string(),
+                            symbol_hash: "0xaaaaaaaaaaa".to_string(),
+                            fee_asset_hash: "0xbbbbbbbb".to_string(),
+                            trade_qty: 100000.into(),
+                            notional: 1000.into(),
+                            executed_price: 1900000.into(),
+                            fee: 1900.into(),
+                            sum_unitary_fundings: 2000.into(),
+                            trade_id: (year as i64 * 1000000
+                                + q as i64 * 10000
+                                + blocknum * 100
+                                + i as i64)
+                                .into(),
+                            match_id: 1000.into(),
+                            timestamp: timestamp.into(),
+                            side: true,
+                            block_time: timestamp,
+                        });
+                    }
+                    create_executed_trades(trades).await.unwrap();
+
+                    let elapsed_ms = inst.elapsed().as_millis();
+                    tracing::info!(
+                        "create_executed_trades elapsed_ms: {} for year: {}, q: {}, blocknum: {}",
+                        elapsed_ms,
+                        year,
+                        q,
+                        blocknum
+                    );
+                }
+            }
+        });
     }
 }

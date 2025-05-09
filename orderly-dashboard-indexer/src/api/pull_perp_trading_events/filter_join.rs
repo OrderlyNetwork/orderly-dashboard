@@ -1,40 +1,57 @@
+use crate::api::MIGRATE_TRADES_FINISHED_AND_QUERY_FROM_PARTITIONING;
 use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
-use crate::db::adl_result::{query_account_adl_results, query_adl_results};
+use crate::db::adl_result::{
+    query_account_adl_results, query_adl_results, query_adl_results_with_time,
+};
 use crate::db::executed_trades::{
-    query_account_executed_trades, query_executed_trades, DbExecutedTrades,
+    query_account_executed_trades, query_executed_trades, query_executed_trades_with_time,
+    DbExecutedTrades,
 };
 use crate::db::liquidation_result::{
     query_liquidation_results, query_liquidation_results_by_time_and_account,
-    query_liquidation_results_by_time_and_keys,
+    query_liquidation_results_by_time_and_keys, query_liquidation_results_with_time,
 };
 use crate::db::liquidation_transfer::{
     query_account_liquidation_transfers_by_time,
     query_account_liquidation_transfers_by_time_and_result_keys, query_liquidation_transfers,
-    DbLiquidationTransfer,
+    query_liquidation_transfers_with_time, DbLiquidationTransfer,
 };
+
 use crate::db::serial_batches::{
-    query_serial_batches_by_time_and_key, query_serial_batches_with_type, SerialBatchType,
+    query_serial_batches_by_time_and_key,
+    query_serial_batches_joined_partitioned_trades_with_type_by_time,
+    query_serial_batches_with_type, query_serial_batches_with_type_and_time, SerialBatchType,
 };
 use crate::db::settings::{get_sol_sync_block_time, get_sol_sync_signature};
 use crate::db::settlement_execution::{
-    query_account_settlement_executions, query_settlement_executions, DbSettlementExecution,
-    DbSettlementExecutionView,
+    query_account_settlement_executions, query_settlement_executions,
+    query_settlement_executions_with_time, DbSettlementExecution, DbSettlementExecutionView,
 };
-use crate::db::settlement_result::query_settlement_results;
+use crate::db::settlement_result::{query_settlement_results, query_settlement_results_with_time};
+
+use crate::db::partitioned_executed_trades::{
+    query_account_partitioned_executed_trades, query_partitioned_executed_trades,
+    DbPartitionedExecutedTrades,
+};
 use crate::db::sol_transaction_events::{
     query_account_sol_balance_transaction_executions, query_sol_balance_transaction_executions,
 };
 use crate::db::transaction_events::{
     query_account_balance_transaction_executions, query_balance_transaction_executions,
+    query_balance_transaction_executions_with_time,
 };
 use crate::formats_external::trading_events::{
     AccountTradingEventsResponse, TradingEvent, TradingEventType, TradingEventsResponse,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use chrono::NaiveDateTime;
 use std::cmp::min;
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::atomic::Ordering;
 
 pub async fn perp_trading_join_events(
+    from_time: Option<i64>,
+    to_time: Option<i64>,
     from_block: i64,
     to_block: i64,
     event_type: Option<TradingEventType>,
@@ -53,7 +70,21 @@ pub async fn perp_trading_join_events(
                 trading_events = join_balance_transactions(from_block, to_block).await?;
             }
             TradingEventType::PerpTrade => {
-                trading_events = join_perp_trades(from_block, to_block).await?;
+                if MIGRATE_TRADES_FINISHED_AND_QUERY_FROM_PARTITIONING.load(Ordering::Relaxed) {
+                    trading_events = join_partitioned_perp_trades(
+                        from_time.ok_or_else(|| {
+                            anyhow::anyhow!("from_time should not null for query perp trading")
+                        })?,
+                        to_time.ok_or_else(|| {
+                            anyhow::anyhow!("to_time should not null for query perp trading")
+                        })?,
+                        from_block,
+                        to_block,
+                    )
+                    .await?;
+                } else {
+                    trading_events = join_perp_trades(from_block, to_block).await?;
+                }
             }
             TradingEventType::SETTLEMENT => {
                 trading_events = join_settlements(from_block, to_block).await?;
@@ -71,11 +102,22 @@ pub async fn perp_trading_join_events(
         response.last_block_timestamp = last_timestamp;
         return Ok(response);
     }
-    let balance_trans = join_balance_transactions(from_block, to_block).await?;
-    let perp_trades = join_perp_trades(from_block, to_block).await?;
-    let settlements = join_settlements(from_block, to_block).await?;
-    let liquidations = join_liquidations(from_block, to_block).await?;
-    let adls = join_adls(from_block, to_block).await?;
+    let from_time = from_time
+        .ok_or_else(|| anyhow::anyhow!("from_time should not null for query perp trading"))?;
+    let to_time =
+        to_time.ok_or_else(|| anyhow::anyhow!("to_time should not null for query perp trading"))?;
+    let balance_trans =
+        join_balance_transactions_with_time(from_block, to_block, from_time, to_time).await?;
+    let perp_trades = if MIGRATE_TRADES_FINISHED_AND_QUERY_FROM_PARTITIONING.load(Ordering::Relaxed)
+    {
+        join_partitioned_perp_trades(from_time, to_time, from_block, to_block).await?
+    } else {
+        join_perp_trades_with_time(from_block, to_block, from_time, to_time).await?
+    };
+    let settlements = join_settlements_with_time(from_block, to_block, from_time, to_time).await?;
+    let liquidations =
+        join_liquidations_with_time(from_block, to_block, from_time, to_time).await?;
+    let adls = join_adls_with_time(from_block, to_block, from_time, to_time).await?;
     let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
     trading_events.sort();
     response.events = trading_events;
@@ -139,15 +181,24 @@ pub async fn account_perp_trading_join_events(
                 .await?;
             }
             TradingEventType::PerpTrade => {
-                trading_events = join_account_perp_trades(
-                    account_id.to_string(),
-                    from_time,
-                    to_time,
-                    None,
-                    None,
-                )
-                .await?
-                .0;
+                if MIGRATE_TRADES_FINISHED_AND_QUERY_FROM_PARTITIONING.load(Ordering::Relaxed) {
+                    trading_events = join_account_partitioned_perp_trades(
+                        account_id.to_string(),
+                        from_time,
+                        to_time,
+                    )
+                    .await?;
+                } else {
+                    trading_events = join_account_perp_trades(
+                        account_id.to_string(),
+                        from_time,
+                        to_time,
+                        None,
+                        None,
+                    )
+                    .await?
+                    .0;
+                }
             }
             TradingEventType::SETTLEMENT => {
                 trading_events = join_account_settlements(
@@ -183,10 +234,18 @@ pub async fn account_perp_trading_join_events(
     let balance_trans =
         join_account_balance_transactions(account_id.to_string(), from_time, to_time, None, None)
             .await?;
-    let (perp_trades, _has_next_offset) =
-        join_account_perp_trades(account_id.to_string(), from_time, to_time, None, None).await?;
-    let (settlements, _has_next_offset) =
-        join_account_settlements(account_id.to_string(), from_time, to_time, None, None).await?;
+    let perp_trades = if MIGRATE_TRADES_FINISHED_AND_QUERY_FROM_PARTITIONING.load(Ordering::Relaxed)
+    {
+        join_account_partitioned_perp_trades(account_id.to_string(), from_time, to_time).await?
+    } else {
+        join_account_perp_trades(account_id.to_string(), from_time, to_time, None, None)
+            .await?
+            .0
+    };
+    let settlements =
+        join_account_settlements(account_id.to_string(), from_time, to_time, None, None)
+            .await?
+            .0;
     let liquidations =
         join_account_liquidations(account_id.to_string(), from_time, to_time, None, None).await?;
     let adls = join_account_adls(account_id.to_string(), from_time, to_time, None, None).await?;
@@ -387,6 +446,86 @@ pub async fn join_perp_trades(from_block: i64, to_block: i64) -> Result<Vec<Trad
 }
 
 /// return (trading_events, has_next_offset)
+pub async fn join_perp_trades_with_time(
+    from_block: i64,
+    to_block: i64,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<TradingEvent>> {
+    let executed_trades =
+        query_executed_trades_with_time(from_block, to_block, from_time, to_time).await?;
+    let mut executed_trades_map: BTreeMap<(i64, i32), Vec<DbExecutedTrades>> = BTreeMap::new();
+    executed_trades.into_iter().for_each(|trade| {
+        let batch_key = trade.get_batch_key();
+        if let Some(vec) = executed_trades_map.get_mut(&batch_key) {
+            vec.push(trade);
+        } else {
+            let vec = vec![trade];
+            executed_trades_map.insert(batch_key, vec);
+        }
+    });
+    let serial_batches = query_serial_batches_with_type_and_time(
+        from_block,
+        to_block,
+        from_time,
+        to_time,
+        SerialBatchType::PerpTrade,
+    )
+    .await?;
+    let mut trading_event_vec: Vec<TradingEvent> = vec![];
+    for serial_batch in serial_batches {
+        let bath_key = serial_batch.get_batch_key();
+        if let Some(trades) = executed_trades_map.remove(&bath_key) {
+            trading_event_vec.push(TradingEvent::from_serial_batch_and_trades(
+                serial_batch,
+                trades,
+            ));
+        }
+    }
+    Ok(trading_event_vec)
+}
+
+pub async fn join_partitioned_perp_trades(
+    from_time: i64,
+    to_time: i64,
+    from_block: i64,
+    to_block: i64,
+) -> Result<Vec<TradingEvent>> {
+    let executed_trades = query_partitioned_executed_trades(
+        NaiveDateTime::from_timestamp_opt(from_time, 0)
+            .ok_or_else(|| anyhow!("timestamp of from_time should be valid"))?,
+        NaiveDateTime::from_timestamp_opt(to_time, 0)
+            .ok_or_else(|| anyhow!("timestamp of to_time should be valid"))?,
+        from_block,
+        to_block,
+    )
+    .await?;
+    let mut executed_trades_map: BTreeMap<(i64, i32), Vec<DbPartitionedExecutedTrades>> =
+        BTreeMap::new();
+    executed_trades.into_iter().for_each(|trade| {
+        let batch_key = trade.get_batch_key();
+        if let Some(vec) = executed_trades_map.get_mut(&batch_key) {
+            vec.push(trade);
+        } else {
+            let vec = vec![trade];
+            executed_trades_map.insert(batch_key, vec);
+        }
+    });
+    let serial_batches =
+        query_serial_batches_with_type(from_block, to_block, SerialBatchType::PerpTrade).await?;
+    let mut trading_event_vec: Vec<TradingEvent> = vec![];
+    for serial_batch in serial_batches {
+        let bath_key = serial_batch.get_batch_key();
+        if let Some(trades) = executed_trades_map.remove(&bath_key) {
+            trading_event_vec.push(TradingEvent::from_serial_batch_and_partitioned_trades(
+                serial_batch,
+                trades,
+            ));
+        }
+    }
+    Ok(trading_event_vec)
+}
+
 pub async fn join_account_perp_trades(
     account_id: String,
     from_time: i64,
@@ -430,6 +569,51 @@ pub async fn join_account_perp_trades(
     Ok((trading_event_vec, has_next_offset))
 }
 
+pub async fn join_account_partitioned_perp_trades(
+    account_id: String,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<TradingEvent>> {
+    let executed_trades = query_account_partitioned_executed_trades(
+        account_id.clone(),
+        NaiveDateTime::from_timestamp_opt(from_time, 0)
+            .ok_or_else(|| anyhow!("timestamp of from_time should be valid"))?,
+        NaiveDateTime::from_timestamp_opt(to_time, 0)
+            .ok_or_else(|| anyhow!("timestamp of to_time should be valid"))?,
+    )
+    .await?;
+    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "executed_trades length: {}", executed_trades.len());
+    let mut executed_trades_map: BTreeMap<(i64, i32), Vec<DbPartitionedExecutedTrades>> =
+        BTreeMap::new();
+    executed_trades.into_iter().for_each(|trade| {
+        let batch_key = trade.get_batch_key();
+        if let Some(vec) = executed_trades_map.get_mut(&batch_key) {
+            vec.push(trade);
+        } else {
+            let vec = vec![trade];
+            executed_trades_map.insert(batch_key, vec);
+        }
+    });
+    let serial_batches = query_serial_batches_joined_partitioned_trades_with_type_by_time(
+        from_time,
+        to_time,
+        account_id,
+        SerialBatchType::PerpTrade,
+    )
+    .await?;
+    let mut trading_event_vec: Vec<TradingEvent> = vec![];
+    for serial_batch in serial_batches {
+        let bath_key = serial_batch.get_batch_key();
+        if let Some(trades) = executed_trades_map.remove(&bath_key) {
+            trading_event_vec.push(TradingEvent::from_view_serial_batch_and_partitioned_trades(
+                serial_batch,
+                trades,
+            ));
+        }
+    }
+    Ok(trading_event_vec)
+}
+
 pub async fn join_balance_transactions(
     from_block: i64,
     to_block: i64,
@@ -451,6 +635,22 @@ pub async fn join_sol_balance_transactions(
     let trading_event_vec: Vec<TradingEvent> = balance_transactions
         .into_iter()
         .map(TradingEvent::from_sol_balance_transaction)
+        .collect::<Vec<_>>();
+    Ok(trading_event_vec)
+}
+
+pub async fn join_balance_transactions_with_time(
+    from_block: i64,
+    to_block: i64,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<TradingEvent>> {
+    let balance_transactions =
+        query_balance_transaction_executions_with_time(from_block, to_block, from_time, to_time)
+            .await?;
+    let trading_event_vec: Vec<TradingEvent> = balance_transactions
+        .into_iter()
+        .map(TradingEvent::from_balance_transaction)
         .collect::<Vec<_>>();
     Ok(trading_event_vec)
 }
@@ -515,6 +715,41 @@ pub async fn join_settlements(from_block: i64, to_block: i64) -> Result<Vec<Trad
 }
 
 /// return (trading_events, has_next_offset)
+pub async fn join_settlements_with_time(
+    from_block: i64,
+    to_block: i64,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<TradingEvent>> {
+    let settlement_executions =
+        query_settlement_executions_with_time(from_block, to_block, from_time, to_time).await?;
+    let mut settlement_execution_map: BTreeMap<(i64, i32), Vec<DbSettlementExecution>> =
+        BTreeMap::new();
+    settlement_executions
+        .into_iter()
+        .for_each(|settlement_execution| {
+            let batch_key = settlement_execution.get_batch_key();
+            if let Some(vec) = settlement_execution_map.get_mut(&batch_key) {
+                vec.push(settlement_execution);
+            } else {
+                let vec = vec![settlement_execution];
+                settlement_execution_map.insert(batch_key, vec);
+            }
+        });
+
+    let settlement_results =
+        query_settlement_results_with_time(from_block, to_block, from_time, to_time).await?;
+    let mut settlement_result_vec: Vec<TradingEvent> = vec![];
+    for settlement_result in settlement_results {
+        let bath_key = settlement_result.get_batch_key();
+        if let Some(executions) = settlement_execution_map.remove(&bath_key) {
+            settlement_result_vec
+                .push(TradingEvent::from_settlement(settlement_result, executions));
+        }
+    }
+    Ok(settlement_result_vec)
+}
+
 pub async fn join_account_settlements(
     account_id: String,
     from_time: i64,
@@ -571,6 +806,43 @@ pub async fn join_liquidations(from_block: i64, to_block: i64) -> Result<Vec<Tra
         });
 
     let liquidation_results = query_liquidation_results(from_block, to_block).await?;
+    let mut liquidation_result_vec: Vec<TradingEvent> = vec![];
+    for liquidation_result in liquidation_results {
+        let bath_key = liquidation_result.get_batch_key();
+        if let Some(transfers) = liquidation_transfer_map.remove(&bath_key) {
+            liquidation_result_vec.push(TradingEvent::from_liquidation(
+                liquidation_result,
+                transfers,
+            ));
+        }
+    }
+    Ok(liquidation_result_vec)
+}
+
+pub async fn join_liquidations_with_time(
+    from_block: i64,
+    to_block: i64,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<TradingEvent>> {
+    let liquidation_transfers =
+        query_liquidation_transfers_with_time(from_block, to_block, from_time, to_time).await?;
+    let mut liquidation_transfer_map: BTreeMap<(i64, i32), Vec<DbLiquidationTransfer>> =
+        BTreeMap::new();
+    liquidation_transfers
+        .into_iter()
+        .for_each(|liquidation_transfer| {
+            let batch_key = liquidation_transfer.get_batch_key();
+            if let Some(vec) = liquidation_transfer_map.get_mut(&batch_key) {
+                vec.push(liquidation_transfer);
+            } else {
+                let vec = vec![liquidation_transfer];
+                liquidation_transfer_map.insert(batch_key, vec);
+            }
+        });
+
+    let liquidation_results =
+        query_liquidation_results_with_time(from_block, to_block, from_time, to_time).await?;
     let mut liquidation_result_vec: Vec<TradingEvent> = vec![];
     for liquidation_result in liquidation_results {
         let bath_key = liquidation_result.get_batch_key();
@@ -675,6 +947,20 @@ pub async fn join_account_liquidations(
 
 pub async fn join_adls(from_block: i64, to_block: i64) -> Result<Vec<TradingEvent>> {
     let adl_results = query_adl_results(from_block, to_block).await?;
+    let adls_vec: Vec<TradingEvent> = adl_results
+        .into_iter()
+        .map(TradingEvent::from_adl_result)
+        .collect::<Vec<_>>();
+    Ok(adls_vec)
+}
+
+pub async fn join_adls_with_time(
+    from_block: i64,
+    to_block: i64,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<TradingEvent>> {
+    let adl_results = query_adl_results_with_time(from_block, to_block, from_time, to_time).await?;
     let adls_vec: Vec<TradingEvent> = adl_results
         .into_iter()
         .map(TradingEvent::from_adl_result)

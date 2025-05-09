@@ -19,6 +19,9 @@ use crate::db::{
     liquidation_result::{
         create_liquidation_results, DbLiquidationResult, LiquidationResultVersion,
     },
+    partitioned_executed_trades::{
+        create_partitioned_executed_trades, DbPartitionedExecutedTrades,
+    },
     settlement_execution::{create_settlement_executions, DbSettlementExecution},
     settlement_result::{create_settlement_results, DbSettlementResult},
     transaction_events::{
@@ -44,6 +47,8 @@ pub(crate) async fn consume_logs_from_tx_receipts(
         let mut settlement_result_log_index_queue: VecDeque<i32> = VecDeque::new();
         let mut liquidation_trasfers_cache: Vec<DbLiquidationTransfer> = Vec::new();
         let mut settlement_exectutions_cahce: Vec<DbSettlementExecution> = Vec::new();
+        let mut executed_trades_cache: Vec<DbExecutedTrades> = Vec::new();
+        let mut executed_partitioned_trades_cache: Vec<DbPartitionedExecutedTrades> = Vec::new();
         // 1 (success)
         if receipt.status.unwrap_or_default().as_u64() == 1 {
             for log in &receipt.logs {
@@ -52,6 +57,8 @@ pub(crate) async fn consume_logs_from_tx_receipts(
                     &mut settlement_result_log_index_queue,
                     &mut liquidation_trasfers_cache,
                     &mut settlement_exectutions_cahce,
+                    &mut executed_trades_cache,
+                    &mut executed_partitioned_trades_cache,
                     log.clone(),
                     Some(receipt),
                     Some(block.timestamp.as_u64()),
@@ -79,6 +86,14 @@ pub(crate) async fn consume_logs_from_tx_receipts(
         // excute
         // clean cache
         liquidation_result_log_index_queue.clear();
+
+        if !executed_trades_cache.is_empty() {
+            create_executed_trades(executed_trades_cache).await?;
+        }
+
+        if !executed_partitioned_trades_cache.is_empty() {
+            create_partitioned_executed_trades(executed_partitioned_trades_cache).await?;
+        }
     }
     Ok(())
 }
@@ -94,6 +109,8 @@ pub(crate) async fn consume_tx_and_logs(
         let mut settlement_result_log_index_queue: VecDeque<i32> = VecDeque::new();
         let mut liquidation_trasfers_cache: Vec<DbLiquidationTransfer> = Vec::new();
         let mut settlement_exectutions_cahce: Vec<DbSettlementExecution> = Vec::new();
+        let mut executed_trades_cache: Vec<DbExecutedTrades> = Vec::new();
+        let mut executed_partitioned_trades_cache: Vec<DbPartitionedExecutedTrades> = Vec::new();
         // 1 (success)
 
         for log in logs {
@@ -102,6 +119,8 @@ pub(crate) async fn consume_tx_and_logs(
                 &mut settlement_result_log_index_queue,
                 &mut liquidation_trasfers_cache,
                 &mut settlement_exectutions_cahce,
+                &mut executed_trades_cache,
+                &mut executed_partitioned_trades_cache,
                 log.clone(),
                 None,
                 Some(block.timestamp.as_u64()),
@@ -128,6 +147,14 @@ pub(crate) async fn consume_tx_and_logs(
         // excute
         // clean cache
         liquidation_result_log_index_queue.clear();
+
+        if !executed_trades_cache.is_empty() {
+            create_executed_trades(executed_trades_cache).await?;
+        }
+
+        if !executed_partitioned_trades_cache.is_empty() {
+            create_partitioned_executed_trades(executed_partitioned_trades_cache).await?;
+        }
     }
     Ok(())
 }
@@ -175,7 +202,12 @@ pub(crate) async fn handle_tx_params(
                     block_time: block_t.unwrap_or_default() as i64,
                 })
                 .collect::<Vec<_>>();
+            let partitioned_trades = db_trades
+                .iter()
+                .map(|item| item.clone().into())
+                .collect::<Vec<DbPartitionedExecutedTrades>>();
             create_executed_trades(db_trades).await?;
+            create_partitioned_executed_trades(partitioned_trades).await?;
         }
         operator_managerCalls::EventUpload(event_upload) => {
             let mut settlement_execs: Vec<DbSettlementExecution> =
@@ -431,6 +463,8 @@ pub(crate) async fn handle_log(
     settlement_result_log_index_queue: &mut VecDeque<i32>,
     liquidation_trasfers: &mut Vec<DbLiquidationTransfer>,
     settlement_exectutions: &mut Vec<DbSettlementExecution>,
+    executed_trades_cache: &mut Vec<DbExecutedTrades>,
+    executed_partitioned_trades_cache: &mut Vec<DbPartitionedExecutedTrades>,
     log: Log,
     receipt: Option<&TransactionReceipt>,
     block_t: Option<u64>,
@@ -875,7 +909,6 @@ pub(crate) async fn handle_log(
                         }
                     }
                     user_ledgerEvents::ProcessValidatedFutures1Filter(trade) => {
-                        // todo: update to write in batches
                         let db_trade = DbExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -898,7 +931,8 @@ pub(crate) async fn handle_log(
                             side: trade.side,
                             block_time: block_t.unwrap_or_default() as i64,
                         };
-                        create_executed_trades(vec![db_trade]).await?;
+                        executed_trades_cache.push(db_trade.clone());
+                        executed_partitioned_trades_cache.push(db_trade.into());
                     }
                     user_ledgerEvents::ProcessValidatedFutures2Filter(trade) => {
                         // todo: update to write in batches
@@ -924,7 +958,9 @@ pub(crate) async fn handle_log(
                             side: trade.side,
                             block_time: block_t.unwrap_or_default() as i64,
                         };
-                        create_executed_trades(vec![db_trade]).await?;
+                        executed_trades_cache.push(db_trade.clone());
+                        executed_partitioned_trades_cache.push(db_trade.into());
+                        // create_executed_trades(vec![db_trade]).await?;
                     }
                     user_ledgerEvents::SettlementResultFilter(settlement_res_event) => {
                         // https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_getlogs

@@ -92,6 +92,10 @@ fn default_db_query_limit() -> usize {
     1000
 }
 
+fn default_option_query_from_partitioning_executed_trades() -> bool {
+    false
+}
+
 #[allow(dead_code)]
 #[derive(Clone, Deserialize, Default, Debug)]
 pub struct SolChainConfig {
@@ -114,6 +118,8 @@ pub struct CommonConfigs {
     pub sol_chain_config: SolChainConfig,
     #[serde(default = "default_db_query_limit")]
     pub db_query_limit: usize,
+    #[serde(default = "default_option_query_from_partitioning_executed_trades")]
+    pub option_query_from_partitioning_executed_trades: bool,
 }
 
 impl Display for CommonConfigs {

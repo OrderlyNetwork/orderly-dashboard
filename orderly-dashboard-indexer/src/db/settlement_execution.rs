@@ -140,6 +140,62 @@ pub async fn query_settlement_executions(
     Ok(events)
 }
 
+pub async fn query_settlement_executions_with_time(
+    from_block: i64,
+    to_block: i64,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<DbSettlementExecution>> {
+    use crate::schema::settlement_execution::dsl::*;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_settlement_executions_with_time start",
+    );
+    let start_time = Instant::now();
+
+    let result = settlement_execution
+        .filter(block_number.ge(from_block))
+        .filter(block_number.le(to_block))
+        .filter(block_time.ge(BigDecimal::from(from_time)))
+        .filter(block_time.le(BigDecimal::from(to_time)))
+        .load_async::<DbSettlementExecution>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_settlement_executions success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_settlement_executions success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_settlement_executions fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
 pub async fn query_account_settlement_executions(
     account_id_: String,
     from_time: i64,

@@ -141,6 +141,65 @@ pub async fn query_serial_batches_with_type(
 }
 
 #[allow(dead_code)]
+pub async fn query_serial_batches_with_type_and_time(
+    from_block: i64,
+    to_block: i64,
+    from_time: i64,
+    to_time: i64,
+    serial_typ: SerialBatchType,
+) -> Result<Vec<DbSerialBatches>> {
+    use crate::schema::serial_batches::dsl::*;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_serial_batches_with_type start",
+    );
+    let start_time = Instant::now();
+
+    let result = serial_batches
+        .filter(block_number.ge(from_block))
+        .filter(block_number.le(to_block))
+        .filter(block_time.ge(BigDecimal::from(from_time)))
+        .filter(block_time.le(BigDecimal::from(to_time)))
+        .filter(event_type.eq(serial_typ.value()))
+        .load_async::<DbSerialBatches>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_serial_batches_with_type success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_serial_batches_with_type success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_serial_batches_with_type fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
+#[allow(dead_code)]
 pub async fn query_serial_batches_with_type_by_time(
     from_time: i64,
     to_time: i64,
@@ -334,6 +393,83 @@ async fn query_serial_batches_by_time_and_key_page(
                 tracing::warn!(
                     target: DB_CONTEXT,
                     "query_serial_batches_by_time_and_key_page fail. err:{:?}, used time:{} ms",
+                    error,
+                    dur_ms
+                );
+                Err(error)?
+            }
+        },
+    };
+
+    Ok(events)
+}
+
+pub async fn query_serial_batches_joined_partitioned_trades_with_type_by_time(
+    from_time: i64,
+    to_time: i64,
+    account_id_: String,
+    serial_typ: SerialBatchType,
+) -> Result<Vec<DbSerialBatchesView>> {
+    use diesel::sql_query;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_serial_batches_with_type_by_time start",
+    );
+    let start_time = Instant::now();
+    let result = sql_query(
+        "select
+                serial_t.block_number as block_number,
+                serial_t.transaction_index as transaction_index,
+                serial_t.log_index as log_index,
+                serial_t.transaction_id as transaction_id,
+                serial_t.block_time as block_time,
+                serial_t.batch_id as batch_id,
+                serial_t.event_type as event_type
+              from
+                serial_batches serial_t
+                left join partitioned_executed_trades exec_t on serial_t.block_number = exec_t.block_number
+                and serial_t.transaction_index = exec_t.transaction_index
+              where
+                serial_t.block_time >= $1
+                and serial_t.block_time <= $2
+                and serial_t.event_type = $3
+                and exec_t.block_time >= $4
+                and exec_t.block_time <= $5
+                and exec_t.account_id = $6;",
+    )
+        .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
+        .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
+        .bind::<diesel::sql_types::SmallInt, _>(serial_typ.value())
+        .bind::<diesel::sql_types::BigInt, _>(from_time)
+        .bind::<diesel::sql_types::BigInt, _>(to_time)
+        .bind::<diesel::sql_types::Text, _>(account_id_)
+        .get_results_async::<DbSerialBatchesView>(&POOL)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let events = match result {
+        Ok(events) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_serial_batches_with_type_by_time success. length:{}, used time:{} ms",
+                events.len(),
+                dur_ms
+            );
+            events
+        }
+        Err(error) => match error {
+            AsyncError::Execute(Error::NotFound) => {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_serial_batches_with_type_by_time success. length:0, used time:{} ms",
+                    dur_ms
+                );
+                vec![]
+            }
+            _ => {
+                tracing::warn!(
+                    target: DB_CONTEXT,
+                    "query_serial_batches_with_type_by_time fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );

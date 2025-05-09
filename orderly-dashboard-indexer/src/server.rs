@@ -40,15 +40,15 @@ impl Service {
         let timer = std::time::Instant::now();
         let resp = match self.inner_handle_request(req).await {
             Ok(response) => {
-                tracing::info!(target: API_SERVER, "cefi query url {} success", uri_path);
+                tracing::info!(target: API_SERVER, "query url {} success", uri_path);
                 Ok(response)
             }
             Err(err) => {
                 error!(
                     target: API_SERVER,
-                    "cefi query url {} fail with err:{}", uri_path, err
+                    "query url {} fail with err:{}", uri_path, err
                 );
-                let body = Body::from("Internal server error");
+                let body = Body::from(format!("Internal server error with: {}", err));
                 let mut internal_server_error = Response::new(body);
                 *internal_server_error.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
                 Ok(internal_server_error)

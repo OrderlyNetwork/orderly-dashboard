@@ -3,6 +3,7 @@ pub mod executed_trades;
 pub mod fee_distribution;
 pub mod liquidation_result;
 pub mod liquidation_transfer;
+pub mod partitioned_executed_trades;
 pub mod serial_batches;
 pub mod settings;
 pub mod settlement_execution;
@@ -10,6 +11,8 @@ pub mod settlement_result;
 pub mod sol_transaction_events;
 pub mod symbols_config;
 pub mod transaction_events;
+
+pub mod utils;
 use actix_diesel::Database;
 use diesel::PgConnection;
 use once_cell::sync::{Lazy, OnceCell};
@@ -28,7 +31,7 @@ pub fn establish_connection() -> Database<PgConnection> {
 }
 
 pub static INITED_DATABASE_URL: OnceCell<String> = OnceCell::new();
-pub static POOL_SIZE_CONFIG: AtomicU32 = AtomicU32::new(160);
+pub static POOL_SIZE_CONFIG: AtomicU32 = AtomicU32::new(3);
 
 #[allow(dead_code)]
 pub fn init_database_setting(database_url: String, pool_size: u32) {
