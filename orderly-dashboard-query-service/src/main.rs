@@ -1,3 +1,4 @@
+#![allow(non_local_definitions)]
 mod monitor;
 
 use actix_cors::Cors;

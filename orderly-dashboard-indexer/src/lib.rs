@@ -1,3 +1,5 @@
+#![allow(non_local_definitions)]
+
 #[allow(dead_code)]
 pub mod api;
 pub mod consume_data_task;

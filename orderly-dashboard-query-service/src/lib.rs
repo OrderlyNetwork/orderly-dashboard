@@ -1,3 +1,4 @@
+#![allow(non_local_definitions)]
 pub mod config;
 pub mod db;
 pub mod error_code;

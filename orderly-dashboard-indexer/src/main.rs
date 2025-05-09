@@ -1,3 +1,5 @@
+#![allow(non_local_definitions)]
+
 mod api;
 mod bindings;
 #[allow(dead_code)]
