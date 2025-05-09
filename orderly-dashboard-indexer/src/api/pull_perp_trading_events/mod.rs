@@ -22,6 +22,16 @@ pub async fn pull_perp_trading_events(
         .get("from_block")
         .context("param from_block not found")?;
     let to_block = params.get("to_block").context("param to_block not found")?;
+    let from_time = if let Some(from_time) = params.get("from_time") {
+        Some(from_time.parse::<i64>()?)
+    } else {
+        None
+    };
+    let to_time = if let Some(to_time) = params.get("to_time") {
+        Some(to_time.parse::<i64>()?)
+    } else {
+        None
+    };
     let e_type = if let Some(event_type) = params.get("event_type") {
         let event_type = "\"".to_string() + event_type + "\"";
         match serde_json::from_str::<TradingEventType>(&event_type) {
@@ -36,9 +46,14 @@ pub async fn pull_perp_trading_events(
     } else {
         None
     };
-    let response =
-        filter_join::perp_trading_join_events(from_block.parse()?, to_block.parse()?, e_type)
-            .await?;
+    let response = filter_join::perp_trading_join_events(
+        from_time,
+        to_time,
+        from_block.parse()?,
+        to_block.parse()?,
+        e_type,
+    )
+    .await?;
     Ok(Response::Success(SuccessResponse::new(response)))
 }
 

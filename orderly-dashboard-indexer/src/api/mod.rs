@@ -17,7 +17,11 @@ pub use pull_perp_trading_events::{
     pull_perp_trading_events, pull_perp_trading_events_by_account,
     pull_perp_trading_events_by_account_v2, pull_sol_events, pull_sol_events_by_account,
 };
+use std::sync::atomic::AtomicBool;
 pub use symbols_config::get_symbols_data;
+
+pub(crate) static MIGRATE_TRADES_FINISHED_AND_QUERY_FROM_PARTITIONING: AtomicBool =
+    AtomicBool::new(false);
 
 pub async fn get_status() -> Result<Response<serde_json::Value>> {
     let data = serde_json::json!({

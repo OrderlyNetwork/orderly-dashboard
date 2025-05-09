@@ -3,6 +3,7 @@ use crate::db::adl_result::DbAdlResult;
 use crate::db::executed_trades::DbExecutedTrades;
 use crate::db::liquidation_result::{DbLiquidationResult, LiquidationResultVersion};
 use crate::db::liquidation_transfer::DbLiquidationTransfer;
+use crate::db::partitioned_executed_trades::DbPartitionedExecutedTrades;
 use crate::db::serial_batches::{DbSerialBatches, DbSerialBatchesView};
 use crate::db::settlement_execution::{DbSettlementExecution, DbSettlementExecutionView};
 use crate::db::settlement_result::DbSettlementResult;
@@ -111,9 +112,47 @@ impl TradingEvent {
         }
     }
 
+    pub fn from_serial_batch_and_partitioned_trades(
+        value: DbSerialBatches,
+        mut trades: Vec<DbPartitionedExecutedTrades>,
+    ) -> TradingEvent {
+        trades.sort_by(|a, b| a.log_index.cmp(&b.log_index));
+        let trades: Vec<Trade> = trades.into_iter().map(Into::into).collect::<Vec<_>>();
+        TradingEvent {
+            block_number: value.block_number as u64,
+            transaction_index: value.transaction_index as u32,
+            log_index: value.log_index as u32,
+            transaction_id: value.transaction_id.clone(),
+            block_timestamp: value.block_time.to_u64().unwrap_or_default(),
+            data: TradingEventInnerData::ProcessedTrades {
+                batch_id: value.batch_id as u64,
+                trades,
+            },
+        }
+    }
+
     pub fn from_view_serial_batch_and_trades(
         value: DbSerialBatchesView,
         mut trades: Vec<DbExecutedTrades>,
+    ) -> TradingEvent {
+        trades.sort_by(|a, b| a.log_index.cmp(&b.log_index));
+        let trades: Vec<Trade> = trades.into_iter().map(Into::into).collect::<Vec<_>>();
+        TradingEvent {
+            block_number: value.block_number as u64,
+            transaction_index: value.transaction_index as u32,
+            log_index: value.log_index as u32,
+            transaction_id: value.transaction_id.clone(),
+            block_timestamp: value.block_time.to_u64().unwrap_or_default(),
+            data: TradingEventInnerData::ProcessedTrades {
+                batch_id: value.batch_id as u64,
+                trades,
+            },
+        }
+    }
+
+    pub fn from_view_serial_batch_and_partitioned_trades(
+        value: DbSerialBatchesView,
+        mut trades: Vec<DbPartitionedExecutedTrades>,
     ) -> TradingEvent {
         trades.sort_by(|a, b| a.log_index.cmp(&b.log_index));
         let trades: Vec<Trade> = trades.into_iter().map(Into::into).collect::<Vec<_>>();
@@ -385,6 +424,29 @@ pub struct Trade {
 
 impl From<DbExecutedTrades> for Trade {
     fn from(value: DbExecutedTrades) -> Self {
+        Trade {
+            account_id: value.account_id,
+            symbol_hash: value.symbol_hash,
+            fee_asset_hash: value.fee_asset_hash,
+            trade_qty: value.trade_qty.to_string(),
+            notional: value.notional.to_string(),
+            executed_price: value.executed_price.to_string(),
+            fee: value.fee.to_string(),
+            sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
+            trade_id: value.trade_id.to_u64().unwrap_or_default(),
+            match_id: value.match_id.to_u64().unwrap_or_default(),
+            timestamp: value.timestamp.to_u64().unwrap_or_default(),
+            side: if value.side {
+                PurchaseSide::Sell
+            } else {
+                PurchaseSide::Buy
+            },
+        }
+    }
+}
+
+impl From<DbPartitionedExecutedTrades> for Trade {
+    fn from(value: DbPartitionedExecutedTrades) -> Self {
         Trade {
             account_id: value.account_id,
             symbol_hash: value.symbol_hash,

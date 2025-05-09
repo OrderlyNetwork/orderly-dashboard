@@ -27,6 +27,9 @@ use anyhow::Result;
 use clap::Parser;
 use dotenv::dotenv;
 
+use crate::handler::check_or_create_new_partition::{
+    check_or_create_executed_trades_partition, migrate_executed_trades_data,
+};
 use crate::{
     consume_data_task::{consume_data_task, ORDERLY_DASHBOARD_INDEXER},
     db::settings::update_last_sol_syn_signature,
@@ -61,6 +64,14 @@ fn main() -> Result<()> {
                     update_last_sol_syn_signature,
                 )
             ));
+        }
+        if let Err(err) = check_or_create_executed_trades_partition().await {
+            tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "check_or_create_executed_trades_partition failed with err: {}, exit", err);
+            return;
+        }
+        if let Err(err) = migrate_executed_trades_data(config.option_query_from_partitioning_executed_trades).await {
+            tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "migrate_executed_trades_data failed with err: {}, exit", err);
+            return;
         }
         let early_stop = opts.end_block.is_some() && opts.start_block.is_none() && opts.end_block.unwrap_or_default() < opts.start_block.unwrap_or_default();
         if early_stop {
