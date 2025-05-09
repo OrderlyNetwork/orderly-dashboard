@@ -48,7 +48,7 @@ impl PartitionBounds {
     pub fn new_from_year_quarter(year_quarter: u64) -> PartitionBounds {
         let year = year_quarter / 100;
         let month_start = (year_quarter % 100 - 1) * 3 + 1;
-        let (to_year, to_month) = if month_start < 12 {
+        let (to_year, to_month) = if month_start < 10 {
             (year, month_start + 3)
         } else {
             (year + 1, 1)
@@ -124,22 +124,22 @@ mod tests {
 
     #[test]
     fn test_partition_bounds() {
-        let year_month = 202408;
-        let partition_bounds = PartitionBounds::new_from_year_quarter(year_month);
+        let year_quarter = 202403;
+        let partition_bounds = PartitionBounds::new_from_year_quarter(year_quarter);
         println!(
             "partition_bounds for year_month: {} is {:?}",
-            year_month, partition_bounds
+            year_quarter, partition_bounds
         );
-        assert_eq!(partition_bounds.from_bound, "2024-08-01 00:00:00");
-        assert_eq!(partition_bounds.to_bound, "2024-09-01 00:00:00");
+        assert_eq!(partition_bounds.from_bound, "2024-07-01 00:00:00");
+        assert_eq!(partition_bounds.to_bound, "2024-10-01 00:00:00");
 
-        let year_month = 202312;
+        let year_month = 202304;
         let partition_bounds = PartitionBounds::new_from_year_quarter(year_month);
         println!(
             "partition_bounds for year_month: {} is {:?}",
             year_month, partition_bounds
         );
-        assert_eq!(partition_bounds.from_bound, "2023-12-01 00:00:00");
+        assert_eq!(partition_bounds.from_bound, "2023-10-01 00:00:00");
         assert_eq!(partition_bounds.to_bound, "2024-01-01 00:00:00");
     }
 }
