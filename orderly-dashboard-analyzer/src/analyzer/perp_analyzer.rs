@@ -16,7 +16,6 @@ use crate::db::user_perp_summary::UserPerpSummaryKey;
 const PERP_ANALYZER: &str = "perp-trade-analyzer";
 pub async fn analyzer_perp_trade(
     trades: Vec<Trade>,
-    pulled_block_time: NaiveDateTime,
     pulled_block_height: i64,
     context: &mut AnalyzeContext,
 ) -> i64 {
@@ -48,7 +47,6 @@ pub async fn analyzer_perp_trade(
                 (fixed_fee.clone()).abs(),
                 (fixed_notional.clone()).abs(),
                 pulled_block_height.clone(),
-                pulled_block_time.clone(),
             );
         }
 
@@ -60,7 +58,6 @@ pub async fn analyzer_perp_trade(
                 (fixed_fee.clone()).abs(),
                 (fixed_notional.clone()).abs(),
                 pulled_block_height.clone(),
-                pulled_block_time.clone(),
                 perp_trade.side.clone(),
             );
         }
@@ -77,7 +74,8 @@ pub async fn analyzer_perp_trade(
 
         let suf: BigDecimal = perp_trade.sum_unitary_fundings.parse().unwrap();
 
-        user_perp_snap.charge_funding_fee(suf.div(get_unitary_prec()));
+        // should no check and update log idx for charge funding fee
+        user_perp_snap.charge_funding_fee(suf.div(get_unitary_prec()), pulled_block_height);
         let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
             fixed_qty.clone(),
             fixed_notional.clone(),
@@ -90,7 +88,6 @@ pub async fn analyzer_perp_trade(
                 fixed_fee.clone(),
                 fixed_notional.clone(),
                 pulled_block_height.clone(),
-                pulled_block_time.clone(),
                 open_cost_diff.clone(),
                 fixed_qty.clone(),
             );
@@ -101,7 +98,10 @@ pub async fn analyzer_perp_trade(
                     .new_opening();
             }
             if new_user {
-                context.get_orderly_perp(&perp_symbol).await.new_user();
+                context
+                    .get_orderly_perp(&perp_symbol)
+                    .await
+                    .new_user(pulled_block_height);
             }
         }
 
@@ -118,7 +118,6 @@ pub async fn analyzer_perp_trade(
                 fixed_fee,
                 fixed_notional,
                 pulled_block_height.clone(),
-                pulled_block_time.clone(),
                 pnl_diff,
             );
 

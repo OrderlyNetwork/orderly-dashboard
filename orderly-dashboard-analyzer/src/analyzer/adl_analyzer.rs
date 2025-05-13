@@ -18,7 +18,6 @@ pub async fn analyzer_adl(
     adl_price: String,
     sum_unitary_fundings: String,
     block_hour: NaiveDateTime,
-    pulled_block_time: NaiveDateTime,
     block_num: i64,
     context: &mut AnalyzeContext,
 ) {
@@ -36,11 +35,8 @@ pub async fn analyzer_adl(
     {
         let key = HourlyOrderlyPerpKey::new_key(symbol_hash.clone(), block_hour.clone());
         let hourly_orderly_perp = context.get_hourly_orderly_perp(&key).await;
-        hourly_orderly_perp.new_liquidation(
-            fixed_adl_perice.clone() * fixed_adl_qty.clone(),
-            block_num,
-            pulled_block_time.clone(),
-        );
+        hourly_orderly_perp
+            .new_liquidation(fixed_adl_perice.clone() * fixed_adl_qty.clone(), block_num);
     }
 
     let user_perp_key = UserPerpSummaryKey {
@@ -62,20 +58,18 @@ pub async fn analyzer_adl(
         hourly_user_perp.new_liquidation(
             fixed_adl_perice.clone() * fixed_adl_qty.clone(),
             block_num,
-            pulled_block_time.clone(),
             pnl_diff,
         );
     }
 
     {
         let user_perp_summary = context.get_user_perp(&user_perp_key).await;
-        user_perp_summary.charge_funding_fee(fixed_sum_unitary_fundings.clone());
+        user_perp_summary.charge_funding_fee(fixed_sum_unitary_fundings.clone(), block_num);
 
         user_perp_summary.new_liquidation(
             adl_qty.clone(),
             adl_price.clone(),
             block_num,
-            pulled_block_time.clone(),
             cpt.clone(),
             fixed_sum_unitary_fundings,
             open_cost_diff,

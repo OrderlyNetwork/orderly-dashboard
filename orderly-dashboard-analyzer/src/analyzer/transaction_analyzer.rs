@@ -23,7 +23,6 @@ pub async fn analyzer_transaction(
     token_amount: String,
     block_hour: &NaiveDateTime,
     block_number: i64,
-    block_time: NaiveDateTime,
     context: &mut AnalyzeContext,
     sender: String,
     broker_hash: String,
@@ -65,9 +64,9 @@ pub async fn analyzer_transaction(
         };
         let hourly_user_token = context.get_hourly_user_token(&key).await;
         if deposit {
-            hourly_user_token.deposit(fixed_amount.clone(), block_number, block_time);
+            hourly_user_token.deposit(fixed_amount.clone(), block_number);
         } else {
-            hourly_user_token.withdraw(fixed_amount.clone(), block_number, block_time);
+            hourly_user_token.withdraw(fixed_amount.clone(), block_number);
         }
     }
 
@@ -80,9 +79,9 @@ pub async fn analyzer_transaction(
 
         let hourly_orderly_token = context.get_hourly_orderly_token(&key).await;
         if deposit {
-            hourly_orderly_token.deposit(fixed_amount.clone(), block_number, block_time);
+            hourly_orderly_token.deposit(fixed_amount.clone(), block_number);
         } else {
-            hourly_orderly_token.withdraw(fixed_amount.clone(), block_number, block_time);
+            hourly_orderly_token.withdraw(fixed_amount.clone(), block_number);
         }
     }
 
@@ -93,9 +92,9 @@ pub async fn analyzer_transaction(
         };
         let orderly_token = context.get_orderly_token(&key).await;
         if deposit {
-            orderly_token.deposit(fixed_amount.clone(), block_number, block_time);
+            orderly_token.deposit(fixed_amount.clone(), block_number);
         } else {
-            orderly_token.withdraw(fixed_amount.clone(), block_number, block_time);
+            orderly_token.withdraw(fixed_amount.clone(), block_number);
         }
     }
     {
@@ -106,9 +105,9 @@ pub async fn analyzer_transaction(
         };
         let user_token = context.get_user_token(&key).await;
         if deposit {
-            user_token.deposit(fixed_amount.clone(), block_number, block_time);
+            user_token.deposit(fixed_amount.clone(), block_number);
         } else {
-            user_token.withdraw(fixed_amount.clone(), block_number, block_time);
+            user_token.withdraw(fixed_amount.clone(), block_number);
         }
     }
 }

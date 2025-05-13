@@ -35,32 +35,25 @@ pub struct HourlyOrderlyPerp {
 }
 
 impl HourlyOrderlyPerp {
-    pub fn new_liquidation(
-        &mut self,
-        liquidation_amount: BigDecimal,
-        block_num: i64,
-        block_time: NaiveDateTime,
-    ) {
+    pub fn new_liquidation(&mut self, liquidation_amount: BigDecimal, block_num: i64) {
+        if block_num < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.liquidation_count += 1;
         self.liquidation_amount += liquidation_amount.abs();
-        self.pulled_block_time = block_time;
-        self.pulled_block_height = block_num;
     }
 }
 
 impl HourlyOrderlyPerp {
-    pub fn new_trade(
-        &mut self,
-        fee: BigDecimal,
-        amount: BigDecimal,
-        pulled_block_height: i64,
-        pulled_block_time: NaiveDateTime,
-    ) {
+    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64) {
+        if pulled_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.trading_fee += fee;
         self.trading_volume += amount.abs();
         self.trading_count += 1;
-        self.pulled_block_height = pulled_block_height;
-        self.pulled_block_time = pulled_block_time;
     }
 
     pub fn new_opening(&mut self) {

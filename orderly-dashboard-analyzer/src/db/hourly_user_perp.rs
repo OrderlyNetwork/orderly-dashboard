@@ -29,8 +29,8 @@ pub struct HourlyUserPerp {
     liquidation_amount: BigDecimal,
     liquidation_count: i64,
 
-    pulled_block_height: i64,
-    pulled_block_time: NaiveDateTime,
+    pub pulled_block_height: i64,
+    pub pulled_block_time: NaiveDateTime,
 }
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
@@ -56,16 +56,17 @@ impl HourlyUserPerp {
         fee: BigDecimal,
         amount: BigDecimal,
         pulled_block_height: i64,
-        pulled_block_time: NaiveDateTime,
         realized_pnl: BigDecimal,
     ) -> bool {
+        if pulled_block_height < self.pulled_block_height {
+            // already processed this block events
+            return false;
+        }
         let new_hourly_user = self.trading_count == 0;
 
         self.trading_fee += fee;
         self.trading_volume += amount.abs();
         self.trading_count += 1;
-        self.pulled_block_height = pulled_block_height;
-        self.pulled_block_time = pulled_block_time;
         self.realized_pnl += realized_pnl;
 
         new_hourly_user
@@ -76,17 +77,22 @@ impl HourlyUserPerp {
         &mut self,
         liquidation_amount: BigDecimal,
         block_num: i64,
-        block_time: NaiveDateTime,
         realized_pnl: BigDecimal,
     ) {
+        if block_num < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.liquidation_count += 1;
         self.liquidation_amount += liquidation_amount.abs();
-        self.pulled_block_time = block_time;
-        self.pulled_block_height = block_num;
         self.realized_pnl += realized_pnl;
     }
 
-    pub fn new_realized_pnl(&mut self, pnl: BigDecimal) {
+    pub fn new_realized_pnl(&mut self, pnl: BigDecimal, block_num: i64) {
+        if block_num < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.realized_pnl += pnl;
     }
 }
