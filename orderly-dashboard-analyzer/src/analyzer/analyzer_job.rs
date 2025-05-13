@@ -152,7 +152,6 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             token_amount,
                             &block_hour,
                             block_num,
-                            block_time.clone(),
                             &mut context,
                             receiver,
                             broker_hash,
@@ -163,8 +162,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         batch_id: _,
                         trades,
                     } => {
-                        let trade_id =
-                            analyzer_perp_trade(trades, block_time, block_num, &mut context).await;
+                        let trade_id = analyzer_perp_trade(trades, block_num, &mut context).await;
                         latest_perp_trade_id = max(latest_perp_trade_id, trade_id);
                     }
                     TradingEventInnerData::SettlementResult {
@@ -184,7 +182,6 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             settlement_executions,
                             block_hour,
                             block_num,
-                            block_time.clone(),
                             &mut context,
                         )
                         .await
@@ -225,7 +222,6 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             adl_price,
                             sum_unitary_fundings,
                             block_hour,
-                            block_time.clone(),
                             block_num,
                             &mut context,
                         )
@@ -265,7 +261,6 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                             adl_price,
                             sum_unitary_fundings,
                             block_hour,
-                            block_time.clone(),
                             block_num,
                             &mut context,
                         )
@@ -277,7 +272,12 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
         Response::Failure(_) => {}
     }
 
-    context.save_analyze_result().await;
+    context
+        .save_analyze_result(
+            latest_block_height,
+            NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap(),
+        )
+        .await;
     (pulled_block_time, latest_block_height, latest_perp_trade_id)
 }
 

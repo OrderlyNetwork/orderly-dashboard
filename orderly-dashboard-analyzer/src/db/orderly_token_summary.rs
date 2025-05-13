@@ -30,31 +30,25 @@ pub struct OrderlyTokenSummary {
 
 impl OrderlyTokenSummary {
     #[allow(duplicate_macro_attributes)]
-    pub fn deposit(
-        &mut self,
-        p_deposit_amount: BigDecimal,
-        p_block_height: i64,
-        p_block_time: NaiveDateTime,
-    ) {
+    pub fn deposit(&mut self, p_deposit_amount: BigDecimal, p_block_height: i64) {
+        if p_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.total_deposit_amount += p_deposit_amount.clone();
         self.total_deposit_count += 1;
         self.balance += p_deposit_amount.clone().abs();
-        self.pulled_block_height = p_block_height;
-        self.pulled_block_time = p_block_time;
     }
 
     #[allow(duplicate_macro_attributes)]
-    pub fn withdraw(
-        &mut self,
-        p_withdraw_amount: BigDecimal,
-        p_block_height: i64,
-        p_block_time: NaiveDateTime,
-    ) {
+    pub fn withdraw(&mut self, p_withdraw_amount: BigDecimal, p_block_height: i64) {
+        if p_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.total_withdraw_amount += p_withdraw_amount.clone();
         self.total_withdraw_count += 1;
         self.balance -= p_withdraw_amount.clone();
-        self.pulled_block_height = p_block_height;
-        self.pulled_block_time = p_block_time;
     }
 }
 

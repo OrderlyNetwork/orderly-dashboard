@@ -129,6 +129,7 @@ pub async fn analyzer_liquidation_v2(
         &insurance_transfer_amount,
         context,
         liquidated_account_id.clone(),
+        block_num,
     )
     .await;
 
@@ -169,6 +170,7 @@ pub async fn analyzer_liquidation_v1(
         &insurance_transfer_amount,
         context,
         liquidated_account_id.clone(),
+        block_num,
     )
     .await;
 
@@ -203,7 +205,6 @@ async fn statistics_for_orderly(liquidation: &Liquidation, context: &mut Analyze
     h_orderly_perp.new_liquidation(
         (liquidation.qty_transfer.clone()) * (liquidation.mark_price.clone()),
         liquidation.block_num,
-        liquidation.block_time.clone(),
     );
 
     let orderly_perp = context
@@ -212,7 +213,6 @@ async fn statistics_for_orderly(liquidation: &Liquidation, context: &mut Analyze
     orderly_perp.new_liquidation(
         liquidation.qty_transfer.clone() * liquidation.mark_price.clone(),
         liquidation.block_num,
-        liquidation.block_time.clone(),
     );
 }
 
@@ -223,7 +223,10 @@ async fn execute_for_liquidator(liquidation: &Liquidation, context: &mut Analyze
     );
 
     let user_perp = context.get_user_perp(&liquidator_key.clone()).await;
-    user_perp.charge_funding_fee(liquidation.sum_unitry_funding.clone());
+    user_perp.charge_funding_fee(
+        liquidation.sum_unitry_funding.clone(),
+        liquidation.block_num,
+    );
 
     let user_perp_snap = user_perp.clone();
     let (liquidator_open_cost_diff, liquidator_pnl_diff) = RealizedPnl::calc_realized_pnl(
@@ -237,6 +240,7 @@ async fn execute_for_liquidator(liquidation: &Liquidation, context: &mut Analyze
     user_perp.new_liquidator(
         liquidation.qty_transfer.clone(),
         liquidator_open_cost_diff.clone(),
+        liquidation.block_num,
     );
 
     let h_perp_key = HourlyUserPerpKey::new_key(
@@ -246,7 +250,7 @@ async fn execute_for_liquidator(liquidation: &Liquidation, context: &mut Analyze
     );
 
     let h_user_perp = context.get_hourly_user_perp(&h_perp_key).await;
-    h_user_perp.new_realized_pnl(liquidator_pnl_diff.clone());
+    h_user_perp.new_realized_pnl(liquidator_pnl_diff.clone(), liquidation.block_num);
 }
 
 async fn execute_for_liquidated(liquidation: &Liquidation, context: &mut AnalyzeContext) {
@@ -256,7 +260,10 @@ async fn execute_for_liquidated(liquidation: &Liquidation, context: &mut Analyze
     );
 
     let user_perp = context.get_user_perp(&key.clone()).await;
-    user_perp.charge_funding_fee(liquidation.sum_unitry_funding.clone());
+    user_perp.charge_funding_fee(
+        liquidation.sum_unitry_funding.clone(),
+        liquidation.block_num,
+    );
 
     let user_perp_snap = user_perp.clone();
     let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
@@ -272,7 +279,6 @@ async fn execute_for_liquidated(liquidation: &Liquidation, context: &mut Analyze
         liquidation.qty_transfer.clone(),
         liquidation.mark_price.clone(),
         liquidation.block_num,
-        liquidation.block_time.clone(),
         liquidation.cost_position_transfer.clone(),
         liquidation.sum_unitry_funding.clone(),
         open_cost_diff.clone(),
@@ -287,7 +293,6 @@ async fn execute_for_liquidated(liquidation: &Liquidation, context: &mut Analyze
     h_user_perp.new_liquidation(
         (liquidation.qty_transfer.clone()) * (liquidation.mark_price.clone()),
         liquidation.block_num,
-        liquidation.block_time.clone(),
         pnl_diff.clone(),
     );
 }
@@ -296,6 +301,7 @@ async fn transfer_insurance_fund(
     insurance_transfer_amount: &String,
     context: &mut AnalyzeContext,
     liquidated_account_id: String,
+    p_block_height: i64,
 ) {
     let need_transfer_amount: BigDecimal = insurance_transfer_amount
         .parse()
@@ -303,12 +309,23 @@ async fn transfer_insurance_fund(
     if need_transfer_amount != BigDecimal::from(0) {
         let fixed_amount = need_transfer_amount.div(get_cost_position_prec());
         {
-            transfer_amount(liquidated_account_id.clone(), context, fixed_amount.clone()).await;
+            transfer_amount(
+                liquidated_account_id.clone(),
+                context,
+                fixed_amount.clone(),
+                p_block_height,
+            )
+            .await;
         }
     }
 }
 
-async fn transfer_amount(account_id: String, context: &mut AnalyzeContext, amount: BigDecimal) {
+async fn transfer_amount(
+    account_id: String,
+    context: &mut AnalyzeContext,
+    amount: BigDecimal,
+    p_block_height: i64,
+) {
     let key = UserTokenSummaryKey {
         account_id: account_id.clone(),
         token: String::from(USDC_HASH),
@@ -316,5 +333,8 @@ async fn transfer_amount(account_id: String, context: &mut AnalyzeContext, amoun
     };
 
     let user_token = context.get_user_token(&key).await;
-    user_token.add_amount(amount.abs().neg());
+    if p_block_height < user_token.pulled_block_height {
+        return;
+    }
+    user_token.add_amount(amount.abs().neg(), p_block_height);
 }

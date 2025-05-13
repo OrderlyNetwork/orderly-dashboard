@@ -25,24 +25,21 @@ pub struct OrderlyPerpSummary {
     total_liquidation_amount: BigDecimal,
     total_liquidation_count: i64,
 
-    pulled_block_height: i64,
-    pulled_block_time: NaiveDateTime,
+    pub pulled_block_height: i64,
+    pub pulled_block_time: NaiveDateTime,
 
     buy_amount: BigDecimal,
     sell_amount: BigDecimal,
 }
 
 impl OrderlyPerpSummary {
-    pub fn new_liquidation(
-        &mut self,
-        liquidation_amount: BigDecimal,
-        block_num: i64,
-        block_time: NaiveDateTime,
-    ) {
+    pub fn new_liquidation(&mut self, liquidation_amount: BigDecimal, block_num: i64) {
+        if block_num < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.total_liquidation_amount += liquidation_amount;
         self.total_liquidation_count += 1;
-        self.pulled_block_height = block_num;
-        self.pulled_block_time = block_time;
     }
 }
 
@@ -52,14 +49,15 @@ impl OrderlyPerpSummary {
         fee: BigDecimal,
         amount: BigDecimal,
         pulled_block_height: i64,
-        pulled_block_time: NaiveDateTime,
         side: PurchaseSide,
     ) {
+        if pulled_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.total_trading_fee += fee;
         self.total_trading_volume += amount.clone().abs();
         self.total_trading_count += 1;
-        self.pulled_block_height = pulled_block_height;
-        self.pulled_block_time = pulled_block_time;
 
         match side {
             PurchaseSide::Buy => {
@@ -71,7 +69,11 @@ impl OrderlyPerpSummary {
         }
     }
 
-    pub fn new_user(&mut self) {
+    pub fn new_user(&mut self, pulled_block_height: i64) {
+        if pulled_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.total_trading_user_count += 1;
     }
 }

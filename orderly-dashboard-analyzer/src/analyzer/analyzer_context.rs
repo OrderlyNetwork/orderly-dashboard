@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use chrono::NaiveDateTime;
+
 use crate::db::hourly_orderly_perp::{
     create_or_update_hourly_orderly_perp, find_hourly_orderly_perp, HourlyOrderlyPerp,
     HourlyOrderlyPerpKey,
@@ -61,47 +63,82 @@ impl AnalyzeContext {
         }
     }
 
-    pub async fn save_analyze_result(&mut self) {
-        create_or_update_hourly_user_perp(Vec::from_iter(
-            self.hourly_user_perp_cache.values().into_iter(),
-        ))
-        .await
-        .unwrap();
+    pub async fn save_analyze_result(
+        &mut self,
+        pulled_block_height: i64,
+        pulled_block_time: NaiveDateTime,
+    ) {
+        self.hourly_user_perp_cache.iter_mut().for_each(|(_k, v)| {
+            v.pulled_block_height = pulled_block_height;
+            v.pulled_block_time = pulled_block_time;
+        });
+        create_or_update_hourly_user_perp(Vec::from_iter(self.hourly_user_perp_cache.values()))
+            .await
+            .unwrap();
+
+        self.hourly_orderly_perp_cache
+            .iter_mut()
+            .for_each(|(_k, v)| {
+                v.pulled_block_height = pulled_block_height;
+                v.pulled_block_time = pulled_block_time;
+            });
         create_or_update_hourly_orderly_perp(Vec::from_iter(
-            self.hourly_orderly_perp_cache.values().into_iter(),
+            self.hourly_orderly_perp_cache.values(),
         ))
         .await
         .unwrap();
-        create_or_update_orderly_perp_summary(Vec::from_iter(
-            self.orderly_perp_cache.values().into_iter(),
-        ))
-        .await
-        .unwrap();
-        create_or_update_user_perp_summary(Vec::from_iter(
-            self.user_perp_cache.values().into_iter(),
-        ))
-        .await
-        .unwrap();
+
+        self.orderly_perp_cache.iter_mut().for_each(|(_k, v)| {
+            v.pulled_block_height = pulled_block_height;
+            v.pulled_block_time = pulled_block_time;
+        });
+        create_or_update_orderly_perp_summary(Vec::from_iter(self.orderly_perp_cache.values()))
+            .await
+            .unwrap();
+
+        self.user_perp_cache.iter_mut().for_each(|(_k, v)| {
+            v.pulled_block_height = pulled_block_height;
+            v.pulled_block_time = pulled_block_time;
+        });
+        create_or_update_user_perp_summary(Vec::from_iter(self.user_perp_cache.values()))
+            .await
+            .unwrap();
+
+        self.hourly_orderly_token_cache
+            .iter_mut()
+            .for_each(|(_k, v)| {
+                v.pulled_block_height = pulled_block_height;
+                v.pulled_block_time = pulled_block_time;
+            });
         create_or_update_hourly_orderly_token(Vec::from_iter(
-            self.hourly_orderly_token_cache.values().into_iter(),
+            self.hourly_orderly_token_cache.values(),
         ))
         .await
         .unwrap();
-        create_or_update_hourly_user_token(Vec::from_iter(
-            self.hourly_user_token_cache.values().into_iter(),
-        ))
-        .await
-        .unwrap();
-        create_or_update_user_token_summary(Vec::from_iter(
-            self.user_token_cache.values().into_iter(),
-        ))
-        .await
-        .unwrap();
-        create_or_update_orderly_token_summary(Vec::from_iter(
-            self.orderly_token_cache.values().into_iter(),
-        ))
-        .await
-        .unwrap();
+
+        self.hourly_user_token_cache.iter_mut().for_each(|(_k, v)| {
+            v.pulled_block_height = pulled_block_height;
+            v.pulled_block_time = pulled_block_time;
+        });
+        create_or_update_hourly_user_token(Vec::from_iter(self.hourly_user_token_cache.values()))
+            .await
+            .unwrap();
+
+        self.user_token_cache.iter_mut().for_each(|(_k, v)| {
+            v.pulled_block_height = pulled_block_height;
+            v.pulled_block_time = pulled_block_time;
+        });
+        create_or_update_user_token_summary(Vec::from_iter(self.user_token_cache.values()))
+            .await
+            .unwrap();
+
+        self.orderly_token_cache.iter_mut().for_each(|(_k, v)| {
+            v.pulled_block_height = pulled_block_height;
+            v.pulled_block_time = pulled_block_time;
+        });
+        create_or_update_orderly_token_summary(Vec::from_iter(self.orderly_token_cache.values()))
+            .await
+            .unwrap();
     }
 }
 

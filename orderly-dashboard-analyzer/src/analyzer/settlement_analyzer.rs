@@ -19,7 +19,6 @@ pub async fn analyzer_settlement(
     settlement_executions: Vec<SettlementExecution>,
     _block_hour: NaiveDateTime,
     pulled_block_height: i64,
-    pulled_block_time: NaiveDateTime,
     context: &mut AnalyzeContext,
 ) {
     tracing::info!(target:SETTLEMENT_ANALYZER," receive settlement,account:{},settlement:{:?}",account_id.clone(),settlement_executions);
@@ -32,7 +31,7 @@ pub async fn analyzer_settlement(
     let settle_token: BigDecimal = settled_amount.parse().unwrap();
     let fixed_amount = settle_token.div(get_cost_position_prec());
     let user_token = context.get_user_token(&key).await;
-    user_token.new_settlement(fixed_amount, pulled_block_height, pulled_block_time.clone());
+    user_token.new_settlement(fixed_amount, pulled_block_height);
 
     for settlement in settlement_executions {
         let user_perp_summary_key = UserPerpSummaryKey {
@@ -50,7 +49,7 @@ pub async fn analyzer_settlement(
         let cost_position_diff: BigDecimal = settlement.settled_amount.parse().unwrap();
         let fixed_cost_position_diff = cost_position_diff.div(get_cost_position_prec());
 
-        user_perp_snap.charge_funding_fee(fixed_sum_unitary_fundings);
-        user_perp_snap.new_settlemnt(fixed_cost_position_diff);
+        user_perp_snap.charge_funding_fee(fixed_sum_unitary_fundings, pulled_block_height);
+        user_perp_snap.new_settlemnt(fixed_cost_position_diff, pulled_block_height);
     }
 }

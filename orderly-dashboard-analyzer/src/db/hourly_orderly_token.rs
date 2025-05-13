@@ -29,28 +29,22 @@ pub struct HourlyOrderlyToken {
 }
 
 impl HourlyOrderlyToken {
-    pub fn deposit(
-        &mut self,
-        p_deposit_amount: BigDecimal,
-        p_block_height: i64,
-        p_block_time: NaiveDateTime,
-    ) {
+    pub fn deposit(&mut self, p_deposit_amount: BigDecimal, p_block_height: i64) {
+        if p_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.deposit_amount += p_deposit_amount;
         self.deposit_count += 1;
-        self.pulled_block_time = p_block_time;
-        self.pulled_block_height = p_block_height;
     }
 
-    pub fn withdraw(
-        &mut self,
-        p_withdraw_amount: BigDecimal,
-        p_block_height: i64,
-        p_block_time: NaiveDateTime,
-    ) {
+    pub fn withdraw(&mut self, p_withdraw_amount: BigDecimal, p_block_height: i64) {
+        if p_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.withdraw_amount += p_withdraw_amount;
         self.deposit_count += 1;
-        self.pulled_block_time = p_block_time;
-        self.pulled_block_height = p_block_height;
     }
 }
 

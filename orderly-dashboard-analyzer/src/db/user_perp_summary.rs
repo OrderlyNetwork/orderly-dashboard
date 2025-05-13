@@ -33,8 +33,8 @@ pub struct UserPerpSummary {
     total_liquidation_amount: BigDecimal,
     total_liquidation_count: i64,
 
-    pulled_block_height: i64,
-    pulled_block_time: NaiveDateTime,
+    pub pulled_block_height: i64,
+    pub pulled_block_time: NaiveDateTime,
 
     pub sum_unitary_fundings: BigDecimal,
 }
@@ -45,29 +45,52 @@ impl UserPerpSummary {
         qty: BigDecimal,
         price: BigDecimal,
         block_num: i64,
-        block_time: NaiveDateTime,
         _cost_position_transfer: BigDecimal,
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
     ) {
+        if block_num < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+
         self.holding += qty.clone();
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
-        self.pulled_block_height = block_num;
-        self.pulled_block_time = block_time.clone();
         self.opening_cost += open_cost_diff;
     }
 
-    pub fn new_settlemnt(&mut self, settlement_amount: BigDecimal) {
+    pub fn new_settlemnt(&mut self, settlement_amount: BigDecimal, pulled_block_height: i64) {
+        if pulled_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.cost_position += settlement_amount;
     }
 
-    pub fn new_liquidator(&mut self, holding_diff: BigDecimal, opening_cost_diff: BigDecimal) {
+    pub fn new_liquidator(
+        &mut self,
+        holding_diff: BigDecimal,
+        opening_cost_diff: BigDecimal,
+        pulled_block_height: i64,
+    ) {
+        if pulled_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         self.holding -= holding_diff.clone();
         self.opening_cost += opening_cost_diff;
     }
 
-    pub fn charge_funding_fee(&mut self, new_sum_unitary_fundings: BigDecimal) {
+    pub fn charge_funding_fee(
+        &mut self,
+        new_sum_unitary_fundings: BigDecimal,
+        pulled_block_height: i64,
+    ) {
+        if pulled_block_height < self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
         if new_sum_unitary_fundings.clone() == self.sum_unitary_fundings.clone() {
             return;
         }
@@ -91,10 +114,14 @@ impl UserPerpSummary {
         fee: BigDecimal,
         amount: BigDecimal,
         pulled_block_height: i64,
-        pulled_block_time: NaiveDateTime,
         open_cost_diff: BigDecimal,
         qty: BigDecimal,
     ) -> (bool, bool) {
+        if pulled_block_height < self.pulled_block_height {
+            // already processed this block events
+            return (false, false);
+        }
+
         let is_opening = self.holding.clone() == Default::default()
             || (self.holding.clone().sign() != amount.clone().sign()
                 && amount.clone().abs() > self.holding.clone().abs());
@@ -103,8 +130,6 @@ impl UserPerpSummary {
         self.total_trading_fee += fee;
         self.total_trading_volume += amount.clone().abs();
         self.total_trading_count += 1;
-        self.pulled_block_height = pulled_block_height;
-        self.pulled_block_time = pulled_block_time;
         self.holding += qty;
         self.opening_cost += open_cost_diff;
 
