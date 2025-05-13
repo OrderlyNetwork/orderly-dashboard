@@ -34,7 +34,7 @@ pub struct OrderlyPerpSummary {
 
 impl OrderlyPerpSummary {
     pub fn new_liquidation(&mut self, liquidation_amount: BigDecimal, block_num: i64) {
-        if block_num < self.pulled_block_height {
+        if block_num <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -51,7 +51,7 @@ impl OrderlyPerpSummary {
         pulled_block_height: i64,
         side: PurchaseSide,
     ) {
-        if pulled_block_height < self.pulled_block_height {
+        if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -70,7 +70,7 @@ impl OrderlyPerpSummary {
     }
 
     pub fn new_user(&mut self, pulled_block_height: i64) {
-        if pulled_block_height < self.pulled_block_height {
+        if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }

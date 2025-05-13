@@ -31,7 +31,7 @@ pub struct UserTokenSummary {
 
 impl UserTokenSummary {
     pub fn add_amount(&mut self, add_amount: BigDecimal, p_block_height: i64) {
-        if p_block_height < self.pulled_block_height {
+        if p_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -42,7 +42,7 @@ impl UserTokenSummary {
 
 impl UserTokenSummary {
     pub fn deposit(&mut self, p_deposit_amount: BigDecimal, p_block_height: i64) {
-        if p_block_height < self.pulled_block_height {
+        if p_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -52,7 +52,7 @@ impl UserTokenSummary {
     }
 
     pub fn withdraw(&mut self, p_withdraw_amount: BigDecimal, p_block_height: i64) {
-        if p_block_height < self.pulled_block_height {
+        if p_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -62,7 +62,7 @@ impl UserTokenSummary {
     }
 
     pub fn new_settlement(&mut self, p_settle_amount: BigDecimal, block_num: i64) {
-        if block_num < self.pulled_block_height {
+        if block_num <= self.pulled_block_height {
             // already processed this block events
             return;
         }

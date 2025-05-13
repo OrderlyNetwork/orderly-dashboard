@@ -49,7 +49,7 @@ impl UserPerpSummary {
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
     ) {
-        if block_num < self.pulled_block_height {
+        if block_num <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -61,7 +61,7 @@ impl UserPerpSummary {
     }
 
     pub fn new_settlemnt(&mut self, settlement_amount: BigDecimal, pulled_block_height: i64) {
-        if pulled_block_height < self.pulled_block_height {
+        if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -74,7 +74,7 @@ impl UserPerpSummary {
         opening_cost_diff: BigDecimal,
         pulled_block_height: i64,
     ) {
-        if pulled_block_height < self.pulled_block_height {
+        if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -87,7 +87,7 @@ impl UserPerpSummary {
         new_sum_unitary_fundings: BigDecimal,
         pulled_block_height: i64,
     ) {
-        if pulled_block_height < self.pulled_block_height {
+        if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -117,7 +117,7 @@ impl UserPerpSummary {
         open_cost_diff: BigDecimal,
         qty: BigDecimal,
     ) -> (bool, bool) {
-        if pulled_block_height < self.pulled_block_height {
+        if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return (false, false);
         }

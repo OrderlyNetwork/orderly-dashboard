@@ -30,7 +30,7 @@ pub struct HourlyOrderlyToken {
 
 impl HourlyOrderlyToken {
     pub fn deposit(&mut self, p_deposit_amount: BigDecimal, p_block_height: i64) {
-        if p_block_height < self.pulled_block_height {
+        if p_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -39,7 +39,7 @@ impl HourlyOrderlyToken {
     }
 
     pub fn withdraw(&mut self, p_withdraw_amount: BigDecimal, p_block_height: i64) {
-        if p_block_height < self.pulled_block_height {
+        if p_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }

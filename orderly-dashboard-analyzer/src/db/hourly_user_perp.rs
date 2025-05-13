@@ -58,7 +58,7 @@ impl HourlyUserPerp {
         pulled_block_height: i64,
         realized_pnl: BigDecimal,
     ) -> bool {
-        if pulled_block_height < self.pulled_block_height {
+        if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return false;
         }
@@ -79,7 +79,7 @@ impl HourlyUserPerp {
         block_num: i64,
         realized_pnl: BigDecimal,
     ) {
-        if block_num < self.pulled_block_height {
+        if block_num <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -89,7 +89,7 @@ impl HourlyUserPerp {
     }
 
     pub fn new_realized_pnl(&mut self, pnl: BigDecimal, block_num: i64) {
-        if block_num < self.pulled_block_height {
+        if block_num <= self.pulled_block_height {
             // already processed this block events
             return;
         }

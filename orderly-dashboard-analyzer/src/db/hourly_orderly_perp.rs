@@ -36,7 +36,7 @@ pub struct HourlyOrderlyPerp {
 
 impl HourlyOrderlyPerp {
     pub fn new_liquidation(&mut self, liquidation_amount: BigDecimal, block_num: i64) {
-        if block_num < self.pulled_block_height {
+        if block_num <= self.pulled_block_height {
             // already processed this block events
             return;
         }
@@ -47,7 +47,7 @@ impl HourlyOrderlyPerp {
 
 impl HourlyOrderlyPerp {
     pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64) {
-        if pulled_block_height < self.pulled_block_height {
+        if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
