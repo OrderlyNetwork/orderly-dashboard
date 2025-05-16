@@ -1,4 +1,6 @@
+pub mod rank_metrics;
 pub mod trading_metrics;
+
 use crate::db::raw_request::ExecutionResult;
 use serde::{Deserialize, Serialize};
 

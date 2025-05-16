@@ -13,6 +13,7 @@ use crate::db::trading_metrics::ranking::{
 };
 use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
 use crate::error_code::{QUERY_OVER_EXECUTION_ERR, QUERY_OVER_LIMIT_ERR};
+use crate::format_extern::rank_metrics::PositionRankExtern;
 use crate::{add_base_header, format_extern::Response};
 use dashmap::DashMap;
 use fxhash::FxBuildHasher;
@@ -21,6 +22,7 @@ use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use std::sync::Arc;
 use std::time::Instant;
+use typescript_type_def::TypeDef;
 
 const TRADING_METRICS: &str = "trading_metrics_context";
 
@@ -86,7 +88,7 @@ pub struct VolumeRankingRequest {
     size: i32,
 }
 
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, TypeDef)]
 pub struct VolumeRankingData {
     pub account_id: String,
     pub symbol: String,
@@ -348,7 +350,7 @@ pub async fn get_position_rank(
                 let resp_data = top_position_caches
                     [param.offset as usize..(param.offset + param.limit) as usize]
                     .to_vec();
-                return Ok(write_response(resp_data));
+                return Ok(write_response(PositionRankExtern::new(resp_data)));
             }
         }
         return match query_user_perp_max_symbol_holding(param.offset, param.limit, None, None).await
@@ -358,7 +360,7 @@ pub async fn get_position_rank(
                     .into_iter()
                     .map(Into::into)
                     .collect::<Vec<VolumeRankingData>>();
-                Ok(write_response(user_perp_holding))
+                Ok(write_response(PositionRankExtern::new(user_perp_holding)))
             }
             Err(err) => {
                 return Ok(write_failed_response(
@@ -383,7 +385,7 @@ pub async fn get_position_rank(
                             let resp_data = top_positions.0
                                 [param.offset as usize..(param.offset + param.limit) as usize]
                                 .to_vec();
-                            return Ok(write_response(resp_data));
+                            return Ok(write_response(PositionRankExtern::new(resp_data)));
                         }
                     }
                 }
@@ -407,7 +409,7 @@ pub async fn get_position_rank(
                             symbol_hash,
                             Arc::new(RwLock::new((user_perp_holding, Instant::now()))),
                         );
-                        return Ok(write_response(resp_data));
+                        return Ok(write_response(PositionRankExtern::new(resp_data)));
                     }
                     Err(err) => {
                         return Ok(write_failed_response(
@@ -431,7 +433,7 @@ pub async fn get_position_rank(
                         .into_iter()
                         .map(Into::into)
                         .collect::<Vec<VolumeRankingData>>();
-                    Ok(write_response(user_perp_holding))
+                    Ok(write_response(PositionRankExtern::new(user_perp_holding)))
                 }
                 Err(err) => {
                     return Ok(write_failed_response(
@@ -459,7 +461,7 @@ pub async fn get_position_rank(
                 .into_iter()
                 .map(Into::into)
                 .collect::<Vec<VolumeRankingData>>();
-            Ok(write_response(user_perp_holding))
+            Ok(write_response(PositionRankExtern::new(user_perp_holding)))
         }
         Err(err) => {
             return Ok(write_failed_response(
