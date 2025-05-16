@@ -26,4 +26,10 @@ pub struct AnalyzerConfig {
     pub batch_block_num: u64,
     pub server_port: u16,
     pub get_broker_url: String,
+    #[serde(default = "default_base_url")]
+    pub base_url: String,
+}
+
+fn default_base_url() -> String {
+    "https://api.orderly.org".to_string()
 }
