@@ -94,6 +94,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    market_info (symbol_hash) {
+        symbol -> Text,
+        symbol_hash -> Text,
+        index_price -> Numeric,
+        mark_price -> Numeric,
+        sum_unitary_funding -> Numeric,
+        open_interest -> Numeric,
+        update_time -> Timestamp,
+    }
+}
+
+diesel::table! {
     orderly_perp_summary (symbol) {
         symbol -> Text,
         open_interest -> Numeric,
@@ -183,6 +195,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     hourly_orderly_token,
     hourly_user_perp,
     hourly_user_token,
+    market_info,
     orderly_perp_summary,
     orderly_token_summary,
     symbols,

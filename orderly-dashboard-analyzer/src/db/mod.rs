@@ -13,6 +13,7 @@ pub mod hourly_orderly_perp;
 pub mod hourly_orderly_token;
 pub mod hourly_user_perp;
 pub mod hourly_user_token;
+pub mod market_info;
 pub mod orderly_perp_summary;
 pub mod orderly_token_summary;
 pub mod symbols;
@@ -31,7 +32,7 @@ pub fn init_database_url(database_url: String) {
 
 pub fn establish_connection() -> Database<PgConnection> {
     let database_url = get_database_credentials();
-    Database::builder().pool_max_size(4).open(&database_url)
+    Database::builder().pool_max_size(6).open(&database_url)
 }
 
 pub fn get_database_credentials() -> String {

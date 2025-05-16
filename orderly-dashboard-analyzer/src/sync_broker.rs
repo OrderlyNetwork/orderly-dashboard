@@ -81,7 +81,15 @@ async fn get_brokers(url: String) -> anyhow::Result<String> {
     }
 }
 
+pub fn cal_symbol_hash(symbol: &str) -> String {
+    cal_string_hash(symbol)
+}
+
 pub fn cal_broker_hash(broker_id: &str) -> String {
+    cal_string_hash(broker_id)
+}
+
+pub fn cal_string_hash(broker_id: &str) -> String {
     let mut hasher = Keccak::v256();
     hasher.update(broker_id.as_bytes());
     let mut output = [0u8; 32];

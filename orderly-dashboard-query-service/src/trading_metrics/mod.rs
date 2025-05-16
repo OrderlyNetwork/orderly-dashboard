@@ -1,5 +1,6 @@
 use actix_web::{get, web, HttpResponse, Responder, Result};
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
+use orderly_dashboard_analyzer::sync_broker::cal_symbol_hash;
 use serde::Serialize;
 use serde_derive::Deserialize;
 
@@ -8,12 +9,57 @@ use crate::db::trading_metrics::orderly_daily_perp::{daily_gas_fee, daily_orderl
 use crate::db::trading_metrics::orderly_daily_token::get_daily_token;
 use crate::db::trading_metrics::ranking::{
     get_daily_trading_volume_ranking, get_pnl_ranking, get_token_ranking,
-    get_user_perp_holding_ranking,
+    get_user_perp_holding_ranking, query_user_perp_max_symbol_holding, UserSymbolHoldingRank,
 };
 use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
+use crate::error_code::{QUERY_OVER_EXECUTION_ERR, QUERY_OVER_LIMIT_ERR};
 use crate::{add_base_header, format_extern::Response};
+use dashmap::DashMap;
+use fxhash::FxBuildHasher;
+use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
+use parking_lot::RwLock;
+use std::sync::Arc;
+use std::time::Instant;
 
 const TRADING_METRICS: &str = "trading_metrics_context";
+
+lazy_static! {
+    pub static ref TOP_POSITIONS: RwLock<Vec<VolumeRankingData>> =
+        RwLock::new(Vec::with_capacity(1000));
+}
+
+pub static SYMBOL_TOP_POSITIONS: Lazy<
+    DashMap<String, Arc<RwLock<(Vec<VolumeRankingData>, Instant)>>, FxBuildHasher>,
+> = Lazy::new(|| DashMap::with_hasher(FxBuildHasher::default()));
+
+// 1000
+pub fn update_positions_task() {
+    actix_web::rt::spawn(update_positions());
+}
+
+async fn update_positions() -> anyhow::Result<()> {
+    loop {
+        match query_user_perp_max_symbol_holding(0, 1000, None, None).await {
+            Ok(user_perp_holding) => {
+                let user_perp_holding = user_perp_holding
+                    .into_iter()
+                    .map(Into::into)
+                    .collect::<Vec<VolumeRankingData>>();
+                *TOP_POSITIONS.write() = user_perp_holding;
+            }
+            Err(err) => {
+                tracing::warn!(
+                    "query_user_perp_max_symbol_holding failed with err: {}",
+                    err
+                );
+            }
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+    }
+    #[allow(unreachable_code)]
+    Ok(())
+}
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct DailyRequest {
@@ -40,6 +86,32 @@ pub struct VolumeRankingRequest {
     size: i32,
 }
 
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct VolumeRankingData {
+    pub account_id: String,
+    pub symbol: String,
+    pub holding: String,
+    pub index_price: String,
+    pub holding_value: String,
+}
+
+impl From<UserSymbolHoldingRank> for VolumeRankingData {
+    fn from(value: UserSymbolHoldingRank) -> Self {
+        VolumeRankingData {
+            account_id: value.account_id,
+            symbol: value.symbol,
+            holding: value.holding.to_string(),
+            index_price: value.index_price.to_string(),
+            holding_value: value.holding_value.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct VolumeRankingResponse {
+    pub rows: Vec<VolumeRankingData>,
+}
+
 fn default_days() -> i32 {
     30
 }
@@ -50,6 +122,23 @@ fn default_size() -> i32 {
 
 fn test_symbol() -> String {
     "test".to_string()
+}
+
+fn default_offset() -> i32 {
+    0
+}
+
+fn default_limit() -> i32 {
+    50
+}
+#[derive(Debug, Clone, Deserialize)]
+pub struct PositionRankingRequest {
+    account_id: Option<String>,
+    symbol: Option<String>,
+    #[serde(default = "default_offset")]
+    offset: i32,
+    #[serde(default = "default_limit")]
+    limit: i32,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -232,4 +321,151 @@ pub async fn get_token_withdraw_rank(
     Ok(write_response(
         get_token_ranking(param.to_hour(), param.size as i64, true).await,
     ))
+}
+
+#[get("/ranking/positions")]
+pub async fn get_position_rank(
+    param: web::Query<PositionRankingRequest>,
+) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "/ranking/positions, params: {:?}", param.0);
+    if param.limit > 200 {
+        return Ok(write_failed_response(
+            QUERY_OVER_LIMIT_ERR,
+            "query number over limit 200",
+        ));
+    }
+    if param.limit == 0 {
+        return Ok(write_failed_response(
+            QUERY_OVER_LIMIT_ERR,
+            "query number should not be 0",
+        ));
+    }
+
+    if param.account_id.is_none() && param.symbol.is_none() {
+        if param.offset + param.limit <= 1000 {
+            let top_position_caches = TOP_POSITIONS.read();
+            if (param.offset + param.limit) as usize <= top_position_caches.len() {
+                let resp_data = top_position_caches
+                    [param.offset as usize..(param.offset + param.limit - 1) as usize]
+                    .to_vec();
+                return Ok(write_response(resp_data));
+            }
+        }
+        return match query_user_perp_max_symbol_holding(param.offset, param.limit, None, None).await
+        {
+            Ok(user_perp_holding) => {
+                let user_perp_holding = user_perp_holding
+                    .into_iter()
+                    .map(Into::into)
+                    .collect::<Vec<VolumeRankingData>>();
+                Ok(write_response(user_perp_holding))
+            }
+            Err(err) => {
+                return Ok(write_failed_response(
+                    QUERY_OVER_EXECUTION_ERR,
+                    &err.to_string(),
+                ));
+            }
+        };
+    }
+
+    // symbol is some
+    if let Some(symbol) = &param.symbol {
+        let symbol_hash = cal_symbol_hash(symbol.as_str());
+        // symbol is some and account_id is none
+        if param.account_id.is_none() {
+            if param.offset + param.limit <= 1000 {
+                if let Some(top_position_caches) = SYMBOL_TOP_POSITIONS.get(&symbol_hash) {
+                    let top_positions = top_position_caches.read();
+                    if top_positions.1.elapsed().as_secs() < 5 {
+                        if (param.offset + param.limit) as usize <= top_positions.0.len() {
+                            // use cache and return
+                            let resp_data = top_positions.0
+                                [param.offset as usize..(param.offset + param.limit - 1) as usize]
+                                .to_vec();
+                            return Ok(write_response(resp_data));
+                        }
+                    }
+                }
+
+                match query_user_perp_max_symbol_holding(0, 1000, None, Some(symbol_hash.clone()))
+                    .await
+                {
+                    Ok(user_perp_holding) => {
+                        tracing::info!(
+                            "read from db and update cache for symbol hash: {}",
+                            symbol_hash
+                        );
+                        let user_perp_holding = user_perp_holding
+                            .into_iter()
+                            .map(Into::into)
+                            .collect::<Vec<VolumeRankingData>>();
+                        let resp_data = user_perp_holding
+                            [param.offset as usize..(param.offset + param.limit - 1) as usize]
+                            .to_vec();
+                        SYMBOL_TOP_POSITIONS.insert(
+                            symbol_hash,
+                            Arc::new(RwLock::new((user_perp_holding, Instant::now()))),
+                        );
+                        return Ok(write_response(resp_data));
+                    }
+                    Err(err) => {
+                        return Ok(write_failed_response(
+                            QUERY_OVER_EXECUTION_ERR,
+                            &err.to_string(),
+                        ));
+                    }
+                }
+            }
+
+            return match query_user_perp_max_symbol_holding(
+                param.offset,
+                param.limit,
+                None,
+                Some(symbol_hash.clone()),
+            )
+            .await
+            {
+                Ok(user_perp_holding) => {
+                    let user_perp_holding = user_perp_holding
+                        .into_iter()
+                        .map(Into::into)
+                        .collect::<Vec<VolumeRankingData>>();
+                    Ok(write_response(user_perp_holding))
+                }
+                Err(err) => {
+                    return Ok(write_failed_response(
+                        QUERY_OVER_EXECUTION_ERR,
+                        &err.to_string(),
+                    ));
+                }
+            };
+        }
+    }
+
+    // account_id is some, symbol may be someor none
+    let account_id = param.account_id.clone().unwrap_or_default();
+    let symbol_hash = param.symbol.clone().map(|s| cal_symbol_hash(&s));
+    match query_user_perp_max_symbol_holding(
+        param.offset,
+        param.limit,
+        Some(account_id),
+        symbol_hash,
+    )
+    .await
+    {
+        Ok(user_perp_holding) => {
+            let user_perp_holding = user_perp_holding
+                .into_iter()
+                .map(Into::into)
+                .collect::<Vec<VolumeRankingData>>();
+            Ok(write_response(user_perp_holding))
+        }
+        Err(err) => {
+            return Ok(write_failed_response(
+                QUERY_OVER_EXECUTION_ERR,
+                &err.to_string(),
+            ));
+        }
+    }
 }

@@ -8,6 +8,7 @@ use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
 use orderly_dashboard_analyzer::sync_broker::start_sync_brokers;
 use serde_json::json;
+use sync_market_data::update_market_infos_task;
 
 use crate::analyzer::analyzer_job::start_analyzer_trade_job;
 use crate::config::{AnalyzerConfig, Opts};
@@ -20,6 +21,7 @@ mod config;
 mod db;
 mod schema;
 mod sync_broker;
+pub mod sync_market_data;
 
 #[allow(dead_code)]
 const ORDERLY_DASHBOARD_ANALYZER: &str = "orderly-dashboard-analyzer";
@@ -78,11 +80,13 @@ async fn main() -> std::io::Result<()> {
     let config: AnalyzerConfig =
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     init_database_url(get_database_credentials());
+    orderly_dashboard_indexer::runtime::init_pool_workers_num(1);
     let port = config.server_port;
     let sync_broker_url = config.get_broker_url.clone();
 
     start_analyze_job(config.clone());
     start_sync_brokers(sync_broker_url);
+    update_market_infos_task(config.base_url.clone());
     HttpServer::new(|| App::new().service(health).service(status))
         .bind(("0.0.0.0", port))?
         .run()
