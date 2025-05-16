@@ -346,7 +346,7 @@ pub async fn get_position_rank(
             let top_position_caches = TOP_POSITIONS.read();
             if (param.offset + param.limit) as usize <= top_position_caches.len() {
                 let resp_data = top_position_caches
-                    [param.offset as usize..(param.offset + param.limit - 1) as usize]
+                    [param.offset as usize..(param.offset + param.limit) as usize]
                     .to_vec();
                 return Ok(write_response(resp_data));
             }
@@ -381,7 +381,7 @@ pub async fn get_position_rank(
                         if (param.offset + param.limit) as usize <= top_positions.0.len() {
                             // use cache and return
                             let resp_data = top_positions.0
-                                [param.offset as usize..(param.offset + param.limit - 1) as usize]
+                                [param.offset as usize..(param.offset + param.limit) as usize]
                                 .to_vec();
                             return Ok(write_response(resp_data));
                         }
@@ -401,7 +401,7 @@ pub async fn get_position_rank(
                             .map(Into::into)
                             .collect::<Vec<VolumeRankingData>>();
                         let resp_data = user_perp_holding
-                            [param.offset as usize..(param.offset + param.limit - 1) as usize]
+                            [param.offset as usize..(param.offset + param.limit) as usize]
                             .to_vec();
                         SYMBOL_TOP_POSITIONS.insert(
                             symbol_hash,
