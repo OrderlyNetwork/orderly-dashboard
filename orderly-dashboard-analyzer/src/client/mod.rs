@@ -48,7 +48,7 @@ async fn get_market_infos(base_url: &str) -> anyhow::Result<String> {
     match response {
         Ok(res) => Ok(res.text().await?),
         Err(err) => Err(anyhow::anyhow!(
-            "reqwest get_brokers faield with err: {:?}",
+            "reqwest get_market_infos faield with err: {:?}",
             err
         )),
     }

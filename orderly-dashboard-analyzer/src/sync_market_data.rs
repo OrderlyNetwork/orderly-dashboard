@@ -24,7 +24,7 @@ pub fn update_market_infos_task(base_url: String) {
 }
 
 async fn upsert_market_infos(base_url: &str) -> anyhow::Result<()> {
-    let data = list_market_infos(base_url).await.unwrap();
+    let data = list_market_infos(base_url).await?;
     tracing::info!("market infos lens: {:?}", data.data.rows.len());
     let nsecs = data.timestamp % 1000 * 1_000_000;
     let update_time =
