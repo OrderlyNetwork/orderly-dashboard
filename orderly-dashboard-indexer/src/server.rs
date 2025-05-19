@@ -143,6 +143,12 @@ impl Service {
             },
             "/get_symbols_data" => serde_json::to_string(&api::get_symbols_data().await?),
             "/get_network_info" => serde_json::to_string(&api::get_network_info().await?),
+            "/pull_block_timestamp" => match get_query_params(&req) {
+                Either::Left(params) => {
+                    serde_json::to_string(&api::network_info::pull_block_time(&params).await?)
+                }
+                Either::Right(response) => return Ok(response),
+            },
             "/status" => serde_json::to_string(&api::get_status().await?),
             _ => {
                 let mut not_found = Response::default();

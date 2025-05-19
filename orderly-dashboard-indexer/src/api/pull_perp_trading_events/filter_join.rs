@@ -57,7 +57,7 @@ pub async fn perp_trading_join_events(
     event_type: Option<TradingEventType>,
 ) -> Result<TradingEventsResponse> {
     let last_block = crate::api::get_may_cached_orderly_last_rpc_processed_height().await?;
-    let last_timestamp = crate::api::get_may_cached_orderly_last_rpc_processed_timestamp().await?;
+    // let last_timestamp = crate::api::get_may_cached_orderly_last_rpc_processed_timestamp().await?;
     let to_block = min(last_block as i64, to_block);
     let mut response = TradingEventsResponse::default();
     if last_block == 0 {
@@ -97,9 +97,11 @@ pub async fn perp_trading_join_events(
             }
         }
         trading_events.sort();
+        if !trading_events.is_empty() {
+            response.last_block_timestamp = trading_events[0].block_timestamp as i64;
+        }
         response.events = trading_events;
         response.last_block = last_block;
-        response.last_block_timestamp = last_timestamp;
         return Ok(response);
     }
     let from_time = from_time
@@ -120,9 +122,11 @@ pub async fn perp_trading_join_events(
     let adls = join_adls_with_time(from_block, to_block, from_time, to_time).await?;
     let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
     trading_events.sort();
+    if !trading_events.is_empty() {
+        response.last_block_timestamp = trading_events[0].block_timestamp as i64;
+    }
     response.events = trading_events;
     response.last_block = last_block;
-    response.last_block_timestamp = last_timestamp;
     Ok(response)
 }
 

@@ -11,6 +11,8 @@ use crate::db::DB_CONTEXT;
 use crate::db::POOL;
 use crate::schema::block_summary;
 
+pub const TRADE_METRIC: &str = "trade";
+pub const GAS_METRIC: &str = "gas_fee";
 #[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "block_summary"]
 pub struct BlockSummary {
@@ -32,13 +34,20 @@ pub async fn find_block_summary(p_metric: String) -> Result<BlockSummary, DBExce
         .filter(metrics_type.eq(p_metric.clone()))
         .first_async::<BlockSummary>(&POOL)
         .await;
+    let id_ = if p_metric == GAS_METRIC {
+        2
+    } else if p_metric == TRADE_METRIC {
+        3
+    } else {
+        4
+    };
 
     match select_result {
         Ok(result) => Ok(result),
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
                 let result = BlockSummary {
-                    id: 3,
+                    id: id_,
                     latest_block_height: 0,
                     pulled_block_height: 0,
                     pulled_block_time: Default::default(),
