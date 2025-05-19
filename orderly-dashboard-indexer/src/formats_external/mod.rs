@@ -166,3 +166,8 @@ pub struct RecoverySolEventRequest {
     pub start_sigature: String,
     pub end_slot: u64,
 }
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct BlockTimeResponse {
+    pub block_timestamp: i64,
+}

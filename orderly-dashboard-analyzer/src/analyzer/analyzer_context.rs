@@ -69,7 +69,9 @@ impl AnalyzeContext {
         pulled_block_time: NaiveDateTime,
     ) {
         self.hourly_user_perp_cache.iter_mut().for_each(|(_k, v)| {
-            v.pulled_block_height = pulled_block_height;
+            if pulled_block_height != 0 {
+                v.pulled_block_height = pulled_block_height;
+            }
             v.pulled_block_time = pulled_block_time;
         });
         create_or_update_hourly_user_perp(Vec::from_iter(self.hourly_user_perp_cache.values()))
@@ -79,7 +81,9 @@ impl AnalyzeContext {
         self.hourly_orderly_perp_cache
             .iter_mut()
             .for_each(|(_k, v)| {
-                v.pulled_block_height = pulled_block_height;
+                if pulled_block_height != 0 {
+                    v.pulled_block_height = pulled_block_height;
+                }
                 v.pulled_block_time = pulled_block_time;
             });
         create_or_update_hourly_orderly_perp(Vec::from_iter(
@@ -89,7 +93,9 @@ impl AnalyzeContext {
         .unwrap();
 
         self.orderly_perp_cache.iter_mut().for_each(|(_k, v)| {
-            v.pulled_block_height = pulled_block_height;
+            if pulled_block_height != 0 {
+                v.pulled_block_height = pulled_block_height;
+            }
             v.pulled_block_time = pulled_block_time;
         });
         create_or_update_orderly_perp_summary(Vec::from_iter(self.orderly_perp_cache.values()))
@@ -97,7 +103,9 @@ impl AnalyzeContext {
             .unwrap();
 
         self.user_perp_cache.iter_mut().for_each(|(_k, v)| {
-            v.pulled_block_height = pulled_block_height;
+            if pulled_block_height != 0 {
+                v.pulled_block_height = pulled_block_height;
+            }
             v.pulled_block_time = pulled_block_time;
         });
         create_or_update_user_perp_summary(Vec::from_iter(self.user_perp_cache.values()))
@@ -107,7 +115,9 @@ impl AnalyzeContext {
         self.hourly_orderly_token_cache
             .iter_mut()
             .for_each(|(_k, v)| {
-                v.pulled_block_height = pulled_block_height;
+                if pulled_block_height != 0 {
+                    v.pulled_block_height = pulled_block_height;
+                }
                 v.pulled_block_time = pulled_block_time;
             });
         create_or_update_hourly_orderly_token(Vec::from_iter(
@@ -117,7 +127,9 @@ impl AnalyzeContext {
         .unwrap();
 
         self.hourly_user_token_cache.iter_mut().for_each(|(_k, v)| {
-            v.pulled_block_height = pulled_block_height;
+            if pulled_block_height != 0 {
+                v.pulled_block_height = pulled_block_height;
+            }
             v.pulled_block_time = pulled_block_time;
         });
         create_or_update_hourly_user_token(Vec::from_iter(self.hourly_user_token_cache.values()))
@@ -125,7 +137,9 @@ impl AnalyzeContext {
             .unwrap();
 
         self.user_token_cache.iter_mut().for_each(|(_k, v)| {
-            v.pulled_block_height = pulled_block_height;
+            if pulled_block_height != 0 {
+                v.pulled_block_height = pulled_block_height;
+            }
             v.pulled_block_time = pulled_block_time;
         });
         create_or_update_user_token_summary(Vec::from_iter(self.user_token_cache.values()))
@@ -133,7 +147,9 @@ impl AnalyzeContext {
             .unwrap();
 
         self.orderly_token_cache.iter_mut().for_each(|(_k, v)| {
-            v.pulled_block_height = pulled_block_height;
+            if pulled_block_height != 0 {
+                v.pulled_block_height = pulled_block_height;
+            }
             v.pulled_block_time = pulled_block_time;
         });
         create_or_update_orderly_token_summary(Vec::from_iter(self.orderly_token_cache.values()))

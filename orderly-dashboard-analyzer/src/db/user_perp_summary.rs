@@ -118,6 +118,7 @@ impl UserPerpSummary {
         qty: BigDecimal,
     ) -> (bool, bool) {
         if pulled_block_height <= self.pulled_block_height {
+            tracing::warn!("deprecated trade for pulled_block_height: {}, self.pulled_block_height: {}, fee: {}", pulled_block_height, self.pulled_block_height, fee);
             // already processed this block events
             return (false, false);
         }

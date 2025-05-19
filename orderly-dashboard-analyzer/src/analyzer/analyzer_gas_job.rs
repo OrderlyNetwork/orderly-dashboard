@@ -14,7 +14,7 @@ use tokio::time;
 use crate::analyzer::analyzer_gas_context::GasFeeContext;
 use crate::analyzer::analyzer_job::HTTPException;
 use crate::analyzer::analyzer_job::HTTPException::Timeout;
-use crate::db::block_summary::{create_or_update_block_summary, find_block_summary};
+use crate::db::block_summary::{create_or_update_block_summary, find_block_summary, GAS_METRIC};
 use crate::db::hourly_gas_fee::HourlyGasFeeKey;
 
 use super::get_gas_prec;
@@ -29,7 +29,7 @@ pub fn start_analyzer_gas_job(
     batch_block_num: u64,
 ) {
     tokio::spawn(async move {
-        let mut block_summary = find_block_summary("gas_fee".to_string()).await.unwrap();
+        let mut block_summary = find_block_summary(GAS_METRIC.to_string()).await.unwrap();
         let mut from_block = max(block_summary.pulled_block_height + 1, start_block.clone());
         let mut max_block = block_summary.latest_block_height;
 
@@ -58,7 +58,7 @@ pub fn start_analyzer_gas_job(
                     if round_to_block > latest_block_height {
                         tracing::info!(target: ANALYZER_CONTEXT,"continue to pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
                         // to avoid cpu usage too high
-                        tokio::time::sleep(Duration::from_millis(1)).await;
+                        tokio::time::sleep(Duration::from_millis(2000)).await;
                         continue;
                     }
 
@@ -66,13 +66,16 @@ pub fn start_analyzer_gas_job(
                     from_block = round_to_block + 1;
 
                     block_summary.pulled_block_height = round_to_block;
-                    block_summary.pulled_block_time =
-                        NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
+                    if pulled_block_time != 0 {
+                        block_summary.pulled_block_time =
+                            NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
+                    }
                     block_summary.latest_block_height = latest_block_height;
+                    tracing::info!("gas job block_summary info: {:?}", block_summary);
                     create_or_update_block_summary(block_summary.clone())
                         .await
                         .ok();
-                    tracing::info!(target: ANALYZER_CONTEXT,"ok to pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
+                    tracing::info!(target: ANALYZER_CONTEXT,"gas job ok to pull block from {} to {}. cost:{}",round_from_block,round_to_block,Utc::now().timestamp_millis()-timestamp);
                 }
                 Err(error) => {
                     tracing::warn!(target: ANALYZER_CONTEXT, "get_indexer_data err: {:?}", error);
