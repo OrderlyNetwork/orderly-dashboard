@@ -3,7 +3,7 @@
 #[warn(deprecated)]
 extern crate diesel;
 
-use crate::analyzer::analyzer_gas_job::start_analyzer_gas_job;
+// use crate::analyzer::analyzer_gas_job::start_analyzer_gas_job;
 use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
 use orderly_dashboard_analyzer::sync_broker::start_sync_brokers;
@@ -40,15 +40,14 @@ fn start_analyze_job(config: AnalyzerConfig) {
         config.pull_interval,
         config.indexer_address.clone(),
         config.start_block,
-        config.start_block_timestamp,
         config.batch_block_num,
     );
-    start_analyzer_gas_job(
-        config.pull_interval,
-        config.indexer_address.clone(),
-        config.start_block,
-        config.batch_block_num,
-    );
+    // start_analyzer_gas_job(
+    //     config.pull_interval,
+    //     config.indexer_address.clone(),
+    //     config.start_block,
+    //     config.batch_block_num,
+    // );
     tracing::info!(target:ORDERLY_DASHBOARD_ANALYZER,"start analyze block event")
 }
 
