@@ -142,6 +142,9 @@ pub async fn find_hourly_user_perp(
 pub async fn create_or_update_hourly_user_perp(
     p_hourly_user_perp_vec: Vec<&HourlyUserPerp>,
 ) -> Result<usize, DBException> {
+    if p_hourly_user_perp_vec.is_empty() {
+        return Ok(0);
+    }
     use crate::schema::hourly_user_perp::dsl::*;
     let mut row_nums = 0;
     for hourly_user_perp_data in p_hourly_user_perp_vec {
