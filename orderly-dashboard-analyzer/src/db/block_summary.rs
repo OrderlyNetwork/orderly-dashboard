@@ -11,6 +11,8 @@ use crate::db::DB_CONTEXT;
 use crate::db::POOL;
 use crate::schema::block_summary;
 
+pub const TRADE_METRIC: &str = "trade";
+pub const GAS_METRIC: &str = "gas_fee";
 #[derive(Insertable, Queryable, Debug, Clone)]
 #[table_name = "block_summary"]
 pub struct BlockSummary {
@@ -32,13 +34,20 @@ pub async fn find_block_summary(p_metric: String) -> Result<BlockSummary, DBExce
         .filter(metrics_type.eq(p_metric.clone()))
         .first_async::<BlockSummary>(&POOL)
         .await;
+    let id_ = if p_metric == GAS_METRIC {
+        2
+    } else if p_metric == TRADE_METRIC {
+        3
+    } else {
+        4
+    };
 
     match select_result {
         Ok(result) => Ok(result),
         Err(error) => match error {
             AsyncError::Execute(Error::NotFound) => {
                 let result = BlockSummary {
-                    id: 3,
+                    id: id_,
                     latest_block_height: 0,
                     pulled_block_height: 0,
                     pulled_block_time: Default::default(),
@@ -78,5 +87,35 @@ pub async fn create_or_update_block_summary(summary: BlockSummary) -> Result<(),
             tracing::warn!(target: DB_CONTEXT,"init_or_update_block_summary error. err:{:?}",error);
             Err("init_block_summary error".to_string())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn init_log() {
+        tracing_subscriber::fmt::Subscriber::builder()
+            .with_writer(std::io::stderr)
+            .with_thread_ids(true)
+            .with_thread_names(true)
+            .init();
+    }
+    #[ignore]
+    #[actix_web::test]
+    async fn test_create_or_update_block_summary() {
+        dotenv::dotenv().ok();
+        init_log();
+
+        let sumary = BlockSummary {
+            id: 5,
+            latest_block_height: 100,
+            pulled_block_height: 100,
+            pulled_block_time: NaiveDateTime::from_timestamp_opt(1747674014, 0).unwrap(),
+            pulled_event_id: 100,
+            pulled_perp_trade_id: 10000,
+            metrics_type: "test".to_string(),
+        };
+        create_or_update_block_summary(sumary).await.unwrap();
     }
 }

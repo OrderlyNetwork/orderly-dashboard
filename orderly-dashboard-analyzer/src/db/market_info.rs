@@ -65,7 +65,6 @@ pub async fn create_or_update_market_infos(market_infos: Vec<DBMarketInfo>) -> a
 mod tests {
     use super::*;
     use crate::client::list_market_infos;
-    use chrono::{Datelike, Timelike};
     use num_traits::FromPrimitive;
 
     fn init_log() {

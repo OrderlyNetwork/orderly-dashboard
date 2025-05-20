@@ -213,3 +213,32 @@ pub async fn get_block_logs(block_num: u64) -> Result<Vec<Log>> {
         }
     }
 }
+
+pub async fn get_blockheader_by_number(number: u64) -> Result<Block<H256>> {
+    let provider = unsafe { PROVIDER.get_unchecked() };
+
+    let result = timeout(
+        Duration::from_secs(3),
+        provider.get_block(BlockNumber::Number(number.into())),
+    )
+    .await;
+    match result {
+        Err(_) => {
+            return Err(anyhow::anyhow!("request elapsed"));
+        }
+        Ok(Ok(Some(block))) => {
+            return Ok(block);
+        }
+        Ok(Ok(None)) => {
+            return Err(anyhow::anyhow!("block number found for number: {}", number));
+        }
+        Ok(Err(err)) => {
+            tracing::warn!(
+                target: ORDERLY_DASHBOARD_INDEXER,
+                "get_blockheader_by_number query err: {}",
+                err
+            );
+            return Err(anyhow::anyhow!("query err"));
+        }
+    }
+}
