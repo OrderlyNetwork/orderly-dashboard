@@ -116,6 +116,9 @@ pub async fn find_orderly_perp_summary(
 pub async fn create_or_update_orderly_perp_summary(
     p_orderly_perp_summary_vec: Vec<&OrderlyPerpSummary>,
 ) -> Result<usize, DBException> {
+    if p_orderly_perp_summary_vec.is_empty() {
+        return Ok(0);
+    }
     use crate::schema::orderly_perp_summary::dsl::*;
 
     let mut row_nums = 0;

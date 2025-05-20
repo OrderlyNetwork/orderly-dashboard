@@ -73,7 +73,7 @@ pub fn start_analyzer_trade_job(
                         continue;
                     }
                     if latest_block_height > round_from_block + 2 * (batch_block_num as i64) {
-                        interval_ms = 10;
+                        interval_ms = 5;
                     } else {
                         interval_ms = interval_seconds * 1000;
                     }
