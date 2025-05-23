@@ -4,14 +4,14 @@ use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::pg::upsert::on_constraint;
+use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::{Insertable, Queryable};
 
 use crate::db::user_token_summary::DBException;
-use crate::db::user_token_summary::DBException::{InsertError, QueryError, Timeout};
-use crate::db::POOL;
+use crate::db::user_token_summary::DBException::{QueryError, Timeout};
+use crate::db::{BATCH_UPSERT_LEN, POOL};
 use crate::schema::hourly_orderly_perp;
 
 #[derive(Insertable, Queryable, QueryableByName, Debug, Clone)]
@@ -115,39 +115,87 @@ pub async fn find_hourly_orderly_perp(
 
 pub async fn create_or_update_hourly_orderly_perp(
     p_hourly_data_vec: Vec<&HourlyOrderlyPerp>,
-) -> Result<usize, DBException> {
+) -> anyhow::Result<usize> {
     if p_hourly_data_vec.is_empty() {
         return Ok(0);
     }
     use crate::schema::hourly_orderly_perp::dsl::*;
-    let mut row_nums = 0;
-    for hourly_data in p_hourly_data_vec {
-        let update_result = diesel::insert_into(hourly_orderly_perp)
-            .values(hourly_data.clone())
-            .on_conflict(on_constraint("hourly_orderly_perp_uq"))
-            .do_update()
-            .set((
-                trading_fee.eq(hourly_data.trading_fee.clone()),
-                trading_volume.eq(hourly_data.trading_volume.clone()),
-                trading_count.eq(hourly_data.trading_count.clone()),
-                trading_user_count.eq(hourly_data.trading_user_count.clone()),
-                opening_count.eq(hourly_data.opening_count),
-                liquidation_amount.eq(hourly_data.liquidation_amount.clone()),
-                liquidation_count.eq(hourly_data.liquidation_count.clone()),
-                pulled_block_height.eq(hourly_data.pulled_block_height.clone()),
-                pulled_block_time.eq(hourly_data.pulled_block_time.clone()),
-            ))
-            .execute_async(&POOL)
-            .await;
 
-        match update_result {
-            Ok(_) => {
-                row_nums += 1;
+    let mut row_nums = 0;
+    let mut p_hourly_data_vec = p_hourly_data_vec
+        .into_iter()
+        .cloned()
+        .collect::<Vec<HourlyOrderlyPerp>>();
+    loop {
+        if p_hourly_data_vec.len() >= BATCH_UPSERT_LEN {
+            let (values1, res) = p_hourly_data_vec.split_at(BATCH_UPSERT_LEN);
+            let values1 = values1
+                .iter()
+                .map(|v| v.clone())
+                .collect::<Vec<HourlyOrderlyPerp>>();
+            p_hourly_data_vec = res.iter().cloned().collect::<Vec<HourlyOrderlyPerp>>();
+            let update_result = diesel::insert_into(hourly_orderly_perp)
+                .values(values1)
+                .on_conflict(on_constraint("hourly_orderly_perp_uq"))
+                .do_update()
+                .set((
+                    trading_fee.eq(excluded(trading_fee)),
+                    trading_volume.eq(excluded(trading_volume)),
+                    trading_count.eq(excluded(trading_count)),
+                    trading_user_count.eq(excluded(trading_user_count)),
+                    opening_count.eq(excluded(opening_count)),
+                    liquidation_amount.eq(excluded(liquidation_amount)),
+                    liquidation_count.eq(excluded(liquidation_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                ))
+                .execute_async(&POOL)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!(
+                        "update hourly_orderly_perp failed: {}",
+                        err
+                    ));
+                }
             }
-            Err(_) => {
-                return Err(InsertError);
+        } else {
+            let update_result = diesel::insert_into(hourly_orderly_perp)
+                .values(p_hourly_data_vec)
+                .on_conflict(on_constraint("hourly_orderly_perp_uq"))
+                .do_update()
+                .set((
+                    trading_fee.eq(excluded(trading_fee)),
+                    trading_volume.eq(excluded(trading_volume)),
+                    trading_count.eq(excluded(trading_count)),
+                    trading_user_count.eq(excluded(trading_user_count)),
+                    opening_count.eq(excluded(opening_count)),
+                    liquidation_amount.eq(excluded(liquidation_amount)),
+                    liquidation_count.eq(excluded(liquidation_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                ))
+                .execute_async(&POOL)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                    break;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!(
+                        "update hourly_orderly_perp failed: {}",
+                        err
+                    ));
+                }
             }
         }
     }
-    return Ok(row_nums);
+
+    Ok(row_nums)
 }

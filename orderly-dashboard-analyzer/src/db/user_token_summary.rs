@@ -2,13 +2,12 @@ use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::pg::upsert::on_constraint;
+use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::db::user_token_summary::DBException::UpdateError;
-use crate::db::POOL;
 use crate::db::{PrimaryKey, DB_CONTEXT};
+use crate::db::{BATCH_UPSERT_LEN, POOL};
 use crate::schema::user_token_summary;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
@@ -83,7 +82,6 @@ impl PrimaryKey for UserTokenSummaryKey {}
 pub enum DBException {
     InsertError,
     QueryError,
-    UpdateError,
     Timeout,
 }
 
@@ -129,33 +127,74 @@ pub async fn find_user_token_summary(
 
 pub async fn create_or_update_user_token_summary(
     user_token_summary_vec: Vec<&UserTokenSummary>,
-) -> Result<usize, DBException> {
+) -> anyhow::Result<usize> {
+    if user_token_summary_vec.is_empty() {
+        return Ok(0);
+    }
     use crate::schema::user_token_summary::dsl::*;
+
     let mut row_nums = 0;
+    let mut user_token_summary_vec = user_token_summary_vec
+        .into_iter()
+        .cloned()
+        .collect::<Vec<UserTokenSummary>>();
+    loop {
+        if user_token_summary_vec.len() >= BATCH_UPSERT_LEN {
+            let (values1, res) = user_token_summary_vec.split_at(BATCH_UPSERT_LEN);
+            let values1 = values1
+                .iter()
+                .map(|v| v.clone())
+                .collect::<Vec<UserTokenSummary>>();
+            user_token_summary_vec = res.iter().cloned().collect::<Vec<UserTokenSummary>>();
+            let update_result = diesel::insert_into(user_token_summary)
+                .values(values1)
+                .on_conflict(on_constraint("user_token_summary_uq"))
+                .do_update()
+                .set((
+                    balance.eq(excluded(balance)),
+                    total_withdraw_amount.eq(excluded(total_withdraw_amount)),
+                    total_withdraw_count.eq(excluded(total_withdraw_count)),
+                    total_deposit_amount.eq(excluded(total_deposit_amount)),
+                    total_deposit_count.eq(excluded(total_deposit_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                ))
+                .execute_async(&POOL)
+                .await;
 
-    for summary in user_token_summary_vec {
-        let effect = diesel::insert_into(user_token_summary)
-            .values(summary.clone())
-            .on_conflict(on_constraint("user_token_summary_uq"))
-            .do_update()
-            .set((
-                balance.eq(summary.balance.clone()),
-                total_withdraw_amount.eq(summary.total_withdraw_amount.clone()),
-                total_withdraw_count.eq(summary.total_withdraw_count.clone()),
-                total_deposit_amount.eq(summary.total_deposit_amount.clone()),
-                total_deposit_count.eq(summary.total_deposit_count.clone()),
-                pulled_block_height.eq(summary.pulled_block_height.clone()),
-                pulled_block_time.eq(summary.pulled_block_time.clone()),
-            ))
-            .execute_async(&POOL)
-            .await;
-
-        match effect {
-            Ok(affected) => {
-                row_nums += affected;
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!("update user_token_summary failed: {}", err));
+                }
             }
-            Err(_) => {
-                return Err(UpdateError);
+        } else {
+            let update_result = diesel::insert_into(user_token_summary)
+                .values(user_token_summary_vec)
+                .on_conflict(on_constraint("user_token_summary_uq"))
+                .do_update()
+                .set((
+                    balance.eq(excluded(balance)),
+                    total_withdraw_amount.eq(excluded(total_withdraw_amount)),
+                    total_withdraw_count.eq(excluded(total_withdraw_count)),
+                    total_deposit_amount.eq(excluded(total_deposit_amount)),
+                    total_deposit_count.eq(excluded(total_deposit_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                ))
+                .execute_async(&POOL)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                    break;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!("update user_token_summary failed: {}", err));
+                }
             }
         }
     }

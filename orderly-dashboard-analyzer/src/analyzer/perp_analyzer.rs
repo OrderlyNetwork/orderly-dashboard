@@ -14,14 +14,18 @@ use crate::db::hourly_user_perp::HourlyUserPerpKey;
 use crate::db::user_perp_summary::UserPerpSummaryKey;
 
 const PERP_ANALYZER: &str = "perp-trade-analyzer";
+
 pub async fn analyzer_perp_trade(
     trades: Vec<Trade>,
     pulled_block_height: i64,
     context: &mut AnalyzeContext,
 ) -> i64 {
+    if trades.is_empty() {
+        return 0;
+    }
     let mut max_perp_trade_id = 0i64;
+    let trade_len = trades.len();
     for perp_trade in trades {
-        tracing::info!(target:PERP_ANALYZER,"receiver trade:{}",perp_trade.trade_id.clone());
         max_perp_trade_id = max(max_perp_trade_id, perp_trade.trade_id as i64);
 
         let trade_qty: BigDecimal = perp_trade.trade_qty.parse().unwrap();
@@ -130,6 +134,7 @@ pub async fn analyzer_perp_trade(
         }
     }
 
+    tracing::info!(target:PERP_ANALYZER,"handle trade length: {}, max_perp_trade_id: {}", trade_len, max_perp_trade_id);
     return max_perp_trade_id;
 }
 

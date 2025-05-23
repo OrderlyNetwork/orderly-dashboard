@@ -2,13 +2,14 @@ use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
+use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
 use diesel::result::Error;
 use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;
 
 use crate::db::user_token_summary::DBException;
-use crate::db::user_token_summary::DBException::{InsertError, QueryError};
-use crate::db::POOL;
+use crate::db::user_token_summary::DBException::QueryError;
+use crate::db::{BATCH_UPSERT_LEN, POOL};
 use crate::schema::orderly_perp_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
@@ -115,42 +116,91 @@ pub async fn find_orderly_perp_summary(
 
 pub async fn create_or_update_orderly_perp_summary(
     p_orderly_perp_summary_vec: Vec<&OrderlyPerpSummary>,
-) -> Result<usize, DBException> {
+) -> anyhow::Result<usize> {
     if p_orderly_perp_summary_vec.is_empty() {
         return Ok(0);
     }
     use crate::schema::orderly_perp_summary::dsl::*;
 
     let mut row_nums = 0;
-    for summary in p_orderly_perp_summary_vec {
-        let update_result = diesel::insert_into(orderly_perp_summary)
-            .values(summary.clone())
-            .on_conflict(symbol)
-            .do_update()
-            .set((
-                open_interest.eq(summary.open_interest.clone()),
-                total_trading_volume.eq(summary.total_trading_volume.clone()),
-                total_trading_fee.eq(summary.total_trading_fee.clone()),
-                total_trading_count.eq(summary.total_trading_count.clone()),
-                total_trading_user_count.eq(summary.total_trading_user_count.clone()),
-                total_liquidation_amount.eq(summary.total_liquidation_amount.clone()),
-                total_liquidation_count.eq(summary.total_liquidation_count.clone()),
-                pulled_block_height.eq(summary.pulled_block_height.clone()),
-                pulled_block_time.eq(summary.pulled_block_time.clone()),
-                buy_amount.eq(summary.buy_amount.clone()),
-                sell_amount.eq(summary.sell_amount.clone()),
-            ))
-            .execute_async(&POOL)
-            .await;
+    let mut p_orderly_perp_summary_vec = p_orderly_perp_summary_vec
+        .into_iter()
+        .cloned()
+        .collect::<Vec<OrderlyPerpSummary>>();
+    loop {
+        if p_orderly_perp_summary_vec.len() >= BATCH_UPSERT_LEN {
+            let (values1, res) = p_orderly_perp_summary_vec.split_at(BATCH_UPSERT_LEN);
+            let values1 = values1
+                .iter()
+                .map(|v| v.clone())
+                .collect::<Vec<OrderlyPerpSummary>>();
+            p_orderly_perp_summary_vec = res.iter().cloned().collect::<Vec<OrderlyPerpSummary>>();
+            let update_result = diesel::insert_into(orderly_perp_summary)
+                .values(values1)
+                .on_conflict(symbol)
+                .do_update()
+                .set((
+                    open_interest.eq(excluded(open_interest)),
+                    total_trading_volume.eq(excluded(total_trading_volume)),
+                    total_trading_fee.eq(excluded(total_trading_fee)),
+                    total_trading_count.eq(excluded(total_trading_count)),
+                    total_trading_user_count.eq(excluded(total_trading_user_count)),
+                    total_liquidation_amount.eq(excluded(total_liquidation_amount)),
+                    total_liquidation_count.eq(excluded(total_liquidation_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                    buy_amount.eq(excluded(buy_amount)),
+                    sell_amount.eq(excluded(sell_amount)),
+                ))
+                .execute_async(&POOL)
+                .await;
 
-        match update_result {
-            Ok(_) => {
-                row_nums += 1;
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!(
+                        "update orderly_perp_summary failed: {}",
+                        err
+                    ));
+                }
             }
-            Err(_) => {
-                return Err(InsertError);
+        } else {
+            let update_result = diesel::insert_into(orderly_perp_summary)
+                .values(p_orderly_perp_summary_vec)
+                .on_conflict(symbol)
+                .do_update()
+                .set((
+                    open_interest.eq(excluded(open_interest)),
+                    total_trading_volume.eq(excluded(total_trading_volume)),
+                    total_trading_fee.eq(excluded(total_trading_fee)),
+                    total_trading_count.eq(excluded(total_trading_count)),
+                    total_trading_user_count.eq(excluded(total_trading_user_count)),
+                    total_liquidation_amount.eq(excluded(total_liquidation_amount)),
+                    total_liquidation_count.eq(excluded(total_liquidation_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                    buy_amount.eq(excluded(buy_amount)),
+                    sell_amount.eq(excluded(sell_amount)),
+                ))
+                .execute_async(&POOL)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                    break;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!(
+                        "update orderly_perp_summary failed: {}",
+                        err
+                    ));
+                }
             }
         }
     }
+
     Ok(row_nums)
 }

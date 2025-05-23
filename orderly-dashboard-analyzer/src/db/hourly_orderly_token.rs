@@ -2,14 +2,14 @@ use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::pg::upsert::on_constraint;
+use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::{Insertable, Queryable};
 
 use crate::db::user_token_summary::DBException;
-use crate::db::user_token_summary::DBException::{InsertError, QueryError};
-use crate::db::{PrimaryKey, POOL};
+use crate::db::user_token_summary::DBException::QueryError;
+use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, POOL};
 use crate::schema::hourly_orderly_token;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
@@ -95,36 +95,75 @@ pub async fn find_hourly_orderly_token(
 
 pub async fn create_or_update_hourly_orderly_token(
     p_hourly_data_vec: Vec<&HourlyOrderlyToken>,
-) -> Result<usize, DBException> {
+) -> anyhow::Result<usize> {
     if p_hourly_data_vec.is_empty() {
         return Ok(0);
     }
     use crate::schema::hourly_orderly_token::dsl::*;
-    let mut row_nums = 0;
-    for hourly_data in p_hourly_data_vec {
-        let update_result = diesel::insert_into(hourly_orderly_token)
-            .values(hourly_data.clone())
-            .on_conflict(on_constraint("hourly_orderly_token_uq"))
-            .do_update()
-            .set((
-                withdraw_amount.eq(hourly_data.withdraw_amount.clone()),
-                withdraw_count.eq(hourly_data.withdraw_count.clone()),
-                deposit_amount.eq(hourly_data.deposit_amount.clone()),
-                deposit_count.eq(hourly_data.deposit_count.clone()),
-                pulled_block_height.eq(hourly_data.pulled_block_height.clone()),
-                pulled_block_time.eq(hourly_data.pulled_block_time.clone()),
-            ))
-            .execute_async(&POOL)
-            .await;
 
-        match update_result {
-            Ok(_) => {
-                row_nums += 1;
+    let mut row_nums = 0;
+    let mut p_hourly_data_vec = p_hourly_data_vec
+        .into_iter()
+        .cloned()
+        .collect::<Vec<HourlyOrderlyToken>>();
+    loop {
+        if p_hourly_data_vec.len() >= BATCH_UPSERT_LEN {
+            let (values1, res) = p_hourly_data_vec.split_at(BATCH_UPSERT_LEN);
+            let values1 = values1
+                .iter()
+                .map(|v| v.clone())
+                .collect::<Vec<HourlyOrderlyToken>>();
+            p_hourly_data_vec = res.iter().cloned().collect::<Vec<HourlyOrderlyToken>>();
+            let update_result = diesel::insert_into(hourly_orderly_token)
+                .values(values1)
+                .on_conflict(on_constraint("hourly_orderly_token_uq"))
+                .do_update()
+                .set((
+                    withdraw_amount.eq(excluded(withdraw_amount)),
+                    withdraw_count.eq(excluded(withdraw_count)),
+                    deposit_amount.eq(excluded(deposit_amount)),
+                    deposit_count.eq(excluded(deposit_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                ))
+                .execute_async(&POOL)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!("update hourly_user_perp failed: {}", err));
+                }
             }
-            Err(_) => {
-                return Err(InsertError);
+        } else {
+            let update_result = diesel::insert_into(hourly_orderly_token)
+                .values(p_hourly_data_vec)
+                .on_conflict(on_constraint("hourly_orderly_token_uq"))
+                .do_update()
+                .set((
+                    withdraw_amount.eq(excluded(withdraw_amount)),
+                    withdraw_count.eq(excluded(withdraw_count)),
+                    deposit_amount.eq(excluded(deposit_amount)),
+                    deposit_count.eq(excluded(deposit_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                ))
+                .execute_async(&POOL)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                    break;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!("update hourly_user_perp failed: {}", err));
+                }
             }
         }
     }
-    return Ok(row_nums);
+
+    Ok(row_nums)
 }

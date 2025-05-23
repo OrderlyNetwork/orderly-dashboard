@@ -2,13 +2,13 @@ use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::pg::upsert::on_constraint;
+use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
 use diesel::result::Error;
 
 use crate::db::user_token_summary::DBException;
-use crate::db::user_token_summary::DBException::{InsertError, QueryError};
-use crate::db::{PrimaryKey, POOL};
+use crate::db::user_token_summary::DBException::QueryError;
+use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, POOL};
 use crate::schema::user_perp_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
@@ -194,7 +194,97 @@ pub async fn find_user_perp_summary(
 
 pub async fn create_or_update_user_perp_summary(
     p_user_perp_summary_vec: Vec<&UserPerpSummary>,
-) -> Result<usize, DBException> {
+) -> anyhow::Result<usize> {
+    if p_user_perp_summary_vec.is_empty() {
+        return Ok(0);
+    }
+    use crate::schema::user_perp_summary::dsl::*;
+
+    let mut row_nums = 0;
+    let mut user_perp_summary_vec = p_user_perp_summary_vec
+        .into_iter()
+        .cloned()
+        .collect::<Vec<UserPerpSummary>>();
+    loop {
+        if user_perp_summary_vec.len() >= BATCH_UPSERT_LEN {
+            let (values1, res) = user_perp_summary_vec.split_at(BATCH_UPSERT_LEN);
+            let values1 = values1
+                .iter()
+                .map(|v| v.clone())
+                .collect::<Vec<UserPerpSummary>>();
+            user_perp_summary_vec = res.iter().cloned().collect::<Vec<UserPerpSummary>>();
+            let update_result = diesel::insert_into(user_perp_summary)
+                .values(values1)
+                .on_conflict(on_constraint("user_perp_summary_uq"))
+                .do_update()
+                .set((
+                    holding.eq(excluded(holding)),
+                    opening_cost.eq(excluded(opening_cost)),
+                    cost_position.eq(excluded(cost_position)),
+                    total_trading_volume.eq(excluded(total_trading_volume)),
+                    total_trading_fee.eq(excluded(total_trading_fee)),
+                    total_trading_count.eq(excluded(total_trading_count)),
+                    total_realized_pnl.eq(excluded(total_realized_pnl)),
+                    total_un_realized_pnl.eq(excluded(total_un_realized_pnl)),
+                    total_liquidation_amount.eq(excluded(total_liquidation_amount)),
+                    total_liquidation_count.eq(excluded(total_liquidation_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                    sum_unitary_fundings.eq(excluded(sum_unitary_fundings)),
+                ))
+                .execute_async(&POOL)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!("update user_perp_summary failed: {}", err));
+                }
+            }
+        } else {
+            let update_result = diesel::insert_into(user_perp_summary)
+                .values(user_perp_summary_vec)
+                .on_conflict(on_constraint("user_perp_summary_uq"))
+                .do_update()
+                .set((
+                    holding.eq(excluded(holding)),
+                    opening_cost.eq(excluded(opening_cost)),
+                    cost_position.eq(excluded(cost_position)),
+                    total_trading_volume.eq(excluded(total_trading_volume)),
+                    total_trading_fee.eq(excluded(total_trading_fee)),
+                    total_trading_count.eq(excluded(total_trading_count)),
+                    total_realized_pnl.eq(excluded(total_realized_pnl)),
+                    total_un_realized_pnl.eq(excluded(total_un_realized_pnl)),
+                    total_liquidation_amount.eq(excluded(total_liquidation_amount)),
+                    total_liquidation_count.eq(excluded(total_liquidation_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                    sum_unitary_fundings.eq(excluded(sum_unitary_fundings)),
+                ))
+                .execute_async(&POOL)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                    break;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!("update user_perp_summary failed: {}", err));
+                }
+            }
+        }
+    }
+
+    Ok(row_nums)
+}
+
+#[allow(dead_code)]
+pub async fn legacy_create_or_update_user_perp_summary(
+    p_user_perp_summary_vec: Vec<&UserPerpSummary>,
+) -> anyhow::Result<usize> {
     if p_user_perp_summary_vec.is_empty() {
         return Ok(0);
     }
@@ -228,10 +318,75 @@ pub async fn create_or_update_user_perp_summary(
             Ok(_) => {
                 row_nums += 1;
             }
-            Err(_) => {
-                return Err(InsertError);
+            Err(err) => {
+                return Err(anyhow::anyhow!("update user_perp_summary failed: {}", err));
             }
         }
     }
     Ok(row_nums)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Instant;
+
+    use super::*;
+    use chrono::Utc;
+
+    fn init_log() {
+        tracing_subscriber::fmt::Subscriber::builder()
+            .with_writer(std::io::stderr)
+            .with_thread_ids(true)
+            .with_thread_names(true)
+            .init();
+    }
+    #[ignore]
+    #[actix_web::test]
+    async fn test_create_or_update_user_perp_summary() {
+        dotenv::dotenv().ok();
+        init_log();
+        let mut data = vec![];
+        let update_time = NaiveDateTime::from_timestamp_opt(
+            Utc::now().timestamp(),
+            Utc::now().timestamp_subsec_nanos() as u32,
+        )
+        .unwrap();
+        for i in 0..998 {
+            data.push(UserPerpSummary {
+                account_id: (i as usize % BATCH_UPSERT_LEN).to_string(),
+                symbol: "0xaaaaa".to_string(),
+                holding: (i * 10000).into(),
+                opening_cost: (i * 10000).into(),
+                cost_position: (i * 10000).into(),
+                total_trading_volume: (i * 10000).into(),
+                total_trading_count: (i * 10000).into(),
+                total_trading_fee: (i * 10000).into(),
+                total_realized_pnl: (i * 10000).into(),
+                total_un_realized_pnl: (i * 10000).into(),
+                total_liquidation_amount: (i * 10000).into(),
+                total_liquidation_count: (i * 10000).into(),
+                pulled_block_height: (i * 10000).into(),
+                pulled_block_time: update_time,
+                sum_unitary_fundings: (i * 10000).into(),
+            });
+        }
+        let val = Vec::from_iter(data.iter());
+        let inst1 = Instant::now();
+        create_or_update_user_perp_summary(val.clone())
+            .await
+            .unwrap();
+        let elapse1_ms = inst1.elapsed().as_millis();
+
+        let inst2 = Instant::now();
+        legacy_create_or_update_user_perp_summary(val.clone())
+            .await
+            .unwrap();
+        let elapse2_ms = inst2.elapsed().as_millis();
+
+        tracing::info!(
+            "test_create_or_update_user_perp_summary elapse1_ms: {}, elapse2_ms: {}",
+            elapse1_ms,
+            elapse2_ms
+        );
+    }
 }
