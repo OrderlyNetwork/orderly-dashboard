@@ -93,6 +93,7 @@ pub async fn find_hourly_orderly_token(
     }
 }
 
+#[allow(dead_code)]
 pub async fn create_or_update_hourly_orderly_token(
     p_hourly_data_vec: Vec<&HourlyOrderlyToken>,
 ) -> anyhow::Result<usize> {
@@ -134,7 +135,10 @@ pub async fn create_or_update_hourly_orderly_token(
                     row_nums += len;
                 }
                 Err(err) => {
-                    return Err(anyhow::anyhow!("update hourly_user_perp failed: {}", err));
+                    return Err(anyhow::anyhow!(
+                        "update hourly_orderly_token failed: {}",
+                        err
+                    ));
                 }
             }
         } else {
@@ -159,7 +163,10 @@ pub async fn create_or_update_hourly_orderly_token(
                     break;
                 }
                 Err(err) => {
-                    return Err(anyhow::anyhow!("update hourly_user_perp failed: {}", err));
+                    return Err(anyhow::anyhow!(
+                        "update hourly_orderly_token failed: {}",
+                        err
+                    ));
                 }
             }
         }

@@ -7,8 +7,7 @@ use crate::db::hourly_orderly_perp::{
     HourlyOrderlyPerpKey,
 };
 use crate::db::hourly_orderly_token::{
-    create_or_update_hourly_orderly_token, find_hourly_orderly_token, HourlyOrderlyToken,
-    HourlyOrderlyTokenKey,
+    find_hourly_orderly_token, HourlyOrderlyToken, HourlyOrderlyTokenKey,
 };
 use crate::db::hourly_user_perp::{
     create_or_update_hourly_user_perp, find_hourly_user_perp, HourlyUserPerp, HourlyUserPerpKey,
@@ -112,19 +111,19 @@ impl AnalyzeContext {
             .await
             .unwrap();
 
-        self.hourly_orderly_token_cache
-            .iter_mut()
-            .for_each(|(_k, v)| {
-                if pulled_block_height != 0 {
-                    v.pulled_block_height = pulled_block_height;
-                }
-                v.pulled_block_time = pulled_block_time;
-            });
-        create_or_update_hourly_orderly_token(Vec::from_iter(
-            self.hourly_orderly_token_cache.values(),
-        ))
-        .await
-        .unwrap();
+        // self.hourly_orderly_token_cache
+        //     .iter_mut()
+        //     .for_each(|(_k, v)| {
+        //         if pulled_block_height != 0 {
+        //             v.pulled_block_height = pulled_block_height;
+        //         }
+        //         v.pulled_block_time = pulled_block_time;
+        //     });
+        // create_or_update_hourly_orderly_token(Vec::from_iter(
+        //     self.hourly_orderly_token_cache.values(),
+        // ))
+        // .await
+        // .unwrap();
 
         self.hourly_user_token_cache.iter_mut().for_each(|(_k, v)| {
             if pulled_block_height != 0 {
