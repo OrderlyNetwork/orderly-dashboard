@@ -2,14 +2,14 @@ use actix_diesel::dsl::AsyncRunQueryDsl;
 use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::pg::upsert::on_constraint;
+use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
 use diesel::result::Error;
 
 use crate::db::user_token_summary::DBException;
-use crate::db::user_token_summary::DBException::{InsertError, QueryError};
+use crate::db::user_token_summary::DBException::QueryError;
 use crate::db::POOL;
-use crate::db::{PrimaryKey, DB_CONTEXT};
+use crate::db::{PrimaryKey, BATCH_UPSERT_LEN};
 use crate::schema::hourly_user_token;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
@@ -101,33 +101,78 @@ pub async fn find_hourly_user_token(
 
 pub async fn create_or_update_hourly_user_token(
     hourly_data_vec: Vec<&HourlyUserToken>,
-) -> Result<usize, DBException> {
+) -> anyhow::Result<usize> {
+    if hourly_data_vec.is_empty() {
+        return Ok(0);
+    }
     use crate::schema::hourly_user_token::dsl::*;
 
     let mut row_nums = 0;
-    for hourly_data in hourly_data_vec {
-        let result = diesel::insert_into(hourly_user_token)
-            .values(hourly_data.clone())
-            .on_conflict(on_constraint("hourly_user_token_uq"))
-            .do_update()
-            .set((
-                withdraw_amount.eq(hourly_data.withdraw_amount.clone()),
-                withdraw_count.eq(hourly_data.withdraw_count.clone()),
-                deposit_amount.eq(hourly_data.deposit_amount.clone()),
-                deposit_count.eq(hourly_data.deposit_count.clone()),
-                pulled_block_height.eq(hourly_data.pulled_block_height.clone()),
-                pulled_block_time.eq(hourly_data.pulled_block_time.clone()),
-            ))
-            .execute_async(&POOL)
-            .await;
+    let mut hourly_data_vec = hourly_data_vec
+        .into_iter()
+        .cloned()
+        .collect::<Vec<HourlyUserToken>>();
+    loop {
+        if hourly_data_vec.len() >= BATCH_UPSERT_LEN {
+            let (values1, res) = hourly_data_vec.split_at(BATCH_UPSERT_LEN);
+            let values1 = values1
+                .iter()
+                .map(|v| v.clone())
+                .collect::<Vec<HourlyUserToken>>();
+            hourly_data_vec = res.iter().cloned().collect::<Vec<HourlyUserToken>>();
+            let update_result = diesel::insert_into(hourly_user_token)
+                .values(values1)
+                .on_conflict(on_constraint("hourly_user_token_uq"))
+                .do_update()
+                .set((
+                    withdraw_amount.eq(excluded(withdraw_amount)),
+                    withdraw_count.eq(excluded(withdraw_count)),
+                    deposit_amount.eq(excluded(deposit_amount)),
+                    deposit_count.eq(excluded(deposit_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                ))
+                .execute_async(&POOL)
+                .await;
 
-        match result {
-            Ok(_) => row_nums += 1,
-            Err(error) => {
-                tracing::warn!(target: DB_CONTEXT,"create_or_update_hourly_data error. err:{:?}",error);
-                return Err(InsertError);
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!("update hourly_user_token failed: {}", err));
+                }
+            }
+        } else {
+            let update_result = diesel::insert_into(hourly_user_token)
+                .values(hourly_data_vec)
+                .on_conflict(on_constraint("hourly_user_token_uq"))
+                .do_update()
+                .set((
+                    withdraw_amount.eq(excluded(withdraw_amount)),
+                    withdraw_count.eq(excluded(withdraw_count)),
+                    deposit_amount.eq(excluded(deposit_amount)),
+                    deposit_count.eq(excluded(deposit_count)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                ))
+                .execute_async(&POOL)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                    break;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!(
+                        "update create_or_update_hourly_user_token failed: {}",
+                        err
+                    ));
+                }
             }
         }
     }
-    return Ok(row_nums);
+
+    Ok(row_nums)
 }
