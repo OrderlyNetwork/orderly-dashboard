@@ -143,3 +143,108 @@ fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
     let date_time = NaiveDateTime::from_timestamp_opt(block_timestamp / 1000, 0).unwrap();
     return date_time.with_second(0).unwrap().with_minute(0).unwrap();
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{analyzer_perp_trade, AnalyzeContext, UserPerpSummaryKey};
+    use crate::analyzer::{calc::USDC_HASH, tests::*};
+    use bigdecimal::BigDecimal;
+
+    use num_traits::FromPrimitive;
+    use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;
+    use orderly_dashboard_indexer::formats_external::trading_events::Trade;
+
+    const ALICE: &str = "0xa11ce00000000000000000000000000000000000000000000000000000000000";
+    const BOB: &str = "0xb0b0000000000000000000000000000000000000000000000000000000000000";
+
+    #[actix_web::test]
+    async fn test_perp_trades() {
+        let mut context = AnalyzeContext::new_context();
+        let block_time = 1748416430;
+
+        let symbols = vec![
+            SYMBOL_HASH_BTC_USDC.to_string(),
+            SYMBOL_HASH_ETH_USDC.to_string(),
+        ];
+        let tokens = vec![TOKEN_HASH.to_string(), USDC_HASH.to_string()];
+        let account_symbols = vec![
+            (ALICE.to_string(), SYMBOL_HASH_BTC_USDC.to_string()),
+            (ALICE.to_string(), SYMBOL_HASH_ETH_USDC.to_string()),
+            (BOB.to_string(), SYMBOL_HASH_BTC_USDC.to_string()),
+            (BOB.to_string(), SYMBOL_HASH_ETH_USDC.to_string()),
+        ];
+        let account_tokens = vec![
+            (ALICE.to_string(), TOKEN_HASH.to_string()),
+            (ALICE.to_string(), USDC_HASH.to_string()),
+            (BOB.to_string(), TOKEN_HASH.to_string()),
+            (BOB.to_string(), USDC_HASH.to_string()),
+        ];
+
+        context.init_orderly_context(block_time, symbols, tokens, account_symbols, account_tokens);
+        let alice_eth_perp_key = UserPerpSummaryKey {
+            account_id: ALICE.to_string(),
+            symbol: SYMBOL_HASH_ETH_USDC.to_string(),
+        };
+
+        let bob_eth_perp_key = UserPerpSummaryKey {
+            account_id: BOB.to_string(),
+            symbol: SYMBOL_HASH_ETH_USDC.to_string(),
+        };
+        context.set_user_perp_cache(
+            &alice_eth_perp_key,
+            BigDecimal::from_i128(0).unwrap(),
+            BigDecimal::from_i128(0).unwrap(),
+            BigDecimal::from_i128(0).unwrap(),
+        );
+        context.set_user_perp_cache(
+            &bob_eth_perp_key,
+            BigDecimal::from_i128(0).unwrap(),
+            BigDecimal::from_i128(0).unwrap(),
+            BigDecimal::from_i128(0).unwrap(),
+        );
+
+        let trades = vec![
+            Trade {
+                account_id: ALICE.to_string(),
+                symbol_hash: SYMBOL_HASH_ETH_USDC.to_string(),
+                fee_asset_hash: TOKEN_HASH.to_string(),
+                trade_qty: "-200000000".to_string(),
+                notional: "-5000000".to_string(),
+                executed_price: "250000000".to_string(),
+                fee: "7500".to_string(),
+                sum_unitary_fundings: "1000000000000001".to_string(),
+                trade_id: 13,
+                match_id: 1678975214714862536,
+                timestamp: (block_time * 1000) as u64,
+                side: PurchaseSide::Sell,
+            },
+            Trade {
+                account_id: BOB.to_string(),
+                symbol_hash: SYMBOL_HASH_ETH_USDC.to_string(),
+                fee_asset_hash: TOKEN_HASH.to_string(),
+                trade_qty: "200000000".to_string(),
+                notional: "5000000".to_string(),
+                executed_price: "250000000".to_string(),
+                fee: "5000".to_string(),
+                sum_unitary_fundings: "1000000000000001".to_string(),
+                trade_id: 14,
+                match_id: 1678975214714862536,
+                timestamp: (block_time * 1000) as u64,
+                side: PurchaseSide::Buy,
+            },
+        ];
+        let block_number = 1000000;
+        analyzer_perp_trade(trades, block_number, &mut context).await;
+        {
+            let alice_eth = context.get_user_perp_cache(&alice_eth_perp_key);
+            assert_eq!(alice_eth.holding, BigDecimal::from(-2));
+            println!("alice_eth perp summary: {:?}", alice_eth);
+        }
+
+        {
+            let bob_eth = context.get_user_perp_cache(&bob_eth_perp_key);
+            assert_eq!(bob_eth.holding, BigDecimal::from(2));
+            println!("bob_eth perp summary: {:?}", bob_eth);
+        }
+    }
+}

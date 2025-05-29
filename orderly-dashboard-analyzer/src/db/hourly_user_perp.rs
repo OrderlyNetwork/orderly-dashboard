@@ -33,6 +33,30 @@ pub struct HourlyUserPerp {
     pub pulled_block_time: NaiveDateTime,
 }
 
+impl HourlyUserPerp {
+    pub fn new_emtpy_hourly_user_perp(
+        account_id: &str,
+        symbol: &str,
+        block_hour: NaiveDateTime,
+    ) -> HourlyUserPerp {
+        HourlyUserPerp {
+            account_id: account_id.to_string(),
+            symbol: symbol.to_string(),
+            block_hour: block_hour,
+            trading_fee: Default::default(),
+            trading_volume: Default::default(),
+            trading_count: 0,
+            realized_pnl: Default::default(),
+            un_realized_pnl: Default::default(),
+            latest_sum_unitary_funding: Default::default(),
+            liquidation_amount: Default::default(),
+            liquidation_count: 0,
+            pulled_block_height: 0,
+            pulled_block_time: Default::default(),
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct HourlyUserPerpKey {
     pub account_id: String,
@@ -103,7 +127,7 @@ pub async fn find_hourly_user_perp(
     p_account_id: String,
     p_symbol: String,
     p_block_hour: NaiveDateTime,
-) -> Result<HourlyUserPerp, DBException> {
+) -> anyhow::Result<HourlyUserPerp> {
     use crate::schema::hourly_user_perp::dsl::*;
     let select_result = hourly_user_perp
         .filter(account_id.eq(p_account_id.clone()))
@@ -134,7 +158,13 @@ pub async fn find_hourly_user_perp(
 
                 Ok(new_perp)
             }
-            _ => Err(QueryError),
+            _ => Err(anyhow::anyhow!(
+                "find_hourly_user_perp for account_id {}, symbol {}, p_block_hour: {}, err: {}",
+                p_account_id,
+                p_symbol,
+                p_block_hour,
+                error
+            )),
         },
     }
 }

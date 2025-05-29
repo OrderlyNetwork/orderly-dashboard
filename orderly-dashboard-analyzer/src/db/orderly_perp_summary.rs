@@ -34,6 +34,25 @@ pub struct OrderlyPerpSummary {
 }
 
 impl OrderlyPerpSummary {
+    pub fn new_empty_orderly_perp_summary(symbol: &str) -> OrderlyPerpSummary {
+        OrderlyPerpSummary {
+            symbol: symbol.to_string(),
+            open_interest: Default::default(),
+            total_trading_volume: Default::default(),
+            total_trading_fee: Default::default(),
+            total_trading_count: 0,
+            total_trading_user_count: 0,
+            total_liquidation_amount: Default::default(),
+            total_liquidation_count: 0,
+            pulled_block_height: 0,
+            pulled_block_time: Default::default(),
+            buy_amount: Default::default(),
+            sell_amount: Default::default(),
+        }
+    }
+}
+
+impl OrderlyPerpSummary {
     pub fn new_liquidation(&mut self, liquidation_amount: BigDecimal, block_num: i64) {
         if block_num <= self.pulled_block_height {
             // already processed this block events

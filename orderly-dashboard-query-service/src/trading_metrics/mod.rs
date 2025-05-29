@@ -92,6 +92,7 @@ pub struct VolumeRankingRequest {
 pub struct VolumeRankingData {
     pub account_id: String,
     pub symbol: String,
+    pub symbol_hash: String,
     pub holding: String,
     pub index_price: String,
     pub holding_value: String,
@@ -102,6 +103,7 @@ impl From<UserSymbolHoldingRank> for VolumeRankingData {
         VolumeRankingData {
             account_id: value.account_id,
             symbol: value.symbol,
+            symbol_hash: value.symbol_hash,
             holding: value.holding.to_string(),
             index_price: value.index_price.to_string(),
             holding_value: value.holding_value.to_string(),
