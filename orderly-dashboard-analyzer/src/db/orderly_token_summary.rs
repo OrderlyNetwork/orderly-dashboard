@@ -29,6 +29,22 @@ pub struct OrderlyTokenSummary {
 }
 
 impl OrderlyTokenSummary {
+    pub fn new_empty_orderly_token_summary(token: &str, chain_id: &str) -> OrderlyTokenSummary {
+        OrderlyTokenSummary {
+            token: token.to_string(),
+            chain_id: chain_id.to_string(),
+            balance: Default::default(),
+            total_withdraw_amount: Default::default(),
+            total_withdraw_count: 0,
+            total_deposit_amount: Default::default(),
+            total_deposit_count: 0,
+            pulled_block_height: 0,
+            pulled_block_time: Default::default(),
+        }
+    }
+}
+
+impl OrderlyTokenSummary {
     #[allow(duplicate_macro_attributes)]
     pub fn deposit(&mut self, p_deposit_amount: BigDecimal, p_block_height: i64) {
         if p_block_height <= self.pulled_block_height {

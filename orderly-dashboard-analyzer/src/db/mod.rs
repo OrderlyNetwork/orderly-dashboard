@@ -22,7 +22,7 @@ pub mod user_perp_summary;
 pub mod user_token_summary;
 
 pub const DB_CONTEXT: &str = "DB_operation";
-pub const BATCH_UPSERT_LEN: usize = 300;
+pub const BATCH_UPSERT_LEN: usize = 3;
 
 pub static POOL: Lazy<Database<PgConnection>> = Lazy::new(|| establish_connection());
 pub static INITED_DATABASE_URL: OnceCell<String> = OnceCell::new();
