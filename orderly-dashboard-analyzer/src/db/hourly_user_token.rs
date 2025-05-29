@@ -30,6 +30,28 @@ pub struct HourlyUserToken {
 }
 
 impl HourlyUserToken {
+    pub fn new_emtpy_hourly_user_token(
+        account_id: &str,
+        token: &str,
+        block_hour: NaiveDateTime,
+        chain_id: &str,
+    ) -> HourlyUserToken {
+        HourlyUserToken {
+            account_id: account_id.to_string(),
+            token: token.to_string(),
+            block_hour: block_hour,
+            chain_id: chain_id.to_string(),
+            withdraw_amount: Default::default(),
+            withdraw_count: 0,
+            deposit_amount: Default::default(),
+            deposit_count: 0,
+            pulled_block_height: 0,
+            pulled_block_time: Default::default(),
+        }
+    }
+}
+
+impl HourlyUserToken {
     #[allow(duplicate_macro_attributes)]
     pub fn deposit(&mut self, p_deposit_amount: BigDecimal, p_block_height: i64) {
         if p_block_height <= self.pulled_block_height {

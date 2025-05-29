@@ -149,8 +149,7 @@ pub async fn analyzer_liquidation_v2(
             block_hour.clone(),
         );
 
-        execute_for_liquidated(&liquidation, context).await;
-        execute_for_liquidator(&liquidation, context).await;
+        execute_for_liquidation_v2(&liquidation, context).await;
         statistics_for_orderly(&liquidation, context).await;
     }
 }
@@ -297,6 +296,50 @@ async fn execute_for_liquidated(liquidation: &Liquidation, context: &mut Analyze
     );
 }
 
+async fn execute_for_liquidation_v2(liquidation: &Liquidation, context: &mut AnalyzeContext) {
+    let key = UserPerpSummaryKey::new_key(
+        liquidation.liquidated_account_id.clone(),
+        liquidation.symbol_hash.clone(),
+    );
+
+    let user_perp = context.get_user_perp(&key.clone()).await;
+    user_perp.charge_funding_fee(
+        liquidation.sum_unitry_funding.clone(),
+        liquidation.block_num,
+    );
+
+    let user_perp_snap = user_perp.clone();
+    let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
+        liquidation.qty_transfer.clone(),
+        (liquidation.cost_position_transfer.clone())
+            - ((liquidation.liquidator_fee.clone()) + (liquidation.insurnace_fee.clone())),
+        user_perp_snap.holding.clone(),
+        user_perp_snap.opening_cost.clone(),
+    );
+
+    let user_perp = context.get_user_perp(&key.clone()).await;
+    user_perp.new_liquidation_v2(
+        liquidation.qty_transfer.clone(),
+        liquidation.mark_price.clone(),
+        liquidation.block_num,
+        liquidation.cost_position_transfer.clone(),
+        liquidation.sum_unitry_funding.clone(),
+        open_cost_diff.clone(),
+    );
+
+    let h_perp_key = HourlyUserPerpKey::new_key(
+        liquidation.liquidated_account_id.clone(),
+        liquidation.symbol_hash.clone(),
+        liquidation.block_hour.clone(),
+    );
+    let h_user_perp = context.get_hourly_user_perp(&h_perp_key).await;
+    h_user_perp.new_liquidation(
+        (liquidation.qty_transfer.clone()) * (liquidation.mark_price.clone()),
+        liquidation.block_num,
+        pnl_diff.clone(),
+    );
+}
+
 async fn transfer_insurance_fund(
     insurance_transfer_amount: &String,
     context: &mut AnalyzeContext,
@@ -337,4 +380,319 @@ async fn transfer_amount(
         return;
     }
     user_token.add_amount(amount.abs().neg(), p_block_height);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::analyzer::tests::*;
+    use bigdecimal::BigDecimal;
+    use chrono::NaiveDateTime;
+    use num_traits::FromPrimitive;
+    use std::str::FromStr;
+
+    use super::{
+        analyzer_liquidation_v1, analyzer_liquidation_v2, AnalyzeContext, LiquidationTransfer,
+        LiquidationTransferV2, UserPerpSummaryKey, USDC_HASH,
+    };
+
+    #[actix_web::test]
+    async fn test_liquidation_v1() {
+        let mut context = AnalyzeContext::new_context();
+        let block_time = 1748416430;
+
+        let symbols = vec![
+            SYMBOL_HASH_BTC_USDC.to_string(),
+            SYMBOL_HASH_ETH_USDC.to_string(),
+        ];
+        let tokens = vec![TOKEN_HASH.to_string(), USDC_HASH.to_string()];
+        let account_symbols = vec![
+            (
+                LIQUIDATED_ACCOUNT_ID.to_string(),
+                SYMBOL_HASH_BTC_USDC.to_string(),
+            ),
+            (
+                LIQUIDATED_ACCOUNT_ID.to_string(),
+                SYMBOL_HASH_ETH_USDC.to_string(),
+            ),
+            (
+                LIQUIDATOR_ACCOUNT_ID.to_string(),
+                SYMBOL_HASH_BTC_USDC.to_string(),
+            ),
+            (
+                LIQUIDATOR_ACCOUNT_ID.to_string(),
+                SYMBOL_HASH_ETH_USDC.to_string(),
+            ),
+            (INSURANCE_FUND.to_string(), SYMBOL_HASH_BTC_USDC.to_string()),
+            (INSURANCE_FUND.to_string(), SYMBOL_HASH_ETH_USDC.to_string()),
+        ];
+        let account_tokens = vec![
+            (LIQUIDATED_ACCOUNT_ID.to_string(), TOKEN_HASH.to_string()),
+            (LIQUIDATED_ACCOUNT_ID.to_string(), USDC_HASH.to_string()),
+            (LIQUIDATOR_ACCOUNT_ID.to_string(), TOKEN_HASH.to_string()),
+            (LIQUIDATOR_ACCOUNT_ID.to_string(), USDC_HASH.to_string()),
+            (INSURANCE_FUND.to_string(), TOKEN_HASH.to_string()),
+            (INSURANCE_FUND.to_string(), USDC_HASH.to_string()),
+        ];
+
+        context.init_orderly_context(block_time, symbols, tokens, account_symbols, account_tokens);
+        let liquidated_btc_perp_key = UserPerpSummaryKey {
+            account_id: LIQUIDATED_ACCOUNT_ID.to_string(),
+            symbol: SYMBOL_HASH_BTC_USDC.to_string(),
+        };
+        let liquidated_eth_perp_key = UserPerpSummaryKey {
+            account_id: LIQUIDATED_ACCOUNT_ID.to_string(),
+            symbol: SYMBOL_HASH_ETH_USDC.to_string(),
+        };
+        let liquidator_btc_perp_key = UserPerpSummaryKey {
+            account_id: LIQUIDATOR_ACCOUNT_ID.to_string(),
+            symbol: SYMBOL_HASH_BTC_USDC.to_string(),
+        };
+        let liquidator_eth_perp_key = UserPerpSummaryKey {
+            account_id: LIQUIDATOR_ACCOUNT_ID.to_string(),
+            symbol: SYMBOL_HASH_ETH_USDC.to_string(),
+        };
+        context.set_user_perp_cache(
+            &liquidated_btc_perp_key,
+            BigDecimal::from_i128(-400000000).unwrap(),
+            BigDecimal::from_i128(-8000000).unwrap(),
+            BigDecimal::from_i128(2000000000000002).unwrap(),
+        );
+        context.set_user_perp_cache(
+            &liquidated_eth_perp_key,
+            BigDecimal::from_i128(200000000).unwrap(),
+            BigDecimal::from_i128(3600000000).unwrap(),
+            BigDecimal::from_i128(2000000000000002).unwrap(),
+        );
+
+        let liquidation_transfers = vec![
+            LiquidationTransfer {
+                liquidation_transfer_id: 100.to_string(),
+                liquidator_account_id: LIQUIDATOR_ACCOUNT_ID.to_string(),
+                symbol_hash: SYMBOL_HASH_BTC_USDC.to_string(),
+                position_qty_transfer: (-200000000).to_string(),
+                cost_position_transfer: (-4000000).to_string(),
+                liquidator_fee: 15000.to_string(),
+                insurance_fee: 15000.to_string(),
+                liquidation_fee: 30000.to_string(),
+                mark_price: 200000000.to_string(),
+                sum_unitary_fundings: "3000000000000003".to_string(),
+            },
+            LiquidationTransfer {
+                liquidation_transfer_id: 101.to_string(),
+                liquidator_account_id: LIQUIDATOR_ACCOUNT_ID.to_string(),
+                symbol_hash: SYMBOL_HASH_ETH_USDC.to_string(),
+                position_qty_transfer: 100000000.to_string(),
+                cost_position_transfer: 1800000000.to_string(),
+                liquidator_fee: 18000000.to_string(),
+                insurance_fee: 18000000.to_string(),
+                liquidation_fee: 36000000.to_string(),
+                mark_price: "180000000000".to_string(),
+                sum_unitary_fundings: "3000000000000003".to_string(),
+            },
+        ];
+
+        let block_number = 1000000;
+        let block_hour = convert_block_hour(block_time);
+        let block_time = NaiveDateTime::from_timestamp_opt(block_time, 0).unwrap();
+
+        analyzer_liquidation_v1(
+            LIQUIDATED_ACCOUNT_ID.to_string(),
+            USDC_HASH.to_string(),
+            0.to_string(),
+            liquidation_transfers,
+            block_number,
+            block_hour,
+            block_time,
+            &mut context,
+        )
+        .await;
+
+        {
+            let liquidated_btc = context.get_user_perp_cache(&liquidated_btc_perp_key);
+            assert_eq!(liquidated_btc.holding, BigDecimal::from(-2));
+            println!("liquidated_btc perp summary: {:?}", liquidated_btc);
+        }
+
+        {
+            let liquidated_eth = context.get_user_perp_cache(&liquidated_eth_perp_key);
+            assert_eq!(liquidated_eth.holding, BigDecimal::from(1));
+            println!("liquidated eth perp summary: {:?}", liquidated_eth);
+        }
+
+        {
+            let liquidator_btc = context.get_user_perp_cache(&liquidator_btc_perp_key);
+            assert_eq!(liquidator_btc.holding, BigDecimal::from(-2));
+            println!("liquidator btc perp summary: {:?}", liquidator_btc);
+        }
+
+        {
+            let liquidator_eth = context.get_user_perp_cache(&liquidator_eth_perp_key);
+            assert_eq!(liquidator_eth.holding, BigDecimal::from(1));
+            println!("liquidator eth perp summary: {:?}", liquidator_eth);
+        }
+    }
+
+    #[actix_web::test]
+    async fn test_liquidation_v2_1() {
+        let mut context = AnalyzeContext::new_context();
+        let block_time = 1748416430;
+
+        let symbols = vec![
+            SYMBOL_HASH_BTC_USDC.to_string(),
+            SYMBOL_HASH_ETH_USDC.to_string(),
+        ];
+        let tokens = vec![TOKEN_HASH.to_string(), USDC_HASH.to_string()];
+        let account_symbols = vec![
+            (
+                LIQUIDATED_ACCOUNT_ID.to_string(),
+                SYMBOL_HASH_BTC_USDC.to_string(),
+            ),
+            (
+                LIQUIDATED_ACCOUNT_ID.to_string(),
+                SYMBOL_HASH_ETH_USDC.to_string(),
+            ),
+            (
+                LIQUIDATOR_ACCOUNT_ID.to_string(),
+                SYMBOL_HASH_BTC_USDC.to_string(),
+            ),
+            (
+                LIQUIDATOR_ACCOUNT_ID.to_string(),
+                SYMBOL_HASH_ETH_USDC.to_string(),
+            ),
+            (INSURANCE_FUND.to_string(), SYMBOL_HASH_BTC_USDC.to_string()),
+            (INSURANCE_FUND.to_string(), SYMBOL_HASH_ETH_USDC.to_string()),
+        ];
+        let account_tokens = vec![
+            (LIQUIDATED_ACCOUNT_ID.to_string(), TOKEN_HASH.to_string()),
+            (LIQUIDATED_ACCOUNT_ID.to_string(), USDC_HASH.to_string()),
+            (LIQUIDATOR_ACCOUNT_ID.to_string(), TOKEN_HASH.to_string()),
+            (LIQUIDATOR_ACCOUNT_ID.to_string(), USDC_HASH.to_string()),
+            (INSURANCE_FUND.to_string(), TOKEN_HASH.to_string()),
+            (INSURANCE_FUND.to_string(), USDC_HASH.to_string()),
+        ];
+
+        context.init_orderly_context(block_time, symbols, tokens, account_symbols, account_tokens);
+        let liquidated_btc_perp_key = UserPerpSummaryKey {
+            account_id: LIQUIDATED_ACCOUNT_ID.to_string(),
+            symbol: SYMBOL_HASH_BTC_USDC.to_string(),
+        };
+        let liquidator_btc_perp_key = UserPerpSummaryKey {
+            account_id: LIQUIDATOR_ACCOUNT_ID.to_string(),
+            symbol: SYMBOL_HASH_BTC_USDC.to_string(),
+        };
+        let insurance_btc_perp_key = UserPerpSummaryKey {
+            account_id: INSURANCE_FUND.to_string(),
+            symbol: SYMBOL_HASH_BTC_USDC.to_string(),
+        };
+        context.set_user_perp_cache(
+            &liquidated_btc_perp_key,
+            BigDecimal::from_i128(-289_000_000).unwrap(),
+            BigDecimal::from_i128(-435_175_502).unwrap(),
+            BigDecimal::from_i128(40_331_900_000_000_000).unwrap(),
+        );
+        context.set_user_perp_cache(
+            &liquidator_btc_perp_key,
+            BigDecimal::from_i128(4_059_000_000).unwrap(),
+            BigDecimal::from_i128(-2_533_031_349).unwrap(),
+            BigDecimal::from_i128(40_376_000_000_000_000).unwrap(),
+        );
+        context.set_user_perp_cache(
+            &insurance_btc_perp_key,
+            BigDecimal::from_i128(0).unwrap(),
+            BigDecimal::from_i128(-142_229_490).unwrap(),
+            BigDecimal::from_i128(40_376_000_000_000_000).unwrap(),
+        );
+
+        let liquidation_transfers1 = vec![LiquidationTransferV2 {
+            account_id: LIQUIDATED_ACCOUNT_ID.to_string(),
+            symbol_hash: SYMBOL_HASH_BTC_USDC.to_string(),
+            position_qty_transfer: (254_000_000).to_string(),
+            cost_position_transfer: (402_465_540).to_string(),
+            fee: 14_086_294.to_string(),
+            mark_price: "15845100000".to_string(),
+            sum_unitary_fundings: "40376000000000000".to_string(),
+        }];
+        let liquidation_transfers2 = vec![LiquidationTransferV2 {
+            account_id: LIQUIDATOR_ACCOUNT_ID.to_string(),
+            symbol_hash: SYMBOL_HASH_BTC_USDC.to_string(),
+            position_qty_transfer: (-254_000_000).to_string(),
+            cost_position_transfer: (-402_465_540).to_string(),
+            fee: (-7_043_147).to_string(),
+            mark_price: "15845100000".to_string(),
+            sum_unitary_fundings: "40376000000000000".to_string(),
+        }];
+        let liquidation_transfers3 = vec![LiquidationTransferV2 {
+            account_id: INSURANCE_FUND.to_string(),
+            symbol_hash: SYMBOL_HASH_ETH_USDC.to_string(),
+            position_qty_transfer: 0.to_string(),
+            cost_position_transfer: 0.to_string(),
+            fee: (-7_043_147).to_string(),
+            mark_price: "15845100000".to_string(),
+            sum_unitary_fundings: "40376000000000000".to_string(),
+        }];
+
+        let block_number = 1000000;
+        let block_hour = convert_block_hour(block_time);
+        let block_time = NaiveDateTime::from_timestamp_opt(block_time, 0).unwrap();
+
+        analyzer_liquidation_v2(
+            LIQUIDATED_ACCOUNT_ID.to_string(),
+            USDC_HASH.to_string(),
+            0.to_string(),
+            liquidation_transfers1,
+            block_number,
+            block_hour,
+            block_time,
+            &mut context,
+        )
+        .await;
+
+        analyzer_liquidation_v2(
+            LIQUIDATOR_ACCOUNT_ID.to_string(),
+            USDC_HASH.to_string(),
+            0.to_string(),
+            liquidation_transfers2,
+            block_number,
+            block_hour,
+            block_time,
+            &mut context,
+        )
+        .await;
+
+        analyzer_liquidation_v2(
+            INSURANCE_FUND.to_string(),
+            USDC_HASH.to_string(),
+            0.to_string(),
+            liquidation_transfers3,
+            block_number,
+            block_hour,
+            block_time,
+            &mut context,
+        )
+        .await;
+
+        {
+            let liquidated_btc = context.get_user_perp_cache(&liquidated_btc_perp_key);
+            assert_eq!(
+                liquidated_btc.holding,
+                BigDecimal::from_str("-0.35000000").unwrap()
+            );
+            println!("liquidated_btc perp summary: {:?}", liquidated_btc);
+        }
+
+        {
+            let liquidator_btc = context.get_user_perp_cache(&liquidator_btc_perp_key);
+            assert_eq!(
+                liquidator_btc.holding,
+                BigDecimal::from_str("38.05000000").unwrap()
+            );
+            println!("liquidator eth perp summary: {:?}", liquidator_btc);
+        }
+
+        {
+            let insurance_btc = context.get_user_perp_cache(&insurance_btc_perp_key);
+            assert_eq!(insurance_btc.holding, BigDecimal::from(0));
+            println!("insurance btc perp summary: {:?}", insurance_btc);
+        }
+    }
 }

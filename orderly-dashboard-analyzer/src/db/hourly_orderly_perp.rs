@@ -35,6 +35,27 @@ pub struct HourlyOrderlyPerp {
 }
 
 impl HourlyOrderlyPerp {
+    pub fn new_empty_hourly_orderly_perp(
+        symbol: &str,
+        block_hour: NaiveDateTime,
+    ) -> HourlyOrderlyPerp {
+        HourlyOrderlyPerp {
+            symbol: symbol.to_string(),
+            block_hour: block_hour,
+            trading_fee: Default::default(),
+            trading_volume: Default::default(),
+            trading_count: 0,
+            trading_user_count: 0,
+            opening_count: 0,
+            liquidation_amount: Default::default(),
+            liquidation_count: 0,
+            pulled_block_height: 0,
+            pulled_block_time: Default::default(),
+        }
+    }
+}
+
+impl HourlyOrderlyPerp {
     pub fn new_liquidation(&mut self, liquidation_amount: BigDecimal, block_num: i64) {
         if block_num <= self.pulled_block_height {
             // already processed this block events
@@ -80,7 +101,7 @@ impl HourlyOrderlyPerpKey {
 pub async fn find_hourly_orderly_perp(
     p_symbol: String,
     p_block_hour: NaiveDateTime,
-) -> Result<HourlyOrderlyPerp, DBException> {
+) -> anyhow::Result<HourlyOrderlyPerp> {
     use crate::schema::hourly_orderly_perp::dsl::*;
     let select_result = hourly_orderly_perp
         .filter(symbol.eq(p_symbol.clone()))
@@ -91,7 +112,12 @@ pub async fn find_hourly_orderly_perp(
     match select_result {
         Ok(hourly_data) => Ok(hourly_data),
         Err(error) => match error {
-            AsyncError::Timeout(_) => Err(Timeout),
+            AsyncError::Timeout(err) => Err(anyhow::anyhow!(
+                "find_hourly_orderly_perp symbol: {}, block_hour: {}, timeout err: {}",
+                p_symbol,
+                p_block_hour,
+                err
+            )),
             AsyncError::Execute(Error::NotFound) => {
                 let new_hourly_data = HourlyOrderlyPerp {
                     symbol: p_symbol.clone(),
@@ -108,7 +134,16 @@ pub async fn find_hourly_orderly_perp(
                 };
                 Ok(new_hourly_data)
             }
-            _ => Err(QueryError),
+            AsyncError::Execute(err) => Err(anyhow::anyhow!(
+                "find_hourly_orderly_perp execute err: {}",
+                err
+            )),
+            AsyncError::Delivery(err) => Err(anyhow::anyhow!(
+                "find_hourly_orderly_perp symbol: {}, block_hour: {}, delivery err: {}",
+                p_symbol,
+                p_block_hour,
+                err
+            )),
         },
     }
 }

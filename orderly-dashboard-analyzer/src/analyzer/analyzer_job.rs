@@ -17,6 +17,7 @@ use crate::analyzer::settlement_analyzer::analyzer_settlement;
 use crate::analyzer::transaction_analyzer::analyzer_transaction;
 use crate::db::block_summary::{create_or_update_block_summary, find_block_summary, TRADE_METRIC};
 
+use super::adl_analyzer::analyzer_adl_v2;
 use super::liquidation_analyzer::{analyzer_liquidation_v1, analyzer_liquidation_v2};
 
 const ANALYZER_CONTEXT: &str = "Analyzer-Job";
@@ -238,7 +239,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                     }
                     TradingEventInnerData::AdlResult {
                         account_id,
-                        insurance_account_id: _,
+                        insurance_account_id,
                         symbol_hash,
                         position_qty_transfer,
                         cost_position_transfer,
@@ -247,6 +248,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                     } => {
                         analyzer_adl(
                             account_id,
+                            insurance_account_id,
                             symbol_hash,
                             position_qty_transfer,
                             cost_position_transfer,
@@ -284,7 +286,7 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                         adl_price,
                         sum_unitary_fundings,
                     } => {
-                        analyzer_adl(
+                        analyzer_adl_v2(
                             account_id,
                             symbol_hash,
                             position_qty_transfer,
