@@ -9,8 +9,6 @@ use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::{Insertable, Queryable};
 
-use crate::db::user_token_summary::DBException;
-use crate::db::user_token_summary::DBException::{QueryError, Timeout};
 use crate::db::{BATCH_UPSERT_LEN, POOL};
 use crate::schema::hourly_orderly_perp;
 

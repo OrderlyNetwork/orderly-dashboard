@@ -6,8 +6,6 @@ use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
 use diesel::result::Error;
 
-use crate::db::user_token_summary::DBException;
-use crate::db::user_token_summary::DBException::QueryError;
 use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, POOL};
 use crate::schema::hourly_user_perp;
 

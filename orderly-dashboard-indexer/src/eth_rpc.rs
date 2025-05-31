@@ -9,7 +9,7 @@ use crate::{
             AccountDeposit1Filter, AccountDeposit2Filter, AccountWithdrawApprove1Filter,
             AccountWithdrawApprove2Filter, AccountWithdrawFail1Filter, AccountWithdrawFail2Filter,
             AccountWithdrawFinish1Filter, AccountWithdrawFinish2Filter,
-            AccountWithdrawSolFailFilter, AccountWithdrawSolFinishFilter, FeeDistributionFilter,
+            AccountWithdrawSolFailFilter, BalanceTransferFilter, FeeDistributionFilter,
             LiquidationResultFilter, LiquidationResultV2Filter, LiquidationTransferFilter,
             LiquidationTransferV2Filter, ProcessValidatedFutures1Filter,
             ProcessValidatedFutures2Filter, SettlementExecutionFilter, SettlementResultFilter,
@@ -169,7 +169,6 @@ pub async fn get_block_logs(block_num: u64) -> Result<Vec<Log>> {
         AccountWithdrawFinish2Filter::signature(),
         AccountWithdrawApprove1Filter::signature(),
         AccountWithdrawApprove2Filter::signature(),
-        AccountWithdrawSolFinishFilter::signature(),
         AccountWithdrawSolFailFilter::signature(),
         AccountWithdrawFail1Filter::signature(),
         AccountWithdrawFail2Filter::signature(),
@@ -188,6 +187,7 @@ pub async fn get_block_logs(block_num: u64) -> Result<Vec<Log>> {
         LiquidationResultFilter::signature(),
         LiquidationResultV2Filter::signature(),
         LiquidationTransferV2Filter::signature(),
+        BalanceTransferFilter::signature(),
     ];
     let address = unsafe { TARGET_ADDRS.get_unchecked() }.clone();
     let filter = Filter::new()

@@ -1,4 +1,5 @@
 pub mod adl_result;
+pub mod balance_transfer;
 pub mod executed_trades;
 pub mod fee_distribution;
 pub mod liquidation_result;

@@ -19,6 +19,21 @@ diesel::table! {
 }
 
 diesel::table! {
+    balance_transfer (block_number, transaction_index, log_index) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        transaction_id -> Text,
+        block_time -> Numeric,
+        account_id -> Text,
+        amount -> Numeric,
+        token_hash -> Text,
+        is_from_account_id -> Bool,
+        transfer_type -> Int2,
+    }
+}
+
+diesel::table! {
     executed_trades (block_number, transaction_index, log_index) {
         block_number -> Int8,
         transaction_index -> Int4,
@@ -174,6 +189,28 @@ diesel::table! {
 
 diesel::table! {
     executed_trades_y2025q02 (block_number, transaction_index, log_index, block_time) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        typ -> Int2,
+        account_id -> Text,
+        symbol_hash -> Text,
+        fee_asset_hash -> Text,
+        trade_qty -> Numeric,
+        notional -> Numeric,
+        executed_price -> Numeric,
+        fee -> Numeric,
+        sum_unitary_fundings -> Numeric,
+        trade_id -> Numeric,
+        match_id -> Numeric,
+        timestamp -> Numeric,
+        side -> Bool,
+        block_time -> Timestamp,
+    }
+}
+
+diesel::table! {
+    executed_trades_y2025q03 (block_number, transaction_index, log_index, block_time) {
         block_number -> Int8,
         transaction_index -> Int4,
         log_index -> Int4,
@@ -389,6 +426,7 @@ diesel::table! {
 
 diesel::allow_tables_to_appear_in_same_query!(
     adl_result,
+    balance_transfer,
     executed_trades,
     executed_trades_before_y2024,
     executed_trades_y2024q01,
@@ -397,6 +435,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     executed_trades_y2024q04,
     executed_trades_y2025q01,
     executed_trades_y2025q02,
+    executed_trades_y2025q03,
     fee_distribution,
     liquidation_result,
     liquidation_transfer,
