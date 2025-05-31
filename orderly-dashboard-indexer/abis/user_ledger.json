@@ -1,10 +1,5 @@
 [
   {
-    "type": "constructor",
-    "inputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
     "type": "function",
     "name": "accountDeposit",
     "inputs": [
@@ -127,66 +122,6 @@
             "name": "receiver",
             "type": "address",
             "internalType": "address"
-          },
-          {
-            "name": "brokerHash",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "tokenHash",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "tokenAmount",
-            "type": "uint128",
-            "internalType": "uint128"
-          },
-          {
-            "name": "fee",
-            "type": "uint128",
-            "internalType": "uint128"
-          },
-          {
-            "name": "chainId",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "withdrawNonce",
-            "type": "uint64",
-            "internalType": "uint64"
-          }
-        ]
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "accountWithDrawSolFinish",
-    "inputs": [
-      {
-        "name": "withdraw",
-        "type": "tuple",
-        "internalType": "struct AccountTypes.AccountWithdrawSol",
-        "components": [
-          {
-            "name": "accountId",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "sender",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "receiver",
-            "type": "bytes32",
-            "internalType": "bytes32"
           },
           {
             "name": "brokerHash",
@@ -446,7 +381,7 @@
     ],
     "outputs": [
       {
-        "name": "accountSnapshots",
+        "name": "",
         "type": "tuple[]",
         "internalType": "struct AccountTypes.AccountSnapshot[]",
         "components": [
@@ -576,56 +511,6 @@
   },
   {
     "type": "function",
-    "name": "contractSigner",
-    "inputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "chainId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "signer",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "crossChainManagerAddress",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "crossChainManagerV2Address",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "executeAdl",
     "inputs": [
       {
@@ -746,6 +631,51 @@
   },
   {
     "type": "function",
+    "name": "executeBalanceTransfer",
+    "inputs": [
+      {
+        "name": "balanceTransfer",
+        "type": "tuple",
+        "internalType": "struct EventTypes.BalanceTransfer",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "amount",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "tokenHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "isFromAccountId",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "transferType",
+            "type": "uint8",
+            "internalType": "uint8"
+          }
+        ]
+      },
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "executeDelegateSigner",
     "inputs": [
       {
@@ -789,7 +719,7 @@
     "name": "executeDelegateWithdrawAction",
     "inputs": [
       {
-        "name": "delegateWithdraw",
+        "name": "withdraw",
         "type": "tuple",
         "internalType": "struct EventTypes.WithdrawData",
         "components": [
@@ -1368,7 +1298,7 @@
     "name": "executeSettlement",
     "inputs": [
       {
-        "name": "settlement",
+        "name": "ledger",
         "type": "tuple",
         "internalType": "struct EventTypes.Settlement",
         "components": [
@@ -1428,6 +1358,86 @@
                 "internalType": "int128"
               }
             ]
+          }
+        ]
+      },
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeWithdraw2Contract",
+    "inputs": [
+      {
+        "name": "data",
+        "type": "tuple",
+        "internalType": "struct EventTypes.Withdraw2Contract",
+        "components": [
+          {
+            "name": "tokenAmount",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "fee",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "chainId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "accountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "vaultType",
+            "type": "uint8",
+            "internalType": "enum EventTypes.VaultEnum"
+          },
+          {
+            "name": "sender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "withdrawNonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "receiver",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "timestamp",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "brokerHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "tokenHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "clientId",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       },
@@ -1607,19 +1617,6 @@
   },
   {
     "type": "function",
-    "name": "feeManager",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IFeeManager"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "getFrozenWithdrawNonce",
     "inputs": [
       {
@@ -1649,75 +1646,10 @@
   },
   {
     "type": "function",
-    "name": "globalDepositId",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint64",
-        "internalType": "uint64"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "globalEventId",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint64",
-        "internalType": "uint64"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "initialize",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "marketManager",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IMarketManager"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "operatorManagerAddress",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "owner",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -1806,13 +1738,6 @@
         ]
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "renounceOwnership",
-    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -1932,32 +1857,6 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "transferOwnership",
-    "inputs": [
-      {
-        "name": "newOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "vaultManager",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IVaultManager"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "event",
@@ -2231,6 +2130,61 @@
   },
   {
     "type": "event",
+    "name": "AccountWithdraw2Contract",
+    "inputs": [
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "withdrawNonce",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "chainId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "tokenHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenAmount",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      },
+      {
+        "name": "fee",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      },
+      {
+        "name": "receiver",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "AccountWithdrawApprove",
     "inputs": [
       {
@@ -2434,7 +2388,7 @@
         "internalType": "uint128"
       },
       {
-        "name": "failReson",
+        "name": "failReason",
         "type": "uint8",
         "indexed": false,
         "internalType": "uint8"
@@ -2513,7 +2467,7 @@
         "internalType": "uint256"
       },
       {
-        "name": "failReson",
+        "name": "failReason",
         "type": "uint8",
         "indexed": false,
         "internalType": "uint8"
@@ -2793,77 +2747,10 @@
         "internalType": "uint128"
       },
       {
-        "name": "failReson",
+        "name": "failReason",
         "type": "uint8",
         "indexed": false,
         "internalType": "uint8"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "AccountWithdrawSolFinish",
-    "inputs": [
-      {
-        "name": "accountId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "withdrawNonce",
-        "type": "uint64",
-        "indexed": true,
-        "internalType": "uint64"
-      },
-      {
-        "name": "eventId",
-        "type": "uint64",
-        "indexed": true,
-        "internalType": "uint64"
-      },
-      {
-        "name": "brokerHash",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "sender",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "receiver",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "chainId",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "tokenHash",
-        "type": "bytes32",
-        "indexed": false,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "tokenAmount",
-        "type": "uint128",
-        "indexed": false,
-        "internalType": "uint128"
-      },
-      {
-        "name": "fee",
-        "type": "uint128",
-        "indexed": false,
-        "internalType": "uint128"
       }
     ],
     "anonymous": false
@@ -2986,6 +2873,49 @@
   },
   {
     "type": "event",
+    "name": "BalanceTransfer",
+    "inputs": [
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      },
+      {
+        "name": "tokenHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "isFromAccountId",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "transferType",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "ChangeCrossChainManager",
     "inputs": [
       {
@@ -3063,6 +2993,25 @@
   {
     "type": "event",
     "name": "ChangeLedgerImplB",
+    "inputs": [
+      {
+        "name": "oldAddress",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "newAddress",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ChangeLedgerImplC",
     "inputs": [
       {
         "name": "oldAddress",
@@ -3212,19 +3161,6 @@
         "type": "bytes32",
         "indexed": false,
         "internalType": "bytes32"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Initialized",
-    "inputs": [
-      {
-        "name": "version",
-        "type": "uint8",
-        "indexed": false,
-        "internalType": "uint8"
       }
     ],
     "anonymous": false
@@ -3421,25 +3357,6 @@
         "type": "int128",
         "indexed": false,
         "internalType": "int128"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "OwnershipTransferred",
-    "inputs": [
-      {
-        "name": "previousOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "newOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
       }
     ],
     "anonymous": false
