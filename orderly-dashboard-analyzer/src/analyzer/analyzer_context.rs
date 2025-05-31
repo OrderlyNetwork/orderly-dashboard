@@ -31,17 +31,17 @@ use crate::db::user_token_summary::{
 };
 
 pub struct AnalyzeContext {
-    hourly_orderly_perp_cache: HashMap<HourlyOrderlyPerpKey, HourlyOrderlyPerp>,
-    hourly_orderly_token_cache: HashMap<HourlyOrderlyTokenKey, HourlyOrderlyToken>,
+    pub hourly_orderly_perp_cache: HashMap<HourlyOrderlyPerpKey, HourlyOrderlyPerp>,
+    pub hourly_orderly_token_cache: HashMap<HourlyOrderlyTokenKey, HourlyOrderlyToken>,
 
-    hourly_user_perp_cache: HashMap<HourlyUserPerpKey, HourlyUserPerp>,
-    hourly_user_token_cache: HashMap<HourlyUserTokenKey, HourlyUserToken>,
+    pub hourly_user_perp_cache: HashMap<HourlyUserPerpKey, HourlyUserPerp>,
+    pub hourly_user_token_cache: HashMap<HourlyUserTokenKey, HourlyUserToken>,
 
-    orderly_perp_cache: HashMap<String, OrderlyPerpSummary>,
-    user_perp_cache: HashMap<UserPerpSummaryKey, UserPerpSummary>,
+    pub orderly_perp_cache: HashMap<String, OrderlyPerpSummary>,
+    pub user_perp_cache: HashMap<UserPerpSummaryKey, UserPerpSummary>,
 
-    orderly_token_cache: HashMap<OrderlyTokenSummaryKey, OrderlyTokenSummary>,
-    user_token_cache: HashMap<UserTokenSummaryKey, UserTokenSummary>,
+    pub orderly_token_cache: HashMap<OrderlyTokenSummaryKey, OrderlyTokenSummary>,
+    pub user_token_cache: HashMap<UserTokenSummaryKey, UserTokenSummary>,
 
     #[allow(dead_code)]
     symbol_cache: HashMap<String, String>,

@@ -29,6 +29,27 @@ pub struct UserTokenSummary {
 }
 
 impl UserTokenSummary {
+    pub fn new_empty_token_summary(
+        account_id: &str,
+        token: &str,
+        chain_id: &str,
+    ) -> UserTokenSummary {
+        UserTokenSummary {
+            account_id: account_id.to_string(),
+            token: token.to_string(),
+            chain_id: chain_id.to_string(),
+            balance: Default::default(),
+            total_withdraw_amount: Default::default(),
+            total_deposit_amount: Default::default(),
+            total_withdraw_count: 0,
+            total_deposit_count: 0,
+            pulled_block_height: 0,
+            pulled_block_time: Default::default(),
+        }
+    }
+}
+
+impl UserTokenSummary {
     pub fn add_amount(&mut self, add_amount: BigDecimal, p_block_height: i64) {
         if p_block_height <= self.pulled_block_height {
             // already processed this block events
