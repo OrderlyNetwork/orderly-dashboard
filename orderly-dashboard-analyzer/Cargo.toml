@@ -48,3 +48,7 @@ clap = { version = "4.3.0", features = ["color", "derive", "env"] }
 num-bigint = "0.4.4"
 num-traits = "0.2"
 openssl-probe = "0.1.5"
+
+[dev-dependencies]
+actix = "=0.13.0"
+actix-rt = "2.2.0"

@@ -147,18 +147,17 @@ pub async fn find_hourly_orderly_perp(
 }
 
 pub async fn create_or_update_hourly_orderly_perp(
-    p_hourly_data_vec: Vec<&HourlyOrderlyPerp>,
+    mut p_hourly_data_vec: Vec<HourlyOrderlyPerp>,
 ) -> anyhow::Result<usize> {
+    #[cfg(test)]
+    tracing::info!("start create_or_update_hourly_orderly_perp....");
+
     if p_hourly_data_vec.is_empty() {
         return Ok(0);
     }
     use crate::schema::hourly_orderly_perp::dsl::*;
 
     let mut row_nums = 0;
-    let mut p_hourly_data_vec = p_hourly_data_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<HourlyOrderlyPerp>>();
     loop {
         if p_hourly_data_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = p_hourly_data_vec.split_at(BATCH_UPSERT_LEN);
@@ -229,6 +228,8 @@ pub async fn create_or_update_hourly_orderly_perp(
             }
         }
     }
+    #[cfg(test)]
+    tracing::info!("finish create_or_update_hourly_orderly_perp....");
 
     Ok(row_nums)
 }

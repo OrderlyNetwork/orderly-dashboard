@@ -122,18 +122,17 @@ pub async fn find_hourly_user_token(
 }
 
 pub async fn create_or_update_hourly_user_token(
-    hourly_data_vec: Vec<&HourlyUserToken>,
+    mut hourly_data_vec: Vec<HourlyUserToken>,
 ) -> anyhow::Result<usize> {
+    #[cfg(test)]
+    tracing::info!("start create_or_update_hourly_user_token....");
+
     if hourly_data_vec.is_empty() {
         return Ok(0);
     }
     use crate::schema::hourly_user_token::dsl::*;
 
     let mut row_nums = 0;
-    let mut hourly_data_vec = hourly_data_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<HourlyUserToken>>();
     loop {
         if hourly_data_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = hourly_data_vec.split_at(BATCH_UPSERT_LEN);
@@ -195,6 +194,9 @@ pub async fn create_or_update_hourly_user_token(
             }
         }
     }
+
+    #[cfg(test)]
+    tracing::info!("finish create_or_update_hourly_user_token....");
 
     Ok(row_nums)
 }

@@ -147,18 +147,17 @@ pub async fn find_user_token_summary(
 }
 
 pub async fn create_or_update_user_token_summary(
-    user_token_summary_vec: Vec<&UserTokenSummary>,
+    mut user_token_summary_vec: Vec<UserTokenSummary>,
 ) -> anyhow::Result<usize> {
+    #[cfg(test)]
+    tracing::info!("start create_or_update_user_token_summary....");
+
     if user_token_summary_vec.is_empty() {
         return Ok(0);
     }
     use crate::schema::user_token_summary::dsl::*;
 
     let mut row_nums = 0;
-    let mut user_token_summary_vec = user_token_summary_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<UserTokenSummary>>();
     loop {
         if user_token_summary_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = user_token_summary_vec.split_at(BATCH_UPSERT_LEN);
@@ -219,6 +218,9 @@ pub async fn create_or_update_user_token_summary(
             }
         }
     }
+
+    #[cfg(test)]
+    tracing::info!("finish create_or_update_user_token_summary....");
 
     Ok(row_nums)
 }

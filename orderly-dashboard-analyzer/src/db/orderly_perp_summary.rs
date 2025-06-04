@@ -134,18 +134,17 @@ pub async fn find_orderly_perp_summary(
 }
 
 pub async fn create_or_update_orderly_perp_summary(
-    p_orderly_perp_summary_vec: Vec<&OrderlyPerpSummary>,
+    mut p_orderly_perp_summary_vec: Vec<OrderlyPerpSummary>,
 ) -> anyhow::Result<usize> {
+    #[cfg(test)]
+    tracing::info!("start create_or_update_orderly_perp_summary....");
+
     if p_orderly_perp_summary_vec.is_empty() {
         return Ok(0);
     }
     use crate::schema::orderly_perp_summary::dsl::*;
 
     let mut row_nums = 0;
-    let mut p_orderly_perp_summary_vec = p_orderly_perp_summary_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<OrderlyPerpSummary>>();
     loop {
         if p_orderly_perp_summary_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = p_orderly_perp_summary_vec.split_at(BATCH_UPSERT_LEN);
@@ -220,6 +219,9 @@ pub async fn create_or_update_orderly_perp_summary(
             }
         }
     }
+
+    #[cfg(test)]
+    tracing::info!("finish create_or_update_orderly_perp_summary....");
 
     Ok(row_nums)
 }

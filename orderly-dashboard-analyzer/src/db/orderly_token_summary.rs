@@ -110,18 +110,17 @@ pub async fn find_orderly_token_summary(
 }
 
 pub async fn create_or_update_orderly_token_summary(
-    p_hourly_data_vec: Vec<&OrderlyTokenSummary>,
+    mut p_hourly_data_vec: Vec<OrderlyTokenSummary>,
 ) -> anyhow::Result<usize> {
+    #[cfg(test)]
+    tracing::info!("start create_or_update_orderly_token_summary....");
+
     if p_hourly_data_vec.is_empty() {
         return Ok(0);
     }
     use crate::schema::orderly_token_summary::dsl::*;
 
     let mut row_nums = 0;
-    let mut p_hourly_data_vec = p_hourly_data_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<OrderlyTokenSummary>>();
     loop {
         if p_hourly_data_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = p_hourly_data_vec.split_at(BATCH_UPSERT_LEN);
@@ -190,6 +189,9 @@ pub async fn create_or_update_orderly_token_summary(
             }
         }
     }
+
+    #[cfg(test)]
+    tracing::info!("finish create_or_update_orderly_token_summary....");
 
     Ok(row_nums)
 }

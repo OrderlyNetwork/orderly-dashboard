@@ -168,18 +168,17 @@ pub async fn find_hourly_user_perp(
 }
 
 pub async fn create_or_update_hourly_user_perp(
-    p_hourly_user_perp_vec: Vec<&HourlyUserPerp>,
+    mut p_hourly_user_perp_vec: Vec<HourlyUserPerp>,
 ) -> anyhow::Result<usize> {
+    #[cfg(test)]
+    tracing::info!("start create_or_update_hourly_user_perp....");
+
     if p_hourly_user_perp_vec.is_empty() {
         return Ok(0);
     }
     use crate::schema::hourly_user_perp::dsl::*;
 
     let mut row_nums = 0;
-    let mut p_hourly_user_perp_vec = p_hourly_user_perp_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<HourlyUserPerp>>();
     loop {
         if p_hourly_user_perp_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = p_hourly_user_perp_vec.split_at(BATCH_UPSERT_LEN);
@@ -246,6 +245,8 @@ pub async fn create_or_update_hourly_user_perp(
             }
         }
     }
+    #[cfg(test)]
+    tracing::info!("finish create_or_update_hourly_user_perp....");
 
     Ok(row_nums)
 }
