@@ -1,17 +1,15 @@
-use crate::db::{DB_CONTEXT, POOL};
+use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
 use crate::schema::sol_transaction_events;
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
-use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 use std::time::Instant;
 
 #[derive(Insertable, Queryable, Debug)]
-#[table_name = "sol_transaction_events"]
+#[diesel(table_name = sol_transaction_events)]
 pub struct DbSolTransactionEvent {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -39,10 +37,12 @@ pub async fn create_sol_balance_transaction_executions(
     if balance_transactions.is_empty() {
         return Ok(0);
     }
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
     let num_rows = diesel::insert_into(sol_transaction_events)
         .values(balance_transactions)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }
@@ -53,11 +53,12 @@ pub async fn query_sol_balance_transaction_executions(
 ) -> Result<Vec<DbSolTransactionEvent>> {
     use crate::schema::sol_transaction_events::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = sol_transaction_events
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
-        .load_async::<DbSolTransactionEvent>(&POOL)
+        .load::<DbSolTransactionEvent>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -72,7 +73,7 @@ pub async fn query_sol_balance_transaction_executions(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_sol_balance_transaction_executions success. length:0, used time:{} ms",
@@ -102,12 +103,12 @@ pub async fn query_account_sol_balance_transaction_executions(
 ) -> Result<Vec<DbSolTransactionEvent>> {
     use crate::schema::sol_transaction_events::dsl::*;
     let start_time = Instant::now();
-
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = sol_transaction_events
         .filter(account_id.eq(account))
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
-        .load_async::<DbSolTransactionEvent>(&POOL)
+        .load::<DbSolTransactionEvent>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -122,7 +123,7 @@ pub async fn query_account_sol_balance_transaction_executions(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_account_sol_balance_transaction_executions success. length:0, used time:{} ms",

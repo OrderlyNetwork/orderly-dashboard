@@ -9,6 +9,7 @@ use postgres::{Client, NoTls};
 use std::env;
 
 pub const DB_CONTEXT: &str = "DB_operation";
+pub(crate) const DB_CONN_ERR_MSG: &str = "Couldn't get db connection from the pool";
 
 lazy_static! {
     pub static ref ANALYZER_PG: Mutex<Client> = Mutex::new(

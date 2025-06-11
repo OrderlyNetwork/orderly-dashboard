@@ -1,15 +1,14 @@
 use crate::config::get_common_cfg;
-use crate::db::{DB_CONTEXT, POOL};
+use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
 use crate::schema::serial_batches;
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
-use diesel::result::Error;
+use diesel::prelude::*;
 use diesel::sql_types::*;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 use std::cmp::min;
 use std::collections::BTreeSet;
 use std::time::Instant;
@@ -27,7 +26,7 @@ impl SerialBatchType {
 }
 
 #[derive(Insertable, Queryable, Debug)]
-#[table_name = "serial_batches"]
+#[diesel(table_name = serial_batches)]
 pub struct DbSerialBatches {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -53,19 +52,19 @@ impl DbSerialBatches {
 #[allow(dead_code)]
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DbSerialBatchesView {
-    #[sql_type = "BigInt"]
+    #[diesel(sql_type = BigInt)]
     pub block_number: i64,
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     pub transaction_index: i32,
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     pub log_index: i32,
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     pub transaction_id: String,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub block_time: BigDecimal,
-    #[sql_type = "BigInt"]
+    #[diesel(sql_type = BigInt)]
     pub batch_id: i64,
-    #[sql_type = "SmallInt"]
+    #[diesel(sql_type = SmallInt)]
     pub event_type: i16,
 }
 
@@ -77,11 +76,12 @@ impl DbSerialBatchesView {
 
 pub async fn create_serial_batches(batches: Vec<DbSerialBatches>) -> Result<usize> {
     use crate::schema::serial_batches::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let num_rows = diesel::insert_into(serial_batches)
         .values(batches)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }
@@ -97,12 +97,13 @@ pub async fn query_serial_batches_with_type(
         "query_serial_batches_with_type start",
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = serial_batches
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
         .filter(event_type.eq(serial_typ.value()))
-        .load_async::<DbSerialBatches>(&POOL)
+        .load::<DbSerialBatches>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -117,7 +118,7 @@ pub async fn query_serial_batches_with_type(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_serial_batches_with_type success. length:0, used time:{} ms",
@@ -154,6 +155,7 @@ pub async fn query_serial_batches_with_type_and_time(
         "query_serial_batches_with_type start",
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = serial_batches
         .filter(block_number.ge(from_block))
@@ -161,7 +163,7 @@ pub async fn query_serial_batches_with_type_and_time(
         .filter(block_time.ge(BigDecimal::from(from_time)))
         .filter(block_time.le(BigDecimal::from(to_time)))
         .filter(event_type.eq(serial_typ.value()))
-        .load_async::<DbSerialBatches>(&POOL)
+        .load::<DbSerialBatches>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -176,7 +178,7 @@ pub async fn query_serial_batches_with_type_and_time(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_serial_batches_with_type success. length:0, used time:{} ms",
@@ -212,6 +214,7 @@ pub async fn query_serial_batches_with_type_by_time(
         "query_serial_batches_with_type_by_time start",
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = sql_query(
         "select
                 serial_t.block_number as block_number,
@@ -239,7 +242,7 @@ pub async fn query_serial_batches_with_type_by_time(
     .bind::<diesel::sql_types::Text, _>(account_id_)
     .bind::<diesel::sql_types::BigInt, _>(from_time)
     .bind::<diesel::sql_types::BigInt, _>(to_time)
-    .get_results_async::<DbSerialBatchesView>(&POOL)
+    .get_results::<DbSerialBatchesView>(&mut conn)
     .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -254,7 +257,7 @@ pub async fn query_serial_batches_with_type_by_time(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_serial_batches_with_type_by_time success. length:0, used time:{} ms",
@@ -362,11 +365,12 @@ async fn query_serial_batches_by_time_and_key_page(
          and (block_number, transaction_index) in ({})", 
         conditions
     );
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = sql_query(&query)
         .bind::<Numeric, _>(BigDecimal::from(from_time))
         .bind::<Numeric, _>(BigDecimal::from(to_time))
-        .get_results_async::<DbSerialBatchesView>(&POOL)
+        .get_results::<DbSerialBatchesView>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -381,7 +385,7 @@ async fn query_serial_batches_by_time_and_key_page(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_serial_batches_by_time_and_key_page success. length:0, used time:{} ms",
@@ -416,6 +420,7 @@ pub async fn query_serial_batches_joined_partitioned_trades_with_type_by_time(
         "query_serial_batches_with_type_by_time start",
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = sql_query(
         "select
                 serial_t.block_number as block_number,
@@ -443,7 +448,7 @@ pub async fn query_serial_batches_joined_partitioned_trades_with_type_by_time(
         .bind::<diesel::sql_types::BigInt, _>(from_time)
         .bind::<diesel::sql_types::BigInt, _>(to_time)
         .bind::<diesel::sql_types::Text, _>(account_id_)
-        .get_results_async::<DbSerialBatchesView>(&POOL)
+        .get_results::<DbSerialBatchesView>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -458,7 +463,7 @@ pub async fn query_serial_batches_joined_partitioned_trades_with_type_by_time(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_serial_batches_with_type_by_time success. length:0, used time:{} ms",
@@ -488,11 +493,12 @@ pub async fn get_serial_batches(from_block: i64, to_block: i64) -> Result<Vec<Db
         "query_serial_batches_with_type start",
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = serial_batches
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
-        .load_async::<DbSerialBatches>(&POOL)
+        .load::<DbSerialBatches>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -507,7 +513,7 @@ pub async fn get_serial_batches(from_block: i64, to_block: i64) -> Result<Vec<Db
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "get_serial_batches success. length:0, used time:{} ms",

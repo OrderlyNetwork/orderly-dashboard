@@ -1,12 +1,12 @@
-use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::schema::balance_transfer;
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 
 #[derive(Insertable, Queryable, Debug)]
-#[table_name = "balance_transfer"]
+#[diesel(table_name = balance_transfer)]
 pub struct DbBalanceTransferEvent {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -27,10 +27,11 @@ pub async fn create_balance_transfer_events(
     if balance_transfers.is_empty() {
         return Ok(0);
     }
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let num_rows = diesel::insert_into(balance_transfer)
         .values(balance_transfers)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }

@@ -1,19 +1,17 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
-use diesel::result::Error;
+use diesel_async::RunQueryDsl;
 use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;
 
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
-use crate::db::{BATCH_UPSERT_LEN, POOL};
+use crate::db::{BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
 use crate::schema::orderly_perp_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
-#[table_name = "orderly_perp_summary"]
+#[diesel(table_name = orderly_perp_summary)]
 pub struct OrderlyPerpSummary {
     symbol: String,
 
@@ -102,15 +100,17 @@ pub async fn find_orderly_perp_summary(
     p_symbol: String,
 ) -> Result<OrderlyPerpSummary, DBException> {
     use crate::schema::orderly_perp_summary::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
     let select_result = orderly_perp_summary
         .filter(symbol.eq(p_symbol.clone()))
-        .first_async::<OrderlyPerpSummary>(&POOL)
+        .first::<OrderlyPerpSummary>(&mut conn)
         .await;
 
     match select_result {
         Ok(perp_data) => Ok(perp_data),
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 let new_perp = OrderlyPerpSummary {
                     symbol: p_symbol.clone(),
                     open_interest: Default::default(),
@@ -146,6 +146,7 @@ pub async fn create_or_update_orderly_perp_summary(
         .into_iter()
         .cloned()
         .collect::<Vec<OrderlyPerpSummary>>();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if p_orderly_perp_summary_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = p_orderly_perp_summary_vec.split_at(BATCH_UPSERT_LEN);
@@ -171,7 +172,7 @@ pub async fn create_or_update_orderly_perp_summary(
                     buy_amount.eq(excluded(buy_amount)),
                     sell_amount.eq(excluded(sell_amount)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {
@@ -203,7 +204,7 @@ pub async fn create_or_update_orderly_perp_summary(
                     buy_amount.eq(excluded(buy_amount)),
                     sell_amount.eq(excluded(sell_amount)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {

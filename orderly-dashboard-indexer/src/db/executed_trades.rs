@@ -1,19 +1,17 @@
 use crate::constants::ALERT_CONTEXT;
 use crate::db::DB_CONTEXT;
-use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::schema::executed_trades;
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
-use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 use std::time::Instant;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
-#[table_name = "executed_trades"]
+#[diesel(table_name = executed_trades)]
 pub struct DbExecutedTrades {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -66,28 +64,31 @@ impl TryFrom<i16> for TradeType {
 
 pub async fn create_executed_trades(trades: Vec<DbExecutedTrades>) -> Result<usize> {
     use crate::schema::executed_trades::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let num_rows = diesel::insert_into(executed_trades)
         .values(trades)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }
 
 pub async fn delete_oldest_executed_trades(limit: i64) -> Result<usize> {
     use crate::schema::executed_trades::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
     let ids: Vec<i64> = executed_trades
         .select(block_number)
         .order(block_number.asc())
         .limit(limit)
-        .load_async::<i64>(&POOL)
+        .load::<i64>(&mut conn)
         .await?;
     if ids.is_empty() {
         return Ok(0);
     }
     // ids.dedup();
-    let min_val = ids.first().cloned().unwrap_or_default();
+    let min_val = if ids.is_empty() { 0 } else { ids[0] };
     let max_val = ids.last().cloned().unwrap_or_default();
 
     let deleted_num = diesel::delete(
@@ -95,7 +96,7 @@ pub async fn delete_oldest_executed_trades(limit: i64) -> Result<usize> {
             .filter(block_number.ge(min_val))
             .filter(block_number.le(max_val)),
     )
-    .execute_async(&POOL)
+    .execute(&mut conn)
     .await?;
     Ok(deleted_num)
 }
@@ -109,12 +110,13 @@ pub async fn query_executed_trades(
         target: DB_CONTEXT,
         "query_executed_trades start with from: {} to: {}", from_block, to_block,
     );
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let start_time = Instant::now();
 
     let result = executed_trades
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
-        .load_async::<DbExecutedTrades>(&POOL)
+        .load::<DbExecutedTrades>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -139,7 +141,7 @@ pub async fn query_executed_trades(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_executed_trades success. length:0, used time:{} ms",
@@ -174,13 +176,14 @@ pub async fn query_executed_trades_with_time(
         "query_executed_trades start with from: {} to: {}", from_block, to_block,
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = executed_trades
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
         .filter(block_time.ge(from_time))
         .filter(block_time.le(to_time))
-        .load_async::<DbExecutedTrades>(&POOL)
+        .load::<DbExecutedTrades>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -205,7 +208,7 @@ pub async fn query_executed_trades_with_time(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_executed_trades success. length:0, used time:{} ms",
@@ -243,6 +246,7 @@ pub async fn query_account_executed_trades(
         account, from_time, to_time,
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let query = executed_trades
         .filter(block_time.ge(from_time))
         .filter(block_time.le(to_time))
@@ -253,10 +257,10 @@ pub async fn query_account_executed_trades(
             .order_by((block_time, log_index))
             .offset(offset as i64)
             .limit(limit.unwrap_or_default() as i64)
-            .load_async::<DbExecutedTrades>(&POOL)
+            .load::<DbExecutedTrades>(&mut conn)
             .await
     } else {
-        query.load_async::<DbExecutedTrades>(&POOL).await
+        query.load::<DbExecutedTrades>(&mut conn).await
     };
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -281,7 +285,7 @@ pub async fn query_account_executed_trades(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_account_executed_trades success. length:0, used time:{} ms",

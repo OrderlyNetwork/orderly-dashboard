@@ -4,7 +4,7 @@ use crate::schema::symbols;
 use diesel::QueryDsl;
 
 #[derive(Debug, Insertable, Queryable, Clone)]
-#[table_name = "symbols"]
+#[diesel(table_name = symbols)]
 pub struct Symbol {
     pub symbol: String,
     pub symbol_hash: String,

@@ -1,17 +1,15 @@
-use crate::db::{DB_CONTEXT, POOL};
+use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
 use crate::schema::settlement_result;
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
-use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 use std::time::Instant;
 
 #[derive(Insertable, Queryable, Debug)]
-#[table_name = "settlement_result"]
+#[diesel(table_name = settlement_result)]
 pub struct DbSettlementResult {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -33,11 +31,12 @@ impl DbSettlementResult {
 
 pub async fn create_settlement_results(settlement_reses: Vec<DbSettlementResult>) -> Result<usize> {
     use crate::schema::settlement_result::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let num_rows = diesel::insert_into(settlement_result)
         .values(settlement_reses)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }
@@ -48,11 +47,12 @@ pub async fn query_settlement_results(
 ) -> Result<Vec<DbSettlementResult>> {
     use crate::schema::settlement_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = settlement_result
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
-        .load_async::<DbSettlementResult>(&POOL)
+        .load::<DbSettlementResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -67,7 +67,7 @@ pub async fn query_settlement_results(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_settlement_results success. length:0, used time:{} ms",
@@ -99,13 +99,14 @@ pub async fn query_settlement_results_with_time(
 ) -> Result<Vec<DbSettlementResult>> {
     use crate::schema::settlement_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = settlement_result
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
         .filter(block_time.ge(BigDecimal::from(from_time)))
         .filter(block_time.le(BigDecimal::from(to_time)))
-        .load_async::<DbSettlementResult>(&POOL)
+        .load::<DbSettlementResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -120,7 +121,7 @@ pub async fn query_settlement_results_with_time(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_settlement_results success. length:0, used time:{} ms",
@@ -151,12 +152,13 @@ pub async fn query_account_settlement_results(
 ) -> Result<Vec<DbSettlementResult>> {
     use crate::schema::settlement_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = settlement_result
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
         .filter(account_id.eq(account))
-        .load_async::<DbSettlementResult>(&POOL)
+        .load::<DbSettlementResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -171,7 +173,7 @@ pub async fn query_account_settlement_results(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_account_settlement_results success. length:0, used time:{} ms",

@@ -1,20 +1,18 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use diesel::result::Error;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
-use crate::db::DB_CONTEXT;
 use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT};
 use crate::schema::block_summary;
 
 pub const TRADE_METRIC: &str = "trade";
 pub const GAS_METRIC: &str = "gas_fee";
 #[derive(Insertable, Queryable, Debug, Clone)]
-#[table_name = "block_summary"]
+#[diesel(table_name = block_summary)]
 pub struct BlockSummary {
     id: i32,
     pub latest_block_height: i64,
@@ -30,9 +28,11 @@ pub struct BlockSummary {
 
 pub async fn find_block_summary(p_metric: String) -> Result<BlockSummary, DBException> {
     use crate::schema::block_summary::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
     let select_result = block_summary
         .filter(metrics_type.eq(p_metric.clone()))
-        .first_async::<BlockSummary>(&POOL)
+        .first::<BlockSummary>(&mut conn)
         .await;
     let id_ = if p_metric == GAS_METRIC {
         2
@@ -45,7 +45,7 @@ pub async fn find_block_summary(p_metric: String) -> Result<BlockSummary, DBExce
     match select_result {
         Ok(result) => Ok(result),
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 let result = BlockSummary {
                     id: id_,
                     latest_block_height: 0,
@@ -67,6 +67,8 @@ pub async fn find_block_summary(p_metric: String) -> Result<BlockSummary, DBExce
 
 pub async fn create_or_update_block_summary(summary: BlockSummary) -> Result<(), String> {
     use crate::schema::block_summary::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
     let init_result = diesel::insert_into(block_summary)
         .values(summary.clone())
         .on_conflict(id)
@@ -78,7 +80,7 @@ pub async fn create_or_update_block_summary(summary: BlockSummary) -> Result<(),
             pulled_event_id.eq(summary.pulled_event_id.clone()),
             pulled_perp_trade_id.eq(summary.pulled_perp_trade_id.clone()),
         ))
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await;
 
     match init_result {

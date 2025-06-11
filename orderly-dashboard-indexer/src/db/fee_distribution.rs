@@ -1,12 +1,12 @@
-use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::schema::fee_distribution;
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
-use diesel::{Insertable, Queryable};
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 
 #[derive(Insertable, Queryable, Debug)]
-#[table_name = "fee_distribution"]
+#[diesel(table_name = fee_distribution)]
 pub struct DbFeeDistribution {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -22,11 +22,12 @@ pub struct DbFeeDistribution {
 
 pub async fn create_fee_distributions(districutions: Vec<DbFeeDistribution>) -> Result<usize> {
     use crate::schema::fee_distribution::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let num_rows = diesel::insert_into(fee_distribution)
         .values(districutions)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }

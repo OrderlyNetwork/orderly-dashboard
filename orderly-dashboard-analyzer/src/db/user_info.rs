@@ -1,15 +1,16 @@
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::InsertError;
-use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::schema::user_info;
 use crate::sync_broker::{cal_account_id, cal_broker_hash, get_sol_account_id};
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use diesel::pg::upsert::on_constraint;
+use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
 use std::str::FromStr;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
-#[table_name = "user_info"]
+#[diesel(table_name = user_info)]
 pub struct UserInfo {
     pub account_id: String,
     pub broker_id: String,
@@ -36,11 +37,12 @@ impl UserInfo {
 
 pub async fn create_user_info(p_user: &UserInfo) -> Result<usize, DBException> {
     use crate::schema::user_info::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let update_result = diesel::insert_into(user_info)
         .values(p_user.clone())
         .on_conflict(on_constraint("pr_account_id"))
         .do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await;
 
     match update_result {

@@ -1,18 +1,16 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::on_constraint;
 use diesel::prelude::*;
-use diesel::result::Error;
+use diesel_async::RunQueryDsl;
 
 use crate::db::user_token_summary::DBException;
-use crate::db::user_token_summary::DBException::{InsertError, QueryError, Timeout};
-use crate::db::POOL;
+use crate::db::user_token_summary::DBException::{InsertError, QueryError};
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::schema::hourly_gas_fee;
 
 #[derive(Insertable, Queryable, QueryableByName, Debug, Clone)]
-#[table_name = "hourly_gas_fee"]
+#[diesel(table_name = hourly_gas_fee)]
 pub struct HourlyGasFee {
     pub block_hour: NaiveDateTime,
 
@@ -58,17 +56,17 @@ pub async fn find_hourly_gas_fee(
     p_block_hour: NaiveDateTime,
 ) -> Result<HourlyGasFee, DBException> {
     use crate::schema::hourly_gas_fee::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result = hourly_gas_fee
         .filter(event_type.eq(p_event_type.clone()))
         .filter(block_hour.eq(p_block_hour.clone()))
-        .first_async::<HourlyGasFee>(&POOL)
+        .first::<HourlyGasFee>(&mut conn)
         .await;
 
     match select_result {
         Ok(hourly_data) => Ok(hourly_data),
         Err(error) => match error {
-            AsyncError::Timeout(_) => Err(Timeout),
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 let new_hourly_data = HourlyGasFee {
                     event_type: p_event_type.clone(),
                     block_hour: p_block_hour,
@@ -89,6 +87,7 @@ pub async fn create_or_update_hourly_gas_fee(
 ) -> Result<usize, DBException> {
     use crate::schema::hourly_gas_fee::dsl::*;
     let mut row_nums = 0;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     for hourly_data in p_hourly_data_vec {
         let update_result = diesel::insert_into(hourly_gas_fee)
             .values(hourly_data.clone())
@@ -100,7 +99,7 @@ pub async fn create_or_update_hourly_gas_fee(
                 pulled_block_height.eq(hourly_data.pulled_block_height.clone()),
                 pulled_block_time.eq(hourly_data.pulled_block_time.clone()),
             ))
-            .execute_async(&POOL)
+            .execute(&mut conn)
             .await;
 
         match update_result {

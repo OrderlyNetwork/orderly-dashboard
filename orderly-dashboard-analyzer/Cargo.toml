@@ -23,13 +23,15 @@ tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.11", features = ["json"] }
 orderly-dashboard-indexer = { path = "../orderly-dashboard-indexer" }
 
-diesel = { version = "1.4.7", features = ["postgres", "numeric", "serde_json", "chrono", "uuidv07"] }
+# diesel = { version = "1.4.7", features = ["postgres", "numeric", "serde_json", "chrono", "uuidv07"] }
+diesel = { version = "2.2.10", features = ["numeric", "serde_json", "postgres", "chrono"] }
 dotenv = "0.15.0"
 serde_json = "1.0.108"
 serde = "1.0.192"
-actix-diesel = { git = "https://github.com/frol/actix-diesel", rev = "3a001986c89dfabfc3c448d8bae28525101b4992" }
+# actix-diesel = { git = "https://github.com/frol/actix-diesel", rev = "3a001986c89dfabfc3c448d8bae28525101b4992" }
+diesel-async = { version = "0.5.2", features = ["postgres", "async-connection-wrapper", "deadpool"] }
 
-bigdecimal = "0.1"
+bigdecimal = { version = "0.4.8", features = ["serde", "serde_json"] }
 
 lazy_static = "1.4.0"
 once_cell = "1.18.0"

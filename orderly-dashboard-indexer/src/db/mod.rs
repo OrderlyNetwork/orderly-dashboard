@@ -14,22 +14,20 @@ pub mod symbols_config;
 pub mod transaction_events;
 
 pub mod utils;
-use actix_diesel::Database;
-use diesel::PgConnection;
+use diesel_async::{
+    pooled_connection::{deadpool::Pool, AsyncDieselConnectionManager},
+    AsyncPgConnection,
+};
 use once_cell::sync::{Lazy, OnceCell};
 use std::env;
 use std::sync::atomic::{AtomicU32, Ordering};
+type DbPool = Pool<AsyncPgConnection>;
 
 pub const DB_CONTEXT: &str = "db_context";
+pub(crate) const DB_CONN_ERR_MSG: &str = "Couldn't get db connection from the pool";
 
-pub static POOL: Lazy<Database<PgConnection>> = Lazy::new(|| establish_connection());
-
-pub fn establish_connection() -> Database<PgConnection> {
-    let database_url = get_database_credentials();
-    Database::builder()
-        .pool_max_size(POOL_SIZE_CONFIG.load(Ordering::Relaxed))
-        .open(&database_url)
-}
+// pub static POOL: Lazy<Database<PgConnection>> = Lazy::new(|| establish_connection());
+pub static POOL: Lazy<DbPool> = Lazy::new(|| initialize_db_pool());
 
 pub static INITED_DATABASE_URL: OnceCell<String> = OnceCell::new();
 pub static POOL_SIZE_CONFIG: AtomicU32 = AtomicU32::new(3);
@@ -48,4 +46,18 @@ pub fn get_database_credentials() -> String {
         return db_url.to_string();
     }
     env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file")
+}
+
+/// Initialize database connection pool based on `DATABASE_URL` environment variable.
+///
+/// See more: <https://docs.rs/diesel-async/latest/diesel_async/pooled_connection/index.html#modules>.
+fn initialize_db_pool() -> DbPool {
+    let db_url = get_database_credentials();
+
+    let connection_manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
+    let pool = Pool::builder(connection_manager)
+        .max_size(POOL_SIZE_CONFIG.load(Ordering::Relaxed) as usize)
+        .build()
+        .expect("pool connected normal");
+    pool
 }
