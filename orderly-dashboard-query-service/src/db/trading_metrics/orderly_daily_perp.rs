@@ -1,44 +1,44 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::sql_types::{Date, Numeric, Timestamp, Varchar};
 use diesel::QueryableByName;
+use diesel_async::RunQueryDsl;
 
 #[allow(unused_imports)]
 use orderly_dashboard_analyzer::{
     db::{hourly_orderly_perp::HourlyOrderlyPerp, POOL},
     schema::hourly_orderly_perp,
-    schema::hourly_orderly_perp::dsl::*,
+    // schema::hourly_orderly_perp::dsl::*,
 };
 
-use crate::db::DB_CONTEXT;
+use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT};
 use crate::format_extern::trading_metrics::{DailyData, OrderlyGasFee, OrderlyPerpDaily};
 
 #[derive(Debug, Clone, QueryableByName)]
 struct OrderlyDailyData {
-    #[sql_type = "Date"]
+    #[diesel(sql_type = Date)]
     pub trading_day: NaiveDate,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub trading_volume: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub trading_fee: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub trading_count: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub trading_user_count: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub liquidation_amount: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub liquidation_count: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub opening_count: BigDecimal,
 }
 
 #[derive(Debug, Clone, QueryableByName)]
 struct OrderlyDailyGas {
-    #[sql_type = "Date"]
+    #[diesel(sql_type = Date)]
     pub trading_day: NaiveDate,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub avg_gas_fee: BigDecimal,
 }
 
@@ -60,11 +60,11 @@ pub async fn daily_orderly_perp(
       group by trading_day order by trading_day asc;",
     );
     tracing::debug!(target:DB_CONTEXT,"daily_orderly_perp query string: {:?}; from_time: {}, end_time: {}", sql_query, from_time, end_time);
-
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result: Result<Vec<OrderlyDailyData>, _> = sql_query
         .bind::<Timestamp, _>(from_time)
         .bind::<Timestamp, _>(end_time)
-        .get_results_async::<OrderlyDailyData>(&POOL)
+        .get_results::<OrderlyDailyData>(&mut conn)
         .await;
 
     let mut daytime_vec: Vec<String> = Vec::new();
@@ -109,11 +109,12 @@ pub async fn daily_gas_fee(
       group by trading_day order by trading_day asc;",
     );
 
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result: Result<Vec<OrderlyDailyGas>, _> = sql_query
         .bind::<Timestamp, _>(from_time)
         .bind::<Timestamp, _>(end_time)
         .bind::<Varchar, _>(p_event_type)
-        .get_results_async::<OrderlyDailyGas>(&POOL)
+        .get_results::<OrderlyDailyGas>(&mut conn)
         .await;
 
     let mut daytime_vec: Vec<String> = Vec::new();

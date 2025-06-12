@@ -1,15 +1,13 @@
-use crate::db::{DB_CONTEXT, POOL};
+use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
 use crate::schema::symbols_config;
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
-use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 
 #[derive(Insertable, Queryable, Debug)]
-#[table_name = "symbols_config"]
+#[diesel(table_name = symbols_config)]
 pub struct DbSymbolConfig {
     pub symbol: String,
     pub symbol_hash: String,
@@ -25,6 +23,7 @@ pub struct DbSymbolConfig {
 pub async fn update_symbol_cfgs(symbols_conf: Vec<DbSymbolConfig>) -> Result<usize> {
     use crate::schema::symbols_config::dsl::*;
     use diesel::pg::upsert::excluded;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let num_rows = diesel::insert_into(symbols_config)
         .values(symbols_conf)
@@ -39,7 +38,7 @@ pub async fn update_symbol_cfgs(symbols_conf: Vec<DbSymbolConfig>) -> Result<usi
             last_mark_price_updated.eq(excluded(last_mark_price_updated)),
             last_funding_updated.eq(excluded(last_funding_updated)),
         ))
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }
@@ -50,8 +49,8 @@ pub async fn query_symbol_cfgs() -> Result<Vec<DbSymbolConfig>> {
         target: DB_CONTEXT,
         "query_symbol_cfgs start",
     );
-
-    let result = symbols_config.load_async::<DbSymbolConfig>(&POOL).await;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let result = symbols_config.load::<DbSymbolConfig>(&mut conn).await;
 
     let symbols_cfgs = match result {
         Ok(symbols_cfgs) => {
@@ -63,7 +62,7 @@ pub async fn query_symbol_cfgs() -> Result<Vec<DbSymbolConfig>> {
             symbols_cfgs
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_symbol_cfgs success. length: 0",

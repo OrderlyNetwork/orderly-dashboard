@@ -2,12 +2,14 @@ use crate::error_code::{RAW_QUERY_EXECUTE_ERR, RAW_QUERY_OVERLIMIT_ERR};
 use crate::service_base::runtime::spawn_future;
 use anyhow::Context;
 use bigdecimal::BigDecimal;
-use diesel::types::FromSql as DieselFromSql;
+use diesel::deserialize::FromSql as DieselFromSql;
+use diesel::pg::PgValue;
 use postgres::types::{FromSql, Type};
 use postgres::{Client, Column, NoTls, Row};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::env;
+use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicU32, Ordering};
 use tokio::sync::oneshot;
 use tokio::sync::oneshot::Sender;
@@ -88,6 +90,7 @@ pub async fn _raw_query(query_str: String) -> anyhow::Result<Vec<Row>> {
     Ok(results)
 }
 
+// https://github.com/sfackler/rust-postgres/issues/284#issuecomment-1092443247
 pub fn postgres_row_to_json_value(row: Row) -> Result<JSONValue, Error> {
     let row_data = postgres_row_to_row_data(row)?;
     Ok(JSONValue::Object(row_data))
@@ -235,10 +238,22 @@ impl FromSql<'_> for StringCollector {
     }
 }
 
+#[repr(transparent)]
+struct TyWrapper(Type);
+impl diesel::pg::TypeOidLookup for TyWrapper {
+    fn lookup(&self) -> NonZeroU32 {
+        NonZeroU32::new(self.0.oid()).unwrap()
+    }
+}
+
 struct Numeric(String);
 impl FromSql<'_> for Numeric {
-    fn from_sql(_: &Type, raw: &[u8]) -> Result<Numeric, Box<dyn std::error::Error + Sync + Send>> {
-        let v = BigDecimal::from_sql(Some(raw)).unwrap_or_default();
+    fn from_sql(
+        ty: &Type,
+        raw: &[u8],
+    ) -> Result<Numeric, Box<dyn std::error::Error + Sync + Send>> {
+        let ty = unsafe { &*(ty as *const Type as *const TyWrapper) };
+        let v = BigDecimal::from_sql(PgValue::new(raw, ty)).unwrap_or_default();
         Ok(Numeric(v.to_string()))
     }
     fn accepts(_ty: &Type) -> bool {
@@ -247,18 +262,22 @@ impl FromSql<'_> for Numeric {
 }
 
 mod timestamp {
+    use super::TyWrapper;
     use diesel::data_types::PgTimestamp;
     use diesel::deserialize::FromSql as DeseFromSql;
     use diesel::pg::Pg;
+    use diesel::pg::PgValue;
     use diesel::sql_types::Timestamp;
     use postgres::types::{FromSql, Type};
+
     pub(crate) struct WrapTimestamp(pub i64);
     impl FromSql<'_> for WrapTimestamp {
         fn from_sql(
-            _: &Type,
+            ty: &Type,
             raw: &[u8],
         ) -> Result<WrapTimestamp, Box<dyn std::error::Error + Sync + Send>> {
-            let v: PgTimestamp = DeseFromSql::<Timestamp, Pg>::from_sql(Some(raw))
+            let ty = unsafe { &*(ty as *const Type as *const TyWrapper) };
+            let v: PgTimestamp = DeseFromSql::<Timestamp, Pg>::from_sql(PgValue::new(raw, ty))
                 .unwrap_or_else(|_| PgTimestamp(0));
             Ok(WrapTimestamp(v.0))
         }

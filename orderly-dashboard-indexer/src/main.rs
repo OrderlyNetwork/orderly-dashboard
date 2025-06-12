@@ -19,7 +19,6 @@ mod service_base;
 mod settings;
 pub mod transform;
 pub mod utils;
-#[macro_use]
 extern crate diesel;
 
 use crate::config::{CommonConfigs, Opts};

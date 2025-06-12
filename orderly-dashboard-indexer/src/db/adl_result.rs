@@ -1,18 +1,17 @@
 use crate::db::DB_CONTEXT;
-use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::schema::adl_result;
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
+use diesel_async::RunQueryDsl;
+
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
-use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
 use std::time::Instant;
 
 #[derive(Insertable, Queryable, Debug)]
-#[table_name = "adl_result"]
+#[diesel(table_name = adl_result)]
 pub struct DbAdlResult {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -59,11 +58,12 @@ impl TryFrom<i16> for AdlVersion {
 
 pub async fn create_adl_results(adls: Vec<DbAdlResult>) -> Result<usize> {
     use crate::schema::adl_result::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let num_rows = diesel::insert_into(adl_result)
         .values(adls)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }
@@ -71,11 +71,12 @@ pub async fn create_adl_results(adls: Vec<DbAdlResult>) -> Result<usize> {
 pub async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbAdlResult>> {
     use crate::schema::adl_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = adl_result
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
-        .load_async::<DbAdlResult>(&POOL)
+        .load::<DbAdlResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -90,7 +91,8 @@ pub async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbA
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            // Err(diesel::NotFound)
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_adl_results success. length:0, used time:{} ms",
@@ -121,13 +123,14 @@ pub async fn query_adl_results_with_time(
 ) -> Result<Vec<DbAdlResult>> {
     use crate::schema::adl_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = adl_result
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
-        .load_async::<DbAdlResult>(&POOL)
+        .load::<DbAdlResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -142,7 +145,7 @@ pub async fn query_adl_results_with_time(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_adl_results_with_time success. length:0, used time:{} ms",
@@ -172,12 +175,13 @@ pub async fn query_account_adl_results(
 ) -> Result<Vec<DbAdlResult>> {
     use crate::schema::adl_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = adl_result
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
         .filter(account_id.eq(account))
-        .load_async::<DbAdlResult>(&POOL)
+        .load::<DbAdlResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -192,7 +196,7 @@ pub async fn query_account_adl_results(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_account_adl_results success. length:0, used time:{} ms",

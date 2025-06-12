@@ -1,19 +1,17 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
-use diesel::result::Error;
+use diesel_async::RunQueryDsl;
 
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
-use crate::db::POOL;
 use crate::db::{PrimaryKey, BATCH_UPSERT_LEN};
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::schema::hourly_user_token;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
-#[table_name = "hourly_user_token"]
+#[diesel(table_name = hourly_user_token)]
 pub struct HourlyUserToken {
     pub account_id: String,
     pub token: String,
@@ -90,18 +88,19 @@ pub async fn find_hourly_user_token(
     ori_chain_id: String,
 ) -> Result<HourlyUserToken, DBException> {
     use crate::schema::hourly_user_token::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = hourly_user_token
         .filter(account_id.eq(ori_account_id.clone()))
         .filter(token.eq(ori_token.clone()))
         .filter(block_hour.eq(ori_block_hour.clone()))
         .filter(chain_id.eq(ori_chain_id.clone()))
-        .first_async::<HourlyUserToken>(&POOL)
+        .first::<HourlyUserToken>(&mut conn)
         .await;
 
     match result {
         Ok(res) => Ok(res),
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 let hourly_data = HourlyUserToken {
                     account_id: ori_account_id.clone(),
                     token: ori_token.clone(),
@@ -134,6 +133,7 @@ pub async fn create_or_update_hourly_user_token(
         .into_iter()
         .cloned()
         .collect::<Vec<HourlyUserToken>>();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if hourly_data_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = hourly_data_vec.split_at(BATCH_UPSERT_LEN);
@@ -154,7 +154,7 @@ pub async fn create_or_update_hourly_user_token(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {
@@ -178,7 +178,7 @@ pub async fn create_or_update_hourly_user_token(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {

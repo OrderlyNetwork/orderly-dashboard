@@ -1,19 +1,17 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
-use diesel::result::Error;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
-use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, POOL};
+use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
 use crate::schema::hourly_orderly_token;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
-#[table_name = "hourly_orderly_token"]
+#[diesel(table_name = hourly_orderly_token)]
 pub struct HourlyOrderlyToken {
     pub token: String,
     pub block_hour: NaiveDateTime,
@@ -83,18 +81,19 @@ pub async fn find_hourly_orderly_token(
     p_chain_id: String,
 ) -> Result<HourlyOrderlyToken, DBException> {
     use crate::schema::hourly_orderly_token::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let select_result = hourly_orderly_token
         .filter(token.eq(p_token.clone()))
         .filter(block_hour.eq(p_block_hour.clone()))
         .filter(chain_id.eq(p_chain_id.clone()))
-        .first_async::<HourlyOrderlyToken>(&POOL)
+        .first::<HourlyOrderlyToken>(&mut conn)
         .await;
 
     match select_result {
         Ok(hourly_data) => Ok(hourly_data),
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 let hourly_data = HourlyOrderlyToken {
                     token: p_token.clone(),
                     block_hour: p_block_hour.clone(),
@@ -127,6 +126,7 @@ pub async fn create_or_update_hourly_orderly_token(
         .into_iter()
         .cloned()
         .collect::<Vec<HourlyOrderlyToken>>();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if p_hourly_data_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = p_hourly_data_vec.split_at(BATCH_UPSERT_LEN);
@@ -147,7 +147,7 @@ pub async fn create_or_update_hourly_orderly_token(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {
@@ -174,7 +174,7 @@ pub async fn create_or_update_hourly_orderly_token(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {

@@ -1,23 +1,21 @@
 use crate::schema::partitioned_executed_trades;
 use crate::{
     constants::ALERT_CONTEXT,
-    db::{executed_trades::DbExecutedTrades, DB_CONTEXT, POOL},
+    db::{executed_trades::DbExecutedTrades, DB_CONN_ERR_MSG, DB_CONTEXT, POOL},
 };
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 use std::time::Instant;
 
 pub const PARTITIONED_EXECUTED_TRADES_TABLE_NAME: &str = "partitioned_executed_trades";
 
 #[derive(Insertable, Queryable, Debug, Clone)]
-#[table_name = "partitioned_executed_trades"]
+#[diesel(table_name = partitioned_executed_trades)]
 pub struct DbPartitionedExecutedTrades {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -78,11 +76,12 @@ pub async fn create_partitioned_executed_trades(
     trades: Vec<DbPartitionedExecutedTrades>,
 ) -> Result<usize> {
     use crate::schema::partitioned_executed_trades::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let num_rows = diesel::insert_into(partitioned_executed_trades)
         .values(trades)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }
@@ -100,13 +99,14 @@ pub async fn query_partitioned_executed_trades(
         "query_partitioned_executed_trades start",
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = partitioned_executed_trades
         .filter(block_time.ge(from_time))
         .filter(block_time.le(to_time))
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
-        .load_async::<DbPartitionedExecutedTrades>(&POOL)
+        .load::<DbPartitionedExecutedTrades>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -131,7 +131,7 @@ pub async fn query_partitioned_executed_trades(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_partitioned_executed_trades success. length:0, used time:{} ms",
@@ -167,12 +167,13 @@ pub async fn query_account_partitioned_executed_trades(
         "query_account_partitioned_executed_trades start",
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = partitioned_executed_trades
         .filter(block_time.ge(from_time))
         .filter(block_time.le(to_time))
         .filter(account_id.eq(account))
-        .load_async::<DbPartitionedExecutedTrades>(&POOL)
+        .load::<DbPartitionedExecutedTrades>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -197,7 +198,7 @@ pub async fn query_account_partitioned_executed_trades(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_account_partitioned_executed_trades success. length:0, used time:{} ms",

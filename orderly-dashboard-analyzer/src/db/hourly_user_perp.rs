@@ -1,16 +1,14 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
-use diesel::result::Error;
+use diesel_async::RunQueryDsl;
 
-use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, POOL};
+use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
 use crate::schema::hourly_user_perp;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
-#[table_name = "hourly_user_perp"]
+#[diesel(table_name = hourly_user_perp)]
 pub struct HourlyUserPerp {
     account_id: String,
     symbol: String,
@@ -127,17 +125,18 @@ pub async fn find_hourly_user_perp(
     p_block_hour: NaiveDateTime,
 ) -> anyhow::Result<HourlyUserPerp> {
     use crate::schema::hourly_user_perp::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result = hourly_user_perp
         .filter(account_id.eq(p_account_id.clone()))
         .filter(symbol.eq(p_symbol.clone()))
         .filter(block_hour.eq(p_block_hour.clone()))
-        .first_async::<HourlyUserPerp>(&POOL)
+        .first::<HourlyUserPerp>(&mut conn)
         .await;
 
     match select_result {
         Ok(perp_data) => Ok(perp_data),
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 let new_perp = HourlyUserPerp {
                     account_id: p_account_id.clone(),
                     symbol: p_symbol.clone(),
@@ -180,6 +179,7 @@ pub async fn create_or_update_hourly_user_perp(
         .into_iter()
         .cloned()
         .collect::<Vec<HourlyUserPerp>>();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if p_hourly_user_perp_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = p_hourly_user_perp_vec.split_at(BATCH_UPSERT_LEN);
@@ -204,7 +204,7 @@ pub async fn create_or_update_hourly_user_perp(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {
@@ -232,7 +232,7 @@ pub async fn create_or_update_hourly_user_perp(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {

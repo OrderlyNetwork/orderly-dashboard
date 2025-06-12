@@ -1,15 +1,15 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::sql_types::{Date, Numeric, Timestamp};
 use diesel::QueryableByName;
+use diesel_async::RunQueryDsl;
 
+use crate::db::DB_CONN_ERR_MSG;
 use orderly_dashboard_analyzer::db::block_summary::find_block_summary;
 #[allow(unused_imports)]
 use orderly_dashboard_analyzer::{
     db::{hourly_orderly_perp::HourlyOrderlyPerp, POOL},
     schema::hourly_orderly_perp,
-    schema::hourly_orderly_perp::dsl::*,
 };
 
 use crate::format_extern::trading_metrics::{DailyTradingFeeExtern, DailyVolumeExtern};
@@ -21,17 +21,17 @@ pub mod ranking;
 
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DailyVolume {
-    #[sql_type = "Date"]
+    #[diesel(sql_type = Date)]
     trading_day: NaiveDate,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     trading_volume: BigDecimal,
 }
 
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DailyFee {
-    #[sql_type = "Date"]
+    #[diesel(sql_type = Date)]
     trading_day: NaiveDate,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     trading_fee: BigDecimal,
 }
 
@@ -58,11 +58,12 @@ pub async fn get_daily_volume(
       from hourly_orderly_perp where block_hour>=$1 and block_hour<=$2 \
       group by trading_day order by trading_day asc;",
     );
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result: Result<Vec<DailyVolume>, _> = sql_query
         .bind::<Timestamp, _>(from_time)
         .bind::<Timestamp, _>(end_time)
-        .get_results_async::<DailyVolume>(&POOL)
+        .get_results::<DailyVolume>(&mut conn)
         .await;
 
     return match result {
@@ -102,11 +103,12 @@ pub async fn get_daily_trading_fee(
       from hourly_orderly_perp where block_hour>=$1 and block_hour<=$2 \
       group by trading_day order by trading_day asc;",
     );
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result: Result<Vec<DailyFee>, _> = query
         .bind::<Timestamp, _>(from_time)
         .bind::<Timestamp, _>(end_time)
-        .get_results_async::<DailyFee>(&POOL)
+        .get_results::<DailyFee>(&mut conn)
         .await;
 
     return match result {

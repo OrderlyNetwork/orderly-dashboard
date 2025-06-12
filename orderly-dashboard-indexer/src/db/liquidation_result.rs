@@ -1,20 +1,19 @@
 use crate::db::DB_CONTEXT;
-use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::schema::liquidation_result;
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
-use diesel::result::Error;
+use diesel::prelude::*;
 use diesel::sql_types::Numeric;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 use std::collections::BTreeSet;
 use std::time::Instant;
 
 #[derive(Insertable, Queryable, QueryableByName, Debug)]
-#[table_name = "liquidation_result"]
+#[diesel(table_name = liquidation_result)]
 pub struct DbLiquidationResult {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -64,11 +63,12 @@ impl DbLiquidationResult {
 
 pub async fn create_liquidation_results(liquidations: Vec<DbLiquidationResult>) -> Result<usize> {
     use crate::schema::liquidation_result::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let num_rows = diesel::insert_into(liquidation_result)
         .values(liquidations)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }
@@ -79,11 +79,12 @@ pub async fn query_liquidation_results(
 ) -> Result<Vec<DbLiquidationResult>> {
     use crate::schema::liquidation_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = liquidation_result
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
-        .load_async::<DbLiquidationResult>(&POOL)
+        .load::<DbLiquidationResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -98,7 +99,7 @@ pub async fn query_liquidation_results(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_liquidation_results success. length:0, used time:{} ms",
@@ -130,13 +131,14 @@ pub async fn query_liquidation_results_with_time(
 ) -> Result<Vec<DbLiquidationResult>> {
     use crate::schema::liquidation_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = liquidation_result
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
         .filter(block_time.ge(BigDecimal::from(from_time)))
         .filter(block_time.le(BigDecimal::from(to_time)))
-        .load_async::<DbLiquidationResult>(&POOL)
+        .load::<DbLiquidationResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -151,7 +153,7 @@ pub async fn query_liquidation_results_with_time(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_liquidation_results_with_time success. length:0, used time:{} ms",
@@ -181,11 +183,12 @@ pub async fn query_liquidation_results_by_time(
 ) -> Result<Vec<DbLiquidationResult>> {
     use crate::schema::liquidation_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = liquidation_result
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
-        .load_async::<DbLiquidationResult>(&POOL)
+        .load::<DbLiquidationResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -200,7 +203,7 @@ pub async fn query_liquidation_results_by_time(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_liquidation_results success. length:0, used time:{} ms",
@@ -230,12 +233,13 @@ pub async fn query_liquidation_results_by_time_and_account(
 ) -> Result<Vec<DbLiquidationResult>> {
     use crate::schema::liquidation_result::dsl::*;
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = liquidation_result
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
         .filter(liquidated_account_id.eq(account_id))
-        .load_async::<DbLiquidationResult>(&POOL)
+        .load::<DbLiquidationResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -250,7 +254,7 @@ pub async fn query_liquidation_results_by_time_and_account(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_liquidation_results success. length:0, used time:{} ms",
@@ -297,11 +301,12 @@ pub async fn query_liquidation_results_by_time_and_keys(
          AND (block_number, log_index) in ({})",
         conditions
     );
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = sql_query(&query)
         .bind::<Numeric, _>(BigDecimal::from(from_time))
         .bind::<Numeric, _>(BigDecimal::from(to_time))
-        .load_async::<DbLiquidationResult>(&POOL)
+        .load::<DbLiquidationResult>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -316,7 +321,7 @@ pub async fn query_liquidation_results_by_time_and_keys(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_liquidation_results_by_time_and_keys success. length:0, used time:{} ms",

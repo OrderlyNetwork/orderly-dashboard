@@ -1,13 +1,11 @@
-use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::formats_external::NetworkInfo;
 use crate::schema::settings;
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use anyhow::Result;
-use diesel::result::Error;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
 
 pub const DEFAULT_CREATED_TABLE_QUARTER: u64 = 202502;
@@ -24,7 +22,7 @@ pub enum SettingsKey {
 }
 
 #[derive(Insertable, Queryable, Debug)]
-#[table_name = "settings"]
+#[diesel(table_name = settings)]
 pub struct DbSettings {
     pub id: i32,
     pub value: String,
@@ -199,15 +197,16 @@ pub async fn get_executed_trades_legacy_sync() -> Result<SyncLegacyDataConfig> {
 
 async fn get_setting(key: i32) -> Result<Option<DbSettings>> {
     use crate::schema::settings::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = settings
         .filter(id.eq(key))
-        .first_async::<DbSettings>(&POOL)
+        .first::<DbSettings>(&mut conn)
         .await;
 
     let event = match result {
         Ok(event) => Some(event),
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => None,
+            diesel::NotFound => None,
             _ => Err(error)?,
         },
     };
@@ -218,13 +217,14 @@ async fn get_setting(key: i32) -> Result<Option<DbSettings>> {
 async fn update_setting(key: SettingsKey, value_: String) -> Result<()> {
     use crate::schema::settings::dsl::*;
     let model = DbSettings::new(key, value_.clone());
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     diesel::insert_into(crate::schema::settings::table)
         .values(model)
         .on_conflict(id)
         .do_update()
         .set(value.eq(value_))
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
 
     Ok(())

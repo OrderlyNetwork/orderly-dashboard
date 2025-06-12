@@ -1,19 +1,17 @@
 use std::hash::Hash;
 
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
-use diesel::result::Error;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 
-use crate::db::{BATCH_UPSERT_LEN, POOL};
+use crate::db::{BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
 use crate::schema::hourly_orderly_perp;
 
 #[derive(Insertable, Queryable, QueryableByName, Debug, Clone)]
-#[table_name = "hourly_orderly_perp"]
+#[diesel(table_name = hourly_orderly_perp)]
 pub struct HourlyOrderlyPerp {
     pub symbol: String,
     pub block_hour: NaiveDateTime,
@@ -101,22 +99,17 @@ pub async fn find_hourly_orderly_perp(
     p_block_hour: NaiveDateTime,
 ) -> anyhow::Result<HourlyOrderlyPerp> {
     use crate::schema::hourly_orderly_perp::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result = hourly_orderly_perp
         .filter(symbol.eq(p_symbol.clone()))
         .filter(block_hour.eq(p_block_hour.clone()))
-        .first_async::<HourlyOrderlyPerp>(&POOL)
+        .first::<HourlyOrderlyPerp>(&mut conn)
         .await;
 
     match select_result {
         Ok(hourly_data) => Ok(hourly_data),
         Err(error) => match error {
-            AsyncError::Timeout(err) => Err(anyhow::anyhow!(
-                "find_hourly_orderly_perp symbol: {}, block_hour: {}, timeout err: {}",
-                p_symbol,
-                p_block_hour,
-                err
-            )),
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 let new_hourly_data = HourlyOrderlyPerp {
                     symbol: p_symbol.clone(),
                     block_hour: p_block_hour,
@@ -132,15 +125,9 @@ pub async fn find_hourly_orderly_perp(
                 };
                 Ok(new_hourly_data)
             }
-            AsyncError::Execute(err) => Err(anyhow::anyhow!(
+            _ => Err(anyhow::anyhow!(
                 "find_hourly_orderly_perp execute err: {}",
-                err
-            )),
-            AsyncError::Delivery(err) => Err(anyhow::anyhow!(
-                "find_hourly_orderly_perp symbol: {}, block_hour: {}, delivery err: {}",
-                p_symbol,
-                p_block_hour,
-                err
+                error
             )),
         },
     }
@@ -159,6 +146,7 @@ pub async fn create_or_update_hourly_orderly_perp(
         .into_iter()
         .cloned()
         .collect::<Vec<HourlyOrderlyPerp>>();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if p_hourly_data_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = p_hourly_data_vec.split_at(BATCH_UPSERT_LEN);
@@ -182,7 +170,7 @@ pub async fn create_or_update_hourly_orderly_perp(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {
@@ -212,7 +200,7 @@ pub async fn create_or_update_hourly_orderly_perp(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {

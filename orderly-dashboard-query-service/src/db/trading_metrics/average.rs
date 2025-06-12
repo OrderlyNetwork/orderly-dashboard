@@ -1,10 +1,11 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{Duration, NaiveDateTime, Utc};
 use diesel::sql_types::*;
 use diesel::QueryableByName;
+use diesel_async::RunQueryDsl;
 
-use crate::db::DB_CONTEXT;
+use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT};
+
 #[allow(unused_imports)]
 use orderly_dashboard_analyzer::{
     db::{hourly_orderly_perp::HourlyOrderlyPerp, POOL},
@@ -16,7 +17,7 @@ use crate::format_extern::trading_metrics::CountAverageExtern;
 
 #[derive(Debug, Clone, QueryableByName)]
 pub struct CountWrapper {
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     count: BigDecimal,
 }
 
@@ -42,9 +43,10 @@ async fn load_average_metric(field: &str, days: i32, start_time: NaiveDateTime) 
         field, days
     );
     tracing::debug!(target: DB_CONTEXT, "{}; block_hour:{}", query, start_time);
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result = diesel::sql_query(query)
         .bind::<Timestamp, _>(start_time)
-        .get_result_async::<CountWrapper>(&POOL)
+        .get_result::<CountWrapper>(&mut conn)
         .await;
 
     match select_result {

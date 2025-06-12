@@ -1,17 +1,15 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
-use diesel::result::Error;
+use diesel_async::RunQueryDsl;
 
 use crate::db::{PrimaryKey, DB_CONTEXT};
-use crate::db::{BATCH_UPSERT_LEN, POOL};
+use crate::db::{BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
 use crate::schema::user_token_summary;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
-#[table_name = "user_token_summary"]
+#[diesel(table_name = user_token_summary)]
 pub struct UserTokenSummary {
     pub account_id: String,
     pub token: String,
@@ -103,7 +101,6 @@ impl PrimaryKey for UserTokenSummaryKey {}
 pub enum DBException {
     InsertError,
     QueryError,
-    Timeout,
 }
 
 pub async fn find_user_token_summary(
@@ -112,18 +109,18 @@ pub async fn find_user_token_summary(
     ori_chain_id: String,
 ) -> Option<UserTokenSummary> {
     use crate::schema::user_token_summary::dsl::*;
-
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let filter = user_token_summary
         .filter(account_id.eq(ori_account_id.clone()))
         .filter(token.eq(ori_token.clone()))
         .filter(chain_id.eq(ori_chain_id.clone()));
 
-    let result = filter.first_async::<UserTokenSummary>(&POOL).await;
+    let result = filter.first::<UserTokenSummary>(&mut conn).await;
 
     match result {
         Ok(summary) => Some(summary),
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 let insert_sum = UserTokenSummary {
                     account_id: ori_account_id.clone(),
                     token: ori_token.clone(),
@@ -159,6 +156,7 @@ pub async fn create_or_update_user_token_summary(
         .into_iter()
         .cloned()
         .collect::<Vec<UserTokenSummary>>();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if user_token_summary_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = user_token_summary_vec.split_at(BATCH_UPSERT_LEN);
@@ -180,7 +178,7 @@ pub async fn create_or_update_user_token_summary(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {
@@ -205,7 +203,7 @@ pub async fn create_or_update_user_token_summary(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {

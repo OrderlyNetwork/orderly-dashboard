@@ -1,15 +1,15 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 
-use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use crate::schema::market_info;
 use crate::sync_broker::cal_symbol_hash;
 use diesel::pg::upsert::excluded;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
-#[table_name = "market_info"]
+#[diesel(table_name = market_info)]
 pub struct DBMarketInfo {
     pub symbol: String,
     pub symbol_hash: String,
@@ -44,6 +44,7 @@ impl DBMarketInfo {
 
 pub async fn create_or_update_market_infos(market_infos: Vec<DBMarketInfo>) -> anyhow::Result<()> {
     use crate::schema::market_info::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     diesel::insert_into(market_info)
         .values(market_infos)
         .on_conflict(symbol_hash)
@@ -55,7 +56,7 @@ pub async fn create_or_update_market_infos(market_infos: Vec<DBMarketInfo>) -> a
             open_interest.eq(excluded(open_interest)),
             update_time.eq(excluded(update_time)),
         ))
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
 
     Ok(())

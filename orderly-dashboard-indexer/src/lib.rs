@@ -5,7 +5,6 @@ pub mod api;
 pub mod consume_data_task;
 pub mod formats_external;
 pub mod schema;
-#[macro_use]
 extern crate diesel;
 pub mod constants;
 pub mod db;

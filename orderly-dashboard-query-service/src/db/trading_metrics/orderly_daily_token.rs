@@ -1,31 +1,30 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel::sql_types::{Date, Numeric, Timestamp};
 use diesel::QueryableByName;
+use diesel_async::RunQueryDsl;
 
-use crate::db::DB_CONTEXT;
+use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT};
 
 #[allow(unused_imports)]
 use orderly_dashboard_analyzer::{
     db::{hourly_orderly_token::HourlyOrderlyToken, POOL},
     schema::hourly_orderly_token,
-    schema::hourly_orderly_token::dsl::*,
 };
 
 use crate::format_extern::trading_metrics::{DailyData, OrderlyTokenDaily};
 
 #[derive(Debug, Clone, QueryableByName)]
 pub struct OrderlyDailyData {
-    #[sql_type = "Date"]
+    #[diesel(sql_type = Date)]
     pub trading_day: NaiveDate,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub withdraw_amount: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub withdraw_count: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub deposit_amount: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub deposit_count: BigDecimal,
 }
 
@@ -44,11 +43,11 @@ pub async fn get_daily_token(
       group by trading_day order by trading_day asc;",
     );
     tracing::debug!(target:DB_CONTEXT,"get_daily_token query string: {:?}; from_time: {}, end_time: {}", sql_query, from_time, end_time);
-
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result: Result<Vec<OrderlyDailyData>, _> = sql_query
         .bind::<Timestamp, _>(from_time)
         .bind::<Timestamp, _>(end_time)
-        .get_results_async::<OrderlyDailyData>(&POOL)
+        .get_results::<OrderlyDailyData>(&mut conn)
         .await;
 
     let mut daytime_vec: Vec<String> = Vec::new();

@@ -1,10 +1,10 @@
-use std::time::Instant;
-
-use actix_diesel::dsl::AsyncRunQueryDsl;
+use crate::db::DB_CONN_ERR_MSG;
 use bigdecimal::{BigDecimal, ToPrimitive};
 use chrono::{Duration, Local};
 use diesel::sql_types::*;
 use diesel::QueryableByName;
+use diesel_async::RunQueryDsl;
+use std::time::Instant;
 
 use crate::format_extern::trading_metrics::{
     TokenAmountRanking, TradingPnlRanking, TradingVolumeRanking, UserPerpHoldingRanking,
@@ -12,17 +12,17 @@ use crate::format_extern::trading_metrics::{
 
 #[derive(Debug, QueryableByName, Clone)]
 pub struct AccountVolume {
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     account_id: String,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     volume: BigDecimal,
 }
 
 #[derive(Debug, QueryableByName, Clone)]
 pub struct AccountPerpHolding {
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     account_id: String,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     holding: BigDecimal,
 }
 
@@ -45,10 +45,11 @@ pub async fn get_token_ranking(hour: i64, account_size: i64, withdraw: bool) -> 
     where block_hour>=$1 group by account_id order by volume desc limit $2"
     }
 
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result = diesel::sql_query(sql)
         .bind::<Timestamp, _>(start_time)
         .bind::<BigInt, _>(account_size)
-        .get_results_async::<AccountVolume>(&POOL)
+        .get_results::<AccountVolume>(&mut conn)
         .await;
 
     match select_result {
@@ -81,6 +82,7 @@ pub async fn get_pnl_ranking(hour: i64, account_size: i64) -> TradingPnlRanking 
 
     let now = Local::now().naive_utc();
     let start_time = now - Duration::hours(hour);
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let select_result = diesel::sql_query(
         "select account_id,sum(realized_pnl) as volume from hourly_user_perp \
@@ -88,7 +90,7 @@ pub async fn get_pnl_ranking(hour: i64, account_size: i64) -> TradingPnlRanking 
     )
     .bind::<Timestamp, _>(start_time)
     .bind::<BigInt, _>(account_size)
-    .get_results_async::<AccountVolume>(&POOL)
+    .get_results::<AccountVolume>(&mut conn)
     .await;
 
     match select_result {
@@ -124,6 +126,7 @@ pub async fn get_daily_trading_volume_ranking(
 
     let now = Local::now().naive_utc();
     let start_time = now - Duration::hours(hour);
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let select_result = diesel::sql_query(
         "select account_id,sum(trading_volume) as volume from hourly_user_perp \
@@ -131,7 +134,7 @@ pub async fn get_daily_trading_volume_ranking(
     )
     .bind::<Timestamp, _>(start_time)
     .bind::<BigInt, _>(account_size)
-    .get_results_async::<AccountVolume>(&POOL)
+    .get_results::<AccountVolume>(&mut conn)
     .await;
 
     match select_result {
@@ -165,10 +168,11 @@ pub async fn get_user_perp_holding_ranking(
         schema::user_perp_summary::dsl::*,
     };
 
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result = diesel::sql_query("select account_id,holding from user_perp_summary where symbol = $1 order by holding desc limit $2")
         .bind::<Text, _>(p_symbol)
         .bind::<BigInt, _>(account_size)
-        .get_results_async::<AccountPerpHolding>(&POOL)
+        .get_results::<AccountPerpHolding>(&mut conn)
         .await;
 
     match select_result {
@@ -194,17 +198,17 @@ pub async fn get_user_perp_holding_ranking(
 
 #[derive(Debug, Clone, QueryableByName)]
 pub struct UserSymbolHoldingRank {
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     pub account_id: String,
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     pub symbol_hash: String,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub holding: BigDecimal,
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     pub symbol: String,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub index_price: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub holding_value: BigDecimal,
 }
 
@@ -217,6 +221,7 @@ pub async fn query_user_perp_max_symbol_holding(
 ) -> anyhow::Result<Vec<UserSymbolHoldingRank>> {
     use orderly_dashboard_analyzer::db::POOL;
 
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result = if account_id.is_none() && symbol_hash.is_none() {
         let sql_query = diesel::sql_query(
             "
@@ -241,7 +246,7 @@ pub async fn query_user_perp_max_symbol_holding(
         let inst = Instant::now();
 
         let select_result: Vec<UserSymbolHoldingRank> = sql_query
-            .get_results_async::<UserSymbolHoldingRank>(&POOL)
+            .get_results::<UserSymbolHoldingRank>(&mut conn)
             .await?;
         tracing::info!(
             "query_user_perp_max_symbol_holding end, elapse_ms: {}",
@@ -281,7 +286,7 @@ pub async fn query_user_perp_max_symbol_holding(
         let inst = Instant::now();
 
         let select_result: Vec<UserSymbolHoldingRank> = sql_query
-            .get_results_async::<UserSymbolHoldingRank>(&POOL)
+            .get_results::<UserSymbolHoldingRank>(&mut conn)
             .await?;
         tracing::info!(
             "query_user_perp_max_symbol_holding end, elapse_ms: {}",
@@ -320,7 +325,7 @@ pub async fn query_user_perp_max_symbol_holding(
         let inst = Instant::now();
 
         let select_result: Vec<UserSymbolHoldingRank> = sql_query
-            .get_results_async::<UserSymbolHoldingRank>(&POOL)
+            .get_results::<UserSymbolHoldingRank>(&mut conn)
             .await?;
         tracing::info!(
             "query_user_perp_max_symbol_holding end, elapse_ms: {}",
@@ -356,7 +361,7 @@ pub async fn query_user_perp_max_symbol_holding(
         let inst = Instant::now();
 
         let select_result: Vec<UserSymbolHoldingRank> = sql_query
-            .get_results_async::<UserSymbolHoldingRank>(&POOL)
+            .get_results::<UserSymbolHoldingRank>(&mut conn)
             .await?;
         tracing::info!(
             "query_user_perp_max_symbol_holding end, elapse_ms: {}",

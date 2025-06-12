@@ -1,18 +1,17 @@
-use crate::db::{DB_CONTEXT, POOL};
+use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
 use crate::schema::settlement_execution;
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
-use diesel::result::Error;
+use diesel::prelude::*;
 use diesel::sql_types::{BigInt, Integer, Nullable, Numeric, Text};
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
+use diesel_async::RunQueryDsl;
 use std::time::Instant;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
-#[table_name = "settlement_execution"]
+#[diesel(table_name = settlement_execution)]
 pub struct DbSettlementExecution {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -39,31 +38,31 @@ impl DbSettlementExecution {
 #[allow(dead_code)]
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DbSettlementExecutionView {
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub result_settled_amount: BigDecimal,
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     pub insurance_account_id: String,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub insurance_transfer_amount: BigDecimal,
-    #[sql_type = "BigInt"]
+    #[diesel(sql_type = BigInt)]
     pub block_number: i64,
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     pub transaction_index: i32,
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     pub log_index: i32,
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     pub settlement_result_log_idx: i32,
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     pub transaction_id: String,
-    #[sql_type = "Text"]
+    #[diesel(sql_type = Text)]
     pub symbol_hash: String,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub sum_unitary_fundings: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub mark_price: BigDecimal,
-    #[sql_type = "Numeric"]
+    #[diesel(sql_type = Numeric)]
     pub settled_amount: BigDecimal,
-    #[sql_type = "Nullable<Numeric>"]
+    #[diesel(sql_type = Nullable<Numeric>)]
     pub block_time: Option<BigDecimal>,
 }
 
@@ -80,10 +79,11 @@ pub async fn create_settlement_executions(
     if settlement_execs.is_empty() {
         return Ok(0);
     }
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let num_rows = diesel::insert_into(settlement_execution)
         .values(settlement_execs)
         .on_conflict_do_nothing()
-        .execute_async(&POOL)
+        .execute(&mut conn)
         .await?;
     Ok(num_rows)
 }
@@ -99,10 +99,11 @@ pub async fn query_settlement_executions(
     );
     let start_time = Instant::now();
 
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = settlement_execution
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
-        .load_async::<DbSettlementExecution>(&POOL)
+        .load::<DbSettlementExecution>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -117,7 +118,7 @@ pub async fn query_settlement_executions(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_settlement_executions success. length:0, used time:{} ms",
@@ -152,13 +153,14 @@ pub async fn query_settlement_executions_with_time(
         "query_settlement_executions_with_time start",
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = settlement_execution
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
         .filter(block_time.ge(BigDecimal::from(from_time)))
         .filter(block_time.le(BigDecimal::from(to_time)))
-        .load_async::<DbSettlementExecution>(&POOL)
+        .load::<DbSettlementExecution>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -173,7 +175,7 @@ pub async fn query_settlement_executions_with_time(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_settlement_executions success. length:0, used time:{} ms",
@@ -209,6 +211,7 @@ pub async fn query_account_settlement_executions(
         "query_account_settlement_executions start",
     );
     let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = if let Some(offset) = offset {
         sql_query(
             "select
@@ -244,7 +247,7 @@ pub async fn query_account_settlement_executions(
             .bind::<diesel::sql_types::Text, _>(account_id_)
             .bind::<diesel::sql_types::BigInt, _>(offset as i64)
             .bind::<diesel::sql_types::BigInt, _>(limit.unwrap_or_default() as i64)
-            .get_results_async::<DbSettlementExecutionView>(&POOL)
+            .get_results::<DbSettlementExecutionView>(&mut conn)
             .await
     } else {
         sql_query(
@@ -276,7 +279,7 @@ pub async fn query_account_settlement_executions(
             .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
             .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
             .bind::<diesel::sql_types::Text, _>(account_id_)
-            .get_results_async::<DbSettlementExecutionView>(&POOL)
+            .get_results::<DbSettlementExecutionView>(&mut conn)
             .await
     };
 
@@ -293,7 +296,7 @@ pub async fn query_account_settlement_executions(
             events
         }
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
                     "query_account_settlement_executions success. length:0, used time:{} ms",

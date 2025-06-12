@@ -1,18 +1,16 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
-use actix_diesel::AsyncError;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
-use diesel::result::Error;
+use diesel_async::RunQueryDsl;
 
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
-use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, POOL};
+use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
 use crate::schema::orderly_token_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
-#[table_name = "orderly_token_summary"]
+#[diesel(table_name = orderly_token_summary)]
 pub struct OrderlyTokenSummary {
     pub token: String,
     pub chain_id: String,
@@ -81,16 +79,17 @@ pub async fn find_orderly_token_summary(
     p_chain_id: String,
 ) -> Result<OrderlyTokenSummary, DBException> {
     use crate::schema::orderly_token_summary::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result = orderly_token_summary
         .filter(token.eq(p_token.clone()))
         .filter(chain_id.eq(p_chain_id.clone()))
-        .first_async::<OrderlyTokenSummary>(&POOL)
+        .first::<OrderlyTokenSummary>(&mut conn)
         .await;
 
     match select_result {
         Ok(hourly_data) => Ok(hourly_data),
         Err(error) => match error {
-            AsyncError::Execute(Error::NotFound) => {
+            diesel::NotFound => {
                 let hourly_data = OrderlyTokenSummary {
                     token: p_token.clone(),
                     chain_id: p_chain_id.clone(),
@@ -122,6 +121,7 @@ pub async fn create_or_update_orderly_token_summary(
         .into_iter()
         .cloned()
         .collect::<Vec<OrderlyTokenSummary>>();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if p_hourly_data_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = p_hourly_data_vec.split_at(BATCH_UPSERT_LEN);
@@ -144,7 +144,7 @@ pub async fn create_or_update_orderly_token_summary(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {
@@ -173,7 +173,7 @@ pub async fn create_or_update_orderly_token_summary(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                 ))
-                .execute_async(&POOL)
+                .execute(&mut conn)
                 .await;
 
             match update_result {

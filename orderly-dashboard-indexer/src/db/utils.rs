@@ -1,14 +1,15 @@
-use actix_diesel::dsl::AsyncRunQueryDsl;
+use diesel::prelude::*;
 use diesel::sql_types::BigInt;
+use diesel_async::RunQueryDsl;
 
-use crate::db::POOL;
+use crate::db::{DB_CONN_ERR_MSG, POOL};
 use anyhow::Result;
 
 use diesel::sql_query;
 
 #[derive(QueryableByName, Debug)]
 pub struct Count {
-    #[sql_type = "BigInt"]
+    #[diesel(sql_type = BigInt)]
     pub count: i64,
 }
 
@@ -19,7 +20,8 @@ pub async fn check_table_is_exist(table_name: String) -> Result<bool> {
         table_name
     );
     let sql = sql_query(s);
-    let result = sql.get_result_async::<Count>(&POOL).await?;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let result = sql.get_result::<Count>(&mut conn).await?;
     if result.count == 0 {
         return Ok(false);
     }
@@ -74,7 +76,8 @@ pub async fn create_partition(
         table_name, parent_table, from_bound, to_bound
     );
     let sql = sql_query(s);
-    let result = sql.execute_async(&POOL).await?;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let result = sql.execute(&mut conn).await?;
     tracing::info!("create_partition result: {}", result);
 
     Ok(true)
