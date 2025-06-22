@@ -220,13 +220,14 @@ async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, 
                     }
                     TradingEventInnerData::LiquidationResult {
                         liquidated_account_id,
-                        insurance_account_id: _,
+                        insurance_account_id,
                         liquidated_asset_hash,
                         insurance_transfer_amount,
                         liquidation_transfers,
                     } => {
                         analyzer_liquidation_v1(
                             liquidated_account_id,
+                            insurance_account_id,
                             liquidated_asset_hash,
                             insurance_transfer_amount,
                             liquidation_transfers,

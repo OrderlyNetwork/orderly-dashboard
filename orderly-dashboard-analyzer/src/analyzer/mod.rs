@@ -17,6 +17,10 @@ pub fn get_qty_prec() -> BigDecimal {
     BigDecimal::from(100_000_000)
 }
 
+pub fn get_symbol_prec() -> i64 {
+    8
+}
+
 pub fn get_price_prec() -> BigDecimal {
     BigDecimal::from(100_000_000)
 }
@@ -36,7 +40,7 @@ pub fn get_gas_prec() -> BigDecimal {
 #[cfg(test)]
 pub mod tests {
     use crate::analyzer::analyzer_context::AnalyzeContext;
-    use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
+    use crate::analyzer::calc::USDC_CHAIN_ID;
     use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
     use crate::db::hourly_user_perp::HourlyUserPerpKey;
     use crate::db::user_perp_summary::UserPerpSummaryKey;

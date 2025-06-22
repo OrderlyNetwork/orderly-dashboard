@@ -525,6 +525,10 @@ mod tests {
     fn test_bigdecimal_scal() {
         let v = BigDecimal::from_str("3.213").unwrap();
         let v = v.with_scale(0);
-        println!("test_bigdecimal_scal: {}", v);
+        assert_eq!("3", v.to_string());
+
+        let v = BigDecimal::from_str("3.813").unwrap();
+        let v = v.with_scale(0);
+        assert_eq!("3", v.to_string());
     }
 }

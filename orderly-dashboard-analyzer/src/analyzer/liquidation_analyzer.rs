@@ -156,6 +156,7 @@ pub async fn analyzer_liquidation_v2(
 
 pub async fn analyzer_liquidation_v1(
     liquidated_account_id: String,
+    _insurance_account_id: String,
     _liquidated_asset_hash: String,
     insurance_transfer_amount: String,
     liquidation_transfers: Vec<LiquidationTransfer>,
@@ -230,7 +231,7 @@ async fn execute_for_liquidator(liquidation: &Liquidation, context: &mut Analyze
     let user_perp_snap = user_perp.clone();
     let (liquidator_open_cost_diff, liquidator_pnl_diff) = RealizedPnl::calc_realized_pnl(
         liquidation.qty_transfer.clone(),
-        -(liquidation.cost_position_transfer.clone() - (liquidation.liquidator_fee.clone())),
+        liquidation.cost_position_transfer.clone() - (liquidation.liquidator_fee.clone()),
         user_perp_snap.holding.clone(),
         user_perp_snap.opening_cost.clone(),
     );
@@ -497,6 +498,7 @@ mod tests {
 
         analyzer_liquidation_v1(
             LIQUIDATED_ACCOUNT_ID.to_string(),
+            "insurance_fund".to_string(),
             USDC_HASH.to_string(),
             0.to_string(),
             liquidation_transfers,
