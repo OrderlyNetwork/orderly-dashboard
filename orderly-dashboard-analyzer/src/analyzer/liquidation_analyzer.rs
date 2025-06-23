@@ -241,6 +241,7 @@ async fn execute_for_liquidator(liquidation: &Liquidation, context: &mut Analyze
         liquidation.qty_transfer.clone(),
         liquidator_open_cost_diff.clone(),
         liquidation.block_num,
+        liquidator_pnl_diff.clone(),
     );
 
     let h_perp_key = HourlyUserPerpKey::new_key(
@@ -282,6 +283,7 @@ async fn execute_for_liquidated(liquidation: &Liquidation, context: &mut Analyze
         liquidation.cost_position_transfer.clone(),
         liquidation.sum_unitry_funding.clone(),
         open_cost_diff.clone(),
+        pnl_diff.clone(),
     );
 
     let h_perp_key = HourlyUserPerpKey::new_key(
@@ -326,6 +328,7 @@ async fn execute_for_liquidation_v2(liquidation: &Liquidation, context: &mut Ana
         liquidation.cost_position_transfer.clone(),
         liquidation.sum_unitry_funding.clone(),
         open_cost_diff.clone(),
+        pnl_diff.clone(),
     );
 
     let h_perp_key = HourlyUserPerpKey::new_key(

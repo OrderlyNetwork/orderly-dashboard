@@ -25,8 +25,7 @@ pub struct UserPerpSummary {
     total_trading_count: i64,
     total_trading_fee: BigDecimal,
 
-    #[allow(dead_code)]
-    total_realized_pnl: BigDecimal,
+    pub total_realized_pnl: BigDecimal,
     #[allow(dead_code)]
     total_un_realized_pnl: BigDecimal,
 
@@ -68,6 +67,7 @@ impl UserPerpSummary {
         _cost_position_transfer: BigDecimal,
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
+        realized_pnl_diff: BigDecimal,
     ) {
         if block_num <= self.pulled_block_height {
             // already processed this block events
@@ -78,6 +78,7 @@ impl UserPerpSummary {
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
         self.opening_cost += open_cost_diff;
+        self.total_realized_pnl += realized_pnl_diff;
     }
 
     pub fn new_liquidation_v2(
@@ -88,6 +89,7 @@ impl UserPerpSummary {
         _cost_position_transfer: BigDecimal,
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
+        realized_pnl_diff: BigDecimal,
     ) {
         if block_num <= self.pulled_block_height {
             // already processed this block events
@@ -98,6 +100,7 @@ impl UserPerpSummary {
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
         self.opening_cost += open_cost_diff;
+        self.total_realized_pnl += realized_pnl_diff;
     }
 
     pub fn new_settlemnt(&mut self, settlement_amount: BigDecimal, pulled_block_height: i64) {
@@ -113,13 +116,15 @@ impl UserPerpSummary {
         holding_diff: BigDecimal,
         opening_cost_diff: BigDecimal,
         pulled_block_height: i64,
+        realized_pnl_diff: BigDecimal,
     ) {
         if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
-        self.holding += holding_diff.clone();
+        self.holding += holding_diff;
         self.opening_cost += opening_cost_diff;
+        self.total_realized_pnl += realized_pnl_diff;
     }
 
     pub fn charge_funding_fee(
@@ -180,6 +185,7 @@ impl UserPerpSummary {
         _cost_position_transfer: BigDecimal,
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
+        realized_pnl_diff: BigDecimal,
     ) {
         if block_num <= self.pulled_block_height {
             // already processed this block events
@@ -190,6 +196,7 @@ impl UserPerpSummary {
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
         self.opening_cost += open_cost_diff;
+        self.total_realized_pnl += realized_pnl_diff;
     }
 
     pub fn new_insurance_adl_v1(
@@ -218,6 +225,7 @@ impl UserPerpSummary {
         _cost_position_transfer: BigDecimal,
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
+        realized_pnl_diff: BigDecimal,
     ) {
         if block_num <= self.pulled_block_height {
             // already processed this block events
@@ -228,6 +236,7 @@ impl UserPerpSummary {
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
         self.opening_cost += open_cost_diff;
+        self.total_realized_pnl += realized_pnl_diff;
     }
 }
 
@@ -239,6 +248,7 @@ impl UserPerpSummary {
         pulled_block_height: i64,
         open_cost_diff: BigDecimal,
         qty: BigDecimal,
+        realized_pnl_diff: BigDecimal,
     ) -> (bool, bool) {
         if pulled_block_height <= self.pulled_block_height {
             tracing::warn!("deprecated trade for pulled_block_height: {}, self.pulled_block_height: {}, fee: {}", pulled_block_height, self.pulled_block_height, fee);
@@ -256,6 +266,7 @@ impl UserPerpSummary {
         self.total_trading_count += 1;
         self.holding += qty;
         self.opening_cost += open_cost_diff;
+        self.total_realized_pnl += realized_pnl_diff;
 
         (is_opening, is_new_user)
     }

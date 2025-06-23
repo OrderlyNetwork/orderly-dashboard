@@ -94,6 +94,7 @@ pub async fn analyzer_perp_trade(
                 pulled_block_height.clone(),
                 open_cost_diff.clone(),
                 fixed_qty.clone(),
+                pnl_diff.clone(),
             );
             if opening {
                 context

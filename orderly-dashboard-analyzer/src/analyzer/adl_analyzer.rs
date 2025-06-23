@@ -60,7 +60,7 @@ pub async fn analyzer_adl(
         hourly_user_perp.new_liquidation(
             fixed_adl_perice.clone() * fixed_adl_qty.clone(),
             block_num,
-            pnl_diff,
+            pnl_diff.clone(),
         );
     }
 
@@ -75,6 +75,7 @@ pub async fn analyzer_adl(
             cpt.clone(),
             fixed_sum_unitary_fundings.clone(),
             open_cost_diff,
+            pnl_diff.clone(),
         );
 
         let insurance_perp_key = UserPerpSummaryKey {
@@ -142,7 +143,7 @@ pub async fn analyzer_adl_v2(
         hourly_user_perp.new_liquidation(
             fixed_adl_perice.clone() * fixed_adl_qty.clone(),
             block_num,
-            pnl_diff,
+            pnl_diff.clone(),
         );
     }
 
@@ -157,6 +158,7 @@ pub async fn analyzer_adl_v2(
             cpt.clone(),
             fixed_sum_unitary_fundings.clone(),
             open_cost_diff,
+            pnl_diff,
         );
     }
 }
