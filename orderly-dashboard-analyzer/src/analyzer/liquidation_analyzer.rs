@@ -231,7 +231,7 @@ async fn execute_for_liquidator(liquidation: &Liquidation, context: &mut Analyze
     let user_perp_snap = user_perp.clone();
     let (liquidator_open_cost_diff, liquidator_pnl_diff) = RealizedPnl::calc_realized_pnl(
         liquidation.qty_transfer.clone(),
-        liquidation.cost_position_transfer.clone() - (liquidation.liquidator_fee.clone()),
+        -(liquidation.cost_position_transfer.clone() - liquidation.liquidator_fee.clone()),
         user_perp_snap.holding.clone(),
         user_perp_snap.opening_cost.clone(),
     );
@@ -270,7 +270,7 @@ async fn execute_for_liquidated(liquidation: &Liquidation, context: &mut Analyze
     let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
         liquidation.qty_transfer.clone(),
         (liquidation.cost_position_transfer.clone())
-            - ((liquidation.liquidator_fee.clone()) + (liquidation.insurnace_fee.clone())),
+            - (liquidation.liquidator_fee.clone() + liquidation.insurnace_fee.clone()),
         user_perp_snap.holding.clone(),
         user_perp_snap.opening_cost.clone(),
     );

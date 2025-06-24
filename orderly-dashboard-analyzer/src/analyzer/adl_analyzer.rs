@@ -128,12 +128,12 @@ pub async fn analyzer_adl_v2(
         account_id: account_id.clone(),
         symbol: symbol_hash.clone(),
     };
-    let user_perp_snap = context.get_user_perp(&user_perp_key.clone()).await.clone();
+    let mut user_perp_summary = context.get_user_perp(&user_perp_key.clone()).await.clone();
     let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
         fixed_adl_qty.clone(),
-        fixed_position_transfer.clone(),
-        user_perp_snap.holding,
-        user_perp_snap.opening_cost,
+        -fixed_position_transfer.clone(),
+        user_perp_summary.holding.clone(),
+        user_perp_summary.opening_cost.clone(),
     );
 
     {
@@ -148,7 +148,6 @@ pub async fn analyzer_adl_v2(
     }
 
     {
-        let user_perp_summary = context.get_user_perp(&user_perp_key).await;
         user_perp_summary.charge_funding_fee(fixed_sum_unitary_fundings.clone(), block_num);
 
         user_perp_summary.new_user_adl_v2(
