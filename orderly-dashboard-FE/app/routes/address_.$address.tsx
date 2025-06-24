@@ -33,7 +33,7 @@ import { Spinner } from '~/components';
 import { ChainAddress, EventsParams, EventTableData, EventType } from '~/hooks';
 
 export function loader({ params }: LoaderFunctionArgs) {
-  return json({ address: params.address });
+  return json({ address: params.address ?? '' });
 }
 
 const defaultVisibility = {
@@ -83,14 +83,14 @@ export const Address: FC = () => {
     }
   ]);
 
-  const { address: rawAddress }: { address: string } = useLoaderData<typeof loader>();
+  const { address: rawAddress } = useLoaderData<typeof loader>();
   const address: ChainAddress = useMemo(() => {
     if (rawAddress.match(/^0x[0-9a-fA-F]{40}$/)) {
       return {
         address: rawAddress,
         chain_namespace: 'evm'
       };
-    } else if (rawAddress.match(/^[0-9a-zA-Z]{44}$/)) {
+    } else if (rawAddress.match(/^[0-9a-zA-Z]{43,44}$/)) {
       return {
         address: rawAddress,
         chain_namespace: 'sol'
