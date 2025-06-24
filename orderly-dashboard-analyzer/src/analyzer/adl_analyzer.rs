@@ -48,7 +48,7 @@ pub async fn analyzer_adl(
     let user_perp_snap = context.get_user_perp(&user_perp_key.clone()).await.clone();
     let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
         fixed_adl_qty.clone(),
-        fixed_position_transfer.clone(),
+        -fixed_position_transfer.clone(),
         user_perp_snap.holding,
         user_perp_snap.opening_cost,
     );
