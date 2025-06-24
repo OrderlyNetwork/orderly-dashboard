@@ -36,6 +36,7 @@ pub async fn analyzer_perp_trade(
 
         let notional: BigDecimal = perp_trade.notional.parse().unwrap();
         let fixed_notional = notional.div(get_cost_position_prec());
+        let quoted_diff = -fixed_notional.clone();
         let trade_hour = convert_block_hour(perp_trade.timestamp as i64);
 
         // hourly_orderly
@@ -82,7 +83,7 @@ pub async fn analyzer_perp_trade(
         user_perp_summary.charge_funding_fee(suf.div(get_unitary_prec()), pulled_block_height);
         let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
             fixed_qty.clone(),
-            -fixed_notional.clone(),
+            quoted_diff.clone(),
             user_perp_summary.holding.clone(),
             user_perp_summary.opening_cost.clone(),
         );
