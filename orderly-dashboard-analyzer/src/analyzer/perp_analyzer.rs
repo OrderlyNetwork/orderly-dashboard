@@ -71,7 +71,7 @@ pub async fn analyzer_perp_trade(
         };
 
         //user_summary
-        let mut user_perp_snap = context
+        let mut user_perp_summary = context
             .get_user_perp(&user_perp_summary_key.clone())
             .await
             .clone();
@@ -79,15 +79,14 @@ pub async fn analyzer_perp_trade(
         let suf: BigDecimal = perp_trade.sum_unitary_fundings.parse().unwrap();
 
         // should no check and update log idx for charge funding fee
-        user_perp_snap.charge_funding_fee(suf.div(get_unitary_prec()), pulled_block_height);
+        user_perp_summary.charge_funding_fee(suf.div(get_unitary_prec()), pulled_block_height);
         let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
             fixed_qty.clone(),
-            fixed_notional.clone(),
-            user_perp_snap.holding.clone(),
-            user_perp_snap.opening_cost.clone(),
+            -fixed_notional.clone(),
+            user_perp_summary.holding.clone(),
+            user_perp_summary.opening_cost.clone(),
         );
         {
-            let user_perp_summary = context.get_user_perp(&user_perp_summary_key).await;
             let (opening, new_user) = user_perp_summary.new_trade(
                 fixed_fee.clone(),
                 fixed_notional.clone(),

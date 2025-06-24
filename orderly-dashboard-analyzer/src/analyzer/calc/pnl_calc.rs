@@ -29,6 +29,7 @@ fn is_reduce(latest_holding: BigDecimal, holding_diff: BigDecimal) -> bool {
  *
 */
 
+// CeFi+avg_open_price+calculation
 impl RealizedPnl {
     pub fn calc_realized_pnl(
         holding_diff: BigDecimal,
