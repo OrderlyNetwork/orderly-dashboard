@@ -37,6 +37,14 @@ impl RealizedPnl {
         latest_holding: BigDecimal,
         last_opening_cost: BigDecimal,
     ) -> (BigDecimal, BigDecimal) {
+        #[cfg(test)]
+        println!(
+            "holding_diff: {},quoted_diff: {}, latest_holding: {}, last_opening_cost: {}",
+            holding_diff.to_string(),
+            quoted_diff.to_string(),
+            latest_holding.to_string(),
+            last_opening_cost.to_string()
+        );
         let reverse = is_reverse(holding_diff.clone(), latest_holding.clone());
         let current_holding = latest_holding.clone() + holding_diff.clone();
         let open_cost_diff;
@@ -47,7 +55,7 @@ impl RealizedPnl {
                 / holding_diff.clone())
             .with_scale_round(get_symbol_prec(), RoundingMode::HalfUp)
                 - last_opening_cost.clone();
-            pnl_diff = ((quoted_diff.clone() * (-latest_holding.clone())) / holding_diff.clone())
+            pnl_diff = (quoted_diff.clone() * (-latest_holding.clone()) / holding_diff.clone())
                 .with_scale_round(get_symbol_prec(), RoundingMode::HalfUp)
                 + last_opening_cost.clone();
         } else {
@@ -65,6 +73,12 @@ impl RealizedPnl {
                 pnl_diff = BigDecimal::from(0);
             }
         }
+        #[cfg(test)]
+        println!(
+            "open_cost_diff: {}, pnl_diff: {}",
+            open_cost_diff.to_string(),
+            pnl_diff.to_string()
+        );
 
         (open_cost_diff, pnl_diff)
     }
