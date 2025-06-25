@@ -324,13 +324,26 @@ async fn execute_for_liquidation_v2(liquidation: &Liquidation, context: &mut Ana
     );
 
     let user_perp_snap = user_perp.clone();
+    let quoted_diff = -liquidation.cost_position_transfer.clone()
+        - liquidation.liquidator_fee.clone()
+        - liquidation.insurnace_fee.clone();
+    #[cfg(test)]
+    println!(
+        "execute_for_liquidation_v2 key: {:?}, qty_transfer: {}, quoted_diff: {}, total_realized_pnl: {}, holding: {}, opening_cost: {}", 
+        key, liquidation.qty_transfer.to_string(), quoted_diff.to_string(), user_perp_snap.total_realized_pnl.to_string(), user_perp_snap.holding.to_string(),  user_perp_snap.opening_cost.to_string(),
+    );
 
     let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
         liquidation.qty_transfer.clone(),
-        (liquidation.cost_position_transfer.clone())
-            - ((liquidation.liquidator_fee.clone()) + (liquidation.insurnace_fee.clone())),
+        quoted_diff,
         user_perp_snap.holding.clone(),
         user_perp_snap.opening_cost.clone(),
+    );
+    #[cfg(test)]
+    println!(
+        "execute_for_liquidation_v2 open_cost_diff: {:?}, pnl_diff: {}",
+        open_cost_diff.to_string(),
+        pnl_diff.to_string()
     );
 
     let user_perp = context.get_user_perp(&key.clone()).await;
@@ -401,10 +414,13 @@ async fn transfer_amount(
 
 #[cfg(test)]
 mod tests {
-    use crate::analyzer::tests::*;
+    use crate::analyzer::{analyzer_job::parse_and_analyzer, tests::*};
     use bigdecimal::BigDecimal;
     use chrono::NaiveDateTime;
     use num_traits::FromPrimitive;
+    use orderly_dashboard_indexer::formats_external::{
+        trading_events::TradingEventsResponse, Response, SuccessResponse,
+    };
     use std::str::FromStr;
 
     use super::{
@@ -712,5 +728,149 @@ mod tests {
             assert_eq!(insurance_btc.holding, BigDecimal::from(0));
             println!("insurance btc perp summary: {:?}", insurance_btc);
         }
+    }
+
+    const TRADE_AND_LIQ_DATA: &str = r#"
+{
+    "success": true,
+    "data": {
+        "events": [
+            {
+                "block_number": 29607613,
+                "transaction_index": 2,
+                "log_index": 7,
+                "transaction_id": "0x444d3119bf970bf8f6febe879eb4a7103266831a64bc3ee4afc2dba62936ffe9",
+                "block_timestamp": 1750747598,
+                "data": {
+                    "ProcessedTrades": {
+                        "batch_id": 544501,
+                        "trades": [
+                            {
+                                "account_id": "0xa8fbdad84f63facd3363563445137ae903f41ffdab304d24f1db95c7ba2cfe84",
+                                "symbol_hash": "0x7e83089239db756ee233fa8972addfea16ae653db0f692e4851aed546b21caeb",
+                                "fee_asset_hash": "0xd6aca1be9729c13d677335161321649cccae6a591554772516700f986f942eaa",
+                                "trade_qty": "870000",
+                                "notional": "21078012",
+                                "executed_price": "242276000000",
+                                "fee": "12647",
+                                "sum_unitary_fundings": "1831480000000000000",
+                                "trade_id": 10076132133,
+                                "match_id": 1750745787747772649,
+                                "timestamp": 1750745787747,
+                                "side": "BUY"
+                            },
+                            {
+                                "account_id": "0xa8fbdad84f63facd3363563445137ae903f41ffdab304d24f1db95c7ba2cfe84",
+                                "symbol_hash": "0x7e83089239db756ee233fa8972addfea16ae653db0f692e4851aed546b21caeb",
+                                "fee_asset_hash": "0xd6aca1be9729c13d677335161321649cccae6a591554772516700f986f942eaa",
+                                "trade_qty": "-870000",
+                                "notional": "-20999973",
+                                "executed_price": "241379000000",
+                                "fee": "12600",
+                                "sum_unitary_fundings": "1831480000000000000",
+                                "trade_id": 10076132134,
+                                "match_id": 1750745906031410525,
+                                "timestamp": 1750745906031,
+                                "side": "SELL"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "block_number": 29643682,
+                "transaction_index": 1,
+                "log_index": 3,
+                "transaction_id": "0xbea889aa594cce839fc158eecaa028a5c260880ddb6eb0af6714716d66ea006d",
+                "block_timestamp": 1750819736,
+                "data": {
+                    "ProcessedTrades": {
+                        "batch_id": 544666,
+                        "trades": [
+                            {
+                                "account_id": "0xa8fbdad84f63facd3363563445137ae903f41ffdab304d24f1db95c7ba2cfe84",
+                                "symbol_hash": "0x7e83089239db756ee233fa8972addfea16ae653db0f692e4851aed546b21caeb",
+                                "fee_asset_hash": "0xd6aca1be9729c13d677335161321649cccae6a591554772516700f986f942eaa",
+                                "trade_qty": "2000000",
+                                "notional": "49334400",
+                                "executed_price": "246672000000",
+                                "fee": "29601",
+                                "sum_unitary_fundings": "1832200000000000000",
+                                "trade_id": 10076132861,
+                                "match_id": 1750817981088355795,
+                                "timestamp": 1750817981088,
+                                "side": "BUY"
+                            },
+                            {
+                                "account_id": "0xa8fbdad84f63facd3363563445137ae903f41ffdab304d24f1db95c7ba2cfe84",
+                                "symbol_hash": "0x7e83089239db756ee233fa8972addfea16ae653db0f692e4851aed546b21caeb",
+                                "fee_asset_hash": "0xd6aca1be9729c13d677335161321649cccae6a591554772516700f986f942eaa",
+                                "trade_qty": "16050000",
+                                "notional": "396048195",
+                                "executed_price": "246759000000",
+                                "fee": "237629",
+                                "sum_unitary_fundings": "1832200000000000000",
+                                "trade_id": 10076132862,
+                                "match_id": 1750817981088372622,
+                                "timestamp": 1750817981088,
+                                "side": "BUY"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "block_number": 29647199,
+                "transaction_index": 3,
+                "log_index": 7,
+                "transaction_id": "0x1a5d656bcb01a5d145f94d67684c233316defda4540a53d5f88f1c1cdb6b9d09",
+                "block_timestamp": 1750826770,
+                "data": {
+                    "LiquidationResultV2": {
+                        "account_id": "0xa8fbdad84f63facd3363563445137ae903f41ffdab304d24f1db95c7ba2cfe84",
+                        "liquidated_asset_hash": "0xd6aca1be9729c13d677335161321649cccae6a591554772516700f986f942eaa",
+                        "insurance_transfer_amount": "0",
+                        "liquidation_transfers": [
+                            {
+                                "account_id": "0xa8fbdad84f63facd3363563445137ae903f41ffdab304d24f1db95c7ba2cfe84",
+                                "symbol_hash": "0x7e83089239db756ee233fa8972addfea16ae653db0f692e4851aed546b21caeb",
+                                "position_qty_transfer": "-18050000",
+                                "cost_position_transfer": "-438726910",
+                                "fee": "2545055",
+                                "mark_price": "243062000000",
+                                "sum_unitary_fundings": "1832200000000000000"
+                            }
+                        ]
+                    }
+                }
+            }
+        ],
+        "last_block": 29647199,
+        "last_block_timestamp": 1750826770,
+        "next_offset": null
+    }
+}
+        "#;
+
+    #[ignore]
+    #[actix_web::test]
+    async fn test_liquidation_with_data() {
+        let result: Response<TradingEventsResponse> =
+            serde_json::from_str(TRADE_AND_LIQ_DATA).unwrap();
+        let mut result_data = Response::<TradingEventsResponse>::empty_success();
+        println!("result: {:?}", result);
+        match &result {
+            Response::Success(data) => {
+                println!(
+                    "result data length: {:?}",
+                    data.as_data().clone().unwrap().events.len()
+                );
+                let mut data = data.as_data().cloned().unwrap();
+                // data.events.remove(2);
+                result_data = Response::Success(SuccessResponse::new(data))
+            }
+            _ => {}
+        }
+        parse_and_analyzer(result_data).await;
     }
 }

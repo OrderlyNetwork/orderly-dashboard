@@ -134,7 +134,7 @@ fn cal_to_time(from_time: i64, batch_block_num: u64) -> i64 {
 }
 
 #[allow(deprecated)]
-async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, i64, i64) {
+pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
     let mut pulled_block_height = 0i64;
     let mut latest_block_height = 0i64;
