@@ -65,9 +65,9 @@ impl RealizedPnl {
                     / latest_holding.clone())
                 .with_scale_round(get_symbol_prec(), RoundingMode::HalfUp);
                 pnl_diff = (last_opening_cost.clone() * (-holding_diff.clone())
-                    / latest_holding.clone()
-                    + quoted_diff.clone())
-                .with_scale_round(get_symbol_prec(), RoundingMode::HalfUp);
+                    / latest_holding.clone())
+                .with_scale_round(get_symbol_prec(), RoundingMode::HalfUp)
+                    + quoted_diff.clone();
             } else {
                 open_cost_diff = quoted_diff.clone();
                 pnl_diff = BigDecimal::from(0);
