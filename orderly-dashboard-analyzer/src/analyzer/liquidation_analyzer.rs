@@ -7,9 +7,9 @@ use orderly_dashboard_indexer::formats_external::trading_events::{
     LiquidationTransfer, LiquidationTransferV2,
 };
 
-use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
 use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
+use crate::analyzer::{analyzer_context::AnalyzeContext, INSURANCE_FUNDS};
 use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
 use crate::db::hourly_user_perp::HourlyUserPerpKey;
 use crate::db::user_perp_summary::UserPerpSummaryKey;
@@ -229,12 +229,18 @@ async fn execute_for_liquidator(liquidation: &Liquidation, context: &mut Analyze
     );
 
     let user_perp_snap = user_perp.clone();
-    let (liquidator_open_cost_diff, liquidator_pnl_diff) = RealizedPnl::calc_realized_pnl(
-        liquidation.qty_transfer.clone(),
-        -(liquidation.cost_position_transfer.clone() - liquidation.liquidator_fee.clone()),
-        user_perp_snap.holding.clone(),
-        user_perp_snap.opening_cost.clone(),
-    );
+
+    let (liquidator_open_cost_diff, liquidator_pnl_diff) =
+        if INSURANCE_FUNDS.contains(&liquidation.liquidator_account_id.as_str()) {
+            (BigDecimal::from(0), BigDecimal::from(0))
+        } else {
+            RealizedPnl::calc_realized_pnl(
+                liquidation.qty_transfer.clone(),
+                -(liquidation.cost_position_transfer.clone() - liquidation.liquidator_fee.clone()),
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            )
+        };
 
     let user_perp = context.get_user_perp(&liquidator_key.clone()).await;
     user_perp.new_liquidator(
@@ -267,13 +273,19 @@ async fn execute_for_liquidated(liquidation: &Liquidation, context: &mut Analyze
     );
 
     let user_perp_snap = user_perp.clone();
-    let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
-        liquidation.qty_transfer.clone(),
-        (liquidation.cost_position_transfer.clone())
-            - (liquidation.liquidator_fee.clone() + liquidation.insurnace_fee.clone()),
-        user_perp_snap.holding.clone(),
-        user_perp_snap.opening_cost.clone(),
-    );
+
+    let (open_cost_diff, pnl_diff) =
+        if INSURANCE_FUNDS.contains(&liquidation.liquidated_account_id.as_str()) {
+            (BigDecimal::from(0), BigDecimal::from(0))
+        } else {
+            RealizedPnl::calc_realized_pnl(
+                liquidation.qty_transfer.clone(),
+                (liquidation.cost_position_transfer.clone())
+                    - (liquidation.liquidator_fee.clone() + liquidation.insurnace_fee.clone()),
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            )
+        };
 
     let user_perp = context.get_user_perp(&key.clone()).await;
     user_perp.new_liquidation(
@@ -312,6 +324,7 @@ async fn execute_for_liquidation_v2(liquidation: &Liquidation, context: &mut Ana
     );
 
     let user_perp_snap = user_perp.clone();
+
     let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
         liquidation.qty_transfer.clone(),
         (liquidation.cost_position_transfer.clone())
