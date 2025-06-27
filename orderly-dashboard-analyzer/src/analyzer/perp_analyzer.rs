@@ -36,6 +36,7 @@ pub async fn analyzer_perp_trade(
 
         let notional: BigDecimal = perp_trade.notional.parse().unwrap();
         let fixed_notional = notional.div(get_cost_position_prec());
+        let quoted_diff = -fixed_notional.clone();
         let trade_hour = convert_block_hour(perp_trade.timestamp as i64);
 
         // hourly_orderly
@@ -82,7 +83,7 @@ pub async fn analyzer_perp_trade(
         user_perp_snap.charge_funding_fee(suf.div(get_unitary_prec()), pulled_block_height);
         let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
             fixed_qty.clone(),
-            fixed_notional.clone(),
+            quoted_diff.clone(),
             user_perp_snap.holding.clone(),
             user_perp_snap.opening_cost.clone(),
         );
@@ -94,6 +95,7 @@ pub async fn analyzer_perp_trade(
                 pulled_block_height.clone(),
                 open_cost_diff.clone(),
                 fixed_qty.clone(),
+                pnl_diff.clone(),
             );
             if opening {
                 context
@@ -237,8 +239,8 @@ mod tests {
         analyzer_perp_trade(trades, block_number, &mut context).await;
         {
             let alice_eth = context.get_user_perp_cache(&alice_eth_perp_key);
+            println!("alice_eth.holding: {:?}", alice_eth.holding.to_string());
             assert_eq!(alice_eth.holding, BigDecimal::from(-2));
-            println!("alice_eth perp summary: {:?}", alice_eth);
         }
 
         {

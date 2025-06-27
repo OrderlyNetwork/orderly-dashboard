@@ -867,13 +867,10 @@ pub async fn join_account_liquidations(
     offset: Option<u32>,
     _limit: Option<u32>,
 ) -> Result<Vec<TradingEvent>> {
-    // as account role
+    // as liquidator account role in v1 or normal account in v2
     let liquidation_transfers =
         query_account_liquidation_transfers_by_time(from_time, to_time, account_id.clone(), offset)
             .await?;
-    if liquidation_transfers.is_empty() {
-        return Ok(vec![]);
-    }
     let mut liquidation_res_keys: BTreeSet<(i64, i32)> = BTreeSet::new();
     let mut liquidation_transfer_map: BTreeMap<(i64, i32), Vec<DbLiquidationTransfer>> =
         BTreeMap::new();
@@ -904,12 +901,12 @@ pub async fn join_account_liquidations(
         }
     }
 
-    // all data are liquidation v2 data, return directly
-    if to_time < 1725120000 {
+    // all data are liquidation v2 data, return directly, 1725120000->2024-09-01 00:00:00
+    if from_time > 1725120000 {
         return Ok(liquidation_result_map.values().cloned().collect());
     }
 
-    // as liquidator role
+    // as liquidated role
     let liquidation_results =
         query_liquidation_results_by_time_and_account(from_time, to_time, account_id).await?;
     let mut liquidation_result_keys: BTreeSet<(i64, i32)> = BTreeSet::new();

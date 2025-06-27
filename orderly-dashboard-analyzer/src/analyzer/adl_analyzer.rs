@@ -2,8 +2,8 @@ use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use std::ops::Div;
 
-use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
+use crate::analyzer::{analyzer_context::AnalyzeContext, INSURANCE_FUNDS};
 use crate::analyzer::{get_cost_position_prec, get_price_prec, get_qty_prec, get_unitary_prec};
 use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
 use crate::db::hourly_user_perp::HourlyUserPerpKey;
@@ -48,7 +48,7 @@ pub async fn analyzer_adl(
     let user_perp_snap = context.get_user_perp(&user_perp_key.clone()).await.clone();
     let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
         fixed_adl_qty.clone(),
-        fixed_position_transfer.clone(),
+        -fixed_position_transfer.clone(),
         user_perp_snap.holding,
         user_perp_snap.opening_cost,
     );
@@ -60,7 +60,7 @@ pub async fn analyzer_adl(
         hourly_user_perp.new_liquidation(
             fixed_adl_perice.clone() * fixed_adl_qty.clone(),
             block_num,
-            pnl_diff,
+            pnl_diff.clone(),
         );
     }
 
@@ -75,6 +75,7 @@ pub async fn analyzer_adl(
             cpt.clone(),
             fixed_sum_unitary_fundings.clone(),
             open_cost_diff,
+            pnl_diff.clone(),
         );
 
         let insurance_perp_key = UserPerpSummaryKey {
@@ -128,12 +129,16 @@ pub async fn analyzer_adl_v2(
         symbol: symbol_hash.clone(),
     };
     let user_perp_snap = context.get_user_perp(&user_perp_key.clone()).await.clone();
-    let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
-        fixed_adl_qty.clone(),
-        fixed_position_transfer.clone(),
-        user_perp_snap.holding,
-        user_perp_snap.opening_cost,
-    );
+    let (open_cost_diff, pnl_diff) = if INSURANCE_FUNDS.contains(&account_id.as_str()) {
+        (BigDecimal::from(0), BigDecimal::from(0))
+    } else {
+        RealizedPnl::calc_realized_pnl(
+            fixed_adl_qty.clone(),
+            -fixed_position_transfer.clone(),
+            user_perp_snap.holding.clone(),
+            user_perp_snap.opening_cost.clone(),
+        )
+    };
 
     {
         let key =
@@ -142,7 +147,7 @@ pub async fn analyzer_adl_v2(
         hourly_user_perp.new_liquidation(
             fixed_adl_perice.clone() * fixed_adl_qty.clone(),
             block_num,
-            pnl_diff,
+            pnl_diff.clone(),
         );
     }
 
@@ -157,6 +162,7 @@ pub async fn analyzer_adl_v2(
             cpt.clone(),
             fixed_sum_unitary_fundings.clone(),
             open_cost_diff,
+            pnl_diff,
         );
     }
 }
@@ -336,6 +342,10 @@ mod tests {
 
         {
             let alice_btc = context.get_user_perp_cache(&alice_btc_perp_key);
+            println!(
+                "alice eth perp alice_btc.holding: {:?}",
+                alice_btc.holding.to_string()
+            );
             assert_eq!(alice_btc.holding, BigDecimal::from_str("0").unwrap());
             println!("alice eth perp summary: {:?}", alice_btc);
         }

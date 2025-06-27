@@ -13,8 +13,17 @@ pub mod perp_analyzer;
 pub mod settlement_analyzer;
 pub mod transaction_analyzer;
 
+pub const INSURANCE_FUNDS: [&str; 2] = [
+    "0xe042ae0d7f1cb85245360af73a383d643e43401f64fa56c2c072dbbf200554d7",
+    "0xd22bfed15458474d0d4a85dda2b889f47169c0adfca0be5cca0303537b87cd40",
+];
+
 pub fn get_qty_prec() -> BigDecimal {
     BigDecimal::from(100_000_000)
+}
+
+pub fn get_symbol_prec() -> i64 {
+    8
 }
 
 pub fn get_price_prec() -> BigDecimal {
@@ -36,7 +45,7 @@ pub fn get_gas_prec() -> BigDecimal {
 #[cfg(test)]
 pub mod tests {
     use crate::analyzer::analyzer_context::AnalyzeContext;
-    use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
+    use crate::analyzer::calc::USDC_CHAIN_ID;
     use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
     use crate::db::hourly_user_perp::HourlyUserPerpKey;
     use crate::db::user_perp_summary::UserPerpSummaryKey;
