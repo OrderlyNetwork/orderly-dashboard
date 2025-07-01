@@ -24,8 +24,9 @@ use orderly_dashboard_query_service::status::get_status;
 use orderly_dashboard_query_service::trading_metrics::{
     average_opening_count, average_trading_fee, average_trading_volume, block_height,
     deposit_gas_fee, event_gas_fee, get_daily_orderly_perp, get_daily_orderly_token,
-    get_perp_holding_rank, get_perp_pnl_rank, get_position_rank, get_token_deposit_rank,
-    get_token_withdraw_rank, get_trading_volume_rank, perp_gas_fee, update_positions_task,
+    get_perp_holding_rank, get_perp_pnl_rank, get_position_rank, get_realized_pnl_rank,
+    get_token_deposit_rank, get_token_withdraw_rank, get_trading_volume_rank, perp_gas_fee,
+    update_positions_task, update_realized_pnl_task,
 };
 
 #[get("/")]
@@ -103,6 +104,7 @@ async fn main() -> std::io::Result<()> {
         });
     });
     crate::update_positions_task();
+    crate::update_realized_pnl_task();
     HttpServer::new(|| {
         let cors = Cors::default()
             .allow_any_origin()
@@ -144,6 +146,7 @@ async fn main() -> std::io::Result<()> {
             .service(list_sol_events)
             .service(list_events_v2)
             .service(get_position_rank)
+            .service(get_realized_pnl_rank)
             .route("/hey", web::get().to(manual_hello))
     })
     .workers(num_cpus::get() * 2)
