@@ -237,7 +237,6 @@ pub async fn query_user_perp_max_symbol_holding(
         ABS(u.holding * m.index_price) AS holding_value
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.holding != 0
     ORDER BY holding_value DESC
     OFFSET $1
     LIMIT $2;
@@ -271,7 +270,7 @@ pub async fn query_user_perp_max_symbol_holding(
         ABS(u.holding * m.index_price) AS holding_value
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.symbol = $1 AND u.holding != 0 
+    WHERE u.symbol = $1
     ORDER BY holding_value DESC
     OFFSET $2
     LIMIT $3;
@@ -312,7 +311,7 @@ pub async fn query_user_perp_max_symbol_holding(
         ABS(u.holding * m.index_price) AS holding_value
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.account_id = $1 AND u.holding != 0 
+    WHERE u.account_id = $1
     ORDER BY holding_value DESC
     OFFSET $2
     LIMIT $3;
@@ -353,7 +352,7 @@ pub async fn query_user_perp_max_symbol_holding(
         ABS(u.holding * m.index_price) AS holding_value
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.account_id = $1 AND u.symbol = $2 AND u.holding != 0 
+    WHERE u.account_id = $1 AND u.symbol = $2
     ORDER BY holding_value DESC
     OFFSET $3
     LIMIT $4;
@@ -404,7 +403,6 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
         ABS(u.holding * m.index_price) AS holding_value
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.holding != 0
     ORDER BY total_realized_pnl {}
     OFFSET $1
     LIMIT $2;
@@ -439,7 +437,7 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
         ABS(u.holding * m.index_price) AS holding_value
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.symbol = $1 AND u.holding != 0 
+    WHERE u.symbol = $1
     ORDER BY total_realized_pnl {}
     OFFSET $2
     LIMIT $3;
@@ -481,7 +479,7 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
         ABS(u.holding * m.index_price) AS holding_value
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.account_id = $1 AND u.holding != 0 
+    WHERE u.account_id = $1
     ORDER BY total_realized_pnl ${}
     OFFSET $2
     LIMIT $3;
@@ -523,7 +521,7 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
         ABS(u.holding * m.index_price) AS holding_value
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.account_id = $1 AND u.symbol = $2 AND u.holding != 0 
+    WHERE u.account_id = $1 AND u.symbol = $2
     ORDER BY total_realized_pnl {}
     OFFSET $3
     LIMIT $4;
