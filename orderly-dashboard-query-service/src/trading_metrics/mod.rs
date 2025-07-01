@@ -9,11 +9,12 @@ use crate::db::trading_metrics::orderly_daily_perp::{daily_gas_fee, daily_orderl
 use crate::db::trading_metrics::orderly_daily_token::get_daily_token;
 use crate::db::trading_metrics::ranking::{
     get_daily_trading_volume_ranking, get_pnl_ranking, get_token_ranking,
-    get_user_perp_holding_ranking, query_user_perp_max_symbol_holding, UserSymbolHoldingRank,
+    get_user_perp_holding_ranking, query_user_perp_max_symbol_holding,
+    query_user_perp_max_symbol_realized_pnl, UserSymbolSummaryRank,
 };
 use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
 use crate::error_code::{QUERY_OVER_EXECUTION_ERR, QUERY_OVER_LIMIT_ERR};
-use crate::format_extern::rank_metrics::PositionRankExtern;
+use crate::format_extern::rank_metrics::UserSummaryRankExtern;
 use crate::{add_base_header, format_extern::Response};
 use dashmap::DashMap;
 use fxhash::FxBuildHasher;
@@ -27,17 +28,34 @@ use typescript_type_def::TypeDef;
 const TRADING_METRICS: &str = "trading_metrics_context";
 
 lazy_static! {
-    pub static ref TOP_POSITIONS: RwLock<Vec<VolumeRankingData>> =
+    pub static ref TOP_POSITIONS: RwLock<Vec<UserSumaryRankingData>> =
+        RwLock::new(Vec::with_capacity(1000));
+    pub static ref TOP_REALIZED_PNL_ASC: RwLock<Vec<UserSumaryRankingData>> =
+        RwLock::new(Vec::with_capacity(1000));
+    pub static ref TOP_REALIZED_PNL_DESC: RwLock<Vec<UserSumaryRankingData>> =
         RwLock::new(Vec::with_capacity(1000));
 }
 
 pub static SYMBOL_TOP_POSITIONS: Lazy<
-    DashMap<String, Arc<RwLock<(Vec<VolumeRankingData>, Instant)>>, FxBuildHasher>,
+    DashMap<String, Arc<RwLock<(Vec<UserSumaryRankingData>, Instant)>>, FxBuildHasher>,
+> = Lazy::new(|| DashMap::with_hasher(FxBuildHasher::default()));
+
+pub static SYMBOL_TOP_REALIZED_PNL_ASC: Lazy<
+    DashMap<String, Arc<RwLock<(Vec<UserSumaryRankingData>, Instant)>>, FxBuildHasher>,
+> = Lazy::new(|| DashMap::with_hasher(FxBuildHasher::default()));
+
+pub static SYMBOL_TOP_REALIZED_PNL_DESC: Lazy<
+    DashMap<String, Arc<RwLock<(Vec<UserSumaryRankingData>, Instant)>>, FxBuildHasher>,
 > = Lazy::new(|| DashMap::with_hasher(FxBuildHasher::default()));
 
 // 1000
 pub fn update_positions_task() {
     actix_web::rt::spawn(update_positions());
+}
+
+pub fn update_realized_pnl_task() {
+    actix_web::rt::spawn(update_realized_pnl_asc());
+    actix_web::rt::spawn(update_realized_pnl_desc());
 }
 
 async fn update_positions() -> anyhow::Result<()> {
@@ -47,12 +65,60 @@ async fn update_positions() -> anyhow::Result<()> {
                 let user_perp_holding = user_perp_holding
                     .into_iter()
                     .map(Into::into)
-                    .collect::<Vec<VolumeRankingData>>();
+                    .collect::<Vec<UserSumaryRankingData>>();
                 *TOP_POSITIONS.write() = user_perp_holding;
             }
             Err(err) => {
                 tracing::warn!(
                     "query_user_perp_max_symbol_holding failed with err: {}",
+                    err
+                );
+            }
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+    }
+    #[allow(unreachable_code)]
+    Ok(())
+}
+
+async fn update_realized_pnl_asc() -> anyhow::Result<()> {
+    loop {
+        match query_user_perp_max_symbol_realized_pnl(0, 1000, None, None, "ASC".to_string()).await
+        {
+            Ok(user_perp_realized_pnl) => {
+                let user_perp_realized_pnl = user_perp_realized_pnl
+                    .into_iter()
+                    .map(Into::into)
+                    .collect::<Vec<UserSumaryRankingData>>();
+                *TOP_REALIZED_PNL_ASC.write() = user_perp_realized_pnl;
+            }
+            Err(err) => {
+                tracing::warn!(
+                    "query_user_perp_max_symbol_realized_pnl failed with err: {}",
+                    err
+                );
+            }
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+    }
+    #[allow(unreachable_code)]
+    Ok(())
+}
+
+async fn update_realized_pnl_desc() -> anyhow::Result<()> {
+    loop {
+        match query_user_perp_max_symbol_realized_pnl(0, 1000, None, None, "DESC".to_string()).await
+        {
+            Ok(user_perp_realized_pnl) => {
+                let user_perp_realized_pnl = user_perp_realized_pnl
+                    .into_iter()
+                    .map(Into::into)
+                    .collect::<Vec<UserSumaryRankingData>>();
+                *TOP_REALIZED_PNL_DESC.write() = user_perp_realized_pnl;
+            }
+            Err(err) => {
+                tracing::warn!(
+                    "query_user_perp_max_symbol_realized_pnl failed with err: {}",
                     err
                 );
             }
@@ -89,22 +155,24 @@ pub struct VolumeRankingRequest {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, TypeDef)]
-pub struct VolumeRankingData {
+pub struct UserSumaryRankingData {
     pub account_id: String,
     pub symbol: String,
     pub symbol_hash: String,
     pub holding: String,
+    pub total_realized_pnl: String,
     pub index_price: String,
     pub holding_value: String,
 }
 
-impl From<UserSymbolHoldingRank> for VolumeRankingData {
-    fn from(value: UserSymbolHoldingRank) -> Self {
-        VolumeRankingData {
+impl From<UserSymbolSummaryRank> for UserSumaryRankingData {
+    fn from(value: UserSymbolSummaryRank) -> Self {
+        UserSumaryRankingData {
             account_id: value.account_id,
             symbol: value.symbol,
             symbol_hash: value.symbol_hash,
             holding: value.holding.to_string(),
+            total_realized_pnl: value.total_realized_pnl.to_string(),
             index_price: value.index_price.to_string(),
             holding_value: value.holding_value.to_string(),
         }
@@ -113,7 +181,7 @@ impl From<UserSymbolHoldingRank> for VolumeRankingData {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct VolumeRankingResponse {
-    pub rows: Vec<VolumeRankingData>,
+    pub rows: Vec<UserSumaryRankingData>,
 }
 
 fn default_days() -> i32 {
@@ -135,6 +203,11 @@ fn default_offset() -> i32 {
 fn default_limit() -> i32 {
     50
 }
+
+fn default_order_by() -> RealizedPnlRankingOrder {
+    RealizedPnlRankingOrder::DESC
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct PositionRankingRequest {
     account_id: Option<String>,
@@ -143,6 +216,33 @@ pub struct PositionRankingRequest {
     offset: i32,
     #[serde(default = "default_limit")]
     limit: i32,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub enum RealizedPnlRankingOrder {
+    ASC,
+    DESC,
+}
+
+impl std::fmt::Display for RealizedPnlRankingOrder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RealizedPnlRankingOrder::ASC => write!(f, "ASC"),
+            RealizedPnlRankingOrder::DESC => write!(f, "DESC"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct RealizedPnlRankingRequest {
+    account_id: Option<String>,
+    symbol: Option<String>,
+    #[serde(default = "default_offset")]
+    offset: i32,
+    #[serde(default = "default_limit")]
+    limit: i32,
+    #[serde(default = "default_order_by")]
+    order_by: RealizedPnlRankingOrder,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -352,7 +452,7 @@ pub async fn get_position_rank(
                 let resp_data = top_position_caches
                     [param.offset as usize..(param.offset + param.limit) as usize]
                     .to_vec();
-                return Ok(write_response(PositionRankExtern::new(resp_data)));
+                return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
             }
         }
         return match query_user_perp_max_symbol_holding(param.offset, param.limit, None, None).await
@@ -361,8 +461,10 @@ pub async fn get_position_rank(
                 let user_perp_holding = user_perp_holding
                     .into_iter()
                     .map(Into::into)
-                    .collect::<Vec<VolumeRankingData>>();
-                Ok(write_response(PositionRankExtern::new(user_perp_holding)))
+                    .collect::<Vec<UserSumaryRankingData>>();
+                Ok(write_response(UserSummaryRankExtern::new(
+                    user_perp_holding,
+                )))
             }
             Err(err) => {
                 return Ok(write_failed_response(
@@ -387,7 +489,7 @@ pub async fn get_position_rank(
                             let resp_data = top_positions.0
                                 [param.offset as usize..(param.offset + param.limit) as usize]
                                 .to_vec();
-                            return Ok(write_response(PositionRankExtern::new(resp_data)));
+                            return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
                         }
                     }
                 }
@@ -403,7 +505,7 @@ pub async fn get_position_rank(
                         let user_perp_holding = user_perp_holding
                             .into_iter()
                             .map(Into::into)
-                            .collect::<Vec<VolumeRankingData>>();
+                            .collect::<Vec<UserSumaryRankingData>>();
                         let resp_data = user_perp_holding
                             [param.offset as usize..(param.offset + param.limit) as usize]
                             .to_vec();
@@ -411,7 +513,7 @@ pub async fn get_position_rank(
                             symbol_hash,
                             Arc::new(RwLock::new((user_perp_holding, Instant::now()))),
                         );
-                        return Ok(write_response(PositionRankExtern::new(resp_data)));
+                        return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
                     }
                     Err(err) => {
                         return Ok(write_failed_response(
@@ -434,8 +536,10 @@ pub async fn get_position_rank(
                     let user_perp_holding = user_perp_holding
                         .into_iter()
                         .map(Into::into)
-                        .collect::<Vec<VolumeRankingData>>();
-                    Ok(write_response(PositionRankExtern::new(user_perp_holding)))
+                        .collect::<Vec<UserSumaryRankingData>>();
+                    Ok(write_response(UserSummaryRankExtern::new(
+                        user_perp_holding,
+                    )))
                 }
                 Err(err) => {
                     return Ok(write_failed_response(
@@ -462,8 +566,195 @@ pub async fn get_position_rank(
             let user_perp_holding = user_perp_holding
                 .into_iter()
                 .map(Into::into)
-                .collect::<Vec<VolumeRankingData>>();
-            Ok(write_response(PositionRankExtern::new(user_perp_holding)))
+                .collect::<Vec<UserSumaryRankingData>>();
+            Ok(write_response(UserSummaryRankExtern::new(
+                user_perp_holding,
+            )))
+        }
+        Err(err) => {
+            return Ok(write_failed_response(
+                QUERY_OVER_EXECUTION_ERR,
+                &err.to_string(),
+            ));
+        }
+    }
+}
+
+#[get("/ranking/realized_pnl")]
+pub async fn get_realized_pnl_rank(
+    param: web::Query<RealizedPnlRankingRequest>,
+) -> Result<impl Responder> {
+    tracing::debug!(target: TRADING_METRICS, "/ranking/realized_pnl, params: {:?}", param.0);
+    if param.limit > 200 {
+        return Ok(write_failed_response(
+            QUERY_OVER_LIMIT_ERR,
+            "query number over limit 200",
+        ));
+    }
+    if param.limit == 0 {
+        return Ok(write_failed_response(
+            QUERY_OVER_LIMIT_ERR,
+            "query number should not be 0",
+        ));
+    }
+
+    if param.account_id.is_none() && param.symbol.is_none() {
+        if param.offset + param.limit <= 1000 {
+            let top_position_caches = match param.order_by {
+                RealizedPnlRankingOrder::ASC => TOP_REALIZED_PNL_ASC.read(),
+                RealizedPnlRankingOrder::DESC => TOP_REALIZED_PNL_DESC.read(),
+            };
+            if (param.offset + param.limit) as usize <= top_position_caches.len() {
+                let resp_data = top_position_caches
+                    [param.offset as usize..(param.offset + param.limit) as usize]
+                    .to_vec();
+                return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
+            }
+        }
+        return match query_user_perp_max_symbol_realized_pnl(
+            param.offset,
+            param.limit,
+            None,
+            None,
+            param.order_by.to_string(),
+        )
+        .await
+        {
+            Ok(user_perp_holding) => {
+                let user_perp_holding = user_perp_holding
+                    .into_iter()
+                    .map(Into::into)
+                    .collect::<Vec<UserSumaryRankingData>>();
+                Ok(write_response(UserSummaryRankExtern::new(
+                    user_perp_holding,
+                )))
+            }
+            Err(err) => {
+                return Ok(write_failed_response(
+                    QUERY_OVER_EXECUTION_ERR,
+                    &err.to_string(),
+                ));
+            }
+        };
+    }
+
+    // symbol is some
+    if let Some(symbol) = &param.symbol {
+        let symbol_hash = cal_symbol_hash(symbol.as_str());
+        // symbol is some and account_id is none
+        if param.account_id.is_none() {
+            if param.offset + param.limit <= 1000 {
+                let top_realized_pnl_caches = match param.order_by {
+                    RealizedPnlRankingOrder::ASC => SYMBOL_TOP_REALIZED_PNL_ASC.get(&symbol_hash),
+                    RealizedPnlRankingOrder::DESC => SYMBOL_TOP_REALIZED_PNL_DESC.get(&symbol_hash),
+                };
+                if let Some(top_position_caches) = top_realized_pnl_caches {
+                    let top_positions = top_position_caches.read();
+                    if top_positions.1.elapsed().as_secs() < 5 {
+                        if (param.offset + param.limit) as usize <= top_positions.0.len() {
+                            // use cache and return
+                            let resp_data = top_positions.0
+                                [param.offset as usize..(param.offset + param.limit) as usize]
+                                .to_vec();
+                            return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
+                        }
+                    }
+                }
+
+                match query_user_perp_max_symbol_realized_pnl(
+                    0,
+                    1000,
+                    None,
+                    Some(symbol_hash.clone()),
+                    param.order_by.to_string(),
+                )
+                .await
+                {
+                    Ok(user_perp_holding) => {
+                        tracing::info!(
+                            "read from db and update cache for symbol hash: {}",
+                            symbol_hash
+                        );
+                        let user_perp_realized_pnl = user_perp_holding
+                            .into_iter()
+                            .map(Into::into)
+                            .collect::<Vec<UserSumaryRankingData>>();
+                        let resp_data = user_perp_realized_pnl
+                            [param.offset as usize..(param.offset + param.limit) as usize]
+                            .to_vec();
+                        match param.order_by {
+                            RealizedPnlRankingOrder::ASC => {
+                                SYMBOL_TOP_REALIZED_PNL_ASC.insert(
+                                    symbol_hash,
+                                    Arc::new(RwLock::new((user_perp_realized_pnl, Instant::now()))),
+                                );
+                            }
+                            RealizedPnlRankingOrder::DESC => {
+                                SYMBOL_TOP_REALIZED_PNL_DESC.insert(
+                                    symbol_hash,
+                                    Arc::new(RwLock::new((user_perp_realized_pnl, Instant::now()))),
+                                );
+                            }
+                        }
+                        return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
+                    }
+                    Err(err) => {
+                        return Ok(write_failed_response(
+                            QUERY_OVER_EXECUTION_ERR,
+                            &err.to_string(),
+                        ));
+                    }
+                }
+            }
+
+            return match query_user_perp_max_symbol_realized_pnl(
+                param.offset,
+                param.limit,
+                None,
+                Some(symbol_hash.clone()),
+                param.order_by.to_string(),
+            )
+            .await
+            {
+                Ok(user_perp_holding) => {
+                    let user_perp_holding = user_perp_holding
+                        .into_iter()
+                        .map(Into::into)
+                        .collect::<Vec<UserSumaryRankingData>>();
+                    Ok(write_response(UserSummaryRankExtern::new(
+                        user_perp_holding,
+                    )))
+                }
+                Err(err) => {
+                    return Ok(write_failed_response(
+                        QUERY_OVER_EXECUTION_ERR,
+                        &err.to_string(),
+                    ));
+                }
+            };
+        }
+    }
+
+    // account_id is some, symbol may be someor none
+    let account_id = param.account_id.clone().unwrap_or_default();
+    let symbol_hash = param.symbol.clone().map(|s| cal_symbol_hash(&s));
+    match query_user_perp_max_symbol_realized_pnl(
+        param.offset,
+        param.limit,
+        Some(account_id),
+        symbol_hash,
+        param.order_by.to_string(),
+    )
+    .await
+    {
+        Ok(user_perp_holding) => {
+            let user_perp_holding = user_perp_holding
+                .into_iter()
+                .map(Into::into)
+                .collect::<Vec<UserSumaryRankingData>>();
+            Ok(write_response(UserSummaryRankExtern::new(
+                user_perp_holding,
+            )))
         }
         Err(err) => {
             return Ok(write_failed_response(
