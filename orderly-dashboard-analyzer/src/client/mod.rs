@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct ResponseData<T> {
@@ -15,8 +16,8 @@ pub struct MarketDataInfos {
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct MarketDataInfo {
     pub symbol: String,
-    pub index_price: f64,
-    pub mark_price: f64,
+    pub index_price: Value,
+    pub mark_price: Value,
     pub sum_unitary_funding: f64,
     pub est_funding_rate: f64,
     pub last_funding_rate: f64,
@@ -51,5 +52,17 @@ async fn get_market_infos(base_url: &str) -> anyhow::Result<String> {
             "reqwest get_market_infos faield with err: {:?}",
             err
         )),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[ignore]
+    #[actix_web::test]
+    async fn test_list_market_infos() {
+        let res = list_market_infos("https://api.orderly.org").await.unwrap();
+        println!("{:?}", res);
     }
 }

@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{str::FromStr, time::Duration};
 
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
@@ -36,8 +36,8 @@ async fn upsert_market_infos(base_url: &str) -> anyhow::Result<()> {
         .map(|v| {
             DBMarketInfo::new(
                 v.symbol,
-                BigDecimal::from_f64(v.index_price).unwrap(),
-                BigDecimal::from_f64(v.mark_price).unwrap(),
+                BigDecimal::from_str(&v.index_price.to_string()).unwrap(),
+                BigDecimal::from_str(&v.mark_price.to_string()).unwrap(),
                 BigDecimal::from_f64(v.sum_unitary_funding).unwrap(),
                 BigDecimal::from_f64(v.open_interest).unwrap(),
                 update_time,
