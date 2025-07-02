@@ -67,6 +67,7 @@ mod tests {
     use super::*;
     use crate::client::list_market_infos;
     use num_traits::FromPrimitive;
+    use std::str::FromStr;
 
     fn init_log() {
         tracing_subscriber::fmt::Subscriber::builder()
@@ -93,8 +94,8 @@ mod tests {
             .map(|v| {
                 DBMarketInfo::new(
                     v.symbol,
-                    BigDecimal::from_f64(v.index_price).unwrap(),
-                    BigDecimal::from_f64(v.mark_price).unwrap(),
+                    BigDecimal::from_str(&v.index_price.to_string()).unwrap(),
+                    BigDecimal::from_str(&v.mark_price.to_string()).unwrap(),
                     BigDecimal::from_f64(v.sum_unitary_funding).unwrap(),
                     BigDecimal::from_f64(v.open_interest).unwrap(),
                     update_time,
