@@ -5,5 +5,6 @@
   "pull_interval": 2,
   "batch_block_num": 500,
   "server_port": 8019,
-  "get_broker_url": "https://api-evm.orderly.org/v1/public/broker/name"
+  "get_broker_url": "https://api-evm.orderly.org/v1/public/broker/name",
+  "env": "PROD"
 }

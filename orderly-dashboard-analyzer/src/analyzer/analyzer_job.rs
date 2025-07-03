@@ -15,6 +15,7 @@ use crate::analyzer::analyzer_job::HTTPException::Timeout;
 use crate::analyzer::perp_analyzer::analyzer_perp_trade;
 use crate::analyzer::settlement_analyzer::analyzer_settlement;
 use crate::analyzer::transaction_analyzer::analyzer_transaction;
+use crate::config::ENV;
 use crate::db::block_summary::{create_or_update_block_summary, find_block_summary, TRADE_METRIC};
 
 use super::adl_analyzer::analyzer_adl_v2;
@@ -28,6 +29,7 @@ pub fn start_analyzer_trade_job(
     base_url: String,
     start_block: i64,
     batch_block_num: u64,
+    env: ENV,
 ) {
     let mut interval_ms = interval_seconds * 1000;
     tokio::spawn(async move {

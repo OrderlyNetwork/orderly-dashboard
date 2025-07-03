@@ -18,6 +18,11 @@ pub const INSURANCE_FUNDS: [&str; 2] = [
     "0xd22bfed15458474d0d4a85dda2b889f47169c0adfca0be5cca0303537b87cd40",
 ];
 
+pub const STG_FUTURES_FEE_COLLECTOR: &str =
+    "0xf56214af975ac69f8519f6e0237cb98a5c121edd0c2444e841eea68d424b5515";
+pub const PROD_FUTURES_FEE_COLLECTOR: &str =
+    "0x9af93b238feedcf6d53c8578a63b37c4fe6feed486b9c85dc3f79f72b976dbb8";
+
 pub fn get_qty_prec() -> BigDecimal {
     BigDecimal::from(100_000_000)
 }

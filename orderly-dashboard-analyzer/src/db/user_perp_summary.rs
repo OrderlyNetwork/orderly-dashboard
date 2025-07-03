@@ -257,14 +257,15 @@ impl UserPerpSummary {
         }
 
         let is_opening = self.holding.clone() == Default::default()
-            || (self.holding.clone().sign() != amount.clone().sign()
-                && amount.clone().abs() > self.holding.clone().abs());
+            || (self.holding.clone().sign() != qty.clone().sign()
+                && qty.clone().abs() > self.holding.clone().abs());
 
         let is_new_user = self.total_trading_count == 0;
-        self.total_trading_fee += fee;
+        self.total_trading_fee += fee.clone();
         self.total_trading_volume += amount.clone().abs();
         self.total_trading_count += 1;
         self.holding += qty;
+        self.cost_position += amount + fee;
         self.opening_cost += open_cost_diff;
         self.total_realized_pnl += realized_pnl_diff;
 
