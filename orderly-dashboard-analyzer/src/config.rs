@@ -29,20 +29,6 @@ pub struct AnalyzerConfig {
     pub get_broker_url: String,
     #[serde(default = "default_base_url")]
     pub base_url: String,
-    #[serde(default = "default_env")]
-    pub env: ENV,
-}
-
-fn default_env() -> ENV {
-    ENV::PROD
-}
-
-#[derive(Debug, Clone, Copy, Deserialize)]
-pub enum ENV {
-    DEV,
-    QA,
-    STAGING,
-    PROD,
 }
 
 fn default_base_url() -> String {

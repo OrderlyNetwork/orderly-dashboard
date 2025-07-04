@@ -199,12 +199,14 @@ mod tests {
             BigDecimal::from_i128(0).unwrap(),
             BigDecimal::from_i128(0).unwrap(),
             BigDecimal::from_i128(0).unwrap(),
+            0.into(),
         );
         context.set_user_perp_cache(
             &bob_eth_perp_key,
             BigDecimal::from_i128(0).unwrap(),
             BigDecimal::from_i128(0).unwrap(),
             BigDecimal::from_i128(0).unwrap(),
+            0.into(),
         );
 
         let trades = vec![
@@ -244,7 +246,7 @@ mod tests {
             println!(
                 "alice_eth.holding: {:?}, alice_eth.cost_position: {}",
                 alice_eth.holding.to_string(),
-                alice_eth.cost_position.to_string()
+                alice_eth.cost_position.to_string(),
             );
             assert_eq!(alice_eth.holding, BigDecimal::from(-2));
             // assertEq(positionA.costPosition, -4992500);
