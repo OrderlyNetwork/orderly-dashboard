@@ -38,6 +38,8 @@ typescript-type-def = "0.5"
 sysinfo = "0.33.1"
 dashmap = "6.1.0"
 fxhash = "0.2.1"
+num-bigint = "0.4.4"
+num-traits = "0.2"
 
 [profile.release]
 opt-level = 3

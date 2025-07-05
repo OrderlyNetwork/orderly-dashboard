@@ -2909,6 +2909,8 @@ dependencies = [
  "futures",
  "fxhash",
  "lazy_static",
+ "num-bigint",
+ "num-traits",
  "num_cpus",
  "once_cell",
  "openssl-probe",

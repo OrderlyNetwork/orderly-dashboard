@@ -201,6 +201,10 @@ pub struct UserSymbolSummaryRank {
     #[diesel(sql_type = Text)]
     pub account_id: String,
     #[diesel(sql_type = Text)]
+    pub address: String,
+    #[diesel(sql_type = Text)]
+    pub broker_id: String,
+    #[diesel(sql_type = Text)]
     pub symbol_hash: String,
     #[diesel(sql_type = Numeric)]
     pub holding: BigDecimal,
@@ -211,7 +215,11 @@ pub struct UserSymbolSummaryRank {
     #[diesel(sql_type = Numeric)]
     pub index_price: BigDecimal,
     #[diesel(sql_type = Numeric)]
+    pub mark_price: BigDecimal,
+    #[diesel(sql_type = Numeric)]
     pub holding_value: BigDecimal,
+    #[diesel(sql_type = Numeric)]
+    pub opening_cost: BigDecimal,
 }
 
 // slow query, should not be used frequently
@@ -227,19 +235,25 @@ pub async fn query_user_perp_max_symbol_holding(
     let select_result = if account_id.is_none() && symbol_hash.is_none() {
         let sql_query = diesel::sql_query(
             "
-    SELECT
-        u.account_id,
-        u.symbol as symbol_hash,
-        u.holding,
-        u.total_realized_pnl,
-        m.symbol,
-        m.index_price,
-        ABS(u.holding * m.index_price) AS holding_value
-    FROM user_perp_summary u
-    JOIN market_info m ON u.symbol = m.symbol_hash
-    ORDER BY holding_value DESC
-    OFFSET $1
-    LIMIT $2;
+SELECT
+  u.account_id,
+  us.address,
+  us.broker_id,
+  u.symbol as symbol_hash,
+  u.holding,
+  u.total_realized_pnl,
+  m.symbol,
+  m.index_price,
+  m.mark_price,
+  ABS(u.holding * m.index_price) AS holding_value,
+  u.opening_cost
+FROM
+  user_perp_summary u
+  JOIN market_info m ON u.symbol = m.symbol_hash
+  JOIN user_info us ON u.account_id = us.account_id
+ORDER BY holding_value DESC
+OFFSET $1
+LIMIT $2;
             ",
         )
         .bind::<Integer, _>(offset)
@@ -267,9 +281,12 @@ pub async fn query_user_perp_max_symbol_holding(
         u.total_realized_pnl,
         m.symbol,
         m.index_price,
-        ABS(u.holding * m.index_price) AS holding_value
+        m.mark_price,
+        ABS(u.holding * m.index_price) AS holding_value,
+        u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
+    JOIN user_info us ON u.account_id = us.account_id
     WHERE u.symbol = $1
     ORDER BY holding_value DESC
     OFFSET $2
@@ -303,14 +320,19 @@ pub async fn query_user_perp_max_symbol_holding(
             "
     SELECT
         u.account_id,
+        us.address,
+        us.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
         m.symbol,
         m.index_price,
-        ABS(u.holding * m.index_price) AS holding_value
+        m.mark_price,
+        ABS(u.holding * m.index_price) AS holding_value,
+        u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
+    JOIN user_info us ON u.account_id = us.account_id
     WHERE u.account_id = $1
     ORDER BY holding_value DESC
     OFFSET $2
@@ -344,14 +366,19 @@ pub async fn query_user_perp_max_symbol_holding(
             "
     SELECT
         u.account_id,
+        us.address,
+        us.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
         m.symbol,
         m.index_price,
-        ABS(u.holding * m.index_price) AS holding_value
+        m.mark_price,
+        ABS(u.holding * m.index_price) AS holding_value,
+        u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
+    JOIN user_info us ON u.account_id = us.account_id
     WHERE u.account_id = $1 AND u.symbol = $2
     ORDER BY holding_value DESC
     OFFSET $3
@@ -395,14 +422,19 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
             "
     SELECT
         u.account_id,
+        us.address,
+        us.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
         m.symbol,
         m.index_price,
-        ABS(u.holding * m.index_price) AS holding_value
+        m.mark_price,
+        ABS(u.holding * m.index_price) AS holding_value,
+        u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
+    JOIN user_info us ON u.account_id = us.account_id
     ORDER BY total_realized_pnl {}
     OFFSET $1
     LIMIT $2;
@@ -429,14 +461,19 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
             "
     SELECT
         u.account_id,
+        us.address,
+        us.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
         m.symbol,
         m.index_price,
-        ABS(u.holding * m.index_price) AS holding_value
+        m.mark_price,
+        ABS(u.holding * m.index_price) AS holding_value,
+        u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
+    JOIN user_info us ON u.account_id = us.account_id
     WHERE u.symbol = $1
     ORDER BY total_realized_pnl {}
     OFFSET $2
@@ -471,14 +508,19 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
             "
     SELECT
         u.account_id,
+        us.address,
+        us.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
         m.symbol,
         m.index_price,
-        ABS(u.holding * m.index_price) AS holding_value
+        m.mark_price,
+        ABS(u.holding * m.index_price) AS holding_value,
+        u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
+    JOIN user_info us ON u.account_id = us.account_id
     WHERE u.account_id = $1
     ORDER BY total_realized_pnl ${}
     OFFSET $2
@@ -513,14 +555,19 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
             "
     SELECT
         u.account_id,
+        us.address,
+        us.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
         m.symbol,
         m.index_price,
-        ABS(u.holding * m.index_price) AS holding_value
+        m.mark_price,
+        ABS(u.holding * m.index_price) AS holding_value,
+        u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
+    JOIN user_info us ON u.account_id = us.account_id
     WHERE u.account_id = $1 AND u.symbol = $2
     ORDER BY total_realized_pnl {}
     OFFSET $3
