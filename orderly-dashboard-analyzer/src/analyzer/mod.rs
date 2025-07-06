@@ -18,6 +18,11 @@ pub const INSURANCE_FUNDS: [&str; 2] = [
     "0xd22bfed15458474d0d4a85dda2b889f47169c0adfca0be5cca0303537b87cd40",
 ];
 
+pub const FUTURES_FEE_COLLECTORS: [&str; 2] = [
+    "0xf56214af975ac69f8519f6e0237cb98a5c121edd0c2444e841eea68d424b5515",
+    "0x9af93b238feedcf6d53c8578a63b37c4fe6feed486b9c85dc3f79f72b976dbb8",
+];
+
 pub fn get_qty_prec() -> BigDecimal {
     BigDecimal::from(100_000_000)
 }
@@ -26,8 +31,16 @@ pub fn get_symbol_prec() -> i64 {
     8
 }
 
+pub fn get_price_prec_decimal() -> i64 {
+    8
+}
+
 pub fn get_price_prec() -> BigDecimal {
     BigDecimal::from(100_000_000)
+}
+
+pub fn get_cost_position_decimal() -> i64 {
+    6
 }
 
 pub fn get_cost_position_prec() -> BigDecimal {
@@ -94,6 +107,7 @@ pub mod tests {
             position_qty: BigDecimal,
             cost_position: BigDecimal,
             sum_unitary_fundings: BigDecimal,
+            opening_cost: BigDecimal,
         );
         fn set_user_token_cache(&mut self, token_key: &UserTokenSummaryKey);
         fn get_user_perp_cache(&mut self, perp_key: &UserPerpSummaryKey) -> &mut UserPerpSummary;
@@ -118,6 +132,7 @@ pub mod tests {
             position_qty: BigDecimal,
             cost_position: BigDecimal,
             sum_unitary_fundings: BigDecimal,
+            opening_cost: BigDecimal,
         ) {
             let mut data = UserPerpSummary::new_empty_user_perp_summary(
                 &perp_key.account_id,
@@ -126,6 +141,7 @@ pub mod tests {
             data.holding = position_qty.div(get_qty_prec());
             data.cost_position = cost_position.clone().div(get_cost_position_prec());
             data.sum_unitary_fundings = sum_unitary_fundings.div(get_unitary_prec());
+            data.opening_cost = opening_cost.div(get_cost_position_prec());
             self.user_perp_cache.insert(perp_key.clone(), data);
         }
         fn set_user_token_cache(&mut self, _token_key: &UserTokenSummaryKey) {}

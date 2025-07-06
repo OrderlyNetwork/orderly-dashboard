@@ -65,8 +65,9 @@ pub fn start_analyzer_trade_job(
                         continue;
                     }
 
+                    let mut context = AnalyzeContext::new_context();
                     let (pulled_block_time, latest_block_height, pulled_perp_trade_id) =
-                        parse_and_analyzer(result.unwrap()).await;
+                        parse_and_analyzer(result.unwrap(), &mut context).await;
 
                     if round_to_block > latest_block_height {
                         tracing::info!(target: ANALYZER_CONTEXT,"continue to pull blocks, from time: {}, to_time: {}, diff mins: {}, from num {} to numb {}, latest_block_height: {}. cost:{}", from_time, to_time, (to_time - from_time) / 60,round_from_block, round_to_block, latest_block_height, Utc::now().timestamp_millis()-timestamp);
@@ -134,12 +135,15 @@ fn cal_to_time(from_time: i64, batch_block_num: u64) -> i64 {
 }
 
 #[allow(deprecated)]
-pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i64, i64, i64) {
+pub async fn parse_and_analyzer(
+    response: Response<TradingEventsResponse>,
+    context: &mut AnalyzeContext,
+) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
+    #[cfg(not(test))]
     let mut pulled_block_height = 0i64;
     let mut latest_block_height = 0i64;
     let mut latest_perp_trade_id = 0i64;
-    let mut context = AnalyzeContext::new_context();
 
     match response {
         Response::Success(success_event) => {
@@ -148,6 +152,7 @@ pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i
             latest_block_height = trading_event.last_block as i64;
 
             let events = trading_event.events;
+            #[cfg(not(test))]
             if !events.is_empty() {
                 if let Some(event) = events.last() {
                     pulled_block_height = event.block_number as i64;
@@ -184,7 +189,7 @@ pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i
                             token_amount,
                             &block_hour,
                             block_num,
-                            &mut context,
+                            context,
                             receiver,
                             broker_hash,
                         )
@@ -194,7 +199,7 @@ pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i
                         batch_id: _,
                         trades,
                     } => {
-                        let trade_id = analyzer_perp_trade(trades, block_num, &mut context).await;
+                        let trade_id = analyzer_perp_trade(trades, block_num, context).await;
                         latest_perp_trade_id = max(latest_perp_trade_id, trade_id);
                     }
                     TradingEventInnerData::SettlementResult {
@@ -214,7 +219,7 @@ pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i
                             settlement_executions,
                             block_hour,
                             block_num,
-                            &mut context,
+                            context,
                         )
                         .await
                     }
@@ -234,7 +239,7 @@ pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i
                             block_num,
                             block_hour.clone(),
                             block_time.clone(),
-                            &mut context,
+                            context,
                         )
                         .await
                     }
@@ -257,7 +262,7 @@ pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i
                             sum_unitary_fundings,
                             block_hour,
                             block_num,
-                            &mut context,
+                            context,
                         )
                         .await;
                     }
@@ -275,7 +280,7 @@ pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i
                             block_num,
                             block_hour.clone(),
                             block_time.clone(),
-                            &mut context,
+                            context,
                         )
                         .await
                     }
@@ -296,7 +301,7 @@ pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i
                             sum_unitary_fundings,
                             block_hour,
                             block_num,
-                            &mut context,
+                            context,
                         )
                         .await;
                     }
@@ -306,6 +311,7 @@ pub async fn parse_and_analyzer(response: Response<TradingEventsResponse>) -> (i
         Response::Failure(_) => {}
     }
 
+    #[cfg(not(test))]
     context
         .save_analyze_result(
             pulled_block_height,

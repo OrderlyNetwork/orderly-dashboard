@@ -148,6 +148,8 @@ fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::{analyzer_perp_trade, AnalyzeContext, UserPerpSummaryKey};
     use crate::analyzer::{calc::USDC_HASH, tests::*};
     use bigdecimal::BigDecimal;
@@ -197,12 +199,14 @@ mod tests {
             BigDecimal::from_i128(0).unwrap(),
             BigDecimal::from_i128(0).unwrap(),
             BigDecimal::from_i128(0).unwrap(),
+            0.into(),
         );
         context.set_user_perp_cache(
             &bob_eth_perp_key,
             BigDecimal::from_i128(0).unwrap(),
             BigDecimal::from_i128(0).unwrap(),
             BigDecimal::from_i128(0).unwrap(),
+            0.into(),
         );
 
         let trades = vec![
@@ -239,8 +243,17 @@ mod tests {
         analyzer_perp_trade(trades, block_number, &mut context).await;
         {
             let alice_eth = context.get_user_perp_cache(&alice_eth_perp_key);
-            println!("alice_eth.holding: {:?}", alice_eth.holding.to_string());
+            println!(
+                "alice_eth.holding: {:?}, alice_eth.cost_position: {}",
+                alice_eth.holding.to_string(),
+                alice_eth.cost_position.to_string(),
+            );
             assert_eq!(alice_eth.holding, BigDecimal::from(-2));
+            // assertEq(positionA.costPosition, -4992500);
+            assert_eq!(
+                alice_eth.cost_position,
+                BigDecimal::from_str("-4.992500").unwrap()
+            );
         }
 
         {

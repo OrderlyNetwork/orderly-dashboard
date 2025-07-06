@@ -16,7 +16,7 @@ pub(crate) struct Opts {
     pub config_path: std::path::PathBuf,
 }
 
-#[derive(Clone, Deserialize, Default, Debug)]
+#[derive(Clone, Deserialize, Debug)]
 pub struct AnalyzerConfig {
     // indexer url
     pub indexer_address: String,
