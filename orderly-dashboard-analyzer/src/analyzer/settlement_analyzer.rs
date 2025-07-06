@@ -5,7 +5,7 @@ use std::ops::Div;
 
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::calc::{USDC_CHAIN_ID, USDC_HASH};
-use crate::analyzer::{get_cost_position_prec, get_unitary_prec};
+use crate::analyzer::{get_cost_position_prec, get_unitary_prec, FUTURES_FEE_COLLECTORS};
 use crate::db::user_perp_summary::UserPerpSummaryKey;
 use crate::db::user_token_summary::UserTokenSummaryKey;
 
@@ -22,6 +22,9 @@ pub async fn analyzer_settlement(
     context: &mut AnalyzeContext,
 ) {
     tracing::info!(target:SETTLEMENT_ANALYZER," receive settlement,account:{},settlement:{:?}",account_id.clone(),settlement_executions);
+    if FUTURES_FEE_COLLECTORS.contains(&account_id.as_str()) {
+        return;
+    }
     let key = UserTokenSummaryKey {
         account_id: account_id.clone(),
         token: String::from(USDC_HASH),

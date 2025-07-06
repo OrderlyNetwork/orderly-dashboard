@@ -1,15 +1,14 @@
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, RoundingMode};
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
-use crate::analyzer::{get_qty_prec, get_unitary_prec};
+use crate::analyzer::get_cost_position_decimal;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
 use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
 use crate::schema::user_perp_summary;
-use std::str::FromStr;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
 #[diesel(table_name = user_perp_summary)]
@@ -64,7 +63,8 @@ impl UserPerpSummary {
         qty: BigDecimal,
         price: BigDecimal,
         block_num: i64,
-        _cost_position_transfer: BigDecimal,
+        cost_position_transfer: BigDecimal,
+        liquidation_fee: BigDecimal,
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
         realized_pnl_diff: BigDecimal,
@@ -75,10 +75,11 @@ impl UserPerpSummary {
         }
 
         self.holding -= qty.clone();
+        self.cost_position += liquidation_fee - cost_position_transfer;
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
-        self.opening_cost += open_cost_diff;
         self.total_realized_pnl += realized_pnl_diff;
+        self.update_opening_cost(open_cost_diff);
     }
 
     pub fn new_liquidation_v2(
@@ -86,10 +87,12 @@ impl UserPerpSummary {
         qty: BigDecimal,
         price: BigDecimal,
         block_num: i64,
-        _cost_position_transfer: BigDecimal,
+        cost_position_transfer: BigDecimal,
+        fee: BigDecimal,
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
         realized_pnl_diff: BigDecimal,
+        need_cal_avg: bool,
     ) {
         if block_num <= self.pulled_block_height {
             // already processed this block events
@@ -97,10 +100,13 @@ impl UserPerpSummary {
         }
 
         self.holding += qty.clone();
+        self.cost_position += cost_position_transfer + fee;
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
-        self.opening_cost += open_cost_diff;
         self.total_realized_pnl += realized_pnl_diff;
+        if need_cal_avg {
+            self.update_opening_cost(open_cost_diff);
+        }
     }
 
     pub fn new_settlemnt(&mut self, settlement_amount: BigDecimal, pulled_block_height: i64) {
@@ -114,19 +120,26 @@ impl UserPerpSummary {
     pub fn new_liquidator(
         &mut self,
         holding_diff: BigDecimal,
+        cost_position_transfer: BigDecimal,
+        liquidator_fee: BigDecimal,
         opening_cost_diff: BigDecimal,
         pulled_block_height: i64,
         realized_pnl_diff: BigDecimal,
+        need_cal_avg: bool,
     ) {
         if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
         self.holding += holding_diff;
-        self.opening_cost += opening_cost_diff;
+        self.cost_position += cost_position_transfer - liquidator_fee;
         self.total_realized_pnl += realized_pnl_diff;
+        if need_cal_avg {
+            self.update_opening_cost(opening_cost_diff);
+        }
     }
 
+    // claimSumUnitaryFunding = qty * (new_funding - old_funding).setScale(USDC_precision, RoundingMode.CEILING)
     pub fn charge_funding_fee(
         &mut self,
         new_sum_unitary_fundings: BigDecimal,
@@ -144,30 +157,10 @@ impl UserPerpSummary {
             self.sum_unitary_fundings = new_sum_unitary_fundings;
             return;
         }
-        const FUNDING_MOVE_RIGHT_PRECISIONS: i128 = 10_i128.pow(17); // 1e17
 
-        let holding_move8 = (self.holding.clone() * get_qty_prec()).with_scale(0);
-        let holding_move8 = i128::from_str(&holding_move8.to_string()).unwrap();
-        let sum_unitary_fundings_diff_move = ((new_sum_unitary_fundings.clone()
-            - self.sum_unitary_fundings.clone())
-            * get_unitary_prec())
-        .with_scale(0);
-        #[cfg(test)]
-        println!(
-            "holding_move6: {}, sum_unitary_fundings_diff: {}",
-            holding_move8, sum_unitary_fundings_diff_move
-        );
-        let accrued_fee_unconverted =
-            holding_move8 * i128::from_str(&sum_unitary_fundings_diff_move.to_string()).unwrap();
-        let mut accrued_fee = accrued_fee_unconverted / FUNDING_MOVE_RIGHT_PRECISIONS;
-        let remainder = accrued_fee_unconverted - (accrued_fee * FUNDING_MOVE_RIGHT_PRECISIONS);
-        if remainder > 0 {
-            accrued_fee += 1;
-        }
-        #[cfg(test)]
-        println!("accrued_fee before div: {}", accrued_fee);
-
-        let accrued_fee = BigDecimal::from_str(&accrued_fee.to_string()).unwrap() / get_qty_prec();
+        let accrued_fee = (self.holding.clone()
+            * (new_sum_unitary_fundings.clone() - self.sum_unitary_fundings.clone()))
+        .with_scale_round(get_cost_position_decimal(), RoundingMode::Ceiling);
         #[cfg(test)]
         println!(
             "self.cost_position: {}, accrued_fee after div: {}",
@@ -182,7 +175,7 @@ impl UserPerpSummary {
         qty: BigDecimal,
         price: BigDecimal,
         block_num: i64,
-        _cost_position_transfer: BigDecimal,
+        cost_position_transfer: BigDecimal,
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
         realized_pnl_diff: BigDecimal,
@@ -193,10 +186,11 @@ impl UserPerpSummary {
         }
 
         self.holding += qty.clone();
+        self.cost_position += cost_position_transfer;
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
-        self.opening_cost += open_cost_diff;
         self.total_realized_pnl += realized_pnl_diff;
+        self.update_opening_cost(open_cost_diff);
     }
 
     pub fn new_insurance_adl_v1(
@@ -204,7 +198,7 @@ impl UserPerpSummary {
         qty: BigDecimal,
         price: BigDecimal,
         block_num: i64,
-        _cost_position_transfer: BigDecimal,
+        cost_position_transfer: BigDecimal,
         _sum_unitary_funding: BigDecimal,
     ) {
         if block_num <= self.pulled_block_height {
@@ -213,6 +207,7 @@ impl UserPerpSummary {
         }
 
         self.holding -= qty.clone();
+        self.cost_position -= cost_position_transfer;
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
     }
@@ -222,10 +217,11 @@ impl UserPerpSummary {
         qty: BigDecimal,
         price: BigDecimal,
         block_num: i64,
-        _cost_position_transfer: BigDecimal,
+        cost_position_transfer: BigDecimal,
         _sum_unitary_funding: BigDecimal,
         open_cost_diff: BigDecimal,
         realized_pnl_diff: BigDecimal,
+        need_cal_avg: bool,
     ) {
         if block_num <= self.pulled_block_height {
             // already processed this block events
@@ -233,10 +229,13 @@ impl UserPerpSummary {
         }
 
         self.holding += qty.clone();
+        self.cost_position += cost_position_transfer;
         self.total_liquidation_amount += qty.clone() * price.clone();
         self.total_liquidation_count += 1;
-        self.opening_cost += open_cost_diff;
         self.total_realized_pnl += realized_pnl_diff;
+        if need_cal_avg {
+            self.update_opening_cost(open_cost_diff);
+        }
     }
 }
 
@@ -257,18 +256,29 @@ impl UserPerpSummary {
         }
 
         let is_opening = self.holding.clone() == Default::default()
-            || (self.holding.clone().sign() != amount.clone().sign()
-                && amount.clone().abs() > self.holding.clone().abs());
+            || (self.holding.clone().sign() != qty.clone().sign()
+                && qty.clone().abs() > self.holding.clone().abs());
 
         let is_new_user = self.total_trading_count == 0;
-        self.total_trading_fee += fee;
+        self.total_trading_fee += fee.clone();
         self.total_trading_volume += amount.clone().abs();
         self.total_trading_count += 1;
         self.holding += qty;
-        self.opening_cost += open_cost_diff;
+        self.cost_position += amount + fee;
         self.total_realized_pnl += realized_pnl_diff;
+        self.update_opening_cost(open_cost_diff);
 
         (is_opening, is_new_user)
+    }
+}
+
+impl UserPerpSummary {
+    pub fn update_opening_cost(&mut self, open_cost_diff: BigDecimal) {
+        if self.holding == BigDecimal::from(0) {
+            self.opening_cost = BigDecimal::from(0);
+        } else {
+            self.opening_cost += open_cost_diff;
+        }
     }
 }
 
@@ -465,6 +475,7 @@ pub async fn legacy_create_or_update_user_perp_summary(
 
 #[cfg(test)]
 mod tests {
+    use crate::analyzer::get_unitary_prec;
     use std::{str::FromStr, time::Instant};
 
     use super::*;
@@ -541,5 +552,51 @@ mod tests {
         let v = BigDecimal::from_str("3.813").unwrap();
         let v = v.with_scale(0);
         assert_eq!("3", v.to_string());
+    }
+
+    #[test]
+    fn test_charge_funding_fee1() {
+        let acc = "account1".to_string();
+        let update_time = NaiveDateTime::from_timestamp_opt(
+            Utc::now().timestamp(),
+            Utc::now().timestamp_subsec_nanos() as u32,
+        )
+        .unwrap();
+        let mut user_perp1 = UserPerpSummary {
+            account_id: acc,
+            symbol: "0xaaaaa".to_string(),
+            holding: BigDecimal::from_str("0.01").unwrap(),
+            opening_cost: 0.into(),
+            cost_position: 0.into(),
+            total_trading_volume: 0.into(),
+            total_trading_count: 0.into(),
+            total_trading_fee: 0.into(),
+            total_realized_pnl: 0.into(),
+            total_un_realized_pnl: 0.into(),
+            total_liquidation_amount: 0.into(),
+            total_liquidation_count: 0.into(),
+            pulled_block_height: 0.into(),
+            pulled_block_time: update_time,
+            sum_unitary_fundings: BigDecimal::from_str("1000000000000000").unwrap()
+                / get_unitary_prec(),
+        };
+
+        user_perp1.charge_funding_fee(
+            BigDecimal::from_str("1100000000000000").unwrap() / get_unitary_prec(),
+            1,
+        );
+        println!(
+            "cost_position: {}, sum_unitary_fundings: {}",
+            user_perp1.cost_position.to_string(),
+            user_perp1.sum_unitary_fundings.to_string()
+        );
+        assert_eq!(
+            user_perp1.cost_position,
+            BigDecimal::from_str("0.001").unwrap()
+        );
+        assert_eq!(
+            user_perp1.sum_unitary_fundings,
+            BigDecimal::from_str("1.1").unwrap()
+        );
     }
 }

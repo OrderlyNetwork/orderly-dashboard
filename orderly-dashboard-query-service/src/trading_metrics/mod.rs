@@ -157,24 +157,43 @@ pub struct VolumeRankingRequest {
 #[derive(Debug, Clone, Deserialize, Serialize, Default, TypeDef)]
 pub struct UserSumaryRankingData {
     pub account_id: String,
+    pub address: String,
+    pub broker_id: String,
     pub symbol: String,
     pub symbol_hash: String,
     pub holding: String,
     pub total_realized_pnl: String,
     pub index_price: String,
+    pub mark_price: String,
     pub holding_value: String,
+    pub opening_cost: String,
+    pub average_entry_price: String,
+    pub un_realized_pnl: String,
 }
 
 impl From<UserSymbolSummaryRank> for UserSumaryRankingData {
     fn from(value: UserSymbolSummaryRank) -> Self {
+        let average_entry_price = if value.holding.sign() == num_bigint::Sign::Minus      {
+            (-value.opening_cost.clone() / value.holding.clone()).with_scale_round(8, bigdecimal::RoundingMode::Down)
+        } else if value.holding.sign() == num_bigint::Sign::Plus {
+            (-value.opening_cost.clone() / value.holding.clone()).with_scale_round(8, bigdecimal::RoundingMode::Up)
+        } else {
+            0.into()
+        };
         UserSumaryRankingData {
             account_id: value.account_id,
+            address: value.address,
+            broker_id: value.broker_id,
             symbol: value.symbol,
             symbol_hash: value.symbol_hash,
             holding: value.holding.to_string(),
             total_realized_pnl: value.total_realized_pnl.to_string(),
             index_price: value.index_price.to_string(),
+            mark_price: value.mark_price.to_string(),
             holding_value: value.holding_value.to_string(),
+            opening_cost: value.opening_cost.to_string(),
+            average_entry_price: average_entry_price.to_string(),
+            un_realized_pnl: (value.holding * (value.mark_price - average_entry_price)).with_scale_round(8, bigdecimal::RoundingMode::Down).to_string()
         }
     }
 }

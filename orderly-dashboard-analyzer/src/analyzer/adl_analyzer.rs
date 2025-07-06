@@ -72,7 +72,7 @@ pub async fn analyzer_adl(
             fixed_adl_qty.clone(),
             adl_price.clone(),
             block_num,
-            cpt.clone(),
+            fixed_position_transfer.clone(),
             fixed_sum_unitary_fundings.clone(),
             open_cost_diff,
             pnl_diff.clone(),
@@ -89,7 +89,7 @@ pub async fn analyzer_adl(
             fixed_adl_qty,
             adl_price,
             block_num,
-            cpt,
+            fixed_position_transfer,
             fixed_sum_unitary_fundings,
         );
     }
@@ -129,15 +129,16 @@ pub async fn analyzer_adl_v2(
         symbol: symbol_hash.clone(),
     };
     let user_perp_snap = context.get_user_perp(&user_perp_key.clone()).await.clone();
-    let (open_cost_diff, pnl_diff) = if INSURANCE_FUNDS.contains(&account_id.as_str()) {
-        (BigDecimal::from(0), BigDecimal::from(0))
-    } else {
+    let need_cal_avg = !INSURANCE_FUNDS.contains(&account_id.as_str());
+    let (open_cost_diff, pnl_diff) = if need_cal_avg {
         RealizedPnl::calc_realized_pnl(
             fixed_adl_qty.clone(),
             -fixed_position_transfer.clone(),
             user_perp_snap.holding.clone(),
             user_perp_snap.opening_cost.clone(),
         )
+    } else {
+        (BigDecimal::from(0), BigDecimal::from(0))
     };
 
     {
@@ -159,10 +160,11 @@ pub async fn analyzer_adl_v2(
             fixed_adl_qty.clone(),
             adl_price.clone(),
             block_num,
-            cpt.clone(),
+            fixed_position_transfer.clone(),
             fixed_sum_unitary_fundings.clone(),
             open_cost_diff,
             pnl_diff,
+            need_cal_avg,
         );
     }
 }
@@ -221,6 +223,7 @@ mod tests {
             BigDecimal::from_i128(2_000_000_000).unwrap(),
             BigDecimal::from_i128(100_000_000).unwrap(),
             BigDecimal::from_i128(10_000_000_000_000_000).unwrap(),
+            0.into(),
         );
 
         context.set_user_perp_cache(
@@ -228,6 +231,7 @@ mod tests {
             BigDecimal::from_i128(-1_000_000_000).unwrap(),
             BigDecimal::from_i128(100_000_000).unwrap(),
             BigDecimal::from_i128(10_000_000_000_000_000).unwrap(),
+            0.into(),
         );
 
         let block_num = 1000000;
@@ -249,14 +253,23 @@ mod tests {
 
         {
             let bob_eth = context.get_user_perp_cache(&bob_eth_perp_key);
+            println!(
+                "bob eth perp summary, holding: {:?}, cost_position: {}",
+                bob_eth.holding.to_string(),
+                bob_eth.cost_position.to_string()
+            );
             assert_eq!(bob_eth.holding, BigDecimal::from_str("0").unwrap());
-            println!("bob eth perp summary: {:?}", bob_eth);
+            assert_eq!(bob_eth.cost_position, BigDecimal::from_str("100").unwrap());
         }
 
         {
             let insurance_eth = context.get_user_perp_cache(&insurance_eth_perp_key);
-            assert_eq!(insurance_eth.holding, BigDecimal::from_str("10").unwrap());
             println!("insurance eth perp summary: {:?}", insurance_eth);
+            assert_eq!(insurance_eth.holding, BigDecimal::from_str("10").unwrap());
+            assert_eq!(
+                insurance_eth.cost_position,
+                BigDecimal::from_str("200").unwrap()
+            );
         }
     }
 
@@ -303,12 +316,14 @@ mod tests {
             BigDecimal::from_i128(10_000_000).unwrap(),
             BigDecimal::from_i128(1_340_402).unwrap(),
             BigDecimal::from_i128(-623_710_000_000_000).unwrap(),
+            0.into(),
         );
         context.set_user_perp_cache(
             &bob_btc_perp_key,
             BigDecimal::from_i128(-10_000_000).unwrap(),
             BigDecimal::from_i128(-1_057_610).unwrap(),
             BigDecimal::from_i128(-97_240_000_000_000).unwrap(),
+            0.into(),
         );
 
         let block_num = 1000000;
@@ -347,6 +362,10 @@ mod tests {
                 alice_btc.holding.to_string()
             );
             assert_eq!(alice_btc.holding, BigDecimal::from_str("0").unwrap());
+            assert_eq!(
+                alice_btc.cost_position,
+                BigDecimal::from_str("0.322399").unwrap()
+            );
             println!("alice eth perp summary: {:?}", alice_btc);
         }
 
