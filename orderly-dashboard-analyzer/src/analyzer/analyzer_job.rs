@@ -7,7 +7,7 @@ use tokio::time;
 use orderly_dashboard_indexer::formats_external::trading_events::{
     TradingEventInnerData, TradingEventsResponse,
 };
-use orderly_dashboard_indexer::formats_external::{BlockTimeResponse, Response};
+use orderly_dashboard_indexer::formats_external::{BlockTimeResponse, IndexerQueryResponse};
 
 use crate::analyzer::adl_analyzer::analyzer_adl;
 use crate::analyzer::analyzer_context::AnalyzeContext;
@@ -56,8 +56,10 @@ pub fn start_analyzer_trade_job(
             .await;
             match response_str {
                 Ok(json_str) => {
-                    let result: Result<Response<TradingEventsResponse>, serde_json::Error> =
-                        serde_json::from_str(&*json_str);
+                    let result: Result<
+                        IndexerQueryResponse<TradingEventsResponse>,
+                        serde_json::Error,
+                    > = serde_json::from_str(&*json_str);
 
                     if result.is_err() {
                         tracing::warn!(target:ANALYZER_CONTEXT, "parse data err, json_str: {}", json_str);
@@ -136,7 +138,7 @@ fn cal_to_time(from_time: i64, batch_block_num: u64) -> i64 {
 
 #[allow(deprecated)]
 pub async fn parse_and_analyzer(
-    response: Response<TradingEventsResponse>,
+    response: IndexerQueryResponse<TradingEventsResponse>,
     context: &mut AnalyzeContext,
 ) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
@@ -146,7 +148,7 @@ pub async fn parse_and_analyzer(
     let mut latest_perp_trade_id = 0i64;
 
     match response {
-        Response::Success(success_event) => {
+        IndexerQueryResponse::Success(success_event) => {
             let trading_event: TradingEventsResponse = success_event.into_data().unwrap();
             pulled_block_time = trading_event.last_block_timestamp;
             latest_block_height = trading_event.last_block as i64;
@@ -308,7 +310,7 @@ pub async fn parse_and_analyzer(
                 }
             }
         }
-        Response::Failure(_) => {}
+        IndexerQueryResponse::Failure(_) => {}
     }
 
     #[cfg(not(test))]
@@ -355,12 +357,12 @@ pub async fn get_block_timestamp_with_retry(base_url: String, block_num: i64) ->
     loop {
         match get_block_timestamp(&base_url, block_num).await {
             Ok(data) => match data {
-                Response::Success(data) => {
+                IndexerQueryResponse::Success(data) => {
                     let timetamp = data.into_data().unwrap().block_timestamp;
                     tracing::info!("get_block_timestamp success with: {:?}", timetamp);
                     return timetamp;
                 }
-                Response::Failure(err) => {
+                IndexerQueryResponse::Failure(err) => {
                     tracing::warn!("get_block_timestamp response failed with err: {:?}", err);
                     tokio::time::sleep(Duration::from_secs(30)).await;
                 }
@@ -376,7 +378,7 @@ pub async fn get_block_timestamp_with_retry(base_url: String, block_num: i64) ->
 pub async fn get_block_timestamp(
     base_url: &str,
     block_num: i64,
-) -> anyhow::Result<Response<BlockTimeResponse>> {
+) -> anyhow::Result<IndexerQueryResponse<BlockTimeResponse>> {
     let indexer_url = format!(
         "{}/pull_block_timestamp?block_number={}",
         base_url, block_num,

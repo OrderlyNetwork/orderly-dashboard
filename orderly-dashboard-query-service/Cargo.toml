@@ -40,6 +40,10 @@ dashmap = "6.1.0"
 fxhash = "0.2.1"
 num-bigint = "0.4.4"
 num-traits = "0.2"
+utoipa = { version = "5.3.1", features = ["actix_extras"] }
+utoipa-swagger-ui = { version = "9.0.2", features = ["actix-web", "debug-embed"] }
+swagger_spec = "0.2.0"
+schemars = { package = "apistos-schemars", version = "0.8", features = ["chrono", "uuid1", "url", "rust_decimal"] }
 
 [profile.release]
 opt-level = 3

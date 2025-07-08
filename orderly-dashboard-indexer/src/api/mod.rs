@@ -9,7 +9,7 @@ use std::sync::atomic::Ordering;
 use crate::{
     consume_data_task::{ORDERLY_PROCESSED_BLOCK_HEIGHT, ORDERLY_PROCESSED_TIMESTAMP},
     db::settings::{get_last_rpc_processed_height, get_last_rpc_processed_timestamp},
-    formats_external::{Response, SuccessResponse},
+    formats_external::{IndexerQueryResponse, SuccessResponse},
 };
 use anyhow::Result;
 pub use network_info::get_network_info;
@@ -23,11 +23,11 @@ pub use symbols_config::get_symbols_data;
 pub(crate) static MIGRATE_TRADES_FINISHED_AND_QUERY_FROM_PARTITIONING: AtomicBool =
     AtomicBool::new(false);
 
-pub async fn get_status() -> Result<Response<serde_json::Value>> {
+pub async fn get_status() -> Result<IndexerQueryResponse<serde_json::Value>> {
     let data = serde_json::json!({
         "is_ready": true,
     });
-    Ok(Response::Success(SuccessResponse::new(data)))
+    Ok(IndexerQueryResponse::Success(SuccessResponse::new(data)))
 }
 
 pub(crate) async fn get_may_cached_orderly_last_rpc_processed_height() -> Result<u64> {
