@@ -16,3 +16,7 @@ Orderly Dashboard is aim to be a web-based data analyze platform that will prese
 ## Service
 - [prod](https://orderly-dashboard.orderly.network)
 - [testnet](https://dev-orderly-dashboard.orderly.network)
+
+## API Doc
+- [prod](https://orderly-dashboard.orderly.network/swagger-ui/#/)
+- [testnet](https://dev-orderly-dashboard.orderly.network/swagger-ui/#/)

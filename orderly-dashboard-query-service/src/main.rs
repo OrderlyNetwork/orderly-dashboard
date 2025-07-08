@@ -21,13 +21,25 @@ use orderly_dashboard_query_service::network_info::{get_network_info, init_index
 use orderly_dashboard_query_service::raw_query::analyzer_raw_query;
 use orderly_dashboard_query_service::service_base::runtime::spawn_future;
 use orderly_dashboard_query_service::status::get_status;
+use orderly_dashboard_query_service::swagger_docs::ApiDoc;
+use orderly_dashboard_query_service::trading_metrics;
 use orderly_dashboard_query_service::trading_metrics::{
     average_opening_count, average_trading_fee, average_trading_volume, block_height,
     deposit_gas_fee, event_gas_fee, get_daily_orderly_perp, get_daily_orderly_token,
-    get_perp_holding_rank, get_perp_pnl_rank, get_position_rank, get_realized_pnl_rank,
-    get_token_deposit_rank, get_token_withdraw_rank, get_trading_volume_rank, perp_gas_fee,
-    update_positions_task, update_realized_pnl_task,
+    get_perp_holding_rank, get_perp_pnl_rank, get_token_deposit_rank, get_token_withdraw_rank,
+    get_trading_volume_rank, perp_gas_fee, update_positions_task, update_realized_pnl_task,
 };
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+
+fn service_config(conf: &mut web::ServiceConfig) {
+    // let scope = web::scope("/")
+    //     .service(trading_metrics::get_position_rank)
+    //     .service(trading_metrics::get_realized_pnl_rank);
+    conf.service(trading_metrics::get_position_rank)
+        .service(trading_metrics::get_realized_pnl_rank);
+    // conf.service(scope);
+}
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -119,6 +131,7 @@ async fn main() -> std::io::Result<()> {
             .max_age(3600);
         App::new()
             .wrap(cors)
+            .configure(service_config)
             .service(hello)
             .service(echo)
             .service(hello2)
@@ -145,8 +158,12 @@ async fn main() -> std::io::Result<()> {
             .service(list_events)
             .service(list_sol_events)
             .service(list_events_v2)
-            .service(get_position_rank)
-            .service(get_realized_pnl_rank)
+            // .service(get_position_rank)
+            // .service(get_realized_pnl_rank)
+            .service(
+                SwaggerUi::new("/swagger-ui/{_:.*}")
+                    .url("/api-docs/openapi.json", ApiDoc::openapi()),
+            )
             .route("/hey", web::get().to(manual_hello))
     })
     .workers(num_cpus::get() * 2)

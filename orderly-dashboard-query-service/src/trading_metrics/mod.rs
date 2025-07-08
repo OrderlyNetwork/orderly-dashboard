@@ -1,6 +1,9 @@
-use actix_web::{get, web, HttpResponse, Responder, Result};
+use actix_web::{get, web, HttpRequest, HttpResponse, Responder, Result};
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
-use orderly_dashboard_analyzer::sync_broker::cal_symbol_hash;
+use orderly_dashboard_analyzer::sync_broker::{
+    cal_account_id, cal_symbol_hash, get_sol_account_id,
+};
+use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
 use serde::Serialize;
 use serde_derive::Deserialize;
 
@@ -13,17 +16,22 @@ use crate::db::trading_metrics::ranking::{
     query_user_perp_max_symbol_realized_pnl, UserSymbolSummaryRank,
 };
 use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
-use crate::error_code::{QUERY_OVER_EXECUTION_ERR, QUERY_OVER_LIMIT_ERR};
+use crate::error_code::{
+    ACCOUNT_ID_CONFLICT_OR_INVALID_ERR, ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE,
+    QUERY_OVER_EXECUTION_ERR, QUERY_OVER_LIMIT_ERR,
+};
 use crate::format_extern::rank_metrics::UserSummaryRankExtern;
-use crate::{add_base_header, format_extern::Response};
+use crate::{add_base_header, format_extern::QeuryServiceResponse};
 use dashmap::DashMap;
 use fxhash::FxBuildHasher;
 use lazy_static::lazy_static;
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
+use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Instant;
 use typescript_type_def::TypeDef;
+use utoipa::ToSchema;
 
 const TRADING_METRICS: &str = "trading_metrics_context";
 
@@ -154,7 +162,7 @@ pub struct VolumeRankingRequest {
     size: i32,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default, TypeDef)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, TypeDef, ToSchema)]
 pub struct UserSumaryRankingData {
     pub account_id: String,
     pub address: String,
@@ -173,10 +181,12 @@ pub struct UserSumaryRankingData {
 
 impl From<UserSymbolSummaryRank> for UserSumaryRankingData {
     fn from(value: UserSymbolSummaryRank) -> Self {
-        let average_entry_price = if value.holding.sign() == num_bigint::Sign::Minus      {
-            (-value.opening_cost.clone() / value.holding.clone()).with_scale_round(8, bigdecimal::RoundingMode::Down)
+        let average_entry_price = if value.holding.sign() == num_bigint::Sign::Minus {
+            (-value.opening_cost.clone() / value.holding.clone())
+                .with_scale_round(8, bigdecimal::RoundingMode::Down)
         } else if value.holding.sign() == num_bigint::Sign::Plus {
-            (-value.opening_cost.clone() / value.holding.clone()).with_scale_round(8, bigdecimal::RoundingMode::Up)
+            (-value.opening_cost.clone() / value.holding.clone())
+                .with_scale_round(8, bigdecimal::RoundingMode::Up)
         } else {
             0.into()
         };
@@ -193,7 +203,9 @@ impl From<UserSymbolSummaryRank> for UserSumaryRankingData {
             holding_value: value.holding_value.to_string(),
             opening_cost: value.opening_cost.to_string(),
             average_entry_price: average_entry_price.to_string(),
-            un_realized_pnl: (value.holding * (value.mark_price - average_entry_price)).with_scale_round(8, bigdecimal::RoundingMode::Down).to_string()
+            un_realized_pnl: (value.holding * (value.mark_price - average_entry_price))
+                .with_scale_round(8, bigdecimal::RoundingMode::Down)
+                .to_string(),
         }
     }
 }
@@ -227,9 +239,11 @@ fn default_order_by() -> RealizedPnlRankingOrder {
     RealizedPnlRankingOrder::DESC
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct PositionRankingRequest {
     account_id: Option<String>,
+    address: Option<String>,
+    broker_id: Option<String>,
     symbol: Option<String>,
     #[serde(default = "default_offset")]
     offset: i32,
@@ -237,7 +251,48 @@ pub struct PositionRankingRequest {
     limit: i32,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl PositionRankingRequest {
+    pub fn check_account_id_valid_and_cal(&mut self) -> bool {
+        if self.account_id.is_none() && self.address.is_none() && self.broker_id.is_none() {
+            return true;
+        }
+        if self.account_id.is_some() && self.address.is_none() && self.broker_id.is_none() {
+            return true;
+        }
+        if self.account_id.is_none() && self.address.is_some() && self.broker_id.is_some() {
+            let address = self.address.clone().unwrap();
+            let broker_id = self.broker_id.clone().unwrap();
+            if address.starts_with("0x") {
+                match cal_account_id(&broker_id, &address) {
+                    Ok(account_id) => {
+                        self.account_id = Some(account_id);
+                    }
+                    Err(_) => {
+                        return false;
+                    }
+                };
+            } else {
+                let sol_key = Pubkey::from_str(&address);
+                if sol_key.is_err() {
+                    return false;
+                }
+                let sol_key = sol_key.unwrap();
+                match get_sol_account_id(&sol_key, &broker_id) {
+                    Ok(account_id) => {
+                        self.account_id = Some(account_id);
+                    }
+                    Err(_) => {
+                        return false;
+                    }
+                };
+            };
+            return true;
+        }
+        false
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
 pub enum RealizedPnlRankingOrder {
     ASC,
     DESC,
@@ -252,9 +307,11 @@ impl std::fmt::Display for RealizedPnlRankingOrder {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct RealizedPnlRankingRequest {
     account_id: Option<String>,
+    address: Option<String>,
+    broker_id: Option<String>,
     symbol: Option<String>,
     #[serde(default = "default_offset")]
     offset: i32,
@@ -262,6 +319,47 @@ pub struct RealizedPnlRankingRequest {
     limit: i32,
     #[serde(default = "default_order_by")]
     order_by: RealizedPnlRankingOrder,
+}
+
+impl RealizedPnlRankingRequest {
+    pub fn check_account_id_valid_and_cal(&mut self) -> bool {
+        if self.account_id.is_none() && self.address.is_none() && self.broker_id.is_none() {
+            return true;
+        }
+        if self.account_id.is_some() && self.address.is_none() && self.broker_id.is_none() {
+            return true;
+        }
+        if self.account_id.is_none() && self.address.is_some() && self.broker_id.is_some() {
+            let address = self.address.clone().unwrap();
+            let broker_id = self.broker_id.clone().unwrap();
+            if address.starts_with("0x") {
+                match cal_account_id(&broker_id, &address) {
+                    Ok(account_id) => {
+                        self.account_id = Some(account_id);
+                    }
+                    Err(_) => {
+                        return false;
+                    }
+                };
+            } else {
+                let sol_key = Pubkey::from_str(&address);
+                if sol_key.is_err() {
+                    return false;
+                }
+                let sol_key = sol_key.unwrap();
+                match get_sol_account_id(&sol_key, &broker_id) {
+                    Ok(account_id) => {
+                        self.account_id = Some(account_id);
+                    }
+                    Err(_) => {
+                        return false;
+                    }
+                };
+            };
+            return true;
+        }
+        false
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -294,7 +392,7 @@ impl DailyRequest {
 }
 
 pub fn write_response<T: Serialize>(res_data: T) -> HttpResponse {
-    let success_response = Response {
+    let success_response = QeuryServiceResponse {
         success: true,
         err_code: 0,
         err_msg: None,
@@ -306,7 +404,8 @@ pub fn write_response<T: Serialize>(res_data: T) -> HttpResponse {
 }
 
 pub fn write_failed_response(err_code: i32, err_msg: &str) -> HttpResponse {
-    let failed_response: Response<()> = Response::new_err(err_code, err_msg.to_string());
+    let failed_response: QeuryServiceResponse<()> =
+        QeuryServiceResponse::new_err(err_code, err_msg.to_string());
     let mut resp = HttpResponse::Ok().json(failed_response);
     add_base_header(&mut resp);
     resp
@@ -438,6 +537,7 @@ pub async fn get_token_deposit_rank(
 
 #[get("/ranking/withdraw")]
 pub async fn get_token_withdraw_rank(
+    _req: HttpRequest,
     param: web::Query<VolumeRankingRequest>,
 ) -> Result<impl Responder> {
     tracing::debug!(target: TRADING_METRICS, "/ranking/withdraw, days: {}, size: {}", param.days, param.size);
@@ -446,22 +546,33 @@ pub async fn get_token_withdraw_rank(
     ))
 }
 
+/// Post Endpoint
+///
+/// Basic Post Example
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Position ranking", body = QeuryServiceResponse<UserSummaryRankExtern>),
+        (status = 409, description = "Invalid Request")
+    ),
+    params(("param" = PositionRankingRequest, Query, description = "position ranking params")),
+)]
 #[get("/ranking/positions")]
 pub async fn get_position_rank(
-    param: web::Query<PositionRankingRequest>,
-) -> Result<impl Responder> {
-    tracing::debug!(target: TRADING_METRICS, "/ranking/positions, params: {:?}", param.0);
+    _req: HttpRequest,
+    mut param: web::Query<PositionRankingRequest>,
+) -> HttpResponse {
+    tracing::info!(target: TRADING_METRICS, "/ranking/positions, params: {:?}", param.0);
     if param.limit > 200 {
-        return Ok(write_failed_response(
-            QUERY_OVER_LIMIT_ERR,
-            "query number over limit 200",
-        ));
+        return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number over limit 200");
     }
     if param.limit == 0 {
-        return Ok(write_failed_response(
-            QUERY_OVER_LIMIT_ERR,
-            "query number should not be 0",
-        ));
+        return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number should not be 0");
+    }
+    if !param.check_account_id_valid_and_cal() {
+        return write_failed_response(
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR,
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE,
+        );
     }
 
     if param.account_id.is_none() && param.symbol.is_none() {
@@ -471,7 +582,7 @@ pub async fn get_position_rank(
                 let resp_data = top_position_caches
                     [param.offset as usize..(param.offset + param.limit) as usize]
                     .to_vec();
-                return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
+                return write_response(UserSummaryRankExtern::new(resp_data));
             }
         }
         return match query_user_perp_max_symbol_holding(param.offset, param.limit, None, None).await
@@ -481,15 +592,10 @@ pub async fn get_position_rank(
                     .into_iter()
                     .map(Into::into)
                     .collect::<Vec<UserSumaryRankingData>>();
-                Ok(write_response(UserSummaryRankExtern::new(
-                    user_perp_holding,
-                )))
+                write_response(UserSummaryRankExtern::new(user_perp_holding))
             }
             Err(err) => {
-                return Ok(write_failed_response(
-                    QUERY_OVER_EXECUTION_ERR,
-                    &err.to_string(),
-                ));
+                return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
             }
         };
     }
@@ -508,7 +614,7 @@ pub async fn get_position_rank(
                             let resp_data = top_positions.0
                                 [param.offset as usize..(param.offset + param.limit) as usize]
                                 .to_vec();
-                            return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
+                            return write_response(UserSummaryRankExtern::new(resp_data));
                         }
                     }
                 }
@@ -532,13 +638,10 @@ pub async fn get_position_rank(
                             symbol_hash,
                             Arc::new(RwLock::new((user_perp_holding, Instant::now()))),
                         );
-                        return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
+                        return write_response(UserSummaryRankExtern::new(resp_data));
                     }
                     Err(err) => {
-                        return Ok(write_failed_response(
-                            QUERY_OVER_EXECUTION_ERR,
-                            &err.to_string(),
-                        ));
+                        return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
                     }
                 }
             }
@@ -556,15 +659,10 @@ pub async fn get_position_rank(
                         .into_iter()
                         .map(Into::into)
                         .collect::<Vec<UserSumaryRankingData>>();
-                    Ok(write_response(UserSummaryRankExtern::new(
-                        user_perp_holding,
-                    )))
+                    write_response(UserSummaryRankExtern::new(user_perp_holding))
                 }
                 Err(err) => {
-                    return Ok(write_failed_response(
-                        QUERY_OVER_EXECUTION_ERR,
-                        &err.to_string(),
-                    ));
+                    return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
                 }
             };
         }
@@ -586,35 +684,38 @@ pub async fn get_position_rank(
                 .into_iter()
                 .map(Into::into)
                 .collect::<Vec<UserSumaryRankingData>>();
-            Ok(write_response(UserSummaryRankExtern::new(
-                user_perp_holding,
-            )))
+            write_response(UserSummaryRankExtern::new(user_perp_holding))
         }
         Err(err) => {
-            return Ok(write_failed_response(
-                QUERY_OVER_EXECUTION_ERR,
-                &err.to_string(),
-            ));
+            return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
         }
     }
 }
 
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Realized pnl ranking", body = QeuryServiceResponse<UserSummaryRankExtern>),
+        (status = 409, description = "Invalid Request")
+    ),
+    params(("param" = RealizedPnlRankingRequest, Query, description = "pnl ranking params")),
+)]
 #[get("/ranking/realized_pnl")]
 pub async fn get_realized_pnl_rank(
-    param: web::Query<RealizedPnlRankingRequest>,
-) -> Result<impl Responder> {
+    _req: HttpRequest,
+    mut param: web::Query<RealizedPnlRankingRequest>,
+) -> HttpResponse {
     tracing::debug!(target: TRADING_METRICS, "/ranking/realized_pnl, params: {:?}", param.0);
     if param.limit > 200 {
-        return Ok(write_failed_response(
-            QUERY_OVER_LIMIT_ERR,
-            "query number over limit 200",
-        ));
+        return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number over limit 200");
     }
     if param.limit == 0 {
-        return Ok(write_failed_response(
-            QUERY_OVER_LIMIT_ERR,
-            "query number should not be 0",
-        ));
+        return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number should not be 0");
+    }
+    if !param.check_account_id_valid_and_cal() {
+        return write_failed_response(
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR,
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE,
+        );
     }
 
     if param.account_id.is_none() && param.symbol.is_none() {
@@ -627,7 +728,7 @@ pub async fn get_realized_pnl_rank(
                 let resp_data = top_position_caches
                     [param.offset as usize..(param.offset + param.limit) as usize]
                     .to_vec();
-                return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
+                return write_response(UserSummaryRankExtern::new(resp_data));
             }
         }
         return match query_user_perp_max_symbol_realized_pnl(
@@ -644,15 +745,10 @@ pub async fn get_realized_pnl_rank(
                     .into_iter()
                     .map(Into::into)
                     .collect::<Vec<UserSumaryRankingData>>();
-                Ok(write_response(UserSummaryRankExtern::new(
-                    user_perp_holding,
-                )))
+                write_response(UserSummaryRankExtern::new(user_perp_holding))
             }
             Err(err) => {
-                return Ok(write_failed_response(
-                    QUERY_OVER_EXECUTION_ERR,
-                    &err.to_string(),
-                ));
+                return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
             }
         };
     }
@@ -675,7 +771,7 @@ pub async fn get_realized_pnl_rank(
                             let resp_data = top_positions.0
                                 [param.offset as usize..(param.offset + param.limit) as usize]
                                 .to_vec();
-                            return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
+                            return write_response(UserSummaryRankExtern::new(resp_data));
                         }
                     }
                 }
@@ -715,13 +811,10 @@ pub async fn get_realized_pnl_rank(
                                 );
                             }
                         }
-                        return Ok(write_response(UserSummaryRankExtern::new(resp_data)));
+                        return write_response(UserSummaryRankExtern::new(resp_data));
                     }
                     Err(err) => {
-                        return Ok(write_failed_response(
-                            QUERY_OVER_EXECUTION_ERR,
-                            &err.to_string(),
-                        ));
+                        return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
                     }
                 }
             }
@@ -740,15 +833,10 @@ pub async fn get_realized_pnl_rank(
                         .into_iter()
                         .map(Into::into)
                         .collect::<Vec<UserSumaryRankingData>>();
-                    Ok(write_response(UserSummaryRankExtern::new(
-                        user_perp_holding,
-                    )))
+                    write_response(UserSummaryRankExtern::new(user_perp_holding))
                 }
                 Err(err) => {
-                    return Ok(write_failed_response(
-                        QUERY_OVER_EXECUTION_ERR,
-                        &err.to_string(),
-                    ));
+                    return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
                 }
             };
         }
@@ -771,15 +859,10 @@ pub async fn get_realized_pnl_rank(
                 .into_iter()
                 .map(Into::into)
                 .collect::<Vec<UserSumaryRankingData>>();
-            Ok(write_response(UserSummaryRankExtern::new(
-                user_perp_holding,
-            )))
+            write_response(UserSummaryRankExtern::new(user_perp_holding))
         }
         Err(err) => {
-            return Ok(write_failed_response(
-                QUERY_OVER_EXECUTION_ERR,
-                &err.to_string(),
-            ));
+            return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
         }
     }
 }

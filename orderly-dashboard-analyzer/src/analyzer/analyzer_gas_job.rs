@@ -8,7 +8,7 @@ use chrono::{NaiveDateTime, Timelike, Utc};
 use orderly_dashboard_indexer::formats_external::gas_consumption::{
     GasConsumptionResponse, TransactionGasCostData,
 };
-use orderly_dashboard_indexer::formats_external::Response;
+use orderly_dashboard_indexer::formats_external::IndexerQueryResponse;
 use tokio::time;
 
 use crate::analyzer::analyzer_gas_context::GasFeeContext;
@@ -44,8 +44,10 @@ pub fn start_analyzer_gas_job(
                 get_indexer_data(round_from_block, round_to_block, base_url.clone()).await;
             match response_str {
                 Ok(json_str) => {
-                    let result: Result<Response<GasConsumptionResponse>, serde_json::Error> =
-                        serde_json::from_str(&*json_str);
+                    let result: Result<
+                        IndexerQueryResponse<GasConsumptionResponse>,
+                        serde_json::Error,
+                    > = serde_json::from_str(&*json_str);
                     if result.is_err() {
                         tracing::warn!(target:ANALYZER_CONTEXT, "parse data err, json_str: {}", json_str);
                         time::sleep(Duration::from_secs(5 * interval_seconds)).await;
@@ -89,13 +91,15 @@ pub fn start_analyzer_gas_job(
 }
 
 #[allow(deprecated)]
-async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64, i64, i64) {
+async fn parse_and_analyzer(
+    response: IndexerQueryResponse<GasConsumptionResponse>,
+) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
     let mut latest_block_height = 0i64;
     let latest_perp_trade_id = 0i64;
 
     match response {
-        Response::Success(success_event) => {
+        IndexerQueryResponse::Success(success_event) => {
             let trading_event: GasConsumptionResponse = success_event.into_data().unwrap();
             pulled_block_time = trading_event.last_timestamp;
             latest_block_height = trading_event.last_block as i64;
@@ -143,7 +147,7 @@ async fn parse_and_analyzer(response: Response<GasConsumptionResponse>) -> (i64,
             }
             context.save_analyze_result().await
         }
-        Response::Failure(_) => {}
+        IndexerQueryResponse::Failure(_) => {}
     }
     (pulled_block_time, latest_block_height, latest_perp_trade_id)
 }

@@ -59,6 +59,7 @@ crossbeam-channel = "0.5.13"
 futures-util = "0.3.30"
 borsh = { version = "1.5.1", features = ["derive"]}
 anchor-syn = { version = "0.30.1", features = ["hash"]}
+utoipa = { version = "5.3.1", features = ["actix_extras"] }
 
 [features]
 frozen-abi = []

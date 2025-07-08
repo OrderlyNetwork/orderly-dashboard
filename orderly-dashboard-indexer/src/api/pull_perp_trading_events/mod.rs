@@ -4,7 +4,7 @@ use crate::config::get_common_cfg;
 use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 use crate::formats_external::trading_events::{AccountTradingEventsResponse, TradingEventType};
 use crate::formats_external::{
-    trading_events::TradingEventsResponse, FailureResponse, Response, SuccessResponse,
+    trading_events::TradingEventsResponse, FailureResponse, IndexerQueryResponse, SuccessResponse,
 };
 use anyhow::{Context, Result};
 use chrono::Utc;
@@ -17,7 +17,7 @@ pub const QUERY_RANGE_S: i64 = 31 * 24 * 3600;
 
 pub async fn pull_perp_trading_events(
     params: &HashMap<String, String>,
-) -> Result<Response<TradingEventsResponse>> {
+) -> Result<IndexerQueryResponse<TradingEventsResponse>> {
     let from_block = params
         .get("from_block")
         .context("param from_block not found")?;
@@ -37,7 +37,7 @@ pub async fn pull_perp_trading_events(
         match serde_json::from_str::<TradingEventType>(&event_type) {
             Ok(event_type) => Some(event_type),
             Err(err) => {
-                return Ok(Response::Failure(FailureResponse::new(
+                return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
                     1000,
                     format!("parse event_type failed with err: {}", err),
                 )))
@@ -54,12 +54,14 @@ pub async fn pull_perp_trading_events(
         e_type,
     )
     .await?;
-    Ok(Response::Success(SuccessResponse::new(response)))
+    Ok(IndexerQueryResponse::Success(SuccessResponse::new(
+        response,
+    )))
 }
 
 pub async fn pull_sol_events(
     params: &HashMap<String, String>,
-) -> Result<Response<TradingEventsResponse>> {
+) -> Result<IndexerQueryResponse<TradingEventsResponse>> {
     let from_block = params
         .get("from_block")
         .context("param from_block not found")?;
@@ -69,7 +71,7 @@ pub async fn pull_sol_events(
         match serde_json::from_str::<TradingEventType>(&event_type) {
             Ok(event_type) => Some(event_type),
             Err(err) => {
-                return Ok(Response::Failure(FailureResponse::new(
+                return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
                     1000,
                     format!("parse event_type failed with err: {}", err),
                 )))
@@ -80,12 +82,14 @@ pub async fn pull_sol_events(
     };
     let response =
         filter_join::sol_join_events(from_block.parse()?, to_block.parse()?, e_type).await?;
-    Ok(Response::Success(SuccessResponse::new(response)))
+    Ok(IndexerQueryResponse::Success(SuccessResponse::new(
+        response,
+    )))
 }
 
 pub async fn pull_perp_trading_events_by_account(
     params: &HashMap<String, String>,
-) -> Result<Response<AccountTradingEventsResponse>> {
+) -> Result<IndexerQueryResponse<AccountTradingEventsResponse>> {
     let account_id = params
         .get("account_id")
         .context("param account_id not found")?;
@@ -106,12 +110,12 @@ pub async fn pull_perp_trading_events_by_account(
             "to_time: {} smaller than from_time: {}",
             to_time, from_time,
         );
-        return Ok(Response::Success(SuccessResponse::new(
+        return Ok(IndexerQueryResponse::Success(SuccessResponse::new(
             AccountTradingEventsResponse::default(),
         )));
     }
     if to_time - from_time > QUERY_RANGE_S {
-        return Ok(Response::Failure(FailureResponse::new(
+        return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
             1000,
             format!(
                 "to_time - from_time should less than {} days",
@@ -124,7 +128,7 @@ pub async fn pull_perp_trading_events_by_account(
         match serde_json::from_str::<TradingEventType>(&event_type) {
             Ok(event_type) => Some(event_type),
             Err(err) => {
-                return Ok(Response::Failure(FailureResponse::new(
+                return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
                     1000,
                     format!("parse event_type failed with err: {}", err),
                 )))
@@ -146,12 +150,14 @@ pub async fn pull_perp_trading_events_by_account(
         filter_join::account_perp_trading_join_events(account_id, from_time, to_time, e_type)
             .await?;
 
-    Ok(Response::Success(SuccessResponse::new(response)))
+    Ok(IndexerQueryResponse::Success(SuccessResponse::new(
+        response,
+    )))
 }
 
 pub async fn pull_perp_trading_events_by_account_v2(
     params: &HashMap<String, String>,
-) -> Result<Response<AccountTradingEventsResponse>> {
+) -> Result<IndexerQueryResponse<AccountTradingEventsResponse>> {
     let account_id = params
         .get("account_id")
         .context("param account_id not found")?;
@@ -172,12 +178,12 @@ pub async fn pull_perp_trading_events_by_account_v2(
             "to_time: {} smaller than from_time: {}",
             to_time, from_time,
         );
-        return Ok(Response::Success(SuccessResponse::new(
+        return Ok(IndexerQueryResponse::Success(SuccessResponse::new(
             AccountTradingEventsResponse::default(),
         )));
     }
     if to_time - from_time > QUERY_RANGE_S {
-        return Ok(Response::Failure(FailureResponse::new(
+        return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
             1000,
             format!(
                 "to_time - from_time should less than {} days",
@@ -190,7 +196,7 @@ pub async fn pull_perp_trading_events_by_account_v2(
         match serde_json::from_str::<TradingEventType>(&event_type) {
             Ok(event_type) => Some(event_type),
             Err(err) => {
-                return Ok(Response::Failure(FailureResponse::new(
+                return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
                     1000,
                     format!("parse event_type failed with err: {}", err),
                 )))
@@ -223,12 +229,14 @@ pub async fn pull_perp_trading_events_by_account_v2(
     )
     .await?;
 
-    Ok(Response::Success(SuccessResponse::new(response)))
+    Ok(IndexerQueryResponse::Success(SuccessResponse::new(
+        response,
+    )))
 }
 
 pub async fn pull_sol_events_by_account(
     params: &HashMap<String, String>,
-) -> Result<Response<AccountTradingEventsResponse>> {
+) -> Result<IndexerQueryResponse<AccountTradingEventsResponse>> {
     let account_id = params
         .get("account_id")
         .context("param account_id not found")?;
@@ -249,12 +257,12 @@ pub async fn pull_sol_events_by_account(
             "to_time: {} smaller than from_time: {}",
             to_time, from_time,
         );
-        return Ok(Response::Success(SuccessResponse::new(
+        return Ok(IndexerQueryResponse::Success(SuccessResponse::new(
             AccountTradingEventsResponse::default(),
         )));
     }
     if to_time - from_time > QUERY_RANGE_S {
-        return Ok(Response::Failure(FailureResponse::new(
+        return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
             1000,
             format!(
                 "to_time - from_time should less than {} days",
@@ -267,7 +275,7 @@ pub async fn pull_sol_events_by_account(
         match serde_json::from_str::<TradingEventType>(&event_type) {
             Ok(event_type) => Some(event_type),
             Err(err) => {
-                return Ok(Response::Failure(FailureResponse::new(
+                return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
                     1000,
                     format!("parse event_type failed with err: {}", err),
                 )))
@@ -286,7 +294,9 @@ pub async fn pull_sol_events_by_account(
     let response =
         filter_join::account_sol_join_events(account_id, from_time, to_time, e_type).await?;
 
-    Ok(Response::Success(SuccessResponse::new(response)))
+    Ok(IndexerQueryResponse::Success(SuccessResponse::new(
+        response,
+    )))
 }
 
 #[cfg(test)]

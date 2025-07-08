@@ -2,21 +2,23 @@ use crate::db::serial_batches::get_serial_batches;
 use crate::db::settings::{get_last_rpc_processed_height, get_last_rpc_processed_timestamp};
 use crate::db::transaction_events::query_balance_transaction_executions;
 use crate::formats_external::gas_consumption::{GasConsumptionResponse, TransactionGasCost};
-use crate::formats_external::{Response, SuccessResponse};
+use crate::formats_external::{IndexerQueryResponse, SuccessResponse};
 use anyhow::{Context, Result};
 use std::cmp::min;
 use std::collections::HashMap;
 
 pub async fn pull_gas_consumptions(
     params: &HashMap<String, String>,
-) -> Result<Response<GasConsumptionResponse>> {
+) -> Result<IndexerQueryResponse<GasConsumptionResponse>> {
     let from_block = params
         .get("from_block")
         .context("param from_block not found")?;
     let to_block = params.get("to_block").context("param to_block not found")?;
     let response = gas_consumption_data(from_block.parse()?, to_block.parse()?).await?;
 
-    Ok(Response::Success(SuccessResponse::new(response)))
+    Ok(IndexerQueryResponse::Success(SuccessResponse::new(
+        response,
+    )))
 }
 
 pub async fn gas_consumption_data(
