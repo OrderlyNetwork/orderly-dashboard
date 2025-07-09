@@ -1,23 +1,31 @@
+use std::str::FromStr;
 use std::time::Instant;
 
 use actix_web::{get, web, HttpResponse, Responder};
 use chrono::{Duration, Utc};
+use orderly_dashboard_analyzer::sync_broker::{cal_account_id, get_sol_account_id};
+use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
 use serde_derive::Deserialize;
 
 use crate::config::get_common_cfg;
+use crate::error_code::{
+    ACCOUNT_ID_CONFLICT_OR_INVALID_ERR, ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE,
+};
 use once_cell::sync::Lazy;
 use orderly_dashboard_analyzer::db::user_info::UserInfo;
 use orderly_dashboard_indexer::formats_external::trading_events::AccountTradingEventsResponse;
-use orderly_dashboard_indexer::formats_external::{FailureResponse, Response};
+use orderly_dashboard_indexer::formats_external::{FailureResponse, IndexerQueryResponse};
 use reqwest::Client;
+use utoipa::ToSchema;
 
 pub(crate) const QUERY_ACCOUNT_EVENT_CONTEXT: &str = "query_account_event_context";
 pub(crate) static CLIENT: Lazy<Client> = Lazy::new(|| Client::new());
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct GetAccountEventsRequest {
-    broker_id: String,
-    address: String,
+    account_id: Option<String>,
+    broker_id: Option<String>,
+    address: Option<String>,
     #[serde(default = "two_weeks_ago")]
     from_time: i64,
     #[serde(default = "now_time")]
@@ -25,7 +33,48 @@ pub struct GetAccountEventsRequest {
     event_type: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+impl GetAccountEventsRequest {
+    pub fn check_account_id_valid_and_cal(&mut self) -> bool {
+        if self.account_id.is_none() && self.address.is_none() && self.broker_id.is_none() {
+            return true;
+        }
+        if self.account_id.is_some() && self.address.is_none() && self.broker_id.is_none() {
+            return true;
+        }
+        if self.account_id.is_none() && self.address.is_some() && self.broker_id.is_some() {
+            let address = self.address.clone().unwrap();
+            let broker_id = self.broker_id.clone().unwrap();
+            if address.starts_with("0x") {
+                match cal_account_id(&broker_id, &address) {
+                    Ok(account_id) => {
+                        self.account_id = Some(account_id);
+                    }
+                    Err(_) => {
+                        return false;
+                    }
+                };
+            } else {
+                let sol_key = Pubkey::from_str(&address);
+                if sol_key.is_err() {
+                    return false;
+                }
+                let sol_key = sol_key.unwrap();
+                match get_sol_account_id(&sol_key, &broker_id) {
+                    Ok(account_id) => {
+                        self.account_id = Some(account_id);
+                    }
+                    Err(_) => {
+                        return false;
+                    }
+                };
+            };
+            return true;
+        }
+        false
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct GetAccountEventsV2Request {
     broker_id: String,
     address: String,
@@ -46,30 +95,44 @@ fn now_time() -> i64 {
     Utc::now().timestamp()
 }
 
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Account events", body = IndexerQueryResponse<AccountTradingEventsResponse>),
+        (status = 1000, description = "Invalid Request")
+    ),
+    params(("param" = GetAccountEventsRequest, Query, description = "account events")),
+)]
 #[get("/events")] // <- define path parameters
 pub async fn list_events(
-    param: web::Query<GetAccountEventsRequest>,
-) -> actix_web::Result<impl Responder> {
+    mut param: web::Query<GetAccountEventsRequest>,
+) -> actix_web::Result<HttpResponse> {
     tracing::info!(
         target: QUERY_ACCOUNT_EVENT_CONTEXT,
-        "query account events start broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}",
+        "query account events start broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?}",
         param.broker_id, param.address, param.from_time, param.to_time, param.event_type,
     );
     let inst = Instant::now();
-    let user_info_res = match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
-        Ok(user_info_res) => user_info_res,
-        Err(err) => {
-            let resp =
-                FailureResponse::new(1000, format!("parse account_id failed with err: {}", err));
-            return Ok(HttpResponse::Ok().json(resp));
-        }
-    };
+    if !param.check_account_id_valid_and_cal() {
+        let resp = FailureResponse::new(
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR,
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE.to_string(),
+        );
+        return Ok(HttpResponse::Ok().json(resp));
+    }
+    // let user_info_res = match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
+    //     Ok(user_info_res) => user_info_res,
+    //     Err(err) => {
+    //         let resp =
+    //             FailureResponse::new(1000, format!("parse account_id failed with err: {}", err));
+    //         return Ok(HttpResponse::Ok().json(resp));
+    //     }
+    // };
     let elapsed_new_user = inst.elapsed().as_millis();
 
     let indexer_data = get_indexer_data(
         param.from_time,
         param.to_time,
-        user_info_res.account_id,
+        param.account_id.clone().unwrap_or_default(),
         param.event_type.as_deref().map(str::to_uppercase),
         get_common_cfg().indexer_address.clone(),
     )
@@ -79,7 +142,7 @@ pub async fn list_events(
     match indexer_data {
         Ok(response) => {
             let length = match &response {
-                Response::Success(sucs) => match sucs.as_data() {
+                IndexerQueryResponse::Success(sucs) => match sucs.as_data() {
                     Some(data) => data.events.len(),
                     None => 0 as usize,
                 },
@@ -87,8 +150,8 @@ pub async fn list_events(
             };
             tracing::info!(
                 target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query account events sucs broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
-                param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis(), elapsed_new_user, elapse_get_data,
+                "query account events sucs account_id: {:?}, broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
+                param.account_id, param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis(), elapsed_new_user, elapse_get_data,
             );
             return Ok(HttpResponse::Ok().json(response));
         }
@@ -99,8 +162,8 @@ pub async fn list_events(
             );
             tracing::warn!(
                 target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query account events failed broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?} with err: {}, cost: {} ms",
-                param.broker_id, param.address, param.from_time, param.to_time, param.event_type, err, inst.elapsed().as_millis(),
+                "query account events failed account_id: {:?}, broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?} with err: {}, cost: {} ms",
+                param.account_id, param.broker_id, param.address, param.from_time, param.to_time, param.event_type, err, inst.elapsed().as_millis(),
             );
             return Ok(HttpResponse::Ok().json(resp));
         }
@@ -141,7 +204,7 @@ pub async fn list_events_v2(
     match indexer_data {
         Ok(response) => {
             let length = match &response {
-                Response::Success(sucs) => match sucs.as_data() {
+                IndexerQueryResponse::Success(sucs) => match sucs.as_data() {
                     Some(data) => data.events.len(),
                     None => 0 as usize,
                 },
@@ -171,22 +234,29 @@ pub async fn list_events_v2(
 
 #[get("/sol_events")] // <- define path parameters
 pub async fn list_sol_events(
-    param: web::Query<GetAccountEventsRequest>,
+    mut param: web::Query<GetAccountEventsRequest>,
 ) -> actix_web::Result<impl Responder> {
     let inst = Instant::now();
-    let user_info_res = match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
-        Ok(user_info_res) => user_info_res,
-        Err(err) => {
-            let resp =
-                FailureResponse::new(1000, format!("parse account_id failed with err: {}", err));
-            return Ok(HttpResponse::Ok().json(resp));
-        }
-    };
+    // let user_info_res = match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
+    //     Ok(user_info_res) => user_info_res,
+    //     Err(err) => {
+    //         let resp =
+    //             FailureResponse::new(1000, format!("parse account_id failed with err: {}", err));
+    //         return Ok(HttpResponse::Ok().json(resp));
+    //     }
+    // };
+    if !param.check_account_id_valid_and_cal() {
+        let resp = FailureResponse::new(
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR,
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE.to_string(),
+        );
+        return Ok(HttpResponse::Ok().json(resp));
+    }
 
     let indexer_data = get_indexer_sol_data(
         param.from_time,
         param.to_time,
-        user_info_res.account_id,
+        param.account_id.clone().unwrap_or_default(),
         param.event_type.as_deref().map(str::to_uppercase),
         get_common_cfg().indexer_address.clone(),
     )
@@ -195,7 +265,7 @@ pub async fn list_sol_events(
     match indexer_data {
         Ok(response) => {
             let length = match &response {
-                Response::Success(sucs) => match sucs.as_data() {
+                IndexerQueryResponse::Success(sucs) => match sucs.as_data() {
                     Some(data) => data.events.len(),
                     None => 0 as usize,
                 },
@@ -203,7 +273,7 @@ pub async fn list_sol_events(
             };
             tracing::info!(
                 target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query sol account events sucs broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms",
+                "query sol account events sucs broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms",
                 param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis()
             );
             return Ok(HttpResponse::Ok().json(response));
@@ -218,7 +288,7 @@ pub async fn list_sol_events(
             );
             tracing::warn!(
                 target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query sol account events failed broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?} with err: {}, cost: {} ms",
+                "query sol account events failed broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?} with err: {}, cost: {} ms",
                 param.broker_id, param.address, param.from_time, param.to_time, param.event_type, err, inst.elapsed().as_millis(),
             );
             return Ok(HttpResponse::Ok().json(resp));
@@ -232,7 +302,7 @@ async fn get_indexer_data(
     p_account_id: String,
     event_type: Option<String>,
     base_url: String,
-) -> anyhow::Result<Response<AccountTradingEventsResponse>> {
+) -> anyhow::Result<IndexerQueryResponse<AccountTradingEventsResponse>> {
     let indexer_url = if let Some(event_type) = event_type {
         format!(
             "{}/pull_account_trading_events?account_id={}&from_time={}&to_time={}&event_type={}",
@@ -259,7 +329,7 @@ async fn get_indexer_sol_data(
     p_account_id: String,
     event_type: Option<String>,
     base_url: String,
-) -> anyhow::Result<Response<AccountTradingEventsResponse>> {
+) -> anyhow::Result<IndexerQueryResponse<AccountTradingEventsResponse>> {
     let indexer_url = if let Some(event_type) = event_type {
         format!(
             "{}/pull_account_sol_events?account_id={}&from_time={}&to_time={}&event_type={}",
@@ -285,7 +355,7 @@ async fn get_indexer_v2_data(
     event_type: Option<String>,
     offset: Option<u32>,
     base_url: String,
-) -> anyhow::Result<Response<AccountTradingEventsResponse>> {
+) -> anyhow::Result<IndexerQueryResponse<AccountTradingEventsResponse>> {
     let mut indexer_url = if let Some(event_type) = event_type {
         format!(
             "{}/pull_account_trading_events_v2?account_id={}&from_time={}&to_time={}&event_type={}",

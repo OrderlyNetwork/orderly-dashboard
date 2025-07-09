@@ -1,7 +1,7 @@
 use crate::config::get_common_cfg;
 use crate::consume_data_task::{consume_data_inner, pull_target_block};
 use crate::formats_external::{
-    FailureResponse, RecoveryBlockRequest, RecoverySolEventRequest, Response,
+    FailureResponse, IndexerQueryResponse, RecoveryBlockRequest, RecoverySolEventRequest,
 };
 use crate::handler::solana::solana_program_log_processor::{
     handle_sol_program_logs, SolanaProgramLogProcessor,
@@ -31,13 +31,15 @@ impl Drop for SolRecoverGuard {
     }
 }
 
-pub(crate) async fn recovery_block(request: RecoveryBlockRequest) -> Result<Response<()>> {
+pub(crate) async fn recovery_block(
+    request: RecoveryBlockRequest,
+) -> Result<IndexerQueryResponse<()>> {
     if IS_RECOVER_FLIGHT.swap(true, Ordering::Relaxed) {
         tracing::warn!(
             target: RECOVERY,
             "recovery_block is on the flight, pls wait"
         );
-        return Ok(Response::Failure(FailureResponse::new(
+        return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
             1000,
             "recovery_block is on the flight, pls wait".to_string(),
         )));
@@ -60,16 +62,18 @@ pub(crate) async fn recovery_block(request: RecoveryBlockRequest) -> Result<Resp
     .await
     {
         tracing::warn!(target: RECOVERY, "recovery_block with error: {:?}", err);
-        return Ok(Response::Failure(FailureResponse::new(
+        return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
             0,
             "recovery_block failed".to_owned(),
         )));
     }
 
-    Ok(Response::empty_success())
+    Ok(IndexerQueryResponse::empty_success())
 }
 
-pub(crate) async fn recovery_sol_events(request: RecoverySolEventRequest) -> Result<Response<()>> {
+pub(crate) async fn recovery_sol_events(
+    request: RecoverySolEventRequest,
+) -> Result<IndexerQueryResponse<()>> {
     tracing::info!(
         target: RECOVERY,
         "recovery_sol_events, start sig:{}, end slot:{}",
@@ -81,7 +85,7 @@ pub(crate) async fn recovery_sol_events(request: RecoverySolEventRequest) -> Res
             target: RECOVERY,
             "recovery_block is on the flight, pls wait"
         );
-        return Ok(Response::Failure(FailureResponse::new(
+        return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
             1000,
             "recovery_block is on the flight, pls wait".to_string(),
         )));
@@ -102,5 +106,5 @@ pub(crate) async fn recovery_sol_events(request: RecoverySolEventRequest) -> Res
     .recover_logs(request.end_slot)
     .await?;
 
-    Ok(Response::empty_success())
+    Ok(IndexerQueryResponse::empty_success())
 }

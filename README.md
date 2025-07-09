@@ -13,6 +13,10 @@ Orderly Dashboard is aim to be a web-based data analyze platform that will prese
 - [How to indexing contract events](./orderly-dashboard-indexer/doc/How-to-indexing-data.md) will help you to know how index can index all events from smart contract with contract upgrade
 - [Project architecture](./resources/images/dashboard_architecture.png) will help you to know those module's relationship.
 
-## Service
+## Service Front End
 - [prod](https://orderly-dashboard.orderly.network)
 - [testnet](https://dev-orderly-dashboard.orderly.network)
+
+## Query Service API Doc
+- [prod](https://orderly-dashboard-query-service.orderly.network/swagger-ui/#/)
+- [testnet](https://dev-orderly-dashboard-query-service.orderly.network/swagger-ui/)

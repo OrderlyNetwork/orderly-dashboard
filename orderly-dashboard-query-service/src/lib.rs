@@ -8,6 +8,7 @@ pub mod network_info;
 pub mod raw_query;
 pub mod service_base;
 pub mod status;
+pub mod swagger_docs;
 pub mod trading_metrics;
 
 pub use format_extern::trading_metrics::Api;

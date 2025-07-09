@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt;
 use typescript_type_def::TypeDef;
+use utoipa::ToSchema;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
@@ -44,7 +45,7 @@ pub struct TradingEventsResponse {
     pub last_block_timestamp: i64,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
 pub struct TradingEvent {
     pub block_number: u64,
     pub transaction_index: u32,
@@ -360,7 +361,7 @@ impl TradingEvent {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TransactionSide {
     Deposit,
@@ -379,7 +380,7 @@ impl TryFrom<i16> for TransactionSide {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum TransactionStatus {
     Succeed,
@@ -398,14 +399,14 @@ impl TryFrom<i16> for TransactionStatus {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef, ToSchema)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum PurchaseSide {
     Buy,
     Sell,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
 pub struct Trade {
     pub account_id: String,
     pub symbol_hash: String,
@@ -468,7 +469,7 @@ impl From<DbPartitionedExecutedTrades> for Trade {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
 pub struct SettlementExecution {
     pub symbol_hash: String,
     pub mark_price: String,
@@ -498,7 +499,7 @@ impl From<DbSettlementExecutionView> for SettlementExecution {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
 pub struct LiquidationTransfer {
     pub liquidation_transfer_id: String,
     pub liquidator_account_id: String,
@@ -529,7 +530,7 @@ impl From<DbLiquidationTransfer> for LiquidationTransfer {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
 pub struct LiquidationTransferV2 {
     pub account_id: String,
     pub symbol_hash: String,
@@ -554,7 +555,7 @@ impl From<DbLiquidationTransfer> for LiquidationTransferV2 {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, TypeDef)]
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
 pub enum TradingEventInnerData {
     Transaction {
         account_id: String,
@@ -614,7 +615,7 @@ pub enum TradingEventInnerData {
     },
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, Default, TypeDef)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default, TypeDef, ToSchema)]
 pub struct AccountTradingEventsResponse {
     pub events: Vec<TradingEvent>,
     pub next_offset: Option<u32>,
@@ -635,7 +636,7 @@ pub type Events = (
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::formats_external::{Response, SuccessResponse};
+    use crate::formats_external::{IndexerQueryResponse, SuccessResponse};
     #[test]
     fn test_serialize_trading_event_response() {
         let mut response_data = TradingEventsResponse::default();
@@ -802,7 +803,7 @@ mod tests {
                 },
             }
         );
-        let response = Response::Success(SuccessResponse::new(response_data));
+        let response = IndexerQueryResponse::Success(SuccessResponse::new(response_data));
         let serde_str = serde_json::to_string(&response).unwrap();
         println!("{}", serde_str);
     }

@@ -438,7 +438,7 @@ mod tests {
     use chrono::NaiveDateTime;
     use num_traits::FromPrimitive;
     use orderly_dashboard_indexer::formats_external::{
-        trading_events::TradingEventsResponse, Response, SuccessResponse,
+        trading_events::TradingEventsResponse, IndexerQueryResponse, SuccessResponse,
     };
     use std::str::FromStr;
 
@@ -896,19 +896,19 @@ mod tests {
     #[ignore]
     #[actix_web::test]
     async fn test_liquidation_with_data() {
-        let result: Response<TradingEventsResponse> =
+        let result: IndexerQueryResponse<TradingEventsResponse> =
             serde_json::from_str(TRADE_AND_LIQ_DATA).unwrap();
-        let mut result_data = Response::<TradingEventsResponse>::empty_success();
+        let mut result_data = IndexerQueryResponse::<TradingEventsResponse>::empty_success();
         println!("result: {:?}", result);
         match &result {
-            Response::Success(data) => {
+            IndexerQueryResponse::Success(data) => {
                 println!(
                     "result data length: {:?}",
                     data.as_data().clone().unwrap().events.len()
                 );
                 let mut data = data.as_data().cloned().unwrap();
                 // data.events.remove(2);
-                result_data = Response::Success(SuccessResponse::new(data))
+                result_data = IndexerQueryResponse::Success(SuccessResponse::new(data))
             }
             _ => {}
         }
@@ -1066,12 +1066,12 @@ mod tests {
         ];
         context.init_orderly_context(block_time, symbols, tokens, account_symbols, account_tokens);
 
-        let result: Response<TradingEventsResponse> =
+        let result: IndexerQueryResponse<TradingEventsResponse> =
             serde_json::from_str(TRADE_AND_LIQ_DATA2).unwrap();
-        let mut result_data = Response::<TradingEventsResponse>::empty_success();
+        let mut result_data = IndexerQueryResponse::<TradingEventsResponse>::empty_success();
         println!("result2: {:?}", result);
         match &result {
-            Response::Success(data) => {
+            IndexerQueryResponse::Success(data) => {
                 let mut data = data.as_data().cloned().unwrap();
                 // match data.events[0].data.clone() {
                 //     TradingEventInnerData::ProcessedTrades { batch_id, trades } => {
@@ -1084,7 +1084,7 @@ mod tests {
                 //     "------result data length: {}, data: {:?}",
                 //     data.events.len(), data.events
                 // );
-                result_data = Response::Success(SuccessResponse::new(data))
+                result_data = IndexerQueryResponse::Success(SuccessResponse::new(data))
             }
             _ => {}
         }
@@ -1180,12 +1180,12 @@ mod tests {
     "#;
     #[actix_web::test]
     async fn test_prod_trade_and_liquidation_with_data() {
-        let result: Response<TradingEventsResponse> =
+        let result: IndexerQueryResponse<TradingEventsResponse> =
             serde_json::from_str(TRADE_AND_LIQ_DATA3).unwrap();
-        let mut result_data = Response::<TradingEventsResponse>::empty_success();
+        let mut result_data = IndexerQueryResponse::<TradingEventsResponse>::empty_success();
         println!("result3: {:?}", result);
         match &result {
-            Response::Success(data) => {
+            IndexerQueryResponse::Success(data) => {
                 let mut data = data.as_data().cloned().unwrap();
                 // match data.events[0].data.clone() {
                 //     TradingEventInnerData::ProcessedTrades { batch_id, trades } => {
@@ -1198,7 +1198,7 @@ mod tests {
                 //     "------result data length: {}, data: {:?}",
                 //     data.events.len(), data.events
                 // );
-                result_data = Response::Success(SuccessResponse::new(data))
+                result_data = IndexerQueryResponse::Success(SuccessResponse::new(data))
             }
             _ => {}
         }

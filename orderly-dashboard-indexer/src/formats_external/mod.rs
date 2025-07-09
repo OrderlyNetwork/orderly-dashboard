@@ -3,21 +3,22 @@ pub mod symbols_config;
 pub mod trading_events;
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value};
+use utoipa::ToSchema;
 
-#[derive(Debug, PartialEq)]
-pub enum Response<T> {
+#[derive(Debug, PartialEq, ToSchema)]
+pub enum IndexerQueryResponse<T> {
     Success(SuccessResponse<T>),
     Failure(FailureResponse),
 }
 
-impl<T: Default> Response<T> {
+impl<T: Default> IndexerQueryResponse<T> {
     pub fn empty_success() -> Self {
         Self::Success(SuccessResponse::default())
     }
 }
 
-impl<'de, T: Deserialize<'de>> Deserialize<'de> for Response<T> {
-    fn deserialize<D>(deserializer: D) -> Result<Response<T>, D::Error>
+impl<'de, T: Deserialize<'de>> Deserialize<'de> for IndexerQueryResponse<T> {
+    fn deserialize<D>(deserializer: D) -> Result<IndexerQueryResponse<T>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -32,26 +33,26 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for Response<T> {
 
         if success {
             SuccessResponse::deserialize(rest)
-                .map(Response::Success)
+                .map(IndexerQueryResponse::Success)
                 .map_err(de::Error::custom)
         } else {
             FailureResponse::deserialize(rest)
-                .map(Response::Failure)
+                .map(IndexerQueryResponse::Failure)
                 .map_err(de::Error::custom)
         }
     }
 }
 
-impl<T: Serialize> Serialize for Response<T> {
+impl<T: Serialize> Serialize for IndexerQueryResponse<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
         match self {
-            Response::Success(success) => {
+            IndexerQueryResponse::Success(success) => {
                 ser::SuccessResponse::new(&success.data).serialize(serializer)
             }
-            Response::Failure(failure) => {
+            IndexerQueryResponse::Failure(failure) => {
                 ser::FailureResponse::new(failure.code, &failure.message).serialize(serializer)
             }
         }
@@ -94,7 +95,7 @@ mod ser {
     }
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize, Default)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, ToSchema)]
 pub struct SuccessResponse<T> {
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<T>,
@@ -116,7 +117,7 @@ impl<T> SuccessResponse<T> {
     }
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, ToSchema)]
 pub struct FailureResponse {
     code: i32,
     message: String,
