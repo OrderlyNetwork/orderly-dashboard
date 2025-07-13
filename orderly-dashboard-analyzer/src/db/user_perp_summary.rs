@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use bigdecimal::{BigDecimal, RoundingMode};
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
@@ -351,6 +353,8 @@ pub async fn create_or_update_user_perp_summary(
         .cloned()
         .collect::<Vec<UserPerpSummary>>();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let len = user_perp_summary_vec.len();
+    let inst = Instant::now();
     loop {
         if user_perp_summary_vec.len() >= BATCH_UPSERT_LEN {
             let (values1, res) = user_perp_summary_vec.split_at(BATCH_UPSERT_LEN);
@@ -422,6 +426,10 @@ pub async fn create_or_update_user_perp_summary(
                 }
             }
         }
+    }
+    let elapse_ms = inst.elapsed().as_millis();
+    if elapse_ms > 3_000 {
+        tracing::warn!("slow query, create_or_update_user_perp_summary, use {} ms for {} records", elapse_ms, len);
     }
 
     Ok(row_nums)
@@ -499,7 +507,7 @@ mod tests {
             Utc::now().timestamp_subsec_nanos() as u32,
         )
         .unwrap();
-        for i in 0..20 {
+        for i in 0..20_000 {
             data.push(UserPerpSummary {
                 account_id: (i).to_string(),
                 symbol: "0xaaaaa".to_string(),
