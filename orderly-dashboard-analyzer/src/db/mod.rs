@@ -24,7 +24,7 @@ pub mod user_perp_summary;
 pub mod user_token_summary;
 
 pub const DB_CONTEXT: &str = "DB_operation";
-pub const BATCH_UPSERT_LEN: usize = 3;
+pub const BATCH_UPSERT_LEN: usize = 300;
 pub(crate) const DB_CONN_ERR_MSG: &str = "Couldn't get db connection from the pool";
 
 type DbPool = Pool<AsyncPgConnection>;
