@@ -217,7 +217,7 @@ pub async fn create_or_update_hourly_user_perp(
             }
         } else {
             #[allow(suspicious_double_ref_op)]
-            let values1 = p_hourly_user_perp_vec
+            let values1 = p_hourly_user_perp_vec_ref
                 .iter()
                 .map(|v| v.clone().clone())
                 .collect::<Vec<HourlyUserPerp>>();
