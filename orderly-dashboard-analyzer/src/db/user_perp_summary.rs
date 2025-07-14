@@ -348,21 +348,22 @@ pub async fn create_or_update_user_perp_summary(
     use crate::schema::user_perp_summary::dsl::*;
 
     let mut row_nums = 0;
-    let mut user_perp_summary_vec = p_user_perp_summary_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<UserPerpSummary>>();
+    let mut user_perp_summary_vec_ref = p_user_perp_summary_vec.as_slice();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
-    let len = user_perp_summary_vec.len();
+    let len = user_perp_summary_vec_ref.len();
     let inst = Instant::now();
     loop {
-        if user_perp_summary_vec.len() >= BATCH_UPSERT_LEN {
-            let (values1, res) = user_perp_summary_vec.split_at(BATCH_UPSERT_LEN);
+        let inst = Instant::now();
+        if user_perp_summary_vec_ref.len() >= BATCH_UPSERT_LEN {
+            let values1: &[&UserPerpSummary];
+            (values1, user_perp_summary_vec_ref) =
+                user_perp_summary_vec_ref.split_at(BATCH_UPSERT_LEN);
+            #[allow(suspicious_double_ref_op)]
             let values1 = values1
                 .iter()
-                .map(|v| v.clone())
+                .map(|v| v.clone().clone())
                 .collect::<Vec<UserPerpSummary>>();
-            user_perp_summary_vec = res.iter().cloned().collect::<Vec<UserPerpSummary>>();
+            let len = values1.len();
             let update_result = diesel::insert_into(user_perp_summary)
                 .values(values1)
                 .on_conflict(on_constraint("user_perp_summary_uq"))
@@ -393,9 +394,22 @@ pub async fn create_or_update_user_perp_summary(
                     return Err(anyhow::anyhow!("update user_perp_summary failed: {}", err));
                 }
             }
+            let elapse_ms = inst.elapsed().as_millis();
+            if elapse_ms > 50 {
+                tracing::info!(
+                    "create_or_update_user_perp_summary batch cost {} ms for {} records",
+                    elapse_ms,
+                    len
+                );
+            }
         } else {
+            #[allow(suspicious_double_ref_op)]
+            let values1 = user_perp_summary_vec_ref
+                .iter()
+                .map(|v| v.clone().clone())
+                .collect::<Vec<UserPerpSummary>>();
             let update_result = diesel::insert_into(user_perp_summary)
-                .values(user_perp_summary_vec)
+                .values(values1)
                 .on_conflict(on_constraint("user_perp_summary_uq"))
                 .do_update()
                 .set((
@@ -429,7 +443,11 @@ pub async fn create_or_update_user_perp_summary(
     }
     let elapse_ms = inst.elapsed().as_millis();
     if elapse_ms > 3_000 {
-        tracing::warn!("slow query, create_or_update_user_perp_summary, use {} ms for {} records", elapse_ms, len);
+        tracing::warn!(
+            "slow query, create_or_update_user_perp_summary, use {} ms for {} records",
+            elapse_ms,
+            len
+        );
     }
 
     Ok(row_nums)
@@ -507,7 +525,8 @@ mod tests {
             Utc::now().timestamp_subsec_nanos() as u32,
         )
         .unwrap();
-        for i in 0..20_000 {
+        // 26s
+        for i in 0..200_000 {
             data.push(UserPerpSummary {
                 account_id: (i).to_string(),
                 symbol: "0xaaaaa".to_string(),

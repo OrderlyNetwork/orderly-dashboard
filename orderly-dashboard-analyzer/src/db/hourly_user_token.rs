@@ -129,19 +129,17 @@ pub async fn create_or_update_hourly_user_token(
     use crate::schema::hourly_user_token::dsl::*;
 
     let mut row_nums = 0;
-    let mut hourly_data_vec = hourly_data_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<HourlyUserToken>>();
+    let mut hourly_data_vec_ref = hourly_data_vec.as_slice();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if hourly_data_vec.len() >= BATCH_UPSERT_LEN {
-            let (values1, res) = hourly_data_vec.split_at(BATCH_UPSERT_LEN);
+            let values1: &[&HourlyUserToken];
+            (values1, hourly_data_vec_ref) = hourly_data_vec_ref.split_at(BATCH_UPSERT_LEN);
+            #[allow(suspicious_double_ref_op)]
             let values1 = values1
                 .iter()
-                .map(|v| v.clone())
+                .map(|v| v.clone().clone())
                 .collect::<Vec<HourlyUserToken>>();
-            hourly_data_vec = res.iter().cloned().collect::<Vec<HourlyUserToken>>();
             let update_result = diesel::insert_into(hourly_user_token)
                 .values(values1)
                 .on_conflict(on_constraint("hourly_user_token_uq"))
@@ -166,8 +164,13 @@ pub async fn create_or_update_hourly_user_token(
                 }
             }
         } else {
+            #[allow(suspicious_double_ref_op)]
+            let values1 = hourly_data_vec_ref
+                .iter()
+                .map(|v| v.clone().clone())
+                .collect::<Vec<HourlyUserToken>>();
             let update_result = diesel::insert_into(hourly_user_token)
-                .values(hourly_data_vec)
+                .values(values1)
                 .on_conflict(on_constraint("hourly_user_token_uq"))
                 .do_update()
                 .set((

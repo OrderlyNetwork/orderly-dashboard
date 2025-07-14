@@ -152,19 +152,18 @@ pub async fn create_or_update_user_token_summary(
     use crate::schema::user_token_summary::dsl::*;
 
     let mut row_nums = 0;
-    let mut user_token_summary_vec = user_token_summary_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<UserTokenSummary>>();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let mut user_token_summary_vec_ref = user_token_summary_vec.as_slice();
     loop {
         if user_token_summary_vec.len() >= BATCH_UPSERT_LEN {
-            let (values1, res) = user_token_summary_vec.split_at(BATCH_UPSERT_LEN);
+            let values1: &[&UserTokenSummary];
+            (values1, user_token_summary_vec_ref) =
+                user_token_summary_vec_ref.split_at(BATCH_UPSERT_LEN);
+            #[allow(suspicious_double_ref_op)]
             let values1 = values1
                 .iter()
-                .map(|v| v.clone())
+                .map(|v| v.clone().clone())
                 .collect::<Vec<UserTokenSummary>>();
-            user_token_summary_vec = res.iter().cloned().collect::<Vec<UserTokenSummary>>();
             let update_result = diesel::insert_into(user_token_summary)
                 .values(values1)
                 .on_conflict(on_constraint("user_token_summary_uq"))
@@ -190,8 +189,13 @@ pub async fn create_or_update_user_token_summary(
                 }
             }
         } else {
+            #[allow(suspicious_double_ref_op)]
+            let values1 = user_token_summary_vec_ref
+                .iter()
+                .map(|v| v.clone().clone())
+                .collect::<Vec<UserTokenSummary>>();
             let update_result = diesel::insert_into(user_token_summary)
-                .values(user_token_summary_vec)
+                .values(values1)
                 .on_conflict(on_constraint("user_token_summary_uq"))
                 .do_update()
                 .set((

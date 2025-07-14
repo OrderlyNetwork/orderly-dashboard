@@ -175,19 +175,19 @@ pub async fn create_or_update_hourly_user_perp(
     use crate::schema::hourly_user_perp::dsl::*;
 
     let mut row_nums = 0;
-    let mut p_hourly_user_perp_vec = p_hourly_user_perp_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<HourlyUserPerp>>();
+    let mut p_hourly_user_perp_vec_ref = p_hourly_user_perp_vec.as_slice();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if p_hourly_user_perp_vec.len() >= BATCH_UPSERT_LEN {
-            let (values1, res) = p_hourly_user_perp_vec.split_at(BATCH_UPSERT_LEN);
+            let values1: &[&HourlyUserPerp];
+            (values1, p_hourly_user_perp_vec_ref) =
+                p_hourly_user_perp_vec_ref.split_at(BATCH_UPSERT_LEN);
+            #[allow(suspicious_double_ref_op)]
             let values1 = values1
                 .iter()
-                .map(|v| v.clone())
+                .map(|v| v.clone().clone())
                 .collect::<Vec<HourlyUserPerp>>();
-            p_hourly_user_perp_vec = res.iter().cloned().collect::<Vec<HourlyUserPerp>>();
+
             let update_result = diesel::insert_into(hourly_user_perp)
                 .values(values1)
                 .on_conflict(on_constraint("hourly_user_perp_uq"))
@@ -216,8 +216,13 @@ pub async fn create_or_update_hourly_user_perp(
                 }
             }
         } else {
+            #[allow(suspicious_double_ref_op)]
+            let values1 = p_hourly_user_perp_vec
+                .iter()
+                .map(|v| v.clone().clone())
+                .collect::<Vec<HourlyUserPerp>>();
             let update_result = diesel::insert_into(hourly_user_perp)
-                .values(p_hourly_user_perp_vec)
+                .values(values1)
                 .on_conflict(on_constraint("hourly_user_perp_uq"))
                 .do_update()
                 .set((

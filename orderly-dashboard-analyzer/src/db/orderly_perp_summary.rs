@@ -142,19 +142,18 @@ pub async fn create_or_update_orderly_perp_summary(
     use crate::schema::orderly_perp_summary::dsl::*;
 
     let mut row_nums = 0;
-    let mut p_orderly_perp_summary_vec = p_orderly_perp_summary_vec
-        .into_iter()
-        .cloned()
-        .collect::<Vec<OrderlyPerpSummary>>();
+    let mut p_orderly_perp_summary_vec_ref = p_orderly_perp_summary_vec.as_slice();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if p_orderly_perp_summary_vec.len() >= BATCH_UPSERT_LEN {
-            let (values1, res) = p_orderly_perp_summary_vec.split_at(BATCH_UPSERT_LEN);
+            let values1: &[&OrderlyPerpSummary];
+            (values1, p_orderly_perp_summary_vec_ref) =
+                p_orderly_perp_summary_vec_ref.split_at(BATCH_UPSERT_LEN);
+            #[allow(suspicious_double_ref_op)]
             let values1 = values1
                 .iter()
-                .map(|v| v.clone())
+                .map(|v| v.clone().clone())
                 .collect::<Vec<OrderlyPerpSummary>>();
-            p_orderly_perp_summary_vec = res.iter().cloned().collect::<Vec<OrderlyPerpSummary>>();
             let update_result = diesel::insert_into(orderly_perp_summary)
                 .values(values1)
                 .on_conflict(symbol)
@@ -187,8 +186,13 @@ pub async fn create_or_update_orderly_perp_summary(
                 }
             }
         } else {
+            #[allow(suspicious_double_ref_op)]
+            let values1 = p_orderly_perp_summary_vec_ref
+                .iter()
+                .map(|v| v.clone().clone())
+                .collect::<Vec<OrderlyPerpSummary>>();
             let update_result = diesel::insert_into(orderly_perp_summary)
-                .values(p_orderly_perp_summary_vec)
+                .values(values1)
                 .on_conflict(symbol)
                 .do_update()
                 .set((
