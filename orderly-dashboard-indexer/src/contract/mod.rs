@@ -10,6 +10,7 @@ use once_cell::sync::OnceCell;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use tx_event_handler::consume_tx_and_logs;
+pub use tx_event_handler::simple_recover_deposit_sol_logs;
 
 use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 
