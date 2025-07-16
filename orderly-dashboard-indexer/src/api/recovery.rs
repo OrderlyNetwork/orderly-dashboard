@@ -108,3 +108,14 @@ pub(crate) async fn recovery_sol_events(
 
     Ok(IndexerQueryResponse::empty_success())
 }
+
+pub(crate) async fn recover_sol_deposit_events(
+    request: RecoveryBlockRequest,
+) -> Result<IndexerQueryResponse<()>> {
+    crate::contract::simple_recover_deposit_sol_logs(
+        request.start_block_height,
+        request.end_block_height,
+    )
+    .await?;
+    Ok(IndexerQueryResponse::empty_success())
+}

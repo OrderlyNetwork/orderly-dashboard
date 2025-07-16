@@ -1,10 +1,14 @@
 use crate::bindings::operator_manager;
 use crate::bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
-use crate::bindings::user_ledger::{user_ledgerEvents, LiquidationTransfer, SettlementExecution};
-use crate::config::COMMON_CONFIGS;
+use crate::bindings::user_ledger::{
+    user_ledgerEvents, AccountDepositSolFilter, LiquidationTransfer, SettlementExecution,
+};
+use crate::config::{get_common_cfg, COMMON_CONFIGS};
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC};
 use crate::db::balance_transfer::{create_balance_transfer_events, DbBalanceTransferEvent};
 use crate::db::fee_distribution::{create_fee_distributions, DbFeeDistribution};
+use crate::eth_rpc::PROVIDER;
+use std::collections::BTreeSet;
 use std::{collections::VecDeque, str::FromStr};
 
 use crate::db::executed_trades::{create_executed_trades, DbExecutedTrades, TradeType};
@@ -32,10 +36,14 @@ use crate::db::{
 };
 use crate::utils::{convert_amount, format_hash, format_hash_160, to_hex_format, u256_to_i128};
 use anyhow::Result;
+use base58::ToBase58;
 use bigdecimal::{BigDecimal, FromPrimitive};
 use ethers::abi::{ParamType, RawLog};
+use ethers::contract::EthEvent;
 use ethers::core::abi::{self, AbiDecode};
 use ethers::prelude::{Block, EthLogDecode, Log, Transaction, TransactionReceipt};
+use ethers::providers::Middleware;
+use ethers::types::{BlockNumber, Filter, H160, U64};
 
 pub(crate) async fn consume_logs_from_tx_receipts(
     block: Block<Transaction>,
@@ -732,6 +740,54 @@ pub(crate) async fn handle_log(
                         }])
                         .await?;
                     }
+                    user_ledgerEvents::AccountDepositSolFilter(deposit_event) => {
+                        let fee_st = receipt
+                            .map(|r| r.cal_gas_used_and_wei_used())
+                            .unwrap_or_default();
+                        create_balance_transaction_executions(vec![DbTransactionEvent {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            account_id: to_hex_format(&deposit_event.account_id),
+                            sender: None,
+                            receiver: deposit_event.pubkey.to_base58(),
+                            token_hash: to_hex_format(&deposit_event.token_hash),
+                            broker_hash: to_hex_format(&deposit_event.broker_hash),
+                            chain_id: convert_amount(deposit_event.src_chain_id.as_u128() as i128)?,
+                            side: DbTransactionSide::Deposit.value(),
+                            amount: convert_amount(deposit_event.token_amount as i128)?,
+                            fee: BigDecimal::from_str("0")?,
+                            status: DbTransactionStatus::Succeed.value(),
+                            withdraw_nonce: None,
+                            fail_reason: None,
+                            effective_gas_price: if let Some(receipt) = receipt {
+                                receipt.effective_gas_price.map(|amount| {
+                                    convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                                })
+                            } else {
+                                None
+                            },
+                            gas_used: if let Some(receipt) = receipt {
+                                receipt.gas_used.map(|amount| {
+                                    convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                                })
+                            } else {
+                                None
+                            },
+                            l1_fee: Some(convert_amount(fee_st.l1_fee as i128).unwrap_or_default()),
+                            l1_fee_scalar: Some(fee_st.l1_fee_scalar),
+                            l1_gas_price: Some(
+                                convert_amount(fee_st.l1_gas_price as i128).unwrap_or_default(),
+                            ),
+                            l1_gas_used: Some(
+                                convert_amount(fee_st.l1_gas_used as i128).unwrap_or_default(),
+                            ),
+                        }])
+                        .await?;
+                    }
                     user_ledgerEvents::AccountWithdrawFinish1Filter(withdraw_event) => {
                         create_balance_transaction_executions(vec![DbTransactionEvent {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
@@ -1123,4 +1179,141 @@ pub(crate) async fn handle_log(
         return Ok(());
     }
     Ok(())
+}
+
+pub async fn simple_recover_deposit_sol_logs(start_block: u64, end_block: u64) -> Result<()> {
+    if end_block < start_block {
+        tracing::info!("end block less than start block");
+        return Ok(());
+    }
+    let mut current_pull_block = start_block;
+    let page_size = 10_000;
+    if end_block < current_pull_block {
+        tracing::info!("do not has new block, skip pull task");
+        return Ok(());
+    }
+
+    let provider = unsafe { PROVIDER.get_unchecked() };
+    loop {
+        let to_block = std::cmp::min(end_block, current_pull_block + page_size);
+        let result = tokio::time::timeout(
+            std::time::Duration::from_secs(3),
+            get_contract_logs(current_pull_block, to_block),
+        )
+        .await;
+        if result.is_err() {
+            tracing::warn!(
+                "get_contract_logs, current_pull_block={}, end_block={}, timeout 3s",
+                current_pull_block,
+                to_block,
+            );
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            continue;
+        }
+        let logs_result = result.unwrap();
+        if let Err(err) = &logs_result {
+            tracing::info!(
+                "get_contract_logs, current_pull_block={}, end_block={}, failed with err:{}",
+                current_pull_block,
+                to_block,
+                err
+            );
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            continue;
+        }
+        let logs = logs_result?;
+        let removed_logs = logs
+            .iter()
+            .filter_map(|log| {
+                if log.removed.unwrap_or_default() {
+                    Some(log.transaction_hash.unwrap_or_default())
+                } else {
+                    None
+                }
+            })
+            .collect::<BTreeSet<_>>();
+        tracing::info!(
+            "from:{},to:{}, logs length:{}, removed_logs len: {}",
+            current_pull_block,
+            to_block,
+            logs.len(),
+            removed_logs.len(),
+        );
+
+        let mut block_num_mp_time = (0_u64, 0_u64);
+        for log in logs {
+            if log.removed.unwrap_or_default()
+                || removed_logs.contains(&log.transaction_hash.unwrap_or_default())
+            {
+                tracing::warn!("removed_log info: {:?}", log);
+                continue;
+            }
+            let (mut q1, mut q2) = (VecDeque::new(), VecDeque::new());
+            let (mut v1, mut v2, mut v3, mut v4) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+            let block_number = log.block_number.unwrap_or_default().as_u64();
+            if block_number != block_num_mp_time.0 {
+                block_num_mp_time.0 = block_number;
+                loop {
+                    let result = tokio::time::timeout(
+                        std::time::Duration::from_secs(3),
+                        provider.get_block(BlockNumber::Number(U64::from(start_block))),
+                    )
+                    .await;
+                    if result.is_err() {
+                        tracing::warn!("get_block, with number {},timeout in 3s", start_block,);
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                        continue;
+                    }
+                    let blk_result = result.unwrap();
+                    if let Err(err) = &blk_result {
+                        tracing::warn!(
+                            "get_block, with number {},failed with err: {}",
+                            start_block,
+                            err,
+                        );
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                        continue;
+                    }
+                    let blk = blk_result.unwrap().unwrap();
+                    block_num_mp_time.1 = blk.timestamp.as_u64();
+                    break;
+                }
+            }
+            if let Err(err) = handle_log(
+                &mut q1,
+                &mut q2,
+                &mut v1,
+                &mut v2,
+                &mut v3,
+                &mut v4,
+                log,
+                None,
+                Some(block_num_mp_time.1),
+            )
+            .await
+            {
+                tracing::warn!("handle_log err: {:?}", err);
+            }
+        }
+        if to_block >= end_block {
+            break;
+        }
+        current_pull_block = to_block + 1;
+    }
+
+    Ok(())
+}
+
+pub async fn get_contract_logs(start_block: u64, to_block: u64) -> Result<Vec<Log>> {
+    let subnet_config = &get_common_cfg().l2_config;
+    let topics = vec![AccountDepositSolFilter::signature()];
+    let filter = Filter::new()
+        .from_block(BlockNumber::Number(U64::from(start_block)))
+        .to_block(BlockNumber::Number(U64::from(to_block)))
+        .address(vec![H160::from_str(&subnet_config.ledger_address)?])
+        .topic0(topics);
+
+    let provider = unsafe { PROVIDER.get_unchecked() };
+    let logs = provider.get_logs(&filter).await?;
+    Ok(logs)
 }
