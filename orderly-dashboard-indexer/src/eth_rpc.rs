@@ -6,12 +6,12 @@ use crate::{
             FuturesTradeUpload2Filter,
         },
         user_ledger::{
-            AccountDeposit1Filter, AccountDeposit2Filter, AccountWithdrawApprove1Filter,
-            AccountWithdrawApprove2Filter, AccountWithdrawFail1Filter, AccountWithdrawFail2Filter,
-            AccountWithdrawFinish1Filter, AccountWithdrawFinish2Filter,
-            AccountWithdrawSolFailFilter, BalanceTransferFilter, FeeDistributionFilter,
-            LiquidationResultFilter, LiquidationResultV2Filter, LiquidationTransferFilter,
-            LiquidationTransferV2Filter, ProcessValidatedFutures1Filter,
+            AccountDeposit1Filter, AccountDeposit2Filter, AccountDepositSolFilter,
+            AccountWithdrawApprove1Filter, AccountWithdrawApprove2Filter,
+            AccountWithdrawFail1Filter, AccountWithdrawFail2Filter, AccountWithdrawFinish1Filter,
+            AccountWithdrawFinish2Filter, AccountWithdrawSolFailFilter, BalanceTransferFilter,
+            FeeDistributionFilter, LiquidationResultFilter, LiquidationResultV2Filter,
+            LiquidationTransferFilter, LiquidationTransferV2Filter, ProcessValidatedFutures1Filter,
             ProcessValidatedFutures2Filter, SettlementExecutionFilter, SettlementResultFilter,
         },
     },
@@ -188,6 +188,7 @@ pub async fn get_block_logs(block_num: u64) -> Result<Vec<Log>> {
         LiquidationResultV2Filter::signature(),
         LiquidationTransferV2Filter::signature(),
         BalanceTransferFilter::signature(),
+        AccountDepositSolFilter::signature(),
     ];
     let address = unsafe { TARGET_ADDRS.get_unchecked() }.clone();
     let filter = Filter::new()
