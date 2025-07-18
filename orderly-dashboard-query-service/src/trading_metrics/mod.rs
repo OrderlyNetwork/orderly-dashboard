@@ -697,7 +697,15 @@ pub async fn get_position_rank(
         (status = 200, description = "Get Realized pnl ranking", body = QeuryServiceResponse<UserSummaryRankExtern>),
         (status = 409, description = "Invalid Request")
     ),
-    params(("param" = RealizedPnlRankingRequest, Query, description = "pnl ranking params")),
+    params(
+        (
+            "param" = RealizedPnlRankingRequest,
+            Query,
+            description = "pnl ranking params \n 
+example1: {\"account_id\": \"0x85cf9694ff45a0230bb572d9c982126b124036e5bc790c285387d31e4fb482ad\", \"symbol\": \"PERP_BTC_USDC\", \"offset\": 0, \"limit\": 10, \"order_by\": \"DESC\"} \n
+example2: {\"address\": \"0x32831ca2efa20ae6340224bc353d4b241b3d2541\", \"broker_id\": \"woofi_pro\", \"symbol\": \"PERP_BTC_USDC\", \"offset\": 0, \"limit\": 10, \"order_by\": \"DESC\"}"
+        )
+    ),
 )]
 #[get("/ranking/realized_pnl")]
 pub async fn get_realized_pnl_rank(
