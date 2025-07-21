@@ -6,6 +6,7 @@ use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
 use diesel::{Insertable, Queryable};
 use diesel_async::RunQueryDsl;
+use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;
 
 use crate::db::{BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
 use crate::schema::hourly_orderly_perp;
@@ -63,13 +64,22 @@ impl HourlyOrderlyPerp {
 }
 
 impl HourlyOrderlyPerp {
-    pub fn new_trade(&mut self, fee: BigDecimal, amount: BigDecimal, pulled_block_height: i64) {
+    pub fn new_trade(
+        &mut self,
+        fee: BigDecimal,
+        amount: BigDecimal,
+        pulled_block_height: i64,
+        side: PurchaseSide,
+    ) {
         if pulled_block_height <= self.pulled_block_height {
             // already processed this block events
             return;
         }
         self.trading_fee += fee;
-        self.trading_volume += amount.abs();
+        // only count the buy part
+        if side == PurchaseSide::Buy {
+            self.trading_volume += amount.abs();
+        }
         self.trading_count += 1;
     }
 

@@ -31,9 +31,9 @@ pub async fn get_average(field: &str) -> CountAverageExtern {
     let current_week = load_average_metric(field, 7, current_week_start).await;
     let current_month = load_average_metric(field, 30, current_month_start).await;
     CountAverageExtern {
-        latest_day_metric: current_day.count.with_scale(2).to_f64().unwrap(),
-        latest_week_metric: current_week.count.with_scale(2).to_f64().unwrap(),
-        latest_month_metric: current_month.count.with_scale(2).to_f64().unwrap(),
+        last_24hours_metric: current_day.count.with_scale(2).to_f64().unwrap(),
+        last_7days_metric: current_week.count.with_scale(2).to_f64().unwrap(),
+        last_30days_metric: current_month.count.with_scale(2).to_f64().unwrap(),
     }
 }
 

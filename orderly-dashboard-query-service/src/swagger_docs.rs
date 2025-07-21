@@ -6,7 +6,19 @@ use utoipa::{
     Modify, OpenApi,
 };
 
-use crate::{events::events_api::GetAccountEventsRequest, format_extern::QeuryServiceResponse};
+use crate::{
+    events::events_api::GetAccountEventsRequest,
+    format_extern::{
+        trading_metrics::{
+            DailyData, DailyTradingFeeExtern, DailyVolumeExtern, OrderlyPerpDaily,
+            TokenAmountRanking, TradingPnlRanking, TradingVolumeRanking,
+        },
+        QeuryServiceResponse,
+    },
+    trading_metrics::{
+        DailyRequest, DepositWithdrawRankingRequest, PnlRankingRequest, VolumeRankingRequest,
+    },
+};
 use crate::{
     format_extern::rank_metrics::UserSummaryRankExtern,
     trading_metrics::{PositionRankingRequest, RealizedPnlRankingRequest},
@@ -18,20 +30,37 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryResponse;
 #[derive(OpenApi)]
 #[openapi(
     paths(
+        crate::trading_metrics::get_daily_orderly_perp,
+        crate::trading_metrics::daily_volume,
+        crate::trading_metrics::daily_trading_fee,
+        crate::trading_metrics::get_trading_volume_rank,
         crate::trading_metrics::get_position_rank,
         crate::trading_metrics::get_realized_pnl_rank,
+        crate::trading_metrics::get_perp_recent_days_pnl_rank,
+        crate::trading_metrics::get_token_deposit_rank,
+        crate::trading_metrics::get_token_withdraw_rank,
         crate::events::events_api::list_events,
     ),
     components(
         schemas(
+            DailyRequest,
+            VolumeRankingRequest,
             PositionRankingRequest,
             QeuryServiceResponse<UserSummaryRankExtern>,
             RealizedPnlRankingRequest,
             GetAccountEventsRequest,
+            PnlRankingRequest,
+            DepositWithdrawRankingRequest,
             IndexerQueryResponse<AccountTradingEventsResponse>,
+            QeuryServiceResponse<DailyData<OrderlyPerpDaily>>,
+            QeuryServiceResponse<TradingVolumeRanking>,
+            QeuryServiceResponse<DailyVolumeExtern>,
+            QeuryServiceResponse<DailyTradingFeeExtern>,
+            QeuryServiceResponse<Vec<TradingPnlRanking>>,
+            QeuryServiceResponse<Vec<TokenAmountRanking>>,
         )
     ),
-    tags((name = "BasicAPI", description = "A very Basic API")),
+    tags((name = "Orderly DashboardBasicAPI", description = "Orderly Dashboard Basic API")),
     modifiers(&SecurityAddon)
 )]
 pub struct ApiDoc;

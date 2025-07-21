@@ -1,37 +1,40 @@
 use serde::{Deserialize, Serialize};
 use typescript_type_def::TypeDef;
+use utoipa::ToSchema;
 
-#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef, ToSchema)]
 pub struct DailyVolumeExtern {
     pub daytime: Vec<String>,
     pub volume: Vec<f64>,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef, ToSchema)]
 pub struct DailyTradingFeeExtern {
     pub daytime: Vec<String>,
     pub fee_amount: Vec<f64>,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef, ToSchema)]
 pub struct TradingVolumeRanking {
     pub account_ids: Vec<String>,
     pub volume: Vec<f64>,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef, ToSchema)]
 pub struct TradingPnlRanking {
-    pub account_ids: Vec<String>,
-    pub volume: Vec<f64>,
+    pub account_id: String,
+    pub symbol: String,
+    pub realized_pnl: String,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef, ToSchema)]
 pub struct TokenAmountRanking {
-    pub account_ids: Vec<String>,
-    pub volume: Vec<f64>,
+    pub account_id: String,
+    pub token_hash: String,
+    pub amount: String,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef, ToSchema)]
 pub struct OrderlyPerpDaily {
     pub trading_volume: f64,
     pub trading_fee: f64,
@@ -55,7 +58,7 @@ pub struct OrderlyTokenDaily {
     pub deposit_count: f64,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef, ToSchema)]
 pub struct DailyData<T: Serialize> {
     pub daytime: Vec<String>,
     pub data: Vec<T>,
@@ -69,9 +72,9 @@ pub struct UserPerpHoldingRanking {
 
 #[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]
 pub struct CountAverageExtern {
-    pub latest_day_metric: f64,
-    pub latest_week_metric: f64,
-    pub latest_month_metric: f64,
+    pub last_24hours_metric: f64,
+    pub last_7days_metric: f64,
+    pub last_30days_metric: f64,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]

@@ -19,6 +19,26 @@ pub struct AccountVolume {
 }
 
 #[derive(Debug, QueryableByName, Clone)]
+pub struct AccountDepositWithdrawView {
+    #[diesel(sql_type = Text)]
+    account_id: String,
+    #[diesel(sql_type = Text)]
+    token: String,
+    #[diesel(sql_type = Numeric)]
+    amount: BigDecimal,
+}
+
+#[derive(Debug, QueryableByName, Clone)]
+pub struct DbTradingPnlRankingView {
+    #[diesel(sql_type = Text)]
+    pub account_id: String,
+    #[diesel(sql_type = Text)]
+    pub symbol: String,
+    #[diesel(sql_type = Numeric)]
+    pub realized_pnl: BigDecimal,
+}
+
+#[derive(Debug, QueryableByName, Clone)]
 pub struct AccountPerpHolding {
     #[diesel(sql_type = Text)]
     account_id: String,
@@ -26,7 +46,12 @@ pub struct AccountPerpHolding {
     holding: BigDecimal,
 }
 
-pub async fn get_token_ranking(hour: i64, account_size: i64, withdraw: bool) -> TokenAmountRanking {
+pub async fn get_token_ranking(
+    hour: i64,
+    account_size: i64,
+    withdraw: bool,
+    token_hash: String,
+) -> Vec<TokenAmountRanking> {
     #[allow(unused_imports)]
     use orderly_dashboard_analyzer::{
         db::{hourly_user_token::HourlyUserToken, POOL},
@@ -37,42 +62,43 @@ pub async fn get_token_ranking(hour: i64, account_size: i64, withdraw: bool) -> 
     let now = Local::now().naive_utc();
     let start_time = now - Duration::hours(hour);
 
-    let mut sql = "select account_id,sum(withdraw_amount) as volume from hourly_user_token \
-    where block_hour>=$1 group by account_id order by volume desc limit $2";
+    let mut sql = "select account_id, token, sum(withdraw_amount) as amount from hourly_user_token \
+    where block_hour>=$1 and token_hash=$2 group by account_id, token order by volume desc limit $3";
 
     if !withdraw {
-        sql = "select account_id,sum(deposit_amount) as volume from hourly_user_token \
-    where block_hour>=$1 group by account_id order by volume desc limit $2"
+        sql = "select account_id, token, sum(deposit_amount) as amount from hourly_user_token \
+    where block_hour>=$1 and token_hash=$2 group by account_id, token order by volume desc limit $3"
     }
 
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let select_result = diesel::sql_query(sql)
         .bind::<Timestamp, _>(start_time)
+        .bind::<Text, _>(token_hash)
         .bind::<BigInt, _>(account_size)
-        .get_results::<AccountVolume>(&mut conn)
+        .get_results::<AccountDepositWithdrawView>(&mut conn)
         .await;
 
+    let mut deposit_withdraw_vec: Vec<TokenAmountRanking> = Vec::new();
     match select_result {
         Ok(select_data) => {
-            let mut account_vec: Vec<String> = Vec::new();
-            let mut volume_vec: Vec<f64> = Vec::new();
             for account_volume in select_data {
-                account_vec.push(account_volume.account_id);
-                volume_vec.push(account_volume.volume.with_scale(2).to_f64().unwrap());
-            }
-            TokenAmountRanking {
-                account_ids: account_vec,
-                volume: volume_vec,
+                deposit_withdraw_vec.push(TokenAmountRanking {
+                    account_id: account_volume.account_id,
+                    token_hash: account_volume.token,
+                    amount: account_volume.amount.to_string(),
+                });
             }
         }
-        Err(_) => TokenAmountRanking {
-            account_ids: vec![],
-            volume: vec![],
-        },
+        Err(_) => {}
     }
+    deposit_withdraw_vec
 }
 
-pub async fn get_pnl_ranking(hour: i64, account_size: i64) -> TradingPnlRanking {
+pub async fn get_pnl_ranking(
+    hour: i64,
+    account_size: i64,
+    symbol_hash: Option<String>,
+) -> Vec<TradingPnlRanking> {
     #[allow(unused_imports)]
     use orderly_dashboard_analyzer::{
         db::{hourly_user_perp::HourlyUserPerp, POOL},
@@ -84,32 +110,49 @@ pub async fn get_pnl_ranking(hour: i64, account_size: i64) -> TradingPnlRanking 
     let start_time = now - Duration::hours(hour);
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
-    let select_result = diesel::sql_query(
-        "select account_id,sum(realized_pnl) as volume from hourly_user_perp \
-    where block_hour>=$1 group by account_id order by volume desc limit $2",
-    )
-    .bind::<Timestamp, _>(start_time)
-    .bind::<BigInt, _>(account_size)
-    .get_results::<AccountVolume>(&mut conn)
-    .await;
+    // let select_result = diesel::sql_query(
+    //     "select account_id, symbol, sum(realized_pnl) as realized_pnl  from hourly_user_perp \
+    // where block_hour>=$1 group by account_id order by volume desc limit $2",
+    // )
+    // .bind::<Timestamp, _>(start_time)
+    // .bind::<BigInt, _>(account_size)
+    // .get_results::<DbTradingPnlRankingView>(&mut conn)
+    // .await;
 
+    let select_result = if let Some(symbol_hash) = symbol_hash {
+        diesel::sql_query(
+            "select account_id, symbol, sum(realized_pnl) as realized_pnl  from hourly_user_perp \
+        where block_hour>=$1 and symbol_hash=$2 order by realized_pnl desc limit $3",
+        )
+        .bind::<Timestamp, _>(start_time)
+        .bind::<Text, _>(symbol_hash)
+        .bind::<BigInt, _>(account_size)
+        .get_results::<DbTradingPnlRankingView>(&mut conn)
+        .await
+    } else {
+        diesel::sql_query(
+            "select account_id, symbol, sum(realized_pnl) as realized_pnl  from hourly_user_perp \
+        where block_hour>=$1 order by realized_pnl desc limit $2",
+        )
+        .bind::<Timestamp, _>(start_time)
+        .bind::<BigInt, _>(account_size)
+        .get_results::<DbTradingPnlRankingView>(&mut conn)
+        .await
+    };
+
+    let mut trading_pnl_ranking_v: Vec<_> = Vec::new();
     match select_result {
         Ok(select_data) => {
-            let mut account_vec: Vec<String> = Vec::new();
-            let mut volume_vec: Vec<f64> = Vec::new();
-            for account_volume in select_data {
-                account_vec.push(account_volume.account_id);
-                volume_vec.push(account_volume.volume.with_scale(2).to_f64().unwrap());
+            for trading_pnl_ranking in select_data {
+                trading_pnl_ranking_v.push(TradingPnlRanking {
+                    account_id: trading_pnl_ranking.account_id,
+                    symbol: trading_pnl_ranking.symbol,
+                    realized_pnl: trading_pnl_ranking.realized_pnl.to_string(),
+                });
             }
-            TradingPnlRanking {
-                account_ids: account_vec,
-                volume: volume_vec,
-            }
+            trading_pnl_ranking_v
         }
-        Err(_) => TradingPnlRanking {
-            account_ids: vec![],
-            volume: vec![],
-        },
+        Err(_) => trading_pnl_ranking_v,
     }
 }
 

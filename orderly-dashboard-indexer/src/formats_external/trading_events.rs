@@ -399,7 +399,7 @@ impl TryFrom<i16> for TransactionStatus {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef, ToSchema, Copy)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum PurchaseSide {
     Buy,

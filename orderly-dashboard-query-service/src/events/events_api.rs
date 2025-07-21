@@ -95,14 +95,15 @@ fn now_time() -> i64 {
     Utc::now().timestamp()
 }
 
+/// Get user token/trading events informations
 #[utoipa::path(
     responses(
-        (status = 200, description = "Get Account events", body = IndexerQueryResponse<AccountTradingEventsResponse>),
+        (status = 200, description = "Get Account events response on orderly", body = IndexerQueryResponse<AccountTradingEventsResponse>),
         (status = 1000, description = "Invalid Request")
     ),
-    params(("param" = GetAccountEventsRequest, Query, description = "account events")),
+    params(("param" = GetAccountEventsRequest, Query, description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal enum with value \"TRANSACTION | PERPTRADE | SETTLEMENT | LIQUIDATION | ADL\"")),
 )]
-#[get("/events")] // <- define path parameters
+#[get("/events")]
 pub async fn list_events(
     mut param: web::Query<GetAccountEventsRequest>,
 ) -> actix_web::Result<HttpResponse> {
