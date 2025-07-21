@@ -49,9 +49,10 @@ pub async fn analyzer_perp_trade(
                 .get_hourly_orderly_perp(&hour_orderly_perp_key)
                 .await;
             hourly_orderly_perp.new_trade(
-                (fixed_fee.clone()).abs(),
+                fixed_fee.clone(),
                 (fixed_notional.clone()).abs(),
                 pulled_block_height.clone(),
+                perp_trade.side,
             );
         }
 
@@ -63,7 +64,7 @@ pub async fn analyzer_perp_trade(
                 (fixed_fee.clone()).abs(),
                 (fixed_notional.clone()).abs(),
                 pulled_block_height.clone(),
-                perp_trade.side.clone(),
+                perp_trade.side,
             );
         }
         let user_perp_summary_key = UserPerpSummaryKey {

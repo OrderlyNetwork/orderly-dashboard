@@ -100,7 +100,7 @@ pub async fn get_daily_trading_fee(
         "select \
       date(block_hour) as trading_day,\
       sum(trading_fee) as trading_fee \
-      from hourly_orderly_perp where block_hour>=$1 and block_hour<=$2 \
+      from hourly_orderly_perp where block_hour>=$1 and block_hour<$2 \
       group by trading_day order by trading_day asc;",
     );
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);

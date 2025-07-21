@@ -25,21 +25,11 @@ use orderly_dashboard_query_service::swagger_docs::ApiDoc;
 use orderly_dashboard_query_service::trading_metrics;
 use orderly_dashboard_query_service::trading_metrics::{
     average_opening_count, average_trading_fee, average_trading_volume, block_height,
-    deposit_gas_fee, event_gas_fee, get_daily_orderly_perp, get_daily_orderly_token,
-    get_perp_holding_rank, get_perp_pnl_rank, get_token_deposit_rank, get_token_withdraw_rank,
-    get_trading_volume_rank, perp_gas_fee, update_positions_task, update_realized_pnl_task,
+    deposit_gas_fee, event_gas_fee, get_daily_orderly_token, get_perp_holding_rank,
+    get_perp_recent_days_pnl_rank, perp_gas_fee, update_positions_task, update_realized_pnl_task,
 };
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-
-fn service_config(conf: &mut web::ServiceConfig) {
-    // let scope = web::scope("/")
-    //     .service(trading_metrics::get_position_rank)
-    //     .service(trading_metrics::get_realized_pnl_rank);
-    conf.service(trading_metrics::get_position_rank)
-        .service(trading_metrics::get_realized_pnl_rank);
-    // conf.service(scope);
-}
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -91,6 +81,19 @@ fn set_envs() {
     std::env::set_var("RUST_BACKTRACE", "1");
 }
 
+fn service_config(conf: &mut web::ServiceConfig) {
+    conf.service(trading_metrics::get_daily_orderly_perp)
+        .service(daily_volume)
+        .service(daily_trading_fee)
+        .service(trading_metrics::get_trading_volume_rank)
+        .service(trading_metrics::get_position_rank)
+        .service(trading_metrics::get_realized_pnl_rank)
+        .service(trading_metrics::get_token_deposit_rank)
+        .service(trading_metrics::get_token_withdraw_rank)
+        .service(get_perp_recent_days_pnl_rank)
+        .service(list_events);
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     openssl_probe::init_ssl_cert_env_vars();
@@ -135,31 +138,23 @@ async fn main() -> std::io::Result<()> {
             .service(hello)
             .service(echo)
             .service(hello2)
-            .service(daily_volume)
-            .service(daily_trading_fee)
             .service(average_trading_count)
             .service(average_trading_fee)
             .service(average_trading_volume)
             .service(perp_gas_fee)
             .service(event_gas_fee)
             .service(deposit_gas_fee)
-            .service(get_trading_volume_rank)
-            .service(get_daily_orderly_perp)
             .service(get_daily_orderly_token)
+            // duplicate with get_position_rank
             .service(get_perp_holding_rank)
             .service(average_opening_count)
-            .service(get_perp_pnl_rank)
-            .service(get_token_deposit_rank)
-            .service(get_token_withdraw_rank)
+            // duplicate with get_realized_pnl_rank
             .service(block_height)
             .service(get_network_info)
             .service(analyzer_raw_query)
             .service(get_status)
-            .service(list_events)
             .service(list_sol_events)
             .service(list_events_v2)
-            // .service(get_position_rank)
-            // .service(get_realized_pnl_rank)
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-docs/openapi.json", ApiDoc::openapi()),

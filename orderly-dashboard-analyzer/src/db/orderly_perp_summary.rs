@@ -74,11 +74,12 @@ impl OrderlyPerpSummary {
             return;
         }
         self.total_trading_fee += fee;
-        self.total_trading_volume += amount.clone().abs();
         self.total_trading_count += 1;
 
         match side {
             PurchaseSide::Buy => {
+                // only count the buy part for total_trading_volume
+                self.total_trading_volume += amount.clone().abs();
                 self.buy_amount += amount.clone();
             }
             PurchaseSide::Sell => {

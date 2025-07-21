@@ -21,6 +21,10 @@ use crate::error_code::{
     QUERY_OVER_EXECUTION_ERR, QUERY_OVER_LIMIT_ERR,
 };
 use crate::format_extern::rank_metrics::UserSummaryRankExtern;
+use crate::format_extern::trading_metrics::{
+    DailyData, DailyTradingFeeExtern, DailyVolumeExtern, OrderlyPerpDaily, TokenAmountRanking,
+    TradingPnlRanking, TradingVolumeRanking,
+};
 use crate::{add_base_header, format_extern::QeuryServiceResponse};
 use dashmap::DashMap;
 use fxhash::FxBuildHasher;
@@ -137,7 +141,7 @@ async fn update_realized_pnl_desc() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct DailyRequest {
     #[serde(default = "default_past")]
     from_day: String,
@@ -154,12 +158,42 @@ fn default_past() -> String {
     past.format("%Y-%m-%d").to_string()
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct VolumeRankingRequest {
     #[serde(default = "default_days")]
-    days: i32,
+    days: u32,
     #[serde(default = "default_size")]
-    size: i32,
+    size: u32,
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct DepositWithdrawRankingRequest {
+    #[serde(default = "default_days")]
+    days: u32,
+    #[serde(default = "default_size")]
+    size: u32,
+    token: String,
+}
+
+impl DepositWithdrawRankingRequest {
+    fn to_hour(&self) -> i64 {
+        (self.days * 24) as i64
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct PnlRankingRequest {
+    #[serde(default = "default_days")]
+    days: u32,
+    #[serde(default = "default_size")]
+    size: u32,
+    symbol: Option<String>,
+}
+
+impl PnlRankingRequest {
+    fn to_hour(&self) -> i64 {
+        (self.days * 24) as i64
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, TypeDef, ToSchema)]
@@ -215,11 +249,11 @@ pub struct VolumeRankingResponse {
     pub rows: Vec<UserSumaryRankingData>,
 }
 
-fn default_days() -> i32 {
+fn default_days() -> u32 {
     30
 }
 
-fn default_size() -> i32 {
+fn default_size() -> u32 {
     10
 }
 
@@ -367,7 +401,7 @@ pub struct PerpHoldingRankingRequest {
     #[serde(default = "test_symbol")]
     symbol: String,
     #[serde(default = "default_size")]
-    size: i32,
+    size: u32,
 }
 
 impl VolumeRankingRequest {
@@ -385,7 +419,7 @@ impl DailyRequest {
             .unwrap();
         let end_time = NaiveDate::parse_from_str(&self.end_day, date_format)
             .unwrap()
-            .and_hms_opt(0, 0, 0)
+            .and_hms_opt(23, 59, 59)
             .unwrap();
         (from_time, end_time)
     }
@@ -417,13 +451,28 @@ pub async fn block_height() -> Result<impl Responder> {
     Ok(write_response(get_block_height().await))
 }
 
+/// Get daily Perpetual trading information
+///
+/// This api will return `trading_fee`, `trading_count`, `trading_user_count`, `liquidation_amount`: `liquidation_count` and `opening_count` infomation of OrderlyNetwork between `from_days` and `end_days`.
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Daily Orderly Perp Response", body = QeuryServiceResponse<DailyData<OrderlyPerpDaily>>),
+        (status = 409, description = "Invalid Request")
+    ),
+    params(
+        ("param" = DailyRequest, Query, description = "daily orderly perp params \n
+example: {\"from_day\": \"2025-07-12\", \"end_day\": \"2025-07-17\" }
+        ")
+    ),
+)]
 #[get("/daily_orderly_perp")] // <- define path parameters
-pub async fn get_daily_orderly_perp(param: web::Query<DailyRequest>) -> Result<impl Responder> {
+pub async fn get_daily_orderly_perp(
+    _req: HttpRequest,
+    param: web::Query<DailyRequest>,
+) -> HttpResponse {
     tracing::debug!(target: TRADING_METRICS, "daily_orderly_perp from day: {}, end_day: {}", param.from_day, param.end_day);
     let (from_time, end_time) = param.parse_day();
-    Ok(write_response(
-        daily_orderly_perp(from_time, end_time).await,
-    ))
+    write_response(daily_orderly_perp(from_time, end_time).await)
 }
 
 #[get("/daily_gas_fee/perp_trade")] // <- define path parameters
@@ -457,13 +506,39 @@ pub async fn get_daily_orderly_token(param: web::Query<DailyRequest>) -> Result<
     Ok(write_response(get_daily_token(from_time, end_time).await))
 }
 
+/// Get daily Trading volume information
+///
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Daily Trading Volume", body = QeuryServiceResponse<DailyVolumeExtern>),
+        (status = 409, description = "Invalid Request")
+    ),
+    params(("param" = DailyRequest, Query, 
+        description = "Daily volume params, with day format %Y-%m-%d \n
+example: {\"from_day\": \"2025-07-12\", \"end_day\": \"2025-07-17\" }
+        "
+    )),
+)]
 #[get("/daily_volume")] // <- define path parameters
-pub async fn daily_volume(param: web::Query<DailyRequest>) -> Result<impl Responder> {
+pub async fn daily_volume(param: web::Query<DailyRequest>) -> HttpResponse {
     tracing::debug!(target: TRADING_METRICS, "daily_volume from day: {}, end_day: {}", param.from_day, param.end_day);
     let (from_time, end_time) = param.parse_day();
-    Ok(write_response(get_daily_volume(from_time, end_time).await))
+    write_response(get_daily_volume(from_time, end_time).await)
 }
 
+/// Get daily Trading fee information
+///
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Daily Trading Fee", body = QeuryServiceResponse<DailyTradingFeeExtern>),
+        (status = 409, description = "Invalid Request")
+    ),
+    params(("param" = DailyRequest, Query, 
+        description = "Daily volume params \n
+example: {\"from_day\": \"2025-07-12\", \"end_day\": \"2025-07-17\" }
+        "
+    )),
+)]
 #[get("/daily_trading_fee")] // <- define path parameters
 pub async fn daily_trading_fee(param: web::Query<DailyRequest>) -> Result<impl Responder> {
     tracing::debug!(target: TRADING_METRICS, "daily_trading_fee from day: {}, end_day: {}", param.from_day, param.end_day);
@@ -497,14 +572,23 @@ pub async fn average_opening_count() -> Result<impl Responder> {
     Ok(write_response(get_average("opening_count").await))
 }
 
+/// Get daily Trading Volume ranking information
+///
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Trading Volume ranking response", body = QeuryServiceResponse<TradingVolumeRanking>),
+        (status = 409, description = "Invalid Request")
+    ),
+    params(("param" = VolumeRankingRequest, Query, 
+        description = "Position ranking params, days param is the range of recent days \n
+example: {\"days\": 1, \"size\": 10}
+        "
+    )),
+)]
 #[get("/ranking/trading_volume")]
-pub async fn get_trading_volume_rank(
-    param: web::Query<VolumeRankingRequest>,
-) -> Result<impl Responder> {
+pub async fn get_trading_volume_rank(param: web::Query<VolumeRankingRequest>) -> HttpResponse {
     tracing::debug!(target: TRADING_METRICS, "/ranking/trading_volume request, days: {}, size: {}", param.days, param.size);
-    Ok(write_response(
-        get_daily_trading_volume_ranking(param.to_hour(), param.size as i64).await,
-    ))
+    write_response(get_daily_trading_volume_ranking(param.to_hour(), param.size as i64).await)
 }
 
 #[get("/ranking/perp_holding")]
@@ -517,44 +601,102 @@ pub async fn get_perp_holding_rank(
     ))
 }
 
-#[get("/ranking/pnl")]
-pub async fn get_perp_pnl_rank(param: web::Query<VolumeRankingRequest>) -> Result<impl Responder> {
+/// Get Pnl Ranking recent days information
+///
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Pnl Ranking recent days response", body = QeuryServiceResponse<Vec<TradingPnlRanking>>),
+        (status = 409, description = "Invalid Request")
+    ),
+    params(("param" = PnlRankingRequest, Query, 
+        description = "Pnl ranking params, symbol is optional \n
+example1: {\"days\": 3, \"size\": 10, \"symbol\": \"PERP_BTC_USDC\"} \n
+example2: {\"days\": 3, \"size\": 10} \n
+        "
+    )),
+)]
+#[get("/ranking/recent_days_perp_pnl")]
+pub async fn get_perp_recent_days_pnl_rank(param: web::Query<PnlRankingRequest>) -> HttpResponse {
     tracing::debug!(target: TRADING_METRICS, "/ranking/pnl, days: {}, size: {}", param.days, param.size);
-    Ok(write_response(
-        get_pnl_ranking(param.to_hour(), param.size as i64).await,
-    ))
+    write_response(
+        get_pnl_ranking(
+            param.to_hour(),
+            param.size as i64,
+            param.symbol.as_ref().map(|s| cal_symbol_hash(&s)),
+        )
+        .await,
+    )
 }
 
+/// Get token deposit in recent days information
+///
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Token Deposit in recent days response", body = QeuryServiceResponse<Vec<TokenAmountRanking>>),
+        (status = 409, description = "Invalid Request")
+    ),
+    params(("param" = DepositWithdrawRankingRequest, Query, 
+        description = "Token Depoit ranking params \n
+example1: {\"days\": 3, \"size\": 10, \"token\": \"USDC\"} \n
+        "
+    )),
+)]
 #[get("/ranking/deposit")]
 pub async fn get_token_deposit_rank(
-    param: web::Query<VolumeRankingRequest>,
-) -> Result<impl Responder> {
+    param: web::Query<DepositWithdrawRankingRequest>,
+) -> HttpResponse {
     tracing::debug!(target: TRADING_METRICS, "/ranking/deposit, days: {}, size: {}", param.days, param.size);
-    Ok(write_response(
-        get_token_ranking(param.to_hour(), param.size as i64, false).await,
-    ))
+    write_response(
+        get_token_ranking(
+            param.to_hour(),
+            param.size as i64,
+            false,
+            cal_symbol_hash(&param.token),
+        )
+        .await,
+    )
 }
 
+/// Get token withdrawal in recent days information
+///
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Token Withdraw in recent days response", body = QeuryServiceResponse<Vec<TokenAmountRanking>>),
+        (status = 409, description = "Invalid Request")
+    ),
+    params(("param" = DepositWithdrawRankingRequest, Query, 
+        description = "Token Withdraw ranking params \n
+example1: {\"days\": 3, \"size\": 10, \"token\": \"USDC\"} \n
+        "
+    )),
+)]
 #[get("/ranking/withdraw")]
 pub async fn get_token_withdraw_rank(
     _req: HttpRequest,
-    param: web::Query<VolumeRankingRequest>,
-) -> Result<impl Responder> {
+    param: web::Query<DepositWithdrawRankingRequest>,
+) -> HttpResponse {
     tracing::debug!(target: TRADING_METRICS, "/ranking/withdraw, days: {}, size: {}", param.days, param.size);
-    Ok(write_response(
-        get_token_ranking(param.to_hour(), param.size as i64, true).await,
-    ))
+    write_response(
+        get_token_ranking(
+            param.to_hour(),
+            param.size as i64,
+            false,
+            cal_symbol_hash(&param.token),
+        )
+        .await,
+    )
 }
 
-/// Post Endpoint
+/// Get User perp position info ranking by holding
 ///
-/// Basic Post Example
+/// This api will retur `account_id`, `address`,`broker_id`,`symbol`,`symbol_hash`,`holding`,`total_realized_pnl`,`index_price`,`mark_price`,`holding_value`,`opening_cost`,`average_entry_price`,`un_realized_pnl` informations
+///
 #[utoipa::path(
     responses(
         (status = 200, description = "Get Position ranking", body = QeuryServiceResponse<UserSummaryRankExtern>),
         (status = 409, description = "Invalid Request")
     ),
-    params(("param" = PositionRankingRequest, Query, description = "position ranking params")),
+    params(("param" = PositionRankingRequest, Query, description = "position ranking params, `address` nor `broker_id` should not apear with `account_id`, `symbol` is optional, `offset` and `limit` has default value of `0` and `30`")),
 )]
 #[get("/ranking/positions")]
 pub async fn get_position_rank(
@@ -692,9 +834,11 @@ pub async fn get_position_rank(
     }
 }
 
+/// Get user perpetual info ranking by realized_pnl information
+///
 #[utoipa::path(
     responses(
-        (status = 200, description = "Get Realized pnl ranking", body = QeuryServiceResponse<UserSummaryRankExtern>),
+        (status = 200, description = "Get Realized pnl ranking response", body = QeuryServiceResponse<UserSummaryRankExtern>),
         (status = 409, description = "Invalid Request")
     ),
     params(
