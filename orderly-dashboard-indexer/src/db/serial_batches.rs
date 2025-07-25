@@ -3,6 +3,7 @@ use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
 use crate::schema::serial_batches;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
+use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::sql_types::*;
 use diesel::ExpressionMethods;
@@ -445,8 +446,12 @@ pub async fn query_serial_batches_joined_partitioned_trades_with_type_by_time(
         .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
         .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
         .bind::<diesel::sql_types::SmallInt, _>(serial_typ.value())
-        .bind::<diesel::sql_types::BigInt, _>(from_time)
-        .bind::<diesel::sql_types::BigInt, _>(to_time)
+        .bind::<diesel::sql_types::Timestamp, _>(
+            NaiveDateTime::from_timestamp_opt(from_time, 0)
+            .ok_or_else(|| anyhow::anyhow!("timestamp of from_time should be valid"))?
+        )
+        .bind::<diesel::sql_types::Timestamp, _>(NaiveDateTime::from_timestamp_opt(to_time, 0)
+        .ok_or_else(|| anyhow::anyhow!("timestamp of from_time should be valid"))?)
         .bind::<diesel::sql_types::Text, _>(account_id_)
         .get_results::<DbSerialBatchesView>(&mut conn)
         .await;

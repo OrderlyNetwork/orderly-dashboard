@@ -21,7 +21,7 @@
     "public_key": "7YgXI92OjRkkH76M2pb4UMB8VUS6jzxElKKohkap85U="
   },
   "sync_block_strategy": {
-    "parallel_limit": 6
+    "parallel_limit": 1
   },
   "layerzero": {
     "scan_url": "https://api-mainnet.layerzero-scan.com",
@@ -29,7 +29,7 @@
   },
   "perp_symbols_config": ["PERP_ARB_USDC", "PERP_BTC_USDC", "PERP_ETH_USDC", "PERP_SOL_USDC", "PERP_TIA_USDC"],
   "sol_chain_config": {
-    "is_enable": true,
+    "is_enable": false,
     "chain_id": 900900900,
     "rpc_url": "https://api.mainnet-beta.solana.com",
     "start_sig": "3KqRD6KA76a8mBUYkALMhYSLMJePrG9u7Hxg16fxmYskA8urWsxGAMhDePWBvNHgoyvhZHuhPS3xCmUAgAbpwaTb",
