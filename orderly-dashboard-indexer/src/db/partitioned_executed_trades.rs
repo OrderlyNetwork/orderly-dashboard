@@ -154,12 +154,52 @@ pub async fn query_partitioned_executed_trades(
     Ok(events)
 }
 
+pub async fn count_user_in_time_range(
+    account: String,
+    from_time: NaiveDateTime,
+    to_time: NaiveDateTime,
+) -> Result<i64> {
+    use crate::schema::partitioned_executed_trades::dsl::*;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "count_user_in_range start with account: {},from_time: {}, to_time: {}",
+        account, from_time, to_time,
+    );
+    let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let count = partitioned_executed_trades
+        .filter(block_time.ge(from_time))
+        .filter(block_time.le(to_time))
+        .filter(account_id.eq(account.clone()))
+        .count()
+        .get_result::<i64>(&mut conn)
+        .await?;
+
+    let dur_ms = (Instant::now() - start_time).as_millis();
+    if dur_ms >= 1000 {
+        tracing::warn!(
+            target: ALERT_CONTEXT,
+            "count_user_in_time_range slow query. account_id: {}, from_time:{}, to_time:{}, used time:{} ms",
+            account,
+                from_time,
+                to_time,
+            dur_ms
+        );
+    }
+
+    Ok(count)
+}
+
 // time of executed trades need to be convert from secs to millisecond
 #[allow(dead_code)]
 pub async fn query_account_partitioned_executed_trades(
     account: String,
     from_time: NaiveDateTime,
     to_time: NaiveDateTime,
+    limit: Option<u32>,
+    offset_block_number: Option<i64>,
+    offset_transaction_index: Option<i32>,
+    offset_log_index: Option<i32>,
 ) -> Result<Vec<DbPartitionedExecutedTrades>> {
     use crate::schema::partitioned_executed_trades::dsl::*;
     tracing::info!(
@@ -169,12 +209,23 @@ pub async fn query_account_partitioned_executed_trades(
     let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
-    let result = partitioned_executed_trades
+    let query = partitioned_executed_trades
         .filter(block_time.ge(from_time))
         .filter(block_time.le(to_time))
-        .filter(account_id.eq(account))
-        .load::<DbPartitionedExecutedTrades>(&mut conn)
-        .await;
+        .filter(account_id.eq(account.clone()));
+    let result = if let Some(offset) = offset_block_number {
+        query
+            .filter(block_number.le(offset_block_number.unwrap_or_default()))
+            .filter(transaction_index.le(offset_transaction_index.unwrap_or_default()))
+            .filter(log_index.gt(offset_log_index.unwrap_or_default()))
+            .order_by((block_time, block_number, transaction_index, log_index))
+            .offset(offset as i64)
+            .limit(limit.unwrap_or_default() as i64)
+            .load::<DbPartitionedExecutedTrades>(&mut conn)
+            .await
+    } else {
+        query.load::<DbPartitionedExecutedTrades>(&mut conn).await
+    };
     let dur_ms = (Instant::now() - start_time).as_millis();
 
     let events = match result {
@@ -182,7 +233,8 @@ pub async fn query_account_partitioned_executed_trades(
             if dur_ms >= 100 {
                 tracing::warn!(
                     target: ALERT_CONTEXT,
-                    "query_account_partitioned_executed_trades slow query. from_time:{}, to_time:{} length:{}, used time:{} ms",
+                    "query_account_partitioned_executed_trades slow query. account_id: {}, from_time:{}, to_time:{} length:{}, used time:{} ms",
+                    account,
                         from_time,
                         to_time,
                     events.len(),

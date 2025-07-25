@@ -30,8 +30,8 @@ use crate::db::settlement_execution::{
 use crate::db::settlement_result::{query_settlement_results, query_settlement_results_with_time};
 
 use crate::db::partitioned_executed_trades::{
-    query_account_partitioned_executed_trades, query_partitioned_executed_trades,
-    DbPartitionedExecutedTrades,
+    count_user_in_time_range, query_account_partitioned_executed_trades,
+    query_partitioned_executed_trades, DbPartitionedExecutedTrades,
 };
 use crate::db::sol_transaction_events::{
     query_account_sol_balance_transaction_executions, query_sol_balance_transaction_executions,
@@ -41,13 +41,45 @@ use crate::db::transaction_events::{
     query_balance_transaction_executions_with_time,
 };
 use crate::formats_external::trading_events::{
-    AccountTradingEventsResponse, TradingEvent, TradingEventType, TradingEventsResponse,
+    AccountTradingEventsResponse, AccoutTradingCursor, TradingEvent, TradingEventType,
+    TradingEventsResponse,
 };
 use anyhow::{anyhow, Result};
+use cached::{Cached, SizedCache};
 use chrono::NaiveDateTime;
+use lazy_static::lazy_static;
+use parking_lot::RwLock;
 use std::cmp::min;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::atomic::Ordering;
+lazy_static! {
+    pub static ref ACC_RANGE_SIZE_CACHE: RwLock<SizedCache<String, (u32, i64)>> =
+        RwLock::new(SizedCache::with_size(1000));
+}
+
+pub fn acc_range_insert(account_id: &str, from_time: i64, to_time: i64, length: u32) {
+    ACC_RANGE_SIZE_CACHE.write().cache_set(
+        format!("{}_{}_{}", account_id, from_time, to_time),
+        (length, chrono::Utc::now().timestamp()),
+    );
+}
+
+pub fn acc_range_get(account_id: &str, from_time: i64, to_time: i64) -> Option<u32> {
+    const CACHE_VALID_SECS: i64 = 60;
+    let value = {
+        ACC_RANGE_SIZE_CACHE
+            .write()
+            .cache_get(&format!("{}_{}_{}", account_id, from_time, to_time))
+            .cloned()
+    };
+    if let Some((length, timestamp)) = value {
+        let now_timestamp = chrono::Utc::now().timestamp();
+        if now_timestamp - timestamp <= CACHE_VALID_SECS {
+            return Some(length);
+        }
+    }
+    None
+}
 
 pub async fn perp_trading_join_events(
     from_time: Option<i64>,
@@ -186,10 +218,15 @@ pub async fn account_perp_trading_join_events(
             }
             TradingEventType::PerpTrade => {
                 if MIGRATE_TRADES_FINISHED_AND_QUERY_FROM_PARTITIONING.load(Ordering::Relaxed) {
-                    trading_events = join_account_partitioned_perp_trades(
+                    (trading_events, _) = join_account_partitioned_perp_trades(
                         account_id.to_string(),
                         from_time,
                         to_time,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
                     )
                     .await?;
                 } else {
@@ -240,7 +277,18 @@ pub async fn account_perp_trading_join_events(
             .await?;
     let perp_trades = if MIGRATE_TRADES_FINISHED_AND_QUERY_FROM_PARTITIONING.load(Ordering::Relaxed)
     {
-        join_account_partitioned_perp_trades(account_id.to_string(), from_time, to_time).await?
+        let (perp_trades, _) = join_account_partitioned_perp_trades(
+            account_id.to_string(),
+            from_time,
+            to_time,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+        .await?;
+        perp_trades
     } else {
         join_account_perp_trades(account_id.to_string(), from_time, to_time, None, None)
             .await?
@@ -264,127 +312,138 @@ pub async fn account_perp_trading_join_events_v2(
     from_time: i64,
     to_time: i64,
     event_type: Option<TradingEventType>,
-    offset: u32,
     limit: u32,
+    offset_block_time: Option<i64>,
+    offset_block_number: Option<i64>,
+    offset_transaction_index: Option<i32>,
+    offset_log_index: Option<i32>,
 ) -> Result<AccountTradingEventsResponse> {
     let mut response = AccountTradingEventsResponse::default();
     if let Some(event_type) = event_type {
         let mut trading_events: Vec<TradingEvent>;
         match event_type {
             TradingEventType::TRANSACTION => {
-                {
-                    trading_events = join_account_balance_transactions(
-                        account_id.to_string(),
-                        from_time,
-                        to_time,
-                        Some(offset),
-                        Some(limit),
-                    )
-                    .await?;
-                }
-                if trading_events.len() >= limit as usize {
-                    response.next_offset = Some(offset + limit);
-                }
+                trading_events = join_account_balance_transactions(
+                    account_id.to_string(),
+                    from_time,
+                    to_time,
+                    None,
+                    None,
+                )
+                .await?;
             }
             TradingEventType::PerpTrade => {
-                let has_next_offset;
-                (trading_events, has_next_offset) = join_account_perp_trades(
+                let trade_size =
+                    if let Some(trade_size) = acc_range_get(account_id, from_time, to_time) {
+                        trade_size
+                    } else {
+                        let trade_size = count_user_in_time_range(
+                            account_id.to_string(),
+                            NaiveDateTime::from_timestamp_opt(from_time, 0)
+                                .ok_or_else(|| anyhow!("timestamp of from_time should be valid"))?,
+                            NaiveDateTime::from_timestamp_opt(to_time, 0)
+                                .ok_or_else(|| anyhow!("timestamp of to_time should be valid"))?,
+                        )
+                        .await?;
+                        acc_range_insert(account_id, from_time, to_time, trade_size as u32);
+                        trade_size as u32
+                    };
+                let cursor: Option<AccoutTradingCursor>;
+                (trading_events, cursor) = join_account_partitioned_perp_trades(
                     account_id.to_string(),
                     from_time,
                     to_time,
-                    Some(offset),
                     Some(limit),
+                    offset_block_time,
+                    offset_block_number,
+                    offset_transaction_index,
+                    offset_log_index,
                 )
                 .await?;
-                if has_next_offset {
-                    response.next_offset = Some(offset + limit);
+                if trading_events.len() as u32 == limit {
+                    response.trading_event_next_cursor = cursor;
                 }
+                response.trades_count = Some(trade_size);
             }
             TradingEventType::SETTLEMENT => {
-                let has_next_offset;
-                (trading_events, has_next_offset) = join_account_settlements(
+                (trading_events, _) = join_account_settlements(
                     account_id.to_string(),
                     from_time,
                     to_time,
-                    Some(offset),
-                    Some(limit),
+                    None,
+                    None,
                 )
                 .await?;
-                if has_next_offset {
-                    response.next_offset = Some(offset + limit);
-                }
             }
             TradingEventType::LIQUIDATION => {
                 trading_events = join_account_liquidations(
                     account_id.to_string(),
                     from_time,
                     to_time,
-                    Some(offset),
-                    Some(limit),
+                    None,
+                    None,
                 )
                 .await?;
             }
             TradingEventType::ADL => {
-                trading_events = join_account_adls(
-                    account_id.to_string(),
-                    from_time,
-                    to_time,
-                    Some(offset),
-                    Some(limit),
-                )
-                .await?;
+                trading_events =
+                    join_account_adls(account_id.to_string(), from_time, to_time, None, None)
+                        .await?;
             }
         }
         trading_events.sort();
         response.events = trading_events;
         return Ok(response);
     }
-    let balance_trans = join_account_balance_transactions(
+    let trade_size = if let Some(trade_size) = acc_range_get(account_id, from_time, to_time) {
+        trade_size
+    } else {
+        let trade_size = count_user_in_time_range(
+            account_id.to_string(),
+            NaiveDateTime::from_timestamp_opt(from_time, 0)
+                .ok_or_else(|| anyhow!("timestamp of from_time should be valid"))?,
+            NaiveDateTime::from_timestamp_opt(to_time, 0)
+                .ok_or_else(|| anyhow!("timestamp of to_time should be valid"))?,
+        )
+        .await?;
+        acc_range_insert(account_id, from_time, to_time, trade_size as u32);
+        trade_size as u32
+    };
+    let (perp_trades, cursor) = join_account_partitioned_perp_trades(
         account_id.to_string(),
         from_time,
         to_time,
-        Some(offset),
         Some(limit),
+        offset_block_time,
+        offset_block_number,
+        offset_transaction_index,
+        offset_log_index,
     )
     .await?;
-    let (perp_trades, has_next_offset) = join_account_perp_trades(
-        account_id.to_string(),
-        from_time,
-        to_time,
-        Some(offset),
-        Some(limit),
-    )
-    .await?;
-    if has_next_offset {
-        response.next_offset = Some(offset + limit);
+    if perp_trades.len() as u32 == limit {
+        response.trading_event_next_cursor = cursor;
     }
-    let (settlements, has_next_offset) = join_account_settlements(
-        account_id.to_string(),
-        from_time,
-        to_time,
-        Some(offset),
-        Some(limit),
-    )
-    .await?;
-    if has_next_offset {
-        response.next_offset = Some(offset + limit);
-    }
-    let liquidations = join_account_liquidations(
-        account_id.to_string(),
-        from_time,
-        to_time,
-        Some(offset),
-        Some(limit),
-    )
-    .await?;
-    let adls = join_account_adls(
-        account_id.to_string(),
-        from_time,
-        to_time,
-        Some(offset),
-        Some(limit),
-    )
-    .await?;
+    response.trades_count = Some(trade_size);
+    let (balance_trans, settlements, liquidations, adls) = if offset_block_number.is_some() {
+        (vec![], vec![], vec![], vec![])
+    } else {
+        (
+            join_account_balance_transactions(
+                account_id.to_string(),
+                from_time,
+                to_time,
+                None,
+                None,
+            )
+            .await?,
+            join_account_settlements(account_id.to_string(), from_time, to_time, None, None)
+                .await?
+                .0,
+            join_account_liquidations(account_id.to_string(), from_time, to_time, None, None)
+                .await?,
+            join_account_adls(account_id.to_string(), from_time, to_time, None, None).await?,
+        )
+    };
     let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
     trading_events.sort();
     response.events = trading_events;
@@ -575,18 +634,50 @@ pub async fn join_account_perp_trades(
 
 pub async fn join_account_partitioned_perp_trades(
     account_id: String,
-    from_time: i64,
-    to_time: i64,
-) -> Result<Vec<TradingEvent>> {
+    mut from_time: i64,
+    mut to_time: i64,
+    limit: Option<u32>,
+    offset_block_time: Option<i64>,
+    offset_block_number: Option<i64>,
+    offset_transaction_index: Option<i32>,
+    offset_log_index: Option<i32>,
+) -> Result<(Vec<TradingEvent>, Option<AccoutTradingCursor>)> {
+    if let Some(offset_block_time) = offset_block_time {
+        from_time = std::cmp::max(offset_block_time, from_time);
+    };
+    let mut cursor: Option<AccoutTradingCursor> = None;
     let executed_trades = query_account_partitioned_executed_trades(
         account_id.clone(),
         NaiveDateTime::from_timestamp_opt(from_time, 0)
             .ok_or_else(|| anyhow!("timestamp of from_time should be valid"))?,
         NaiveDateTime::from_timestamp_opt(to_time, 0)
             .ok_or_else(|| anyhow!("timestamp of to_time should be valid"))?,
+        limit,
+        offset_block_number,
+        offset_transaction_index,
+        offset_log_index,
     )
     .await?;
+    if executed_trades.len() as u32 == limit.unwrap_or_default() {
+        if let Some(last) = executed_trades.last() {
+            cursor = Some(AccoutTradingCursor {
+                block_time: last.block_time.timestamp(),
+                block_number: last.block_number,
+                transaction_index: last.transaction_index,
+                log_index: last.log_index,
+            });
+        }
+    }
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "executed_trades length: {}", executed_trades.len());
+
+    if offset_block_time.is_some() {
+        if let Some(executed_trade) = executed_trades.first() {
+            from_time = executed_trade.block_time.timestamp();
+        }
+        if let Some(executed_trade) = executed_trades.last() {
+            to_time = executed_trade.block_time.timestamp();
+        }
+    }
     let mut executed_trades_map: BTreeMap<(i64, i32), Vec<DbPartitionedExecutedTrades>> =
         BTreeMap::new();
     executed_trades.into_iter().for_each(|trade| {
@@ -615,7 +706,7 @@ pub async fn join_account_partitioned_perp_trades(
             ));
         }
     }
-    Ok(trading_event_vec)
+    Ok((trading_event_vec, cursor))
 }
 
 pub async fn join_balance_transactions(

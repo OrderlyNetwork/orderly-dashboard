@@ -205,18 +205,51 @@ pub async fn pull_perp_trading_events_by_account_v2(
     } else {
         None
     };
-    let offset = if let Some(offset) = params.get("offset") {
-        u32::from_str(offset)?
-    } else {
-        0
-    };
     let limit = get_common_cfg().db_query_limit;
 
     let orderly_processed_time =
         crate::api::get_may_cached_orderly_last_rpc_processed_timestamp().await?;
     to_time = min(orderly_processed_time, to_time);
+
+    let offset_block_time = if let Some(offset_block_time) = params.get("offset_block_time") {
+        Some(i64::from_str(offset_block_time)?)
+    } else {
+        None
+    };
+    let offset_block_number = if let Some(offset_block_number) = params.get("offset_block_number") {
+        Some(i64::from_str(offset_block_number)?)
+    } else {
+        None
+    };
+    let offset_transaction_index =
+        if let Some(offset_transaction_index) = params.get("offset_transaction_index") {
+            Some(i32::from_str(offset_transaction_index)?)
+        } else {
+            None
+        };
+    let offset_log_index = if let Some(offset_log_index) = params.get("offset_log_index") {
+        Some(i32::from_str(offset_log_index)?)
+    } else {
+        None
+    };
+    let valid_offset = (offset_block_time.is_some()
+        && offset_block_number.is_some()
+        && offset_transaction_index.is_some()
+        && offset_log_index.is_some())
+        || (offset_block_time.is_none()
+            && offset_block_number.is_none()
+            && offset_transaction_index.is_none()
+            && offset_log_index.is_none());
+    if !valid_offset {
+        return Ok(IndexerQueryResponse::Failure(FailureResponse::new(
+            1000,
+            format!("offset params should all filled or none filled"),
+        )));
+    }
+
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
-        "events v2 account_id: {}, from_time: {}, to_time: {} e_type: {:?}, offset: {}, limit: {}", account_id, from_time, to_time, e_type, offset, limit as u32
+        "events v2 account_id: {}, from_time: {}, to_time: {} e_type: {:?}, limit: {}, offset_block_time: {:?}, offset_block_number: {:?}, offset_transaction_index: {:?}, offset_log_index: {:?}", account_id, from_time, to_time, e_type, limit as u32,
+        offset_block_time, offset_block_number, offset_transaction_index, offset_log_index,
     );
 
     let response = filter_join::account_perp_trading_join_events_v2(
@@ -224,8 +257,11 @@ pub async fn pull_perp_trading_events_by_account_v2(
         from_time,
         to_time,
         e_type,
-        offset,
         limit as u32,
+        offset_block_time,
+        offset_block_number,
+        offset_transaction_index,
+        offset_log_index,
     )
     .await?;
 
