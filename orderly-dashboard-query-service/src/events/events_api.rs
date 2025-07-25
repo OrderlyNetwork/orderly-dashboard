@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use std::time::Instant;
 
-use actix_web::{get, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder};
 use chrono::{Duration, Utc};
 use orderly_dashboard_analyzer::sync_broker::{cal_account_id, get_sol_account_id};
 use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
@@ -12,8 +12,9 @@ use crate::error_code::{
     ACCOUNT_ID_CONFLICT_OR_INVALID_ERR, ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE,
 };
 use once_cell::sync::Lazy;
-use orderly_dashboard_analyzer::db::user_info::UserInfo;
-use orderly_dashboard_indexer::formats_external::trading_events::AccountTradingEventsResponse;
+use orderly_dashboard_indexer::formats_external::trading_events::{
+    AccountTradingEventsResponse, AccoutTradingCursor,
+};
 use orderly_dashboard_indexer::formats_external::{FailureResponse, IndexerQueryResponse};
 use reqwest::Client;
 use utoipa::ToSchema;
@@ -76,14 +77,56 @@ impl GetAccountEventsRequest {
 
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct GetAccountEventsV2Request {
-    broker_id: String,
-    address: String,
+    account_id: Option<String>,
+    broker_id: Option<String>,
+    address: Option<String>,
     #[serde(default = "two_weeks_ago")]
     from_time: i64,
     #[serde(default = "now_time")]
     to_time: i64,
     event_type: Option<String>,
-    offset: Option<u32>,
+    trading_event_next_cursor: Option<AccoutTradingCursor>,
+}
+
+impl GetAccountEventsV2Request {
+    pub fn check_account_id_valid_and_cal(&mut self) -> bool {
+        if self.account_id.is_none() && self.address.is_none() && self.broker_id.is_none() {
+            return true;
+        }
+        if self.account_id.is_some() && self.address.is_none() && self.broker_id.is_none() {
+            return true;
+        }
+        if self.account_id.is_none() && self.address.is_some() && self.broker_id.is_some() {
+            let address = self.address.clone().unwrap();
+            let broker_id = self.broker_id.clone().unwrap();
+            if address.starts_with("0x") {
+                match cal_account_id(&broker_id, &address) {
+                    Ok(account_id) => {
+                        self.account_id = Some(account_id);
+                    }
+                    Err(_) => {
+                        return false;
+                    }
+                };
+            } else {
+                let sol_key = Pubkey::from_str(&address);
+                if sol_key.is_err() {
+                    return false;
+                }
+                let sol_key = sol_key.unwrap();
+                match get_sol_account_id(&sol_key, &broker_id) {
+                    Ok(account_id) => {
+                        self.account_id = Some(account_id);
+                    }
+                    Err(_) => {
+                        return false;
+                    }
+                };
+            };
+            return true;
+        }
+        false
+    }
 }
 
 fn two_weeks_ago() -> i64 {
@@ -171,32 +214,71 @@ pub async fn list_events(
     };
 }
 
-#[get("/events_v2")] // <- define path parameters
+/// Get user token/trading events informations with pagelization
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Account events response on orderly", body = IndexerQueryResponse<AccountTradingEventsResponse>),
+        (status = 1000, description = "Invalid Request")
+    ),
+    request_body(
+        content = GetAccountEventsV2Request, content_type = "application/json", 
+        description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal enum with value \"TRANSACTION | PERPTRADE | SETTLEMENT | LIQUIDATION | ADL\"
+example1: \n
+```json
+{ 
+  \"address\": \"0x72d5a3ab49c38bf7b2c658a9f1790945a6d308a8\",
+  \"broker_id\": \"orderly\",
+  \"event_type\": \"PERPTRADE\",
+  \"from_time\": 1720604240,
+  \"to_time\": 1721468240 
+} \n
+```
+
+ example2 with trading_event_next_cursor from last response: \n
+ ```json
+{ 
+  \"address\": \"0x72d5a3ab49c38bf7b2c658a9f1790945a6d308a8\",
+  \"broker_id\": \"orderly\", 
+  \"event_type\": \"PERPTRADE\", 
+  \"from_time\": 1720604240,
+  \"to_time\": 1721468240, 
+  \"trading_event_next_cursor\": 
+    { 
+      \"block_time\": 1720704240,
+      \"block_number\": 10863245,
+      \"transaction_index\": 2,
+      \"log_index\": 122 
+    } 
+} \n
+ ```
+    "
+    ),
+)]
+#[post("/events_v2")] // <- define path parameters
 pub async fn list_events_v2(
-    param: web::Query<GetAccountEventsV2Request>,
-) -> actix_web::Result<impl Responder> {
+    mut param: web::Json<GetAccountEventsV2Request>,
+) -> actix_web::Result<HttpResponse> {
     tracing::info!(
         target: QUERY_ACCOUNT_EVENT_CONTEXT,
-        "query account events v2 start broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, offset: {:?}",
-        param.broker_id, param.address, param.from_time, param.to_time, param.event_type, param.offset,
+        "query account events v2 start broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?}, trading_event_next_cursor: {:?}",
+        param.broker_id, param.address, param.from_time, param.to_time, param.event_type, param.trading_event_next_cursor,
     );
+    if !param.check_account_id_valid_and_cal() {
+        let resp = FailureResponse::new(
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR,
+            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE.to_string(),
+        );
+        return Ok(HttpResponse::Ok().json(resp));
+    }
     let inst = Instant::now();
-    let user_info_res = match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
-        Ok(user_info_res) => user_info_res,
-        Err(err) => {
-            let resp =
-                FailureResponse::new(1000, format!("parse account_id failed with err: {}", err));
-            return Ok(HttpResponse::Ok().json(resp));
-        }
-    };
     let elapsed_new_user = inst.elapsed().as_millis();
 
     let indexer_data = get_indexer_v2_data(
         param.from_time,
         param.to_time,
-        user_info_res.account_id,
+        param.account_id.clone().unwrap_or_default(),
         param.event_type.as_deref().map(str::to_uppercase),
-        param.offset,
+        &param.trading_event_next_cursor,
         get_common_cfg().indexer_address.clone(),
     )
     .await;
@@ -213,7 +295,7 @@ pub async fn list_events_v2(
             };
             tracing::info!(
                 target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query account v2 events sucs broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
+                "query account v2 events sucs broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
                 param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis(), elapsed_new_user, elapse_get_data,
             );
             return Ok(HttpResponse::Ok().json(response));
@@ -225,7 +307,7 @@ pub async fn list_events_v2(
             );
             tracing::warn!(
                 target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query account events failed broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?} with err: {}, cost: {} ms",
+                "query account events failed broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?} with err: {}, cost: {} ms",
                 param.broker_id, param.address, param.from_time, param.to_time, param.event_type, err, inst.elapsed().as_millis(),
             );
             return Ok(HttpResponse::Ok().json(resp));
@@ -354,7 +436,7 @@ async fn get_indexer_v2_data(
     to_time: i64,
     p_account_id: String,
     event_type: Option<String>,
-    offset: Option<u32>,
+    trading_event_next_cursor: &Option<AccoutTradingCursor>,
     base_url: String,
 ) -> anyhow::Result<IndexerQueryResponse<AccountTradingEventsResponse>> {
     let mut indexer_url = if let Some(event_type) = event_type {
@@ -368,8 +450,11 @@ async fn get_indexer_v2_data(
             base_url, p_account_id, from_time, to_time,
         )
     };
-    if let Some(offset) = offset {
-        indexer_url = format!("{}&offset={}", indexer_url, offset);
+    if let Some(trading_event_next_cursor) = trading_event_next_cursor {
+        indexer_url = format!(
+            "{}&offset_block_time={}&offset_block_number={}&offset_transaction_index={}&offset_log_index={}", 
+            indexer_url, trading_event_next_cursor.block_time, trading_event_next_cursor.block_number, trading_event_next_cursor.transaction_index, trading_event_next_cursor.log_index,
+        );
     }
     let response = CLIENT.get(indexer_url).send().await;
     match response {
