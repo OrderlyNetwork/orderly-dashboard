@@ -13,7 +13,9 @@ use crate::error_code::{
 };
 use once_cell::sync::Lazy;
 use orderly_dashboard_analyzer::db::user_info::UserInfo;
-use orderly_dashboard_indexer::formats_external::trading_events::AccountTradingEventsResponse;
+use orderly_dashboard_indexer::formats_external::trading_events::{
+    AccountTradingEventsResponse, AccoutTradingCursor,
+};
 use orderly_dashboard_indexer::formats_external::{FailureResponse, IndexerQueryResponse};
 use reqwest::Client;
 use utoipa::ToSchema;
@@ -83,7 +85,7 @@ pub struct GetAccountEventsV2Request {
     #[serde(default = "now_time")]
     to_time: i64,
     event_type: Option<String>,
-    offset: Option<u32>,
+    trading_event_next_cursor: Option<AccoutTradingCursor>,
 }
 
 fn two_weeks_ago() -> i64 {
@@ -171,14 +173,22 @@ pub async fn list_events(
     };
 }
 
+/// Get user token/trading events informations with pagelization
+#[utoipa::path(
+    responses(
+        (status = 200, description = "Get Account events response on orderly", body = IndexerQueryResponse<AccountTradingEventsResponse>),
+        (status = 1000, description = "Invalid Request")
+    ),
+    params(("param" = GetAccountEventsV2Request, Query, description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal enum with value \"TRANSACTION | PERPTRADE | SETTLEMENT | LIQUIDATION | ADL\"")),
+)]
 #[get("/events_v2")] // <- define path parameters
 pub async fn list_events_v2(
     param: web::Query<GetAccountEventsV2Request>,
-) -> actix_web::Result<impl Responder> {
+) -> actix_web::Result<HttpResponse> {
     tracing::info!(
         target: QUERY_ACCOUNT_EVENT_CONTEXT,
-        "query account events v2 start broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, offset: {:?}",
-        param.broker_id, param.address, param.from_time, param.to_time, param.event_type, param.offset,
+        "query account events v2 start broker_id: {}, address: {}, from_time: {}, to_time: {}, event_type: {:?}, trading_event_next_cursor: {:?}",
+        param.broker_id, param.address, param.from_time, param.to_time, param.event_type, param.trading_event_next_cursor,
     );
     let inst = Instant::now();
     let user_info_res = match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
@@ -196,7 +206,7 @@ pub async fn list_events_v2(
         param.to_time,
         user_info_res.account_id,
         param.event_type.as_deref().map(str::to_uppercase),
-        param.offset,
+        &param.trading_event_next_cursor,
         get_common_cfg().indexer_address.clone(),
     )
     .await;
@@ -354,7 +364,7 @@ async fn get_indexer_v2_data(
     to_time: i64,
     p_account_id: String,
     event_type: Option<String>,
-    offset: Option<u32>,
+    trading_event_next_cursor: &Option<AccoutTradingCursor>,
     base_url: String,
 ) -> anyhow::Result<IndexerQueryResponse<AccountTradingEventsResponse>> {
     let mut indexer_url = if let Some(event_type) = event_type {
@@ -368,8 +378,11 @@ async fn get_indexer_v2_data(
             base_url, p_account_id, from_time, to_time,
         )
     };
-    if let Some(offset) = offset {
-        indexer_url = format!("{}&offset={}", indexer_url, offset);
+    if let Some(trading_event_next_cursor) = trading_event_next_cursor {
+        indexer_url = format!(
+            "{}&offset_block_time={}&offset_block_number={}&offset_transaction_index={}&offset_log_index={}", 
+            indexer_url, trading_event_next_cursor.block_time, trading_event_next_cursor.block_number, trading_event_next_cursor.transaction_index, trading_event_next_cursor.log_index,
+        );
     }
     let response = CLIENT.get(indexer_url).send().await;
     match response {
