@@ -7,7 +7,7 @@ use utoipa::{
 };
 
 use crate::{
-    events::events_api::GetAccountEventsRequest,
+    events::events_api::{GetAccountEventsRequest, GetAccountEventsV2Request},
     format_extern::{
         trading_metrics::{
             DailyData, DailyTradingFeeExtern, DailyVolumeExtern, OrderlyPerpDaily,
@@ -40,6 +40,7 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryResponse;
         crate::trading_metrics::get_token_deposit_rank,
         crate::trading_metrics::get_token_withdraw_rank,
         crate::events::events_api::list_events,
+        crate::events::events_api::list_events_v2,
     ),
     components(
         schemas(
@@ -51,6 +52,7 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryResponse;
             GetAccountEventsRequest,
             PnlRankingRequest,
             DepositWithdrawRankingRequest,
+            GetAccountEventsV2Request,
             IndexerQueryResponse<AccountTradingEventsResponse>,
             QeuryServiceResponse<DailyData<OrderlyPerpDaily>>,
             QeuryServiceResponse<TradingVolumeRanking>,
