@@ -616,9 +616,19 @@ pub enum TradingEventInnerData {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default, TypeDef, ToSchema)]
+pub struct AccoutTradingCursor {
+    pub block_time: i64,
+    pub block_number: i64,
+    pub transaction_index: i32,
+    pub log_index: i32,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default, TypeDef, ToSchema)]
 pub struct AccountTradingEventsResponse {
     pub events: Vec<TradingEvent>,
-    pub next_offset: Option<u32>,
+    pub trading_event_next_cursor: Option<AccoutTradingCursor>,
+    pub trades_count: Option<u32>,
+    pub page_size_limit: Option<u32>,
 }
 
 #[allow(dead_code)]

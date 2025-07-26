@@ -91,7 +91,8 @@ fn service_config(conf: &mut web::ServiceConfig) {
         .service(trading_metrics::get_token_deposit_rank)
         .service(trading_metrics::get_token_withdraw_rank)
         .service(get_perp_recent_days_pnl_rank)
-        .service(list_events);
+        .service(list_events)
+        .service(list_events_v2);
 }
 
 #[actix_web::main]
@@ -154,7 +155,6 @@ async fn main() -> std::io::Result<()> {
             .service(analyzer_raw_query)
             .service(get_status)
             .service(list_sol_events)
-            .service(list_events_v2)
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-docs/openapi.json", ApiDoc::openapi()),
