@@ -144,7 +144,7 @@ fn now_time() -> i64 {
         (status = 200, description = "Get Account events response on orderly", body = IndexerQueryResponse<AccountTradingEventsResponse>),
         (status = 1000, description = "Invalid Request")
     ),
-    params(("param" = GetAccountEventsRequest, Query, description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal enum with value \"TRANSACTION | PERPTRADE | SETTLEMENT | LIQUIDATION | ADL\"")),
+    params(("param" = GetAccountEventsRequest, Query, description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal enum with value \"TRANSACTION | PERPTRADE | SETTLEMENT | LIQUIDATION | ADL\". if `event_type` is not be set, this api will return all event types")),
 )]
 #[get("/events")]
 pub async fn list_events(
@@ -222,7 +222,7 @@ pub async fn list_events(
     ),
     request_body(
         content = GetAccountEventsV2Request, content_type = "application/json", 
-        description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal `enum` with value \"`TRANSACTION` | `PERPTRADE` | `SETTLEMENT` | `LIQUIDATION` | `ADL`\"
+        description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal `enum` with value \"`TRANSACTION` | `PERPTRADE` | `SETTLEMENT` | `LIQUIDATION` | `ADL`. if `event_type` is not be set, this api will return all events without filtering by type.\n
 example1: query first page by `account_id` and time range \n
 ```json
 { 
