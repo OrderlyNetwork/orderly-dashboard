@@ -11,6 +11,13 @@ pub enum IndexerQueryResponse<T> {
     Failure(FailureResponse),
 }
 
+#[derive(Serialize, Deserialize, ToSchema)]
+#[serde(untagged)]
+pub enum IndexerQueryExternResponse<T> {
+    Success(ser_schema::SuccessResponse<T>),
+    Failure(ser_schema::FailureResponse),
+}
+
 impl<T: Default> IndexerQueryResponse<T> {
     pub fn empty_success() -> Self {
         Self::Success(SuccessResponse::default())
@@ -92,6 +99,23 @@ mod ser {
                 message,
             }
         }
+    }
+}
+
+mod ser_schema {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize, utoipa::ToSchema)]
+    pub struct SuccessResponse<T> {
+        success: bool,
+        data: T,
+    }
+
+    #[derive(Serialize, Deserialize, utoipa::ToSchema)]
+    pub struct FailureResponse {
+        success: bool,
+        code: i32,
+        message: String,
     }
 }
 

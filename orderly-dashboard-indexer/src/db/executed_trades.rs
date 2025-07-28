@@ -250,7 +250,7 @@ pub async fn query_account_executed_trades(
     let query = executed_trades
         .filter(block_time.ge(from_time))
         .filter(block_time.le(to_time))
-        .filter(account_id.eq(account));
+        .filter(account_id.eq(account.clone()));
 
     let result = if let Some(offset) = offset {
         query
@@ -269,19 +269,21 @@ pub async fn query_account_executed_trades(
             if dur_ms >= 100 {
                 tracing::warn!(
                     target: ALERT_CONTEXT,
-                    "query_account_executed_trades slow query. from_time:{}, to_time:{} length:{}, used time:{} ms",
+                    "query_account_executed_trades slow query. account_id: {}, from_time:{}, to_time:{} length:{}, used time:{} ms",
+                        account,
                         from_time,
                         to_time,
                     events.len(),
                     dur_ms
                 );
+            } else {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_account_executed_trades success. length:{}, used time:{} ms",
+                    events.len(),
+                    dur_ms
+                );
             }
-            tracing::info!(
-                target: DB_CONTEXT,
-                "query_account_executed_trades success. length:{}, used time:{} ms",
-                events.len(),
-                dur_ms
-            );
             events
         }
         Err(error) => match error {

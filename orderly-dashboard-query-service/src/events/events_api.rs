@@ -15,7 +15,9 @@ use once_cell::sync::Lazy;
 use orderly_dashboard_indexer::formats_external::trading_events::{
     AccountTradingEventsResponse, AccoutTradingCursor,
 };
-use orderly_dashboard_indexer::formats_external::{FailureResponse, IndexerQueryResponse};
+use orderly_dashboard_indexer::formats_external::{
+    FailureResponse, IndexerQueryExternResponse, IndexerQueryResponse,
+};
 use reqwest::Client;
 use utoipa::ToSchema;
 
@@ -141,7 +143,7 @@ fn now_time() -> i64 {
 /// Get user token/trading events informations[This api will be deprecated as it may return too manay data without pagelization, please use `/events_v2` api]
 #[utoipa::path(
     responses(
-        (status = 200, description = "Get Account events response on orderly", body = IndexerQueryResponse<AccountTradingEventsResponse>),
+        (status = 200, description = "Get Account events response on orderly", body = IndexerQueryExternResponse<AccountTradingEventsResponse>),
         (status = 1000, description = "Invalid Request")
     ),
     params(("param" = GetAccountEventsRequest, Query, description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal enum with value \"TRANSACTION | PERPTRADE | SETTLEMENT | LIQUIDATION | ADL\". if `event_type` is not be set, this api will return all event types")),
@@ -217,7 +219,9 @@ pub async fn list_events(
 /// Get user token/trading events informations with pagelization
 #[utoipa::path(
     responses(
-        (status = 200, description = "Get Account events response on orderly, it will return account's `trading events` and `trading_event_next_cursor`, if `trading_event_next_cursor` is not null, you need to to take this data as a param of next page's request. `trading_event_next_cursor` is only filled when `PERPTRADE` were requested and next page exist", body = IndexerQueryResponse<AccountTradingEventsResponse>),
+        (status = 200, description = "Get Account events response on orderly, it will return account's `trading events` and `trading_event_next_cursor`, if `trading_event_next_cursor` is not null, you need to to take this data as a param of next page's request. `trading_event_next_cursor` is only filled when `PERPTRADE` were requested and next page exist", 
+            body = IndexerQueryExternResponse<AccountTradingEventsResponse>
+        ),
         (status = 1000, description = "Invalid Request")
     ),
     request_body(
