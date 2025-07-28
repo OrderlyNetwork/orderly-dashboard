@@ -138,7 +138,7 @@ fn now_time() -> i64 {
     Utc::now().timestamp()
 }
 
-/// Get user token/trading events informations
+/// Get user token/trading events informations[This api will be deprecated as it may return too manay data without pagelization, please use `/events_v2` api]
 #[utoipa::path(
     responses(
         (status = 200, description = "Get Account events response on orderly", body = IndexerQueryResponse<AccountTradingEventsResponse>),
