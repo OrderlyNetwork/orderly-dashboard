@@ -25,7 +25,7 @@ use crate::{
 };
 
 use orderly_dashboard_indexer::formats_external::trading_events::AccountTradingEventsResponse;
-use orderly_dashboard_indexer::formats_external::IndexerQueryResponse;
+use orderly_dashboard_indexer::formats_external::IndexerQueryExternResponse;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -53,7 +53,7 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryResponse;
             PnlRankingRequest,
             DepositWithdrawRankingRequest,
             GetAccountEventsV2Request,
-            IndexerQueryResponse<AccountTradingEventsResponse>,
+            IndexerQueryExternResponse<AccountTradingEventsResponse>,
             QeuryServiceResponse<DailyData<OrderlyPerpDaily>>,
             QeuryServiceResponse<TradingVolumeRanking>,
             QeuryServiceResponse<DailyVolumeExtern>,
