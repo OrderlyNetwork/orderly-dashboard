@@ -219,7 +219,8 @@ pub async fn list_events(
 /// Get user token/trading events informations with pagelization
 #[utoipa::path(
     responses(
-        (status = 200, description = "Get Account events response on orderly, it will return account's `trading events` and `trading_event_next_cursor`, if `trading_event_next_cursor` is not null, you need to to take this data as a param of next page's request. `trading_event_next_cursor` is only filled when `PERPTRADE` were requested and next page exist", 
+        (status = 200, description = "Get Account events response on orderly, it will return account's `trading events` and `trading_event_next_cursor`, if `trading_event_next_cursor` is not null, you need to to take this data as a param of next page's request. 
+        `trading_event_next_cursor` is only filled when `PERPTRADE` were requested(`event_type` is null or `event_type`  is `PERPTRADE` on request_body) and next page exist", 
             body = IndexerQueryExternResponse<AccountTradingEventsResponse>
         ),
         (status = 1000, description = "Invalid Request")
@@ -227,6 +228,8 @@ pub async fn list_events(
     request_body(
         content = GetAccountEventsV2Request, content_type = "application/json", 
         description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal `enum` with value \"`TRANSACTION` | `PERPTRADE` | `SETTLEMENT` | `LIQUIDATION` | `ADL`. if `event_type` is not be set, this api will return all events without filtering by type.\n
+If the returning events data have `PERPTRADE` and other `event_type` events, all other `event_type` events will return on first page without `trading_event_next_cursor` param in request, only `PERPTRADE` events were paginated.
+    
 example1: query first page by `account_id` and time range \n
 ```json
 { 
