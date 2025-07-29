@@ -2,6 +2,7 @@ use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
 use crate::schema::transaction_events;
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
+use diesel::upsert::{excluded, on_constraint};
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
@@ -13,6 +14,7 @@ pub enum DbTransactionSide {
     Deposit = 1,
     Withdraw = 2,
     WithdrawApprove = 3,
+    SolWithdrawApprove = 4,
 }
 
 impl DbTransactionSide {
@@ -29,6 +31,7 @@ impl TryFrom<i16> for DbTransactionSide {
             1 => Ok(Self::Deposit),
             2 => Ok(Self::Withdraw),
             3 => Ok(Self::WithdrawApprove),
+            4 => Ok(Self::SolWithdrawApprove),
             _ => Err(anyhow::anyhow!(
                 "cannot convert integer:{} to DbTransactionSide",
                 value
@@ -88,7 +91,9 @@ pub async fn create_balance_transaction_executions(
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let num_rows = diesel::insert_into(transaction_events)
         .values(balance_transactions)
-        .on_conflict_do_nothing()
+        .on_conflict(on_constraint("transaction_events_id"))
+        .do_update()
+        .set(block_time.eq(excluded(block_time)))
         .execute(&mut conn)
         .await?;
     Ok(num_rows)

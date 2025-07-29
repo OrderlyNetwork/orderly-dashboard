@@ -374,7 +374,7 @@ impl TryFrom<i16> for TransactionSide {
     fn try_from(value: i16) -> Result<Self, Self::Error> {
         match value {
             1 => Ok(Self::Deposit),
-            2 => Ok(Self::Withdraw),
+            2 | 3 | 4 => Ok(Self::Withdraw),
             _ => Err(anyhow::anyhow!("cannot convert integer to TransactionSide")),
         }
     }

@@ -10,14 +10,16 @@ use once_cell::sync::OnceCell;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use tx_event_handler::consume_tx_and_logs;
-pub use tx_event_handler::simple_recover_deposit_sol_logs;
+pub use tx_event_handler::{
+    simple_recover_deposit_sol_logs, simple_recover_sol_deposit_withdraw_approve_and_rebalance_logs,
+};
 
 use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 
 pub(crate) const HANDLE_LOG: &str = "handle_log";
 pub(crate) const OPERATOR_MANAGER_SC: &str = "operator_manager_sc";
 pub(crate) const LEDGER_SC: &str = "ledger_sc";
-pub(crate) const VAULT_SC: &str = "vault_sc";
+pub(crate) const VAULT_MANAGER_SC: &str = "vault_manager_sc";
 
 pub(crate) static ADDR_MAP: OnceCell<BTreeMap<Address, &str>> = OnceCell::new();
 pub(crate) static TARGET_ADDRS: OnceCell<Vec<Address>> = OnceCell::new();
@@ -35,7 +37,7 @@ pub(crate) fn init_addr_set() -> anyhow::Result<()> {
     addrs.push(ledger_address);
 
     let vault_manager_address = H160::from_str(&config.vault_manager_address)?;
-    addr_map.insert(vault_manager_address, VAULT_SC);
+    addr_map.insert(vault_manager_address, VAULT_MANAGER_SC);
     addrs.push(vault_manager_address);
 
     if ADDR_MAP.set(addr_map).is_err() {

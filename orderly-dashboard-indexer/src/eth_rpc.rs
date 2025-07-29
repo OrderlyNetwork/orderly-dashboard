@@ -14,6 +14,10 @@ use crate::{
             LiquidationTransferFilter, LiquidationTransferV2Filter, ProcessValidatedFutures1Filter,
             ProcessValidatedFutures2Filter, SettlementExecutionFilter, SettlementResultFilter,
         },
+        vault_manager::{
+            RebalanceBurnFilter, RebalanceBurnResultFilter, RebalanceMintFilter,
+            RebalanceMintResultFilter,
+        },
     },
     config::COMMON_CONFIGS,
     contract::TARGET_ADDRS,
@@ -189,6 +193,10 @@ pub async fn get_block_logs(block_num: u64) -> Result<Vec<Log>> {
         LiquidationTransferV2Filter::signature(),
         BalanceTransferFilter::signature(),
         AccountDepositSolFilter::signature(),
+        RebalanceBurnFilter::signature(),
+        RebalanceBurnResultFilter::signature(),
+        RebalanceMintFilter::signature(),
+        RebalanceMintResultFilter::signature(),
     ];
     let address = unsafe { TARGET_ADDRS.get_unchecked() }.clone();
     let filter = Filter::new()

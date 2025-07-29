@@ -119,3 +119,14 @@ pub(crate) async fn recover_sol_deposit_events(
     .await?;
     Ok(IndexerQueryResponse::empty_success())
 }
+
+pub(crate) async fn recover_sol_withdraw_approve_rebalance_events(
+    request: RecoveryBlockRequest,
+) -> Result<IndexerQueryResponse<()>> {
+    crate::contract::simple_recover_sol_deposit_withdraw_approve_and_rebalance_logs(
+        request.start_block_height,
+        request.end_block_height,
+    )
+    .await?;
+    Ok(IndexerQueryResponse::empty_success())
+}

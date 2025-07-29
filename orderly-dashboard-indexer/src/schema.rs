@@ -232,6 +232,28 @@ diesel::table! {
 }
 
 diesel::table! {
+    executed_trades_y2025q04 (block_number, transaction_index, log_index, block_time) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        typ -> Int2,
+        account_id -> Text,
+        symbol_hash -> Text,
+        fee_asset_hash -> Text,
+        trade_qty -> Numeric,
+        notional -> Numeric,
+        executed_price -> Numeric,
+        fee -> Numeric,
+        sum_unitary_fundings -> Numeric,
+        trade_id -> Numeric,
+        match_id -> Numeric,
+        timestamp -> Numeric,
+        side -> Bool,
+        block_time -> Timestamp,
+    }
+}
+
+diesel::table! {
     fee_distribution (block_number, transaction_index, log_index) {
         block_number -> Int8,
         transaction_index -> Int4,
@@ -302,6 +324,26 @@ diesel::table! {
         timestamp -> Numeric,
         side -> Bool,
         block_time -> Timestamp,
+    }
+}
+
+diesel::table! {
+    rebalance_events (rebalance_id) {
+        rebalance_id -> Int8,
+        token_hash -> Text,
+        amount -> Numeric,
+        src_chain_id -> Numeric,
+        dst_chain_id -> Numeric,
+        burn_tx_id -> Text,
+        burn_result_tx_id -> Nullable<Text>,
+        mint_tx_id -> Nullable<Text>,
+        mint_result_tx_id -> Nullable<Text>,
+        burn_result_block_time -> Nullable<Int8>,
+        mint_result_block_time -> Nullable<Int8>,
+        burn_result_block_number -> Nullable<Int8>,
+        mint_result_block_number -> Nullable<Int8>,
+        burn_success -> Nullable<Bool>,
+        mint_success -> Nullable<Bool>,
     }
 }
 
@@ -436,10 +478,12 @@ diesel::allow_tables_to_appear_in_same_query!(
     executed_trades_y2025q01,
     executed_trades_y2025q02,
     executed_trades_y2025q03,
+    executed_trades_y2025q04,
     fee_distribution,
     liquidation_result,
     liquidation_transfer,
     partitioned_executed_trades,
+    rebalance_events,
     serial_batches,
     settings,
     settlement_execution,
