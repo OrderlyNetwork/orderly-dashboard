@@ -6,6 +6,7 @@ import { useAppState } from '~/App';
 
 type SearchType = 'address' | 'accountId' | undefined;
 export type AddressData = { address: string; account_id: string; broker_id: string };
+export type ChainNamespace = 'evm' | 'sol';
 
 export const useSearchAddress = (
   query: string | null
@@ -30,6 +31,10 @@ export const useSearchAddress = (
   }
 
   useEffect(() => {
+    setAddressData(undefined);
+  }, [query]);
+
+  useEffect(() => {
     if (searchType != null) return;
     setAddressData(undefined);
   }, [searchType]);
@@ -41,6 +46,10 @@ export const useSearchAddress = (
   }, [loadingCount, addressData, setAddressData]);
 
   useEffect(() => {
+    // Reset state when query changes
+    setIndex(0);
+    setLoadingCount(1_000);
+
     match(searchType)
       .with('accountId', () => {
         setUrls([`${evmApiUrl}/v1/public/account?account_id=${query}`]);
@@ -58,7 +67,10 @@ export const useSearchAddress = (
             );
           })
       )
-      .with(undefined, () => [])
+      .with(undefined, () => {
+        setUrls(undefined);
+        setLoadingCount(0);
+      })
       .exhaustive();
   }, [searchType, evmApiUrl, query, isSol]);
 
@@ -69,7 +81,7 @@ export const useSearchAddress = (
   }, [urls]);
 
   useSWR(
-    (urls ?? [])[index],
+    urls && index < urls.length ? urls[index] : null,
     (url: string) =>
       fetch(url)
         .then((r) => r.json())
@@ -78,13 +90,11 @@ export const useSearchAddress = (
             if (val.code === -1_003) {
               throw new Error(val.code);
             }
-            // setLoadingCount(loadingCount - 1);
             setLoadingCount((count) => count - 1);
-            setIndex(index + 1);
+            setIndex((currentIndex) => currentIndex + 1);
             throw new Error(val.message);
           }
           const data: AddressData | undefined = match(searchType)
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             .with('address', () => {
               const uri = new URL(url);
               const broker_id = uri.searchParams.get('broker_id');
@@ -100,7 +110,7 @@ export const useSearchAddress = (
           if (!data) throw new Error();
           setAddressData((cur) => [...(cur ?? []), data]);
           setLoadingCount((count) => count - 1);
-          setIndex(index + 1);
+          setIndex((currentIndex) => currentIndex + 1);
         }),
     {
       onErrorRetry: (error, _key, _config, revalidate, { retryCount }) => {

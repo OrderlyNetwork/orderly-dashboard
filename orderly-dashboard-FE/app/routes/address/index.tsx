@@ -23,8 +23,10 @@ export function useRenderColumns(
   eventType: EventType | 'ALL',
   setEventType: Dispatch<SetStateAction<EventType | 'ALL'>>
 ) {
-  const { data, error, isLoading, setSize, mutate } = useEvents(query);
-  const events = useMemo(() => data?.flat(), [data]);
+  const { data, error, isLoading, mutate } = useEvents(query);
+
+  const events = useMemo(() => data?.events || [], [data?.events]);
+  const nextCursorValue = data?.nextCursor;
 
   const columnHelper = createColumnHelper<EventTableData>();
 
@@ -633,7 +635,6 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXME how many decimals?
                   return new FixedNumber(value, 8).format({
                     maximumFractionDigits: 2
                   });
@@ -645,7 +646,6 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXME how many decimals?
                   return new FixedNumber(value, 8).format({
                     maximumFractionDigits: 2
                   });
@@ -687,7 +687,6 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXME how many decimals?
                   return new FixedNumber(value, 8).format({
                     maximumFractionDigits: 2
                   });
@@ -699,7 +698,6 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXME how many decimals?
                   return new FixedNumber(value, 8).format({
                     maximumFractionDigits: 2
                   });
@@ -713,5 +711,21 @@ export function useRenderColumns(
     return columns;
   }, [columnHelper, eventType, setEventType, events, tokens, symbols]);
 
-  return { columns, events, error, isLoading, setSize, mutate };
+  return {
+    columns,
+    events,
+    error,
+    isLoading,
+    mutate,
+    pagination: {
+      nextCursor: nextCursorValue,
+      hasMore: nextCursorValue !== null,
+      loadMore: () => {
+        // No longer needed since pagination is automatic
+      },
+      reset: () => {
+        // No longer needed since pagination is automatic
+      }
+    }
+  };
 }

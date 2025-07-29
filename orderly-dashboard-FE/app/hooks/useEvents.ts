@@ -1,5 +1,5 @@
-import { Dayjs } from 'dayjs';
-import useSWRInfinite from 'swr/infinite';
+import dayjs, { Dayjs } from 'dayjs';
+import useSWR from 'swr';
 import { P, match } from 'ts-pattern';
 
 import { useAppState } from '~/App';
@@ -43,12 +43,20 @@ export type EventTableData = types.TradingEvent &
       }
   );
 
+export type TradingEventCursor = {
+  block_time: number;
+  block_number: number;
+  transaction_index: number;
+  log_index: number;
+};
+
 export type EventsParams = {
   address: ChainAddress;
   broker_id: string;
   event_type?: EventType;
   from_time?: Dayjs | null;
   to_time?: Dayjs | null;
+  trading_event_next_cursor?: TradingEventCursor | null;
 };
 
 export type ChainAddress = {
@@ -58,84 +66,210 @@ export type ChainAddress = {
 
 export type ChainNamespace = 'evm' | 'sol';
 
+type EventsV2RequestBody = {
+  account_id?: string;
+  broker_id?: string;
+  address?: string;
+  event_type?: EventType;
+  from_time?: number;
+  to_time?: number;
+  trading_event_next_cursor?: TradingEventCursor;
+};
+
 export function useEvents(query: EventsParams | null) {
   const { queryServiceUrl } = useAppState();
-  return useSWRInfinite<EventTableData[]>(
-    (index) => {
+
+  return useSWR<{
+    events: EventTableData[];
+    nextCursor: TradingEventCursor | null;
+    pageSizeLimit: number;
+    tradesCount: number;
+  }>(
+    () => {
       if (query == null) return null;
 
-      const searchParams = new URLSearchParams();
-      searchParams.set('address', query.address.address);
-      searchParams.set('broker_id', query.broker_id);
-      if (query.event_type != null) {
-        searchParams.set('event_type', query.event_type);
-      }
-
-      if (query.from_time == null || query.to_time == null) {
-        if (index > 0) {
-          return null;
-        }
-        return match(query.address.chain_namespace)
-          .with('evm', () => [`${queryServiceUrl}/events`])
-          .with('sol', () => [`${queryServiceUrl}/events`, `${queryServiceUrl}/sol_events`])
-          .exhaustive();
-      }
-
-      const minFromTime = query.from_time;
-      let fromTime = query.to_time.subtract(2 * (index + 1), 'weeks');
-      const toTime = query.to_time.subtract(2 * index, 'weeks');
-
-      if (fromTime.valueOf() < minFromTime.valueOf()) {
-        fromTime = minFromTime;
-      }
-      if (toTime.valueOf() < minFromTime.valueOf()) {
-        return null;
-      }
-
-      searchParams.set('from_time', String(Math.trunc(fromTime.valueOf() / 1_000)));
-      searchParams.set('to_time', String(Math.trunc(toTime.valueOf() / 1_000)));
-      // we add `from` and `to` params here to invalidate SWR cache
-      return match(query.address.chain_namespace)
-        .with('evm', () => [
-          `${queryServiceUrl}/events?${searchParams.toString()}&from=${query.from_time!.format('L')}&to=${query.to_time!.format('L')}`
-        ])
-        .with('sol', () => [
-          `${queryServiceUrl}/events?${searchParams.toString()}&from=${query.from_time!.format('L')}&to=${query.to_time!.format('L')}`,
-          `${queryServiceUrl}/sol_events?${searchParams.toString()}&from=${query.from_time!.format('L')}&to=${query.to_time!.format('L')}`
-        ])
-        .exhaustive();
+      return [
+        'events_v2',
+        query.address.address,
+        query.broker_id,
+        query.event_type,
+        query.from_time?.valueOf(),
+        query.to_time?.valueOf(),
+        query.trading_event_next_cursor
+      ];
     },
-    (urls: string[]) =>
-      Promise.all(
-        urls.map((url) =>
-          fetch(url)
-            .then((r) => r.json())
-            .then(handleFetchEvents)
-        )
-      ).then((data: EventTableData[][]) =>
-        data.flat().sort((dataA, dataB) => dataA.block_timestamp - dataB.block_timestamp)
-      ),
+    async () => {
+      if (query == null) return { events: [], nextCursor: null, pageSizeLimit: 0, tradesCount: 0 };
+
+      if (query.from_time && query.to_time) {
+        const fromTime = query.from_time.valueOf() / 1000;
+        const toTime = query.to_time.valueOf() / 1000;
+        const diffInDays = (toTime - fromTime) / (60 * 60 * 24);
+
+        if (diffInDays > 30) {
+          const allEvents: EventTableData[] = [];
+          let nextCursorValue: TradingEventCursor | null = null;
+          let pageSizeLimit = 0;
+          let tradesCount = 0;
+
+          const chunkCount = Math.ceil(diffInDays / 30);
+          const chunkSizeMs = 30 * 24 * 60 * 60 * 1000;
+
+          for (let i = 0; i < chunkCount; i++) {
+            const chunkFromTime = query.from_time.valueOf() + i * chunkSizeMs;
+            const chunkToTime = Math.min(
+              query.from_time.valueOf() + (i + 1) * chunkSizeMs,
+              query.to_time.valueOf()
+            );
+
+            const chunkQuery = {
+              ...query,
+              from_time: dayjs(chunkFromTime),
+              to_time: dayjs(chunkToTime)
+            };
+
+            const result = await fetchAllPages(chunkQuery, queryServiceUrl);
+
+            allEvents.push(...result.events);
+
+            if (result.nextCursor !== null) {
+              nextCursorValue = result.nextCursor;
+            }
+
+            pageSizeLimit = Math.max(pageSizeLimit, result.pageSizeLimit);
+            tradesCount += result.tradesCount;
+          }
+
+          const sortedEvents = allEvents.sort((a, b) => {
+            if (a.block_timestamp === b.block_timestamp) {
+              return a.log_index - b.log_index;
+            }
+            return a.block_timestamp - b.block_timestamp;
+          });
+
+          return {
+            events: sortedEvents,
+            nextCursor: nextCursorValue,
+            pageSizeLimit,
+            tradesCount
+          };
+        }
+      }
+
+      return fetchAllPages(query, queryServiceUrl);
+    },
     {
-      parallel: true,
-      initialSize: 100,
-      persistSize: true,
       revalidateOnFocus: false
     }
   );
 }
 
-function handleFetchEvents(val: {
+async function fetchAllPages(
+  query: EventsParams,
+  queryServiceUrl: string
+): Promise<{
+  events: EventTableData[];
+  nextCursor: TradingEventCursor | null;
+  pageSizeLimit: number;
+  tradesCount: number;
+}> {
+  const allEvents: EventTableData[] = [];
+  let currentCursor: TradingEventCursor | null = query.trading_event_next_cursor || null;
+  let pageSizeLimit = 0;
+  let tradesCount = 0;
+
+  do {
+    const pageQuery = {
+      ...query,
+      trading_event_next_cursor: currentCursor
+    };
+
+    const result = await fetchEvents(pageQuery, queryServiceUrl);
+
+    allEvents.push(...result.events);
+    currentCursor = result.nextCursor;
+    pageSizeLimit = Math.max(pageSizeLimit, result.pageSizeLimit);
+    tradesCount += result.tradesCount;
+
+    if (result.events.length === 0) {
+      break;
+    }
+  } while (currentCursor !== null);
+
+  return {
+    events: allEvents,
+    nextCursor: currentCursor,
+    pageSizeLimit,
+    tradesCount
+  };
+}
+
+async function fetchEvents(
+  query: EventsParams,
+  queryServiceUrl: string
+): Promise<{
+  events: EventTableData[];
+  nextCursor: TradingEventCursor | null;
+  pageSizeLimit: number;
+  tradesCount: number;
+}> {
+  const requestBody: EventsV2RequestBody = {};
+
+  requestBody.broker_id = query.broker_id;
+  requestBody.address = query.address.address;
+
+  if (query.event_type != null) {
+    requestBody.event_type = query.event_type;
+  }
+
+  if (query.from_time != null) {
+    requestBody.from_time = Math.trunc(query.from_time.valueOf() / 1_000);
+  }
+
+  if (query.to_time != null) {
+    requestBody.to_time = Math.trunc(query.to_time.valueOf() / 1_000);
+  }
+
+  if (query.trading_event_next_cursor != null) {
+    requestBody.trading_event_next_cursor = query.trading_event_next_cursor;
+  }
+
+  const response = await fetch(`${queryServiceUrl}/events_v2`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  });
+
+  const data = await response.json();
+  return handleFetchEventsV2(data);
+}
+
+function handleFetchEventsV2(val: {
   success: boolean;
-  message: string;
-  data: { events: types.TradingEvent[] };
-}) {
+  data: {
+    events: types.TradingEvent[];
+    trading_event_next_cursor: TradingEventCursor | null;
+    page_size_limit: number;
+    trades_count: number;
+  };
+  message?: string;
+}): {
+  events: EventTableData[];
+  nextCursor: TradingEventCursor | null;
+  pageSizeLimit: number;
+  tradesCount: number;
+} {
   if (!val.success) {
     const error = new Error('');
-    error.message = val.message;
+    error.message = val.message || 'Failed to fetch events';
     throw error;
   }
+
   const events: types.TradingEvent[] = val.data.events;
   const flattenedEvents: EventTableData[] = [];
+
   events.forEach((event) => {
     match(event.data)
       .with(
@@ -204,5 +338,11 @@ function handleFetchEvents(val: {
       )
       .exhaustive();
   });
-  return flattenedEvents;
+
+  return {
+    events: flattenedEvents,
+    nextCursor: val.data.trading_event_next_cursor,
+    pageSizeLimit: val.data.page_size_limit,
+    tradesCount: val.data.trades_count
+  };
 }
