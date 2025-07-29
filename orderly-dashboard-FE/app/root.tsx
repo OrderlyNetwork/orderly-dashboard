@@ -1,4 +1,5 @@
 import { withEmotionCache } from '@emotion/react';
+import { MantineProvider } from '@mantine/core';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -14,6 +15,9 @@ import { ClientStyleContext, ServerStyleContext } from './styles';
 
 import globalCss from '~/global.css?url';
 import uno from '~/styles/uno.css?url';
+
+import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
 
 export const links: LinksFunction = () => [
   { rel: 'stylesheet', href: globalCss },
@@ -97,13 +101,20 @@ const Root = withEmotionCache((_, emotionCache) => {
           radius="medium"
           className="flex flex-col flex-items-center"
         >
-          <AppContext.Provider value={appState}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <ThemeProvider theme={darkTheme}>
-                <App />
-              </ThemeProvider>
-            </LocalizationProvider>
-          </AppContext.Provider>
+          <MantineProvider
+            forceColorScheme="dark"
+            defaultColorScheme="dark"
+            classNamesPrefix="app"
+            withGlobalClasses={false}
+          >
+            <AppContext.Provider value={appState}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <ThemeProvider theme={darkTheme}>
+                  <App />
+                </ThemeProvider>
+              </LocalizationProvider>
+            </AppContext.Provider>
+          </MantineProvider>
         </Theme>
         <ScrollRestoration />
         <Scripts />

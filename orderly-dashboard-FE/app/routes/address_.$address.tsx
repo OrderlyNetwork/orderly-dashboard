@@ -1,4 +1,4 @@
-import { DatePicker } from '@mui/x-date-pickers';
+import { DatePicker } from '@mantine/dates';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -21,8 +21,8 @@ import {
   getSortedRowModel,
   useReactTable
 } from '@tanstack/react-table';
-import dayjs, { Dayjs } from 'dayjs';
-import { FC, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
+import { FC, useMemo, useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { match } from 'ts-pattern';
 
@@ -74,8 +74,14 @@ const defaultVisibility = {
 export const Address: FC = () => {
   const [eventType, setEventType] = useState<EventType | 'ALL'>('ALL');
 
-  const [from, setFrom] = useState<Dayjs | null>(dayjs(new Date()).subtract(2, 'weeks'));
-  const [until, setUntil] = useState<Dayjs | null>(dayjs(new Date()));
+  const [dateRange, setDateRange] = useState<[string | null, string | null]>([
+    dayjs(new Date()).subtract(2, 'weeks').format('YYYY-MM-DD'),
+    dayjs(new Date()).format('YYYY-MM-DD')
+  ]);
+  const [validDateRange, setValidDateRange] = useState<[string | null, string | null]>([
+    dayjs(new Date()).subtract(2, 'weeks').format('YYYY-MM-DD'),
+    dayjs(new Date()).format('YYYY-MM-DD')
+  ]);
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: 'block_timestamp',
@@ -102,6 +108,12 @@ export const Address: FC = () => {
   const [searchParams] = useSearchParams();
   const broker_id = searchParams.get('broker_id');
 
+  useEffect(() => {
+    if (dateRange[0] && dateRange[1]) {
+      setValidDateRange([dateRange[0], dateRange[1]]);
+    }
+  }, [dateRange]);
+
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10
@@ -118,11 +130,11 @@ export const Address: FC = () => {
               .with('LIQUIDATIONV2', () => 'LIQUIDATION')
               .with('ADLV2', () => 'ADL')
               .otherwise((value) => value) as EventType,
-            from_time: from,
-            to_time: until
+            from_time: validDateRange[0] ? dayjs(validDateRange[0]) : null,
+            to_time: validDateRange[1] ? dayjs(validDateRange[1]) : null
           } satisfies EventsParams)
         : null,
-    [broker_id, address, eventType, from, until]
+    [broker_id, address, eventType, validDateRange]
   );
 
   const { evmApiUrl } = useAppState();
@@ -138,7 +150,7 @@ export const Address: FC = () => {
         })
   );
 
-  const { columns, events, error, isLoading, mutate } = useRenderColumns(
+  const { columns, events, error, isLoading } = useRenderColumns(
     eventsParams,
     eventType,
     setEventType
@@ -266,23 +278,26 @@ export const Address: FC = () => {
 
       <div className="flex flex-items-center gap-2">
         <DatePicker
-          label="From"
-          value={from}
-          onChange={(date) => {
-            setFrom(date);
-            mutate();
+          type="range"
+          value={dateRange}
+          maxLevel="year"
+          maxDate={
+            dateRange[0] && dateRange[1]
+              ? dayjs().format('YYYY-MM-DD')
+              : dateRange[0]
+                ? (() => {
+                    const today = dayjs();
+                    const maxRangeDate = dayjs(dateRange[0]).add(30, 'day');
+                    return today.isBefore(maxRangeDate)
+                      ? today.format('YYYY-MM-DD')
+                      : maxRangeDate.format('YYYY-MM-DD');
+                  })()
+                : dayjs().format('YYYY-MM-DD')
+          }
+          onChange={(value) => {
+            setDateRange(value);
           }}
-          maxDate={until ?? undefined}
-        />
-        <span>-</span>
-        <DatePicker
-          label="Until"
-          value={until}
-          onChange={(date) => {
-            setUntil(date);
-            mutate();
-          }}
-          minDate={from ?? undefined}
+          highlightToday={true}
         />
       </div>
 

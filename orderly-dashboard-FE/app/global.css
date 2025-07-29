@@ -9,6 +9,14 @@
   --color-bg-red-hover: rgba(255, 77, 109, 0.4);
 }
 
+:root {
+  --mantine-color-body: transparent !important;
+}
+
+[data-mantine-color-scheme="dark"] {
+  --mantine-color-body: transparent !important;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
