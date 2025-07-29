@@ -219,6 +219,17 @@ impl Service {
                     api::recovery::recover_sol_deposit_events(recovery_block_request).await?;
                 serde_json::to_string(&recovery_block_response)
             }
+            "/recovery/deposit_withdraw_sol_approve_rebalance" => {
+                let recovery_block_request: RecoveryBlockRequest =
+                    serde_json::from_str(&body_as_string)?;
+
+                let recovery_block_response =
+                    api::recovery::recover_sol_withdraw_approve_rebalance_events(
+                        recovery_block_request,
+                    )
+                    .await?;
+                serde_json::to_string(&recovery_block_response)
+            }
             "/recover/sol_events" => {
                 let recovery_sol_events_request: RecoverySolEventRequest =
                     serde_json::from_str(&body_as_string)?;

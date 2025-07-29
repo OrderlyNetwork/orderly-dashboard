@@ -13,6 +13,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     bindgen("operator_manager")?;
     bindgen("user_ledger")?;
     bindgen("market_manager")?;
+    bindgen("vault_manager")?;
 
     Ok(())
 }

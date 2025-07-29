@@ -82,12 +82,20 @@ curl --request POST \
     --header 'Content-Type: application/json' \
     --data '{ "start_sigature": "2pBXgbJWewMsP8Hu1hLSMuDXm34n3BswJSCFHUMdNakoriry7CjTxgLxwH6zykB96KR8xT6ZkHNeBKq2GBR9ZeFn", "end_slot": 340909309}'
 ```
-### recover deposit deposit from sol events
+### recover sol deposit events
 ```shell
 curl --request POST \
     --url http://127.0.0.1:8018/recovery/deposit_sol \
     --header 'Content-Type: application/json' \
     --data '{ "start_block_height": 18130556, "end_block_height": 28021526}'
+
+```
+### recover sol deposit, withdraw approve and rebalance events
+```shell
+curl --request POST \
+    --url http://127.0.0.1:8018/recovery/deposit_withdraw_sol_approve_rebalance \
+    --header 'Content-Type: application/json' \
+    --data '{ "start_block_height": 2360033, "end_block_height": 28595682}'
 ```
 This will process the blocks between `1145079` and `1145179`.
 ### pull trading events

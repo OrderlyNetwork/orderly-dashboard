@@ -1,14 +1,24 @@
 use crate::bindings::operator_manager;
 use crate::bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
 use crate::bindings::user_ledger::{
-    user_ledgerEvents, AccountDepositSolFilter, LiquidationTransfer, SettlementExecution,
+    user_ledgerEvents, AccountDepositSolFilter, AccountWithdrawSolApproveFilter,
+    LiquidationTransfer, SettlementExecution,
+};
+use crate::bindings::vault_manager::{
+    self, vault_managerEvents, RebalanceBurnFilter, RebalanceBurnResultFilter, RebalanceMintFilter,
+    RebalanceMintResultFilter,
 };
 use crate::config::{get_common_cfg, COMMON_CONFIGS};
-use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC};
+use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC, VAULT_MANAGER_SC};
 use crate::db::balance_transfer::{create_balance_transfer_events, DbBalanceTransferEvent};
 use crate::db::fee_distribution::{create_fee_distributions, DbFeeDistribution};
+use crate::db::rebalance_events::{
+    create_rebalance, update_rebalance_burn_status, update_rebalance_mint,
+    update_rebalance_mint_status, DBRebalanceEvent,
+};
 use crate::eth_rpc::PROVIDER;
 use std::collections::BTreeSet;
+use std::future::Future;
 use std::{collections::VecDeque, str::FromStr};
 
 use crate::db::executed_trades::{create_executed_trades, DbExecutedTrades, TradeType};
@@ -788,6 +798,35 @@ pub(crate) async fn handle_log(
                         }])
                         .await?;
                     }
+                    user_ledgerEvents::AccountWithdrawSolApproveFilter(withdraw_event) => {
+                        create_balance_transaction_executions(vec![DbTransactionEvent {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            account_id: to_hex_format(&withdraw_event.account_id),
+                            sender: Some(withdraw_event.sender.to_base58()),
+                            receiver: withdraw_event.receiver.to_base58(),
+                            token_hash: to_hex_format(&withdraw_event.token_hash),
+                            broker_hash: to_hex_format(&withdraw_event.broker_hash),
+                            chain_id: convert_amount(withdraw_event.chain_id.as_u128() as i128)?,
+                            side: DbTransactionSide::SolWithdrawApprove.value(),
+                            amount: convert_amount(withdraw_event.token_amount as i128)?,
+                            fee: convert_amount(withdraw_event.fee as i128)?,
+                            status: DbTransactionStatus::Succeed.value(),
+                            withdraw_nonce: Some(withdraw_event.withdraw_nonce as i64),
+                            fail_reason: None,
+                            effective_gas_price: None,
+                            gas_used: None,
+                            l1_fee: None,
+                            l1_fee_scalar: None,
+                            l1_gas_price: None,
+                            l1_gas_used: None,
+                        }])
+                        .await?;
+                    }
                     user_ledgerEvents::AccountWithdrawFinish1Filter(withdraw_event) => {
                         create_balance_transaction_executions(vec![DbTransactionEvent {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
@@ -1173,6 +1212,51 @@ pub(crate) async fn handle_log(
                     _ => {}
                 }
             }
+            VAULT_MANAGER_SC => {
+                let event =
+                    vault_manager::vault_managerEvents::decode_log(&RawLog::from(log.clone()))?;
+                match event {
+                    vault_managerEvents::RebalanceBurnFilter(filter) => {
+                        create_rebalance(DBRebalanceEvent::new(
+                            filter.rebalance_id as i64,
+                            to_hex_format(&filter.token_hash),
+                            BigDecimal::from_str(&filter.amount.to_string())?,
+                            BigDecimal::from_str(&filter.src_chain_id.to_string())?,
+                            BigDecimal::from_str(&filter.dst_chain_id.to_string())?,
+                            format_hash(log.transaction_hash.unwrap_or_default()),
+                        ))
+                        .await?;
+                    }
+                    vault_managerEvents::RebalanceBurnResultFilter(filter) => {
+                        update_rebalance_burn_status(
+                            filter.rebalance_id as i64,
+                            format_hash(log.transaction_hash.unwrap_or_default()),
+                            (block_t.unwrap_or_default() as i64).into(),
+                            log.block_number.unwrap_or_default().as_u64() as i64,
+                            filter.success,
+                        )
+                        .await?;
+                    }
+                    vault_managerEvents::RebalanceMintFilter(filter) => {
+                        update_rebalance_mint(
+                            filter.rebalance_id as i64,
+                            format_hash(log.transaction_hash.unwrap_or_default()),
+                        )
+                        .await?;
+                    }
+                    vault_managerEvents::RebalanceMintResultFilter(filter) => {
+                        update_rebalance_mint_status(
+                            filter.rebalance_id as i64,
+                            format_hash(log.transaction_hash.unwrap_or_default()),
+                            (block_t.unwrap_or_default() as i64).into(),
+                            log.block_number.unwrap_or_default().as_u64() as i64,
+                            filter.success,
+                        )
+                        .await?;
+                    }
+                    _ => {}
+                }
+            }
             _ => {}
         }
     } else {
@@ -1198,7 +1282,7 @@ pub async fn simple_recover_deposit_sol_logs(start_block: u64, end_block: u64) -
         let to_block = std::cmp::min(end_block, current_pull_block + page_size);
         let result = tokio::time::timeout(
             std::time::Duration::from_secs(3),
-            get_contract_logs(current_pull_block, to_block),
+            get_contract_deposit_sol_logs(current_pull_block, to_block),
         )
         .await;
         if result.is_err() {
@@ -1256,7 +1340,193 @@ pub async fn simple_recover_deposit_sol_logs(start_block: u64, end_block: u64) -
                 loop {
                     let result = tokio::time::timeout(
                         std::time::Duration::from_secs(3),
-                        provider.get_block(BlockNumber::Number(U64::from(start_block))),
+                        provider.get_block(BlockNumber::Number(U64::from(block_number))),
+                    )
+                    .await;
+                    if result.is_err() {
+                        tracing::warn!("get_block, with number {},timeout in 3s", block_number,);
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                        continue;
+                    }
+                    let blk_result = result.unwrap();
+                    if let Err(err) = &blk_result {
+                        tracing::warn!(
+                            "get_block, with number {},failed with err: {}",
+                            start_block,
+                            err,
+                        );
+                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                        continue;
+                    }
+                    let blk = blk_result.unwrap().unwrap();
+                    block_num_mp_time.1 = blk.timestamp.as_u64();
+                    break;
+                }
+            }
+            if let Err(err) = handle_log(
+                &mut q1,
+                &mut q2,
+                &mut v1,
+                &mut v2,
+                &mut v3,
+                &mut v4,
+                log,
+                None,
+                Some(block_num_mp_time.1),
+            )
+            .await
+            {
+                tracing::warn!("handle_log err: {:?}", err);
+            }
+        }
+        if to_block >= end_block {
+            break;
+        }
+        current_pull_block = to_block + 1;
+    }
+
+    Ok(())
+}
+
+pub async fn get_contract_deposit_sol_logs(start_block: u64, to_block: u64) -> Result<Vec<Log>> {
+    let subnet_config = &get_common_cfg().l2_config;
+    let topics = vec![AccountDepositSolFilter::signature()];
+    let filter = Filter::new()
+        .from_block(BlockNumber::Number(U64::from(start_block)))
+        .to_block(BlockNumber::Number(U64::from(to_block)))
+        .address(vec![H160::from_str(&subnet_config.ledger_address)?])
+        .topic0(topics);
+
+    let provider = unsafe { PROVIDER.get_unchecked() };
+    let logs = provider.get_logs(&filter).await?;
+    Ok(logs)
+}
+
+pub async fn simple_recover_sol_deposit_withdraw_approve_and_rebalance_logs(
+    start_block: u64,
+    end_block: u64,
+) -> Result<()> {
+    let page_size = 20_000;
+    simple_recover_logs(
+        start_block,
+        end_block,
+        page_size,
+        get_contract_sol_deposit_withdraw_approve_and_rebalance_logs,
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn get_contract_sol_deposit_withdraw_approve_and_rebalance_logs(
+    start_block: u64,
+    to_block: u64,
+) -> Result<Vec<Log>> {
+    let subnet_config = &get_common_cfg().l2_config;
+    let topics = vec![
+        AccountDepositSolFilter::signature(),
+        AccountWithdrawSolApproveFilter::signature(),
+        RebalanceBurnFilter::signature(),
+        RebalanceBurnResultFilter::signature(),
+        RebalanceMintFilter::signature(),
+        RebalanceMintResultFilter::signature(),
+    ];
+    let filter = Filter::new()
+        .from_block(BlockNumber::Number(U64::from(start_block)))
+        .to_block(BlockNumber::Number(U64::from(to_block)))
+        .address(vec![
+            H160::from_str(&subnet_config.ledger_address)?,
+            H160::from_str(&subnet_config.vault_manager_address)?,
+        ])
+        .topic0(topics);
+
+    let provider = unsafe { PROVIDER.get_unchecked() };
+    let logs = provider.get_logs(&filter).await?;
+    Ok(logs)
+}
+
+pub async fn simple_recover_logs<
+    K: Fn(u64, u64) -> FutK + Send + Clone + 'static,
+    FutK: Future<Output = anyhow::Result<Vec<Log>>> + Send + 'static,
+>(
+    start_block: u64,
+    end_block: u64,
+    page_size: u64,
+    get_sc_logs: K,
+) -> Result<()> {
+    if end_block < start_block {
+        tracing::info!("end block less than start block");
+        return Ok(());
+    }
+    let mut current_pull_block = start_block;
+    if end_block < current_pull_block {
+        tracing::info!("do not has new block, skip pull task");
+        return Ok(());
+    }
+
+    let provider = unsafe { PROVIDER.get_unchecked() };
+    loop {
+        let to_block = std::cmp::min(end_block, current_pull_block + page_size);
+        let result = tokio::time::timeout(
+            std::time::Duration::from_secs(6),
+            get_sc_logs(current_pull_block, to_block),
+        )
+        .await;
+        if result.is_err() {
+            tracing::warn!(
+                "simple_recover_logs get_contract_logs, current_pull_block={}, end_block={}, timeout 6s",
+                current_pull_block,
+                to_block,
+            );
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            continue;
+        }
+        let logs_result = result.unwrap();
+        if let Err(err) = &logs_result {
+            tracing::info!(
+                "simple_recover_logs get_contract_logs, current_pull_block={}, end_block={}, failed with err:{}",
+                current_pull_block,
+                to_block,
+                err
+            );
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            continue;
+        }
+        let logs = logs_result?;
+        let removed_logs = logs
+            .iter()
+            .filter_map(|log| {
+                if log.removed.unwrap_or_default() {
+                    Some(log.transaction_hash.unwrap_or_default())
+                } else {
+                    None
+                }
+            })
+            .collect::<BTreeSet<_>>();
+        tracing::info!(
+            "from:{},to:{}, logs length:{}, removed_logs len: {}",
+            current_pull_block,
+            to_block,
+            logs.len(),
+            removed_logs.len(),
+        );
+
+        let mut block_num_mp_time = (0_u64, 0_u64);
+        for log in logs {
+            if log.removed.unwrap_or_default()
+                || removed_logs.contains(&log.transaction_hash.unwrap_or_default())
+            {
+                tracing::warn!("removed_log info: {:?}", log);
+                continue;
+            }
+            let (mut q1, mut q2) = (VecDeque::new(), VecDeque::new());
+            let (mut v1, mut v2, mut v3, mut v4) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+            let block_number = log.block_number.unwrap_or_default().as_u64();
+            if block_number != block_num_mp_time.0 {
+                block_num_mp_time.0 = block_number;
+                loop {
+                    let result = tokio::time::timeout(
+                        std::time::Duration::from_secs(3),
+                        provider.get_block(BlockNumber::Number(U64::from(block_number))),
                     )
                     .await;
                     if result.is_err() {
@@ -1302,18 +1572,4 @@ pub async fn simple_recover_deposit_sol_logs(start_block: u64, end_block: u64) -
     }
 
     Ok(())
-}
-
-pub async fn get_contract_logs(start_block: u64, to_block: u64) -> Result<Vec<Log>> {
-    let subnet_config = &get_common_cfg().l2_config;
-    let topics = vec![AccountDepositSolFilter::signature()];
-    let filter = Filter::new()
-        .from_block(BlockNumber::Number(U64::from(start_block)))
-        .to_block(BlockNumber::Number(U64::from(to_block)))
-        .address(vec![H160::from_str(&subnet_config.ledger_address)?])
-        .topic0(topics);
-
-    let provider = unsafe { PROVIDER.get_unchecked() };
-    let logs = provider.get_logs(&filter).await?;
-    Ok(logs)
 }
