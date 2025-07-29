@@ -52,14 +52,14 @@ export const SearchInput: FC = () => {
   }, [state, location.pathname, setSearch]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-[20rem]">
       <MagnifyingGlassIcon
-        className="absolute left-0 top-0 max-w-full max-h-full p-[0.4rem]"
+        className="absolute left-0 top-0 max-w-full max-h-full p-[0.4rem] pointer-events-none"
         height="40"
         width="40"
       />
       <input
-        className="p-[0.3rem_0_0.3rem_40px] h-full w-[20rem]"
+        className="p-[0.3rem_0_0.3rem_40px] h-full w-full sm:w-[20rem] text-sm sm:text-base"
         type="text"
         placeholder="Search via wallet or account ID"
         onChange={(event) => {

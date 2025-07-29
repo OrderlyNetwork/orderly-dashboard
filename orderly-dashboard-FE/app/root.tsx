@@ -1,12 +1,13 @@
 import { withEmotionCache } from '@emotion/react';
+import { MantineProvider } from '@mantine/core';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Theme } from '@radix-ui/themes';
 import radixTheme from '@radix-ui/themes/styles.css?url';
 import { LinksFunction } from '@remix-run/node';
 import type { MetaFunction } from '@remix-run/node';
 import { Links, Meta, Scripts, ScrollRestoration, json, useLoaderData } from '@remix-run/react';
+import dayjs from 'dayjs';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { useContext, useEffect, useRef, useState } from 'react';
 
 import { App, AppContext, AppContextType } from './App';
@@ -14,6 +15,11 @@ import { ClientStyleContext, ServerStyleContext } from './styles';
 
 import globalCss from '~/global.css?url';
 import uno from '~/styles/uno.css?url';
+
+import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
+
+dayjs.extend(localizedFormat);
 
 export const links: LinksFunction = () => [
   { rel: 'stylesheet', href: globalCss },
@@ -25,7 +31,14 @@ export const links: LinksFunction = () => [
 ];
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'Orderly Dashboard' }, { name: 'description', content: 'Orderly dashboard' }];
+  return [
+    { title: 'Orderly Dashboard' },
+    { name: 'description', content: 'Orderly dashboard' },
+    {
+      name: 'viewport',
+      content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
+    }
+  ];
 };
 
 export function loader() {
@@ -77,7 +90,10 @@ const Root = withEmotionCache((_, emotionCache) => {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
         <Meta />
         <Links />
         {serverStyleData?.map(({ key, ids, css }) => (
@@ -95,15 +111,20 @@ const Root = withEmotionCache((_, emotionCache) => {
           appearance="dark"
           accentColor="iris"
           radius="medium"
-          className="flex flex-col flex-items-center"
+          className="flex flex-col flex-items-center min-h-screen"
         >
-          <AppContext.Provider value={appState}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <MantineProvider
+            forceColorScheme="dark"
+            defaultColorScheme="dark"
+            classNamesPrefix="app"
+            withGlobalClasses={false}
+          >
+            <AppContext.Provider value={appState}>
               <ThemeProvider theme={darkTheme}>
                 <App />
               </ThemeProvider>
-            </LocalizationProvider>
-          </AppContext.Provider>
+            </AppContext.Provider>
+          </MantineProvider>
         </Theme>
         <ScrollRestoration />
         <Scripts />

@@ -35,21 +35,23 @@ export const BrokerSelection: FC = () => {
   }
 
   return (
-    <Select.Root
-      defaultValue={brokers[0].broker_id}
-      onValueChange={(value) => {
-        setBroker(value);
-      }}
-      value={broker}
-    >
-      <Select.Trigger />
-      <Select.Content>
-        {brokers.map(({ broker_id, broker_name }) => (
-          <Select.Item key={broker_id} value={broker_id}>
-            {broker_name}
-          </Select.Item>
-        ))}
-      </Select.Content>
-    </Select.Root>
+    <div className="w-full sm:w-auto">
+      <Select.Root
+        defaultValue={brokers[0].broker_id}
+        onValueChange={(value) => {
+          setBroker(value);
+        }}
+        value={broker}
+      >
+        <Select.Trigger className="w-full sm:w-auto" />
+        <Select.Content>
+          {brokers.map(({ broker_id, broker_name }) => (
+            <Select.Item key={broker_id} value={broker_id}>
+              {broker_name}
+            </Select.Item>
+          ))}
+        </Select.Content>
+      </Select.Root>
+    </div>
   );
 };

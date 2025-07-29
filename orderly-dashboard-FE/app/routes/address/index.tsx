@@ -23,10 +23,8 @@ export function useRenderColumns(
   eventType: EventType | 'ALL',
   setEventType: Dispatch<SetStateAction<EventType | 'ALL'>>
 ) {
-  const { data, error, isLoading, mutate } = useEvents(query);
-
-  const events = useMemo(() => data?.events || [], [data?.events]);
-  const nextCursorValue = data?.nextCursor;
+  const { events, error, isLoading, isLoadingMore, loadMore, hasMore, tradesCount, pageSizeLimit } =
+    useEvents(query);
 
   const columnHelper = createColumnHelper<EventTableData>();
 
@@ -716,16 +714,10 @@ export function useRenderColumns(
     events,
     error,
     isLoading,
-    mutate,
-    pagination: {
-      nextCursor: nextCursorValue,
-      hasMore: nextCursorValue !== null,
-      loadMore: () => {
-        // No longer needed since pagination is automatic
-      },
-      reset: () => {
-        // No longer needed since pagination is automatic
-      }
-    }
+    isLoadingMore,
+    loadMore,
+    hasMore,
+    tradesCount,
+    pageSizeLimit
   };
 }
