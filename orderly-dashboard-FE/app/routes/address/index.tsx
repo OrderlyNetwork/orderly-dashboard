@@ -1,7 +1,7 @@
 import { Button } from '@radix-ui/themes';
 import { GroupColumnDef, createColumnHelper } from '@tanstack/react-table';
 import { FixedNumber } from '@tarnadas/fixed-number';
-import { Dispatch, SetStateAction, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useMemo } from 'react';
 import { P, match } from 'ts-pattern';
 
 import { Shortened } from './Shortened';
@@ -23,18 +23,10 @@ export function useRenderColumns(
   eventType: EventType | 'ALL',
   setEventType: Dispatch<SetStateAction<EventType | 'ALL'>>
 ) {
-  // State for pagination
-  const [offset, setOffset] = useState<number>(0);
+  const { data, error, isLoading, mutate } = useEvents(query);
 
-  // Update query to include offset
-  const queryWithOffset = query ? { ...query, offset } : null;
-
-  // Use the updated hook
-  const { data, error, isLoading, mutate } = useEvents(queryWithOffset);
-
-  // Extract events and nextOffset from data
-  const events = data?.events || [];
-  const nextOffset = data?.nextOffset;
+  const events = useMemo(() => data?.events || [], [data?.events]);
+  const nextCursorValue = data?.nextCursor;
 
   const columnHelper = createColumnHelper<EventTableData>();
 
@@ -643,7 +635,6 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXME how many decimals?
                   return new FixedNumber(value, 8).format({
                     maximumFractionDigits: 2
                   });
@@ -655,7 +646,6 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXME how many decimals?
                   return new FixedNumber(value, 8).format({
                     maximumFractionDigits: 2
                   });
@@ -697,7 +687,6 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXME how many decimals?
                   return new FixedNumber(value, 8).format({
                     maximumFractionDigits: 2
                   });
@@ -709,7 +698,6 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXME how many decimals?
                   return new FixedNumber(value, 8).format({
                     maximumFractionDigits: 2
                   });
@@ -723,25 +711,20 @@ export function useRenderColumns(
     return columns;
   }, [columnHelper, eventType, setEventType, events, tokens, symbols]);
 
-  // Return the updated values including pagination controls
   return {
     columns,
     events,
     error,
     isLoading,
     mutate,
-    // Pagination helpers
     pagination: {
-      nextOffset,
-      offset,
-      hasMore: nextOffset != null,
+      nextCursor: nextCursorValue,
+      hasMore: nextCursorValue !== null,
       loadMore: () => {
-        if (nextOffset != null) {
-          setOffset(nextOffset);
-        }
+        // No longer needed since pagination is automatic
       },
       reset: () => {
-        setOffset(0);
+        // No longer needed since pagination is automatic
       }
     }
   };

@@ -43,13 +43,20 @@ export type EventTableData = types.TradingEvent &
       }
   );
 
+export type TradingEventCursor = {
+  block_time: number;
+  block_number: number;
+  transaction_index: number;
+  log_index: number;
+};
+
 export type EventsParams = {
   address: ChainAddress;
   broker_id: string;
   event_type?: EventType;
   from_time?: Dayjs | null;
   to_time?: Dayjs | null;
-  offset?: number;
+  trading_event_next_cursor?: TradingEventCursor | null;
 };
 
 export type ChainAddress = {
@@ -59,46 +66,55 @@ export type ChainAddress = {
 
 export type ChainNamespace = 'evm' | 'sol';
 
+type EventsV2RequestBody = {
+  account_id?: string;
+  broker_id?: string;
+  address?: string;
+  event_type?: EventType;
+  from_time?: number;
+  to_time?: number;
+  trading_event_next_cursor?: TradingEventCursor;
+};
+
 export function useEvents(query: EventsParams | null) {
   const { queryServiceUrl } = useAppState();
 
   return useSWR<{
     events: EventTableData[];
-    nextOffset: number | null;
+    nextCursor: TradingEventCursor | null;
+    pageSizeLimit: number;
+    tradesCount: number;
   }>(
     () => {
       if (query == null) return null;
 
-      // Return a unique key for the query
       return [
-        'events',
+        'events_v2',
         query.address.address,
         query.broker_id,
         query.event_type,
         query.from_time?.valueOf(),
         query.to_time?.valueOf(),
-        query.offset
+        query.trading_event_next_cursor
       ];
     },
     async () => {
-      if (query == null) return { events: [], nextOffset: null };
+      if (query == null) return { events: [], nextCursor: null, pageSizeLimit: 0, tradesCount: 0 };
 
-      // Check if we need to split the time range
       if (query.from_time && query.to_time) {
         const fromTime = query.from_time.valueOf() / 1000;
         const toTime = query.to_time.valueOf() / 1000;
         const diffInDays = (toTime - fromTime) / (60 * 60 * 24);
 
-        // If time range is greater than 30 days, split into multiple requests
         if (diffInDays > 30) {
           const allEvents: EventTableData[] = [];
-          let nextOffsetValue: number | null = null;
+          let nextCursorValue: TradingEventCursor | null = null;
+          let pageSizeLimit = 0;
+          let tradesCount = 0;
 
-          // Calculate how many chunks we need
           const chunkCount = Math.ceil(diffInDays / 30);
-          const chunkSizeMs = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+          const chunkSizeMs = 30 * 24 * 60 * 60 * 1000;
 
-          // Make requests for each chunk
           for (let i = 0; i < chunkCount; i++) {
             const chunkFromTime = query.from_time.valueOf() + i * chunkSizeMs;
             const chunkToTime = Math.min(
@@ -106,26 +122,24 @@ export function useEvents(query: EventsParams | null) {
               query.to_time.valueOf()
             );
 
-            // Create a modified query for this chunk - convert Date to Dayjs
             const chunkQuery = {
               ...query,
               from_time: dayjs(chunkFromTime),
               to_time: dayjs(chunkToTime)
             };
 
-            // Make the request for this chunk
-            const result = await fetchEvents(chunkQuery, queryServiceUrl);
+            const result = await fetchAllPages(chunkQuery, queryServiceUrl);
 
-            // Add events to our collection
             allEvents.push(...result.events);
 
-            // Keep track of nextOffset if any chunk has one
-            if (result.nextOffset !== null) {
-              nextOffsetValue = result.nextOffset;
+            if (result.nextCursor !== null) {
+              nextCursorValue = result.nextCursor;
             }
+
+            pageSizeLimit = Math.max(pageSizeLimit, result.pageSizeLimit);
+            tradesCount += result.tradesCount;
           }
 
-          // Sort all events by timestamp and log_index
           const sortedEvents = allEvents.sort((a, b) => {
             if (a.block_timestamp === b.block_timestamp) {
               return a.log_index - b.log_index;
@@ -135,13 +149,14 @@ export function useEvents(query: EventsParams | null) {
 
           return {
             events: sortedEvents,
-            nextOffset: nextOffsetValue
+            nextCursor: nextCursorValue,
+            pageSizeLimit,
+            tradesCount
           };
         }
       }
 
-      // For normal requests (within 31 days), use the standard approach
-      return fetchEvents(query, queryServiceUrl);
+      return fetchAllPages(query, queryServiceUrl);
     },
     {
       revalidateOnFocus: false
@@ -149,51 +164,103 @@ export function useEvents(query: EventsParams | null) {
   );
 }
 
-// Helper function to fetch events for a specific query
+async function fetchAllPages(
+  query: EventsParams,
+  queryServiceUrl: string
+): Promise<{
+  events: EventTableData[];
+  nextCursor: TradingEventCursor | null;
+  pageSizeLimit: number;
+  tradesCount: number;
+}> {
+  const allEvents: EventTableData[] = [];
+  let currentCursor: TradingEventCursor | null = query.trading_event_next_cursor || null;
+  let pageSizeLimit = 0;
+  let tradesCount = 0;
+
+  do {
+    const pageQuery = {
+      ...query,
+      trading_event_next_cursor: currentCursor
+    };
+
+    const result = await fetchEvents(pageQuery, queryServiceUrl);
+
+    allEvents.push(...result.events);
+    currentCursor = result.nextCursor;
+    pageSizeLimit = Math.max(pageSizeLimit, result.pageSizeLimit);
+    tradesCount += result.tradesCount;
+
+    if (result.events.length === 0) {
+      break;
+    }
+  } while (currentCursor !== null);
+
+  return {
+    events: allEvents,
+    nextCursor: currentCursor,
+    pageSizeLimit,
+    tradesCount
+  };
+}
+
 async function fetchEvents(
   query: EventsParams,
   queryServiceUrl: string
-): Promise<{ events: EventTableData[]; nextOffset: number | null }> {
-  const searchParams = new URLSearchParams();
-  searchParams.set('address', query.address.address);
-  searchParams.set('broker_id', query.broker_id);
+): Promise<{
+  events: EventTableData[];
+  nextCursor: TradingEventCursor | null;
+  pageSizeLimit: number;
+  tradesCount: number;
+}> {
+  const requestBody: EventsV2RequestBody = {};
+
+  requestBody.broker_id = query.broker_id;
+  requestBody.address = query.address.address;
 
   if (query.event_type != null) {
-    searchParams.set('event_type', query.event_type);
+    requestBody.event_type = query.event_type;
   }
 
-  if (query.offset != null) {
-    searchParams.set('offset', query.offset.toString());
-  }
-
-  // Handle time range - simplify this since we're only dealing with Dayjs objects now
   if (query.from_time != null) {
-    searchParams.set('from_time', String(Math.trunc(query.from_time.valueOf() / 1_000)));
+    requestBody.from_time = Math.trunc(query.from_time.valueOf() / 1_000);
   }
 
   if (query.to_time != null) {
-    searchParams.set('to_time', String(Math.trunc(query.to_time.valueOf() / 1_000)));
+    requestBody.to_time = Math.trunc(query.to_time.valueOf() / 1_000);
   }
 
-  const url = `${queryServiceUrl}/events_v2?${searchParams.toString()}`;
+  if (query.trading_event_next_cursor != null) {
+    requestBody.trading_event_next_cursor = query.trading_event_next_cursor;
+  }
 
-  // Make a single request regardless of chain namespace
-  const response = await fetch(url)
-    .then((r) => r.json())
-    .then(handleFetchEventsV2);
+  const response = await fetch(`${queryServiceUrl}/events_v2`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  });
 
-  // Return the processed response directly
-  return response;
+  const data = await response.json();
+  return handleFetchEventsV2(data);
 }
 
 function handleFetchEventsV2(val: {
   success: boolean;
-  message?: string;
   data: {
     events: types.TradingEvent[];
-    next_offset: number | null;
+    trading_event_next_cursor: TradingEventCursor | null;
+    page_size_limit: number;
+    trades_count: number;
   };
-}): { events: EventTableData[]; nextOffset: number | null } {
+  message?: string;
+}): {
+  events: EventTableData[];
+  nextCursor: TradingEventCursor | null;
+  pageSizeLimit: number;
+  tradesCount: number;
+} {
   if (!val.success) {
     const error = new Error('');
     error.message = val.message || 'Failed to fetch events';
@@ -274,6 +341,8 @@ function handleFetchEventsV2(val: {
 
   return {
     events: flattenedEvents,
-    nextOffset: val.data.next_offset
+    nextCursor: val.data.trading_event_next_cursor,
+    pageSizeLimit: val.data.page_size_limit,
+    tradesCount: val.data.trades_count
   };
 }
