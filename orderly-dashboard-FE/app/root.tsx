@@ -31,7 +31,14 @@ export const links: LinksFunction = () => [
 ];
 
 export const meta: MetaFunction = () => {
-  return [{ title: 'Orderly Dashboard' }, { name: 'description', content: 'Orderly dashboard' }];
+  return [
+    { title: 'Orderly Dashboard' },
+    { name: 'description', content: 'Orderly dashboard' },
+    {
+      name: 'viewport',
+      content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
+    }
+  ];
 };
 
 export function loader() {
@@ -83,7 +90,10 @@ const Root = withEmotionCache((_, emotionCache) => {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
         <Meta />
         <Links />
         {serverStyleData?.map(({ key, ids, css }) => (
@@ -101,7 +111,7 @@ const Root = withEmotionCache((_, emotionCache) => {
           appearance="dark"
           accentColor="iris"
           radius="medium"
-          className="flex flex-col flex-items-center"
+          className="flex flex-col flex-items-center min-h-screen"
         >
           <MantineProvider
             forceColorScheme="dark"

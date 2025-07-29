@@ -177,65 +177,70 @@ export const Address: FC = () => {
   }
 
   const renderPagination = () => (
-    <div className="flex items-center gap-3">
-      <button
-        className="border rounded p-1"
-        onClick={() => table.firstPage()}
-        disabled={!table.getCanPreviousPage()}
-      >
-        <DoubleArrowLeftIcon />
-      </button>
-      <button
-        className="border rounded p-1"
-        onClick={() => table.previousPage()}
-        disabled={!table.getCanPreviousPage()}
-      >
-        <ChevronLeftIcon />
-      </button>
-      <button
-        className="border rounded p-1"
-        onClick={() => table.nextPage()}
-        disabled={!table.getCanNextPage()}
-      >
-        <ChevronRightIcon />
-      </button>
-      <button
-        className="border rounded p-1"
-        onClick={() => table.lastPage()}
-        disabled={!table.getCanNextPage()}
-      >
-        <DoubleArrowRightIcon />
-      </button>
-      <span className="flex items-center gap-1">
-        <div>Page</div>
-        <strong>
-          {table.getState().pagination.pageIndex + 1} of {table.getPageCount().toLocaleString()}
-        </strong>
-      </span>
-      <span className="flex items-center gap-1">
-        | Go to page:
-        <input
-          type="number"
-          defaultValue={table.getState().pagination.pageIndex + 1}
+    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+      <div className="flex items-center gap-1 sm:gap-2">
+        <button
+          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          onClick={() => table.firstPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          <DoubleArrowLeftIcon />
+        </button>
+        <button
+          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          <ChevronLeftIcon />
+        </button>
+        <button
+          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          <ChevronRightIcon />
+        </button>
+        <button
+          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          onClick={() => table.lastPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          <DoubleArrowRightIcon />
+        </button>
+      </div>
+      <div className="flex flex-row items-center gap-1 sm:gap-2">
+        <span className="flex items-center gap-1 text-xs">
+          <div>Page</div>
+          <strong>
+            {table.getState().pagination.pageIndex + 1} of {table.getPageCount().toLocaleString()}
+          </strong>
+        </span>
+        <span className="flex items-center gap-1 text-xs">
+          | Go to page:
+          <input
+            type="number"
+            defaultValue={table.getState().pagination.pageIndex + 1}
+            onChange={(e) => {
+              const page = e.target.value ? Number(e.target.value) - 1 : 0;
+              table.setPageIndex(page);
+            }}
+            className="border p-1 rounded w-12 sm:w-16 text-xs"
+          />
+        </span>
+        <select
+          value={table.getState().pagination.pageSize}
           onChange={(e) => {
-            const page = e.target.value ? Number(e.target.value) - 1 : 0;
-            table.setPageIndex(page);
+            table.setPageSize(Number(e.target.value));
           }}
-          className="border p-1 rounded w-16"
-        />
-      </span>
-      <select
-        value={table.getState().pagination.pageSize}
-        onChange={(e) => {
-          table.setPageSize(Number(e.target.value));
-        }}
-      >
-        {[10, 20, 30, 40, 50].map((pageSize) => (
-          <option key={pageSize} value={pageSize}>
-            Show {pageSize}
-          </option>
-        ))}
-      </select>
+          className="text-xs"
+        >
+          {[10, 20, 30, 40, 50].map((pageSize) => (
+            <option key={pageSize} value={pageSize}>
+              Show {pageSize}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 
@@ -247,8 +252,8 @@ export const Address: FC = () => {
     const remainingEvents = Math.max(0, totalAvailable - loadedEvents);
 
     return (
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           <Button onClick={loadMore} disabled={isLoadingMore} className="flex items-center gap-2">
             {isLoadingMore ? (
               <>
@@ -259,7 +264,7 @@ export const Address: FC = () => {
               'Load More'
             )}
           </Button>
-          <span className="text-sm text-gray-600">
+          <span className="text-xs sm:text-sm text-gray-600 text-center">
             {remainingEvents > 0
               ? `${remainingEvents.toLocaleString()} more events available (${loadedEvents.toLocaleString()}/${totalAvailable.toLocaleString()} loaded)`
               : 'All events loaded'}
@@ -270,13 +275,13 @@ export const Address: FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full [&>*]:max-w-[50rem]">
-      <h2 className="mb-2">{address.address}</h2>
+    <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full [&>*]:max-w-full lg:max-w-[50rem] px-2 sm:px-0">
+      <h2 className="mb-2 text-lg sm:text-xl break-all">{address.address}</h2>
 
       {accountId != null && (
-        <div className="flex flex-col [&>*:first-child]:font-bold">
+        <div className="flex flex-col [&>*:first-child]:font-bold text-sm sm:text-base">
           <div>Account ID:</div>
-          <div>
+          <div className="break-all">
             {accountId.substring(0, 7)}...{accountId.substr(-7)}
             <IconButton
               className="ml-1"
@@ -293,7 +298,7 @@ export const Address: FC = () => {
         </div>
       )}
 
-      <div className="flex flex-col [&>*:first-child]:font-bold">
+      <div className="flex flex-col [&>*:first-child]:font-bold text-sm sm:text-base">
         <div>Chain Namespace:</div>
         <div>
           {match(address.chain_namespace)
@@ -303,7 +308,7 @@ export const Address: FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-items-center gap-2">
+      <div className="flex flex-col sm:flex-row flex-items-center gap-2 w-full">
         <DatePicker
           type="range"
           value={dateRange}
@@ -329,35 +334,37 @@ export const Address: FC = () => {
         />
       </div>
 
-      <Tabs.Root
-        value={eventType}
-        defaultValue="ALL"
-        onValueChange={(value) => {
-          setEventType(value as EventType);
-          table.resetColumnVisibility();
-        }}
-      >
-        <Tabs.List>
-          <Tabs.Trigger value="ALL">All</Tabs.Trigger>
-          <Tabs.Trigger value="TRANSACTION">Transactions</Tabs.Trigger>
-          <Tabs.Trigger value="PERPTRADE">Trades</Tabs.Trigger>
-          <Tabs.Trigger value="SETTLEMENT">Pnl Settlements</Tabs.Trigger>
-          <Tabs.Trigger value="LIQUIDATIONV2">Liquidations</Tabs.Trigger>
-          <Tabs.Trigger value="LIQUIDATION">Liquidations (old)</Tabs.Trigger>
-          <Tabs.Trigger value="ADLV2">ADL</Tabs.Trigger>
-          <Tabs.Trigger value="ADL">ADL (old)</Tabs.Trigger>
-        </Tabs.List>
-      </Tabs.Root>
+      <div className="w-full overflow-x-auto">
+        <Tabs.Root
+          value={eventType}
+          defaultValue="ALL"
+          onValueChange={(value) => {
+            setEventType(value as EventType);
+            table.resetColumnVisibility();
+          }}
+        >
+          <Tabs.List className="flex-wrap">
+            <Tabs.Trigger value="ALL">All</Tabs.Trigger>
+            <Tabs.Trigger value="TRANSACTION">Transactions</Tabs.Trigger>
+            <Tabs.Trigger value="PERPTRADE">Trades</Tabs.Trigger>
+            <Tabs.Trigger value="SETTLEMENT">Pnl Settlements</Tabs.Trigger>
+            <Tabs.Trigger value="LIQUIDATIONV2">Liquidations</Tabs.Trigger>
+            <Tabs.Trigger value="LIQUIDATION">Liquidations (old)</Tabs.Trigger>
+            <Tabs.Trigger value="ADLV2">ADL</Tabs.Trigger>
+            <Tabs.Trigger value="ADL">ADL (old)</Tabs.Trigger>
+          </Tabs.List>
+        </Tabs.Root>
+      </div>
 
       <div>
         <Popover.Root>
           <Popover.Trigger className="w-auto flex-self-start">
-            <Button variant="soft">
+            <Button variant="soft" className="text-sm">
               <MixerHorizontalIcon width="16" height="16" />
               Column Filters
             </Button>
           </Popover.Trigger>
-          <Popover.Content width="20rem" maxHeight="26rem">
+          <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw]">
             <div className="flex flex-col [&>*]:text-size-4 gap-2">
               <div className="px-1">
                 <Button
@@ -384,7 +391,7 @@ export const Address: FC = () => {
               {table.getAllLeafColumns().map((column) => {
                 return (
                   <div key={column.id} className="px-1">
-                    <label>
+                    <label className="text-sm">
                       <input
                         {...{
                           type: 'checkbox',
@@ -413,53 +420,55 @@ export const Address: FC = () => {
           {renderLoadMore()}
           {renderPagination()}
 
-          <Table.Root className="max-w-full">
-            <Table.Header>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <Table.Row key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Table.ColumnHeaderCell key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder ? null : (
-                        <div
-                          className={
-                            header.column.getCanSort()
-                              ? 'cursor-pointer select-none hover:bg-[--accent-3]'
-                              : ''
-                          }
-                          onClick={header.column.getToggleSortingHandler()}
-                          onKeyDown={(ev) => {
-                            if (ev.key === 'Enter') {
-                              header.column.getToggleSortingHandler();
+          <div className="w-full overflow-x-auto">
+            <Table.Root className="max-w-full min-w-[600px]">
+              <Table.Header>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Table.Row key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Table.ColumnHeaderCell key={header.id} colSpan={header.colSpan}>
+                        {header.isPlaceholder ? null : (
+                          <div
+                            className={
+                              header.column.getCanSort()
+                                ? 'cursor-pointer select-none hover:bg-[--accent-3] text-sm'
+                                : 'text-sm'
                             }
-                          }}
-                          role="button"
-                          tabIndex={0}
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {{
-                            asc: ' 🔼',
-                            desc: ' 🔽'
-                          }[header.column.getIsSorted() as string] ?? null}
-                        </div>
-                      )}
-                    </Table.ColumnHeaderCell>
-                  ))}
-                </Table.Row>
-              ))}
-            </Table.Header>
+                            onClick={header.column.getToggleSortingHandler()}
+                            onKeyDown={(ev) => {
+                              if (ev.key === 'Enter') {
+                                header.column.getToggleSortingHandler();
+                              }
+                            }}
+                            role="button"
+                            tabIndex={0}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {{
+                              asc: ' 🔼',
+                              desc: ' 🔽'
+                            }[header.column.getIsSorted() as string] ?? null}
+                          </div>
+                        )}
+                      </Table.ColumnHeaderCell>
+                    ))}
+                  </Table.Row>
+                ))}
+              </Table.Header>
 
-            <Table.Body>
-              {table.getRowModel().rows.map((row) => (
-                <Table.Row key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <Table.Cell key={cell.id} className="align-middle">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </Table.Cell>
-                  ))}
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
+              <Table.Body>
+                {table.getRowModel().rows.map((row) => (
+                  <Table.Row key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <Table.Cell key={cell.id} className="align-middle text-sm">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </Table.Cell>
+                    ))}
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </div>
 
           {renderPagination()}
         </>

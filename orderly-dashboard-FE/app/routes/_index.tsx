@@ -2,10 +2,10 @@ import { SearchInput } from '~/components';
 
 export default function Index() {
   return (
-    <div className="flex flex-col flex-items-center gap-6">
-      <h1>Orderly Network Dashboard</h1>
+    <div className="flex flex-col flex-items-center gap-4 sm:gap-6 text-center">
+      <h1 className="text-2xl sm:text-3xl lg:text-4xl">Orderly Network Dashboard</h1>
 
-      <div>
+      <div className="text-sm sm:text-base max-w-lg px-4">
         Welcome to the Orderly Network Dashboard!
         <br />
         Here you can query information about users like executed trades, deposits & withdrawals and
@@ -15,7 +15,9 @@ export default function Index() {
         You can either search via wallet address or account ID:
       </div>
 
-      <SearchInput />
+      <div className="w-full max-w-md hidden sm:flex flex-col items-center">
+        <SearchInput />
+      </div>
     </div>
   );
 }
