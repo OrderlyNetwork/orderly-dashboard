@@ -1,13 +1,13 @@
 import { withEmotionCache } from '@emotion/react';
 import { MantineProvider } from '@mantine/core';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Theme } from '@radix-ui/themes';
 import radixTheme from '@radix-ui/themes/styles.css?url';
 import { LinksFunction } from '@remix-run/node';
 import type { MetaFunction } from '@remix-run/node';
 import { Links, Meta, Scripts, ScrollRestoration, json, useLoaderData } from '@remix-run/react';
+import dayjs from 'dayjs';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
 import { useContext, useEffect, useRef, useState } from 'react';
 
 import { App, AppContext, AppContextType } from './App';
@@ -18,6 +18,8 @@ import uno from '~/styles/uno.css?url';
 
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
+
+dayjs.extend(localizedFormat);
 
 export const links: LinksFunction = () => [
   { rel: 'stylesheet', href: globalCss },
@@ -108,11 +110,9 @@ const Root = withEmotionCache((_, emotionCache) => {
             withGlobalClasses={false}
           >
             <AppContext.Provider value={appState}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <ThemeProvider theme={darkTheme}>
-                  <App />
-                </ThemeProvider>
-              </LocalizationProvider>
+              <ThemeProvider theme={darkTheme}>
+                <App />
+              </ThemeProvider>
             </AppContext.Provider>
           </MantineProvider>
         </Theme>

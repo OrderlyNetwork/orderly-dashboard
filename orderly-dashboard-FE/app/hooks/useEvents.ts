@@ -1,4 +1,5 @@
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
+import { useState, useEffect, useCallback } from 'react';
 import useSWR from 'swr';
 import { P, match } from 'ts-pattern';
 
@@ -78,8 +79,13 @@ type EventsV2RequestBody = {
 
 export function useEvents(query: EventsParams | null) {
   const { queryServiceUrl } = useAppState();
+  const [allEvents, setAllEvents] = useState<EventTableData[]>([]);
+  const [nextCursor, setNextCursor] = useState<TradingEventCursor | null>(null);
+  const [pageSizeLimit, setPageSizeLimit] = useState<number>(0);
+  const [tradesCount, setTradesCount] = useState<number>(0);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
 
-  return useSWR<{
+  const { data, error, isLoading } = useSWR<{
     events: EventTableData[];
     nextCursor: TradingEventCursor | null;
     pageSizeLimit: number;
@@ -101,106 +107,77 @@ export function useEvents(query: EventsParams | null) {
     async () => {
       if (query == null) return { events: [], nextCursor: null, pageSizeLimit: 0, tradesCount: 0 };
 
-      if (query.from_time && query.to_time) {
-        const fromTime = query.from_time.valueOf() / 1000;
-        const toTime = query.to_time.valueOf() / 1000;
-        const diffInDays = (toTime - fromTime) / (60 * 60 * 24);
-
-        if (diffInDays > 30) {
-          const allEvents: EventTableData[] = [];
-          let nextCursorValue: TradingEventCursor | null = null;
-          let pageSizeLimit = 0;
-          let tradesCount = 0;
-
-          const chunkCount = Math.ceil(diffInDays / 30);
-          const chunkSizeMs = 30 * 24 * 60 * 60 * 1000;
-
-          for (let i = 0; i < chunkCount; i++) {
-            const chunkFromTime = query.from_time.valueOf() + i * chunkSizeMs;
-            const chunkToTime = Math.min(
-              query.from_time.valueOf() + (i + 1) * chunkSizeMs,
-              query.to_time.valueOf()
-            );
-
-            const chunkQuery = {
-              ...query,
-              from_time: dayjs(chunkFromTime),
-              to_time: dayjs(chunkToTime)
-            };
-
-            const result = await fetchAllPages(chunkQuery, queryServiceUrl);
-
-            allEvents.push(...result.events);
-
-            if (result.nextCursor !== null) {
-              nextCursorValue = result.nextCursor;
-            }
-
-            pageSizeLimit = Math.max(pageSizeLimit, result.pageSizeLimit);
-            tradesCount += result.tradesCount;
-          }
-
-          const sortedEvents = allEvents.sort((a, b) => {
-            if (a.block_timestamp === b.block_timestamp) {
-              return a.log_index - b.log_index;
-            }
-            return a.block_timestamp - b.block_timestamp;
-          });
-
-          return {
-            events: sortedEvents,
-            nextCursor: nextCursorValue,
-            pageSizeLimit,
-            tradesCount
-          };
-        }
-      }
-
-      return fetchAllPages(query, queryServiceUrl);
+      return fetchEvents(query, queryServiceUrl);
     },
     {
       revalidateOnFocus: false
     }
   );
-}
 
-async function fetchAllPages(
-  query: EventsParams,
-  queryServiceUrl: string
-): Promise<{
-  events: EventTableData[];
-  nextCursor: TradingEventCursor | null;
-  pageSizeLimit: number;
-  tradesCount: number;
-}> {
-  const allEvents: EventTableData[] = [];
-  let currentCursor: TradingEventCursor | null = query.trading_event_next_cursor || null;
-  let pageSizeLimit = 0;
-  let tradesCount = 0;
+  useEffect(() => {
+    setAllEvents([]);
+    setNextCursor(null);
+    setPageSizeLimit(0);
+    setTradesCount(0);
+  }, [
+    query?.address.address,
+    query?.broker_id,
+    query?.event_type,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    query?.from_time?.valueOf(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    query?.to_time?.valueOf()
+  ]);
 
-  do {
-    const pageQuery = {
-      ...query,
-      trading_event_next_cursor: currentCursor
-    };
-
-    const result = await fetchEvents(pageQuery, queryServiceUrl);
-
-    allEvents.push(...result.events);
-    currentCursor = result.nextCursor;
-    pageSizeLimit = Math.max(pageSizeLimit, result.pageSizeLimit);
-    tradesCount += result.tradesCount;
-
-    if (result.events.length === 0) {
-      break;
+  // Update accumulated data when new data arrives
+  useEffect(() => {
+    if (data) {
+      if (query?.trading_event_next_cursor) {
+        // Loading more data - append to existing events
+        setAllEvents((prev) => [...prev, ...data.events]);
+      } else {
+        // New query - replace events
+        setAllEvents(data.events);
+      }
+      setNextCursor(data.nextCursor);
+      setPageSizeLimit(data.pageSizeLimit);
+      setTradesCount(data.tradesCount);
     }
-  } while (currentCursor !== null);
+  }, [data, query?.trading_event_next_cursor]);
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const loadMoreQuery = {
+        ...query!,
+        trading_event_next_cursor: nextCursor
+      };
+
+      const result = await fetchEvents(loadMoreQuery, queryServiceUrl);
+
+      setAllEvents((prev) => [...prev, ...result.events]);
+      setNextCursor(result.nextCursor);
+      setPageSizeLimit(Math.max(pageSizeLimit, result.pageSizeLimit));
+      // Don't update tradesCount - it's the total count and should remain constant
+    } catch (error) {
+      console.error('Error loading more events:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [nextCursor, isLoadingMore, query, queryServiceUrl, pageSizeLimit]);
 
   return {
     events: allEvents,
-    nextCursor: currentCursor,
+    nextCursor,
     pageSizeLimit,
-    tradesCount
+    tradesCount,
+    error,
+    isLoading,
+    isLoadingMore,
+    loadMore,
+    hasMore: nextCursor !== null
   };
 }
 

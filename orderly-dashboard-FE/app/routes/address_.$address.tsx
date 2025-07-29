@@ -75,11 +75,11 @@ export const Address: FC = () => {
   const [eventType, setEventType] = useState<EventType | 'ALL'>('ALL');
 
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([
-    dayjs(new Date()).subtract(2, 'weeks').format('YYYY-MM-DD'),
+    dayjs(new Date()).subtract(30, 'days').format('YYYY-MM-DD'),
     dayjs(new Date()).format('YYYY-MM-DD')
   ]);
   const [validDateRange, setValidDateRange] = useState<[string | null, string | null]>([
-    dayjs(new Date()).subtract(2, 'weeks').format('YYYY-MM-DD'),
+    dayjs(new Date()).subtract(30, 'days').format('YYYY-MM-DD'),
     dayjs(new Date()).format('YYYY-MM-DD')
   ]);
   const [sorting, setSorting] = useState<SortingState>([
@@ -131,7 +131,7 @@ export const Address: FC = () => {
               .with('ADLV2', () => 'ADL')
               .otherwise((value) => value) as EventType,
             from_time: validDateRange[0] ? dayjs(validDateRange[0]) : null,
-            to_time: validDateRange[1] ? dayjs(validDateRange[1]) : null
+            to_time: validDateRange[1] ? dayjs(validDateRange[1]).endOf('day') : null
           } satisfies EventsParams)
         : null,
     [broker_id, address, eventType, validDateRange]
@@ -150,11 +150,8 @@ export const Address: FC = () => {
         })
   );
 
-  const { columns, events, error, isLoading } = useRenderColumns(
-    eventsParams,
-    eventType,
-    setEventType
-  );
+  const { columns, events, error, isLoading, isLoadingMore, loadMore, hasMore, tradesCount } =
+    useRenderColumns(eventsParams, eventType, setEventType);
 
   const table = useReactTable<EventTableData>({
     data: events ?? [],
@@ -242,6 +239,36 @@ export const Address: FC = () => {
     </div>
   );
 
+  const renderLoadMore = () => {
+    if (!hasMore) return null;
+
+    const loadedEvents = events.length;
+    const totalAvailable = tradesCount;
+    const remainingEvents = Math.max(0, totalAvailable - loadedEvents);
+
+    return (
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <Button onClick={loadMore} disabled={isLoadingMore} className="flex items-center gap-2">
+            {isLoadingMore ? (
+              <>
+                <Spinner size="1rem" />
+                Loading...
+              </>
+            ) : (
+              'Load More'
+            )}
+          </Button>
+          <span className="text-sm text-gray-600">
+            {remainingEvents > 0
+              ? `${remainingEvents.toLocaleString()} more events available (${loadedEvents.toLocaleString()}/${totalAvailable.toLocaleString()} loaded)`
+              : 'All events loaded'}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full [&>*]:max-w-[50rem]">
       <h2 className="mb-2">{address.address}</h2>
@@ -281,6 +308,7 @@ export const Address: FC = () => {
           type="range"
           value={dateRange}
           maxLevel="year"
+          allowSingleDateInRange={true}
           maxDate={
             dateRange[0] && dateRange[1]
               ? dayjs().format('YYYY-MM-DD')
@@ -382,6 +410,7 @@ export const Address: FC = () => {
         <Spinner size="2.5rem" />
       ) : (
         <>
+          {renderLoadMore()}
           {renderPagination()}
 
           <Table.Root className="max-w-full">
