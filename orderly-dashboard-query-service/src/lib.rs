@@ -10,6 +10,7 @@ pub mod service_base;
 pub mod status;
 pub mod swagger_docs;
 pub mod trading_metrics;
+pub mod utils;
 
 pub use format_extern::trading_metrics::Api;
 
