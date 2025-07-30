@@ -25,6 +25,7 @@ use crate::format_extern::trading_metrics::{
     DailyData, DailyTradingFeeExtern, DailyVolumeExtern, OrderlyPerpDaily, TokenAmountRanking,
     TradingPnlRanking, TradingVolumeRanking,
 };
+use crate::utils::gen_rand;
 use crate::{add_base_header, format_extern::QeuryServiceResponse};
 use dashmap::DashMap;
 use fxhash::FxBuildHasher;
@@ -87,7 +88,7 @@ async fn update_positions() -> anyhow::Result<()> {
                 );
             }
         }
-        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(60)).await;
     }
     #[allow(unreachable_code)]
     Ok(())
@@ -111,7 +112,7 @@ async fn update_realized_pnl_asc() -> anyhow::Result<()> {
                 );
             }
         }
-        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(60)).await;
     }
     #[allow(unreachable_code)]
     Ok(())
@@ -135,7 +136,7 @@ async fn update_realized_pnl_desc() -> anyhow::Result<()> {
                 );
             }
         }
-        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(gen_rand(60, 120))).await;
     }
     #[allow(unreachable_code)]
     Ok(())
@@ -862,6 +863,12 @@ pub async fn get_realized_pnl_rank(
     }
     if param.limit == 0 {
         return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number should not be 0");
+    }
+    if param.offset + param.limit > 1000 {
+        return write_failed_response(
+            QUERY_OVER_LIMIT_ERR,
+            "query offset + limit should less than 1000",
+        );
     }
     if !param.check_account_id_valid_and_cal() {
         return write_failed_response(
