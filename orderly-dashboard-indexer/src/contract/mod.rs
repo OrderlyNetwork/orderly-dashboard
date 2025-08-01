@@ -11,7 +11,9 @@ use std::collections::BTreeMap;
 use std::str::FromStr;
 use tx_event_handler::consume_tx_and_logs;
 pub use tx_event_handler::{
-    simple_recover_deposit_sol_logs, simple_recover_sol_deposit_withdraw_approve_and_rebalance_logs,
+    simple_recover_deposit_sol_logs,
+    simple_recover_sol_deposit_withdraw_approve_and_rebalance_logs,
+    simple_recover_swap_result_uploded_logs,
 };
 
 use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;

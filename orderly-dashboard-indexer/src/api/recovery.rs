@@ -130,3 +130,14 @@ pub(crate) async fn recover_sol_withdraw_approve_rebalance_events(
     .await?;
     Ok(IndexerQueryResponse::empty_success())
 }
+
+pub(crate) async fn recover_swap_result_uploaded_events(
+    request: RecoveryBlockRequest,
+) -> Result<IndexerQueryResponse<()>> {
+    crate::contract::simple_recover_swap_result_uploded_logs(
+        request.start_block_height,
+        request.end_block_height,
+    )
+    .await?;
+    Ok(IndexerQueryResponse::empty_success())
+}
