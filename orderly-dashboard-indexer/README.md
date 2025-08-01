@@ -75,6 +75,7 @@ curl --request POST \
     --header 'Content-Type: application/json' \
     --data '{ "start_block_height": 1145079, "end_block_height": 1145179}'
 ```
+This will process the blocks between `1145079` and `1145179`.
 ### recover solana block
 ```shell
 curl --request POST \
@@ -97,7 +98,13 @@ curl --request POST \
     --header 'Content-Type: application/json' \
     --data '{ "start_block_height": 2360033, "end_block_height": 28595682}'
 ```
-This will process the blocks between `1145079` and `1145179`.
+### recover swap result upload
+```shell
+curl --request POST \
+    --url http://127.0.0.1:8018/recovery/swap_result_uploaded_events \
+    --header 'Content-Type: application/json' \
+    --data '{ "start_block_height": 26510601, "end_block_height": 28710688}'
+```
 ### pull trading events
 this api is described [here](https://wootraders.atlassian.net/wiki/spaces/ORDER/pages/406487066/Dashboard+indexer+-+Analyzer+api#pull-perp-trading-event)
 ```shell

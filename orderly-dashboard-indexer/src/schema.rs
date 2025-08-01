@@ -425,6 +425,23 @@ diesel::table! {
 }
 
 diesel::table! {
+    swap_result_uploaded (block_number, transaction_index, log_index) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        transaction_id -> Text,
+        block_time -> Numeric,
+        account_id -> Text,
+        buy_token_hash -> Text,
+        sell_token_hash -> Text,
+        buy_quantity -> Numeric,
+        sell_quantity -> Numeric,
+        chain_id -> Numeric,
+        swap_status -> Int2,
+    }
+}
+
+diesel::table! {
     symbols_config (symbol) {
         symbol -> Text,
         symbol_hash -> Text,
@@ -489,6 +506,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     settlement_execution,
     settlement_result,
     sol_transaction_events,
+    swap_result_uploaded,
     symbols_config,
     transaction_events,
 );

@@ -2,7 +2,7 @@ use crate::bindings::operator_manager;
 use crate::bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
 use crate::bindings::user_ledger::{
     user_ledgerEvents, AccountDepositSolFilter, AccountWithdrawSolApproveFilter,
-    LiquidationTransfer, SettlementExecution,
+    LiquidationTransfer, SettlementExecution, SwapResultUploadedFilter,
 };
 use crate::bindings::vault_manager::{
     self, vault_managerEvents, RebalanceBurnFilter, RebalanceBurnResultFilter, RebalanceMintFilter,
@@ -15,6 +15,9 @@ use crate::db::fee_distribution::{create_fee_distributions, DbFeeDistribution};
 use crate::db::rebalance_events::{
     create_rebalance, update_rebalance_burn_status, update_rebalance_mint,
     update_rebalance_mint_status, DBRebalanceEvent,
+};
+use crate::db::swap_result_uploaded::{
+    create_swap_result_uploaded_events, DbSwapResultUploadedEvent,
 };
 use crate::eth_rpc::PROVIDER;
 use std::collections::BTreeSet;
@@ -1209,6 +1212,23 @@ pub(crate) async fn handle_log(
                         }])
                         .await?;
                     }
+                    user_ledgerEvents::SwapResultUploadedFilter(event) => {
+                        create_swap_result_uploaded_events(vec![DbSwapResultUploadedEvent::new(
+                            log.block_number.unwrap_or_default().as_u64() as i64,
+                            log.transaction_index.unwrap_or_default().as_u64() as i32,
+                            log.log_index.unwrap_or_default().as_u64() as i32,
+                            format_hash(log.transaction_hash.unwrap_or_default()),
+                            (block_t.unwrap_or_default() as i64).into(),
+                            to_hex_format(&event.account_id),
+                            to_hex_format(&event.buy_token_hash),
+                            to_hex_format(&event.sell_token_hash),
+                            convert_amount(event.buy_quantity as i128)?,
+                            convert_amount(event.sell_quantity as i128)?,
+                            convert_amount(event.chain_id.as_u128() as i128)?,
+                            event.swap_status as i16,
+                        )])
+                        .await?;
+                    }
                     _ => {}
                 }
             }
@@ -1415,6 +1435,35 @@ pub async fn simple_recover_sol_deposit_withdraw_approve_and_rebalance_logs(
     )
     .await?;
     Ok(())
+}
+
+pub async fn simple_recover_swap_result_uploded_logs(
+    start_block: u64,
+    end_block: u64,
+) -> Result<()> {
+    let page_size = 1_000;
+    simple_recover_logs(
+        start_block,
+        end_block,
+        page_size,
+        get_contract_swap_uploaded_logs,
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn get_contract_swap_uploaded_logs(start_block: u64, to_block: u64) -> Result<Vec<Log>> {
+    let subnet_config = &get_common_cfg().l2_config;
+    let topics = vec![SwapResultUploadedFilter::signature()];
+    let filter = Filter::new()
+        .from_block(BlockNumber::Number(U64::from(start_block)))
+        .to_block(BlockNumber::Number(U64::from(to_block)))
+        .address(vec![H160::from_str(&subnet_config.ledger_address)?])
+        .topic0(topics);
+
+    let provider = unsafe { PROVIDER.get_unchecked() };
+    let logs = provider.get_logs(&filter).await?;
+    Ok(logs)
 }
 
 pub async fn get_contract_sol_deposit_withdraw_approve_and_rebalance_logs(

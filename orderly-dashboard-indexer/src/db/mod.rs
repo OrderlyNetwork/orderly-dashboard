@@ -11,6 +11,7 @@ pub mod settings;
 pub mod settlement_execution;
 pub mod settlement_result;
 pub mod sol_transaction_events;
+pub mod swap_result_uploaded;
 pub mod symbols_config;
 pub mod transaction_events;
 

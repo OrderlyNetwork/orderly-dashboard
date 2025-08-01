@@ -282,8 +282,8 @@
               },
               {
                 "name": "balance",
-                "type": "uint128",
-                "internalType": "uint128"
+                "type": "int128",
+                "internalType": "int128"
               },
               {
                 "name": "frozenBalance",
@@ -432,8 +432,8 @@
               },
               {
                 "name": "balance",
-                "type": "uint128",
-                "internalType": "uint128"
+                "type": "int128",
+                "internalType": "int128"
               },
               {
                 "name": "frozenBalance",
@@ -719,7 +719,7 @@
     "name": "executeDelegateWithdrawAction",
     "inputs": [
       {
-        "name": "withdraw",
+        "name": "delegateWithdraw",
         "type": "tuple",
         "internalType": "struct EventTypes.WithdrawData",
         "components": [
@@ -1372,6 +1372,61 @@
   },
   {
     "type": "function",
+    "name": "executeSwapResultUpload",
+    "inputs": [
+      {
+        "name": "swapResultUpload",
+        "type": "tuple",
+        "internalType": "struct EventTypes.SwapResult",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "buyTokenHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "sellTokenHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "buyQuantity",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "sellQuantity",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "chainId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "swapStatus",
+            "type": "uint8",
+            "internalType": "uint8"
+          }
+        ]
+      },
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "executeWithdraw2Contract",
     "inputs": [
       {
@@ -1812,6 +1867,19 @@
     "inputs": [
       {
         "name": "_ledgerImplC",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setLedgerImplD",
+    "inputs": [
+      {
+        "name": "_ledgerImplD",
         "type": "address",
         "internalType": "address"
       }
@@ -3030,6 +3098,25 @@
   },
   {
     "type": "event",
+    "name": "ChangeLedgerImplD",
+    "inputs": [
+      {
+        "name": "oldAddress",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "newAddress",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "ChangeMarketManager",
     "inputs": [
       {
@@ -3363,6 +3450,25 @@
   },
   {
     "type": "event",
+    "name": "PrimeWalletSet",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "primeWallet",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "ProcessValidatedFutures",
     "inputs": [
       {
@@ -3606,6 +3712,61 @@
     "anonymous": false
   },
   {
+    "type": "event",
+    "name": "SwapResultUploaded",
+    "inputs": [
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyTokenHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "sellTokenHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "buyQuantity",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "sellQuantity",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "chainId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "swapStatus",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "error",
     "name": "AccountIdInvalid",
     "inputs": []
@@ -3768,8 +3929,8 @@
     "inputs": [
       {
         "name": "balance",
-        "type": "uint128",
-        "internalType": "uint128"
+        "type": "int128",
+        "internalType": "int128"
       },
       {
         "name": "insuranceTransferAmount",
@@ -3806,7 +3967,17 @@
   },
   {
     "type": "error",
+    "name": "InvalidPrimeWallet",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "LedgerAddressZero",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotImplemented",
     "inputs": []
   },
   {
@@ -3836,8 +4007,29 @@
   },
   {
     "type": "error",
+    "name": "OnlySymbolManagerOrOwner",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "OperatorManagerAddressZero",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ProtocolVaultAddressMismatch",
+    "inputs": [
+      {
+        "name": "want",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "got",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
   },
   {
     "type": "error",
@@ -3971,8 +4163,8 @@
     "inputs": [
       {
         "name": "balance",
-        "type": "uint128",
-        "internalType": "uint128"
+        "type": "int128",
+        "internalType": "int128"
       },
       {
         "name": "withdrawAmount",
