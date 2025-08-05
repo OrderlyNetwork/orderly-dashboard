@@ -713,6 +713,12 @@ pub async fn get_position_rank(
     if param.limit > 200 {
         return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number over limit 200");
     }
+    if param.limit + param.offset > 1000 {
+        return write_failed_response(
+            QUERY_OVER_LIMIT_ERR,
+            "query offset + number over limit 1000",
+        );
+    }
     if param.limit == 0 {
         return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number should not be 0");
     }
@@ -737,67 +743,69 @@ pub async fn get_position_rank(
                                 .to_vec();
                             return write_response(UserSummaryRankExtern::new(resp_data));
                         }
-                    } else {
-                        match query_user_perp_max_symbol_holding(
-                            0,
-                            1000,
-                            None,
-                            None,
-                            param.broker_id.clone(),
-                        )
-                        .await
-                        {
-                            Ok(user_perp_holding) => {
-                                tracing::info!(
-                                    "read from db and update cache for broker: {}",
-                                    broker_id
-                                );
-                                let user_perp_holding = user_perp_holding
-                                    .into_iter()
-                                    .map(Into::into)
-                                    .collect::<Vec<UserSumaryRankingData>>();
-                                let resp_data = user_perp_holding
-                                    [param.offset as usize..(param.offset + param.limit) as usize]
-                                    .to_vec();
-                                BROKER_TOP_POSITIONS.insert(
-                                    broker_id,
-                                    Arc::new(RwLock::new((user_perp_holding, Instant::now()))),
-                                );
-                                return write_response(UserSummaryRankExtern::new(resp_data));
-                            }
-                            Err(err) => {
-                                return write_failed_response(
-                                    QUERY_OVER_EXECUTION_ERR,
-                                    &err.to_string(),
-                                );
-                            }
-                        }
+                    }
+                }
+                match query_user_perp_max_symbol_holding(
+                    0,
+                    1000,
+                    None,
+                    None,
+                    param.broker_id.clone(),
+                )
+                .await
+                {
+                    Ok(user_perp_holding) => {
+                        tracing::info!(
+                            "read from db and update cache for broker: {}, user_perp_holding len {}",
+                            broker_id, user_perp_holding.len()
+                        );
+                        let user_perp_holding = user_perp_holding
+                            .into_iter()
+                            .map(Into::into)
+                            .collect::<Vec<UserSumaryRankingData>>();
+                        let resp_data = if param.offset as usize >= user_perp_holding.len() {
+                            vec![]
+                        } else {
+                            let end = usize::min(
+                                user_perp_holding.len(),
+                                (param.offset + param.limit) as usize,
+                            );
+                            user_perp_holding[param.offset as usize..end].to_vec()
+                        };
+                        BROKER_TOP_POSITIONS.insert(
+                            broker_id,
+                            Arc::new(RwLock::new((user_perp_holding, Instant::now()))),
+                        );
+                        return write_response(UserSummaryRankExtern::new(resp_data));
+                    }
+                    Err(err) => {
+                        return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
                     }
                 }
             }
-        } else {
-            // broker and symbol exist, read from db and no cache
-            return match query_user_perp_max_symbol_holding(
-                param.offset,
-                param.limit,
-                None,
-                param.symbol.clone(),
-                param.broker_id.clone(),
-            )
-            .await
-            {
-                Ok(user_perp_holding) => {
-                    let user_perp_holding = user_perp_holding
-                        .into_iter()
-                        .map(Into::into)
-                        .collect::<Vec<UserSumaryRankingData>>();
-                    write_response(UserSummaryRankExtern::new(user_perp_holding))
-                }
-                Err(err) => {
-                    return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
-                }
-            };
         }
+
+        // broker and symbol exist or offset + limit >= 1000, read from db and no cache
+        return match query_user_perp_max_symbol_holding(
+            param.offset,
+            param.limit,
+            None,
+            param.symbol.clone(),
+            param.broker_id.clone(),
+        )
+        .await
+        {
+            Ok(user_perp_holding) => {
+                let user_perp_holding = user_perp_holding
+                    .into_iter()
+                    .map(Into::into)
+                    .collect::<Vec<UserSumaryRankingData>>();
+                write_response(UserSummaryRankExtern::new(user_perp_holding))
+            }
+            Err(err) => {
+                return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
+            }
+        };
     }
 
     if param.account_id.is_none() && param.symbol.is_none() {
@@ -863,9 +871,15 @@ pub async fn get_position_rank(
                             .into_iter()
                             .map(Into::into)
                             .collect::<Vec<UserSumaryRankingData>>();
-                        let resp_data = user_perp_holding
-                            [param.offset as usize..(param.offset + param.limit) as usize]
-                            .to_vec();
+                        let resp_data = if param.offset as usize >= user_perp_holding.len() {
+                            vec![]
+                        } else {
+                            let end = usize::min(
+                                user_perp_holding.len(),
+                                (param.offset + param.limit) as usize,
+                            );
+                            user_perp_holding[param.offset as usize..end].to_vec()
+                        };
                         SYMBOL_TOP_POSITIONS.insert(
                             symbol_hash,
                             Arc::new(RwLock::new((user_perp_holding, Instant::now()))),
