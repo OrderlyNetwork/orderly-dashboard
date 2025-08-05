@@ -49,6 +49,11 @@ lazy_static! {
         RwLock::new(Vec::with_capacity(1000));
 }
 
+// top 1000 cache
+pub static BROKER_TOP_POSITIONS: Lazy<
+    DashMap<String, Arc<RwLock<(Vec<UserSumaryRankingData>, Instant)>>, FxBuildHasher>,
+> = Lazy::new(|| DashMap::with_hasher(FxBuildHasher::default()));
+
 pub static SYMBOL_TOP_POSITIONS: Lazy<
     DashMap<String, Arc<RwLock<(Vec<UserSumaryRankingData>, Instant)>>, FxBuildHasher>,
 > = Lazy::new(|| DashMap::with_hasher(FxBuildHasher::default()));
@@ -73,7 +78,7 @@ pub fn update_realized_pnl_task() {
 
 async fn update_positions() -> anyhow::Result<()> {
     loop {
-        match query_user_perp_max_symbol_holding(0, 1000, None, None).await {
+        match query_user_perp_max_symbol_holding(0, 1000, None, None, None).await {
             Ok(user_perp_holding) => {
                 let user_perp_holding = user_perp_holding
                     .into_iter()
@@ -288,7 +293,7 @@ pub struct PositionRankingRequest {
 
 impl PositionRankingRequest {
     pub fn check_account_id_valid_and_cal(&mut self) -> bool {
-        if self.account_id.is_none() && self.address.is_none() && self.broker_id.is_none() {
+        if self.account_id.is_none() && self.address.is_none() {
             return true;
         }
         if self.account_id.is_some() && self.address.is_none() && self.broker_id.is_none() {
@@ -717,6 +722,83 @@ pub async fn get_position_rank(
             ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE,
         );
     }
+    if param.broker_id.is_some() && param.address.is_none() {
+        let broker_id = param.broker_id.clone().unwrap();
+        // filter by broker id
+        if param.symbol.is_none() {
+            if param.offset + param.limit <= 1000 {
+                if let Some(broker_top_positions) = BROKER_TOP_POSITIONS.get(&broker_id) {
+                    let top_positions = broker_top_positions.read();
+                    if top_positions.1.elapsed().as_secs() < 60 {
+                        if (param.offset + param.limit) as usize <= top_positions.0.len() {
+                            // use cache and return
+                            let resp_data = top_positions.0
+                                [param.offset as usize..(param.offset + param.limit) as usize]
+                                .to_vec();
+                            return write_response(UserSummaryRankExtern::new(resp_data));
+                        }
+                    } else {
+                        match query_user_perp_max_symbol_holding(
+                            0,
+                            1000,
+                            None,
+                            None,
+                            param.broker_id.clone(),
+                        )
+                        .await
+                        {
+                            Ok(user_perp_holding) => {
+                                tracing::info!(
+                                    "read from db and update cache for broker: {}",
+                                    broker_id
+                                );
+                                let user_perp_holding = user_perp_holding
+                                    .into_iter()
+                                    .map(Into::into)
+                                    .collect::<Vec<UserSumaryRankingData>>();
+                                let resp_data = user_perp_holding
+                                    [param.offset as usize..(param.offset + param.limit) as usize]
+                                    .to_vec();
+                                BROKER_TOP_POSITIONS.insert(
+                                    broker_id,
+                                    Arc::new(RwLock::new((user_perp_holding, Instant::now()))),
+                                );
+                                return write_response(UserSummaryRankExtern::new(resp_data));
+                            }
+                            Err(err) => {
+                                return write_failed_response(
+                                    QUERY_OVER_EXECUTION_ERR,
+                                    &err.to_string(),
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // broker and symbol exist, read from db and no cache
+            return match query_user_perp_max_symbol_holding(
+                param.offset,
+                param.limit,
+                None,
+                param.symbol.clone(),
+                param.broker_id.clone(),
+            )
+            .await
+            {
+                Ok(user_perp_holding) => {
+                    let user_perp_holding = user_perp_holding
+                        .into_iter()
+                        .map(Into::into)
+                        .collect::<Vec<UserSumaryRankingData>>();
+                    write_response(UserSummaryRankExtern::new(user_perp_holding))
+                }
+                Err(err) => {
+                    return write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string());
+                }
+            };
+        }
+    }
 
     if param.account_id.is_none() && param.symbol.is_none() {
         if param.offset + param.limit <= 1000 {
@@ -728,7 +810,8 @@ pub async fn get_position_rank(
                 return write_response(UserSummaryRankExtern::new(resp_data));
             }
         }
-        return match query_user_perp_max_symbol_holding(param.offset, param.limit, None, None).await
+        return match query_user_perp_max_symbol_holding(param.offset, param.limit, None, None, None)
+            .await
         {
             Ok(user_perp_holding) => {
                 let user_perp_holding = user_perp_holding
@@ -751,7 +834,7 @@ pub async fn get_position_rank(
             if param.offset + param.limit <= 1000 {
                 if let Some(top_position_caches) = SYMBOL_TOP_POSITIONS.get(&symbol_hash) {
                     let top_positions = top_position_caches.read();
-                    if top_positions.1.elapsed().as_secs() < 5 {
+                    if top_positions.1.elapsed().as_secs() < 60 {
                         if (param.offset + param.limit) as usize <= top_positions.0.len() {
                             // use cache and return
                             let resp_data = top_positions.0
@@ -762,8 +845,14 @@ pub async fn get_position_rank(
                     }
                 }
 
-                match query_user_perp_max_symbol_holding(0, 1000, None, Some(symbol_hash.clone()))
-                    .await
+                match query_user_perp_max_symbol_holding(
+                    0,
+                    1000,
+                    None,
+                    Some(symbol_hash.clone()),
+                    None,
+                )
+                .await
                 {
                     Ok(user_perp_holding) => {
                         tracing::info!(
@@ -794,6 +883,7 @@ pub async fn get_position_rank(
                 param.limit,
                 None,
                 Some(symbol_hash.clone()),
+                None,
             )
             .await
             {
@@ -819,6 +909,7 @@ pub async fn get_position_rank(
         param.limit,
         Some(account_id),
         symbol_hash,
+        None,
     )
     .await
     {
