@@ -271,10 +271,99 @@ pub async fn query_user_perp_max_symbol_holding(
     limit: i32,
     account_id: Option<String>,
     symbol_hash: Option<String>,
+    broker_id: Option<String>,
 ) -> anyhow::Result<Vec<UserSymbolSummaryRank>> {
     use orderly_dashboard_analyzer::db::POOL;
 
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    if let Some(broker_id) = broker_id {
+        // if broker exist, account id should be empty
+        let select_result = if let Some(symbol_hash) = &symbol_hash {
+            let sql_query = diesel::sql_query(
+                "
+    SELECT
+      u.account_id,
+      us.address,
+      us.broker_id,
+      u.symbol as symbol_hash,
+      u.holding,
+      u.total_realized_pnl,
+      m.symbol,
+      m.index_price,
+      m.mark_price,
+      ABS(u.holding * m.index_price) AS holding_value,
+      u.opening_cost
+    FROM
+      user_perp_summary u
+      JOIN market_info m ON u.symbol = m.symbol_hash
+      JOIN user_info us ON u.account_id = us.account_id
+    WHERE u.symbol = $1 AND us.broker_id = $2
+    ORDER BY holding_value DESC
+    OFFSET $3
+    LIMIT $4;
+                ",
+            )
+            .bind::<Text, _>(symbol_hash.clone())
+            .bind::<Text, _>(broker_id.clone())
+            .bind::<Integer, _>(offset)
+            .bind::<Integer, _>(limit);
+            tracing::info!("query_user_perp_max_symbol_holding start");
+            let inst = Instant::now();
+
+            let select_result: Vec<UserSymbolSummaryRank> = sql_query
+                .get_results::<UserSymbolSummaryRank>(&mut conn)
+                .await?;
+            tracing::info!(
+                "query_user_perp_max_symbol_holding end, elapse_ms: {}",
+                inst.elapsed().as_millis()
+            );
+
+            select_result
+        } else {
+            let sql_query = diesel::sql_query(
+                "
+    SELECT
+      u.account_id,
+      us.address,
+      us.broker_id,
+      u.symbol as symbol_hash,
+      u.holding,
+      u.total_realized_pnl,
+      m.symbol,
+      m.index_price,
+      m.mark_price,
+      ABS(u.holding * m.index_price) AS holding_value,
+      u.opening_cost
+    FROM
+      user_perp_summary u
+      JOIN market_info m ON u.symbol = m.symbol_hash
+      JOIN user_info us ON u.account_id = us.account_id
+    WHERE us.broker_id = $1
+    ORDER BY holding_value DESC
+    OFFSET $2
+    LIMIT $3;
+                ",
+            )
+            .bind::<Text, _>(broker_id.clone())
+            .bind::<Integer, _>(offset)
+            .bind::<Integer, _>(limit);
+            tracing::info!("query_user_perp_max_symbol_holding start");
+            let inst = Instant::now();
+
+            let select_result: Vec<UserSymbolSummaryRank> = sql_query
+                .get_results::<UserSymbolSummaryRank>(&mut conn)
+                .await?;
+            tracing::info!(
+                "query_user_perp_max_symbol_holding end, elapse_ms: {}",
+                inst.elapsed().as_millis()
+            );
+
+            select_result
+        };
+
+        return Ok(select_result);
+    }
+
     let select_result = if account_id.is_none() && symbol_hash.is_none() {
         let sql_query = diesel::sql_query(
             "

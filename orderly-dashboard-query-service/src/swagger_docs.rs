@@ -36,7 +36,7 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryExternResponse;
         crate::trading_metrics::get_trading_volume_rank,
         crate::trading_metrics::get_position_rank,
         crate::trading_metrics::get_realized_pnl_rank,
-        crate::trading_metrics::get_perp_recent_days_pnl_rank,
+        // crate::trading_metrics::get_perp_recent_days_pnl_rank,
         crate::trading_metrics::get_token_deposit_rank,
         crate::trading_metrics::get_token_withdraw_rank,
         crate::events::events_api::list_events,
