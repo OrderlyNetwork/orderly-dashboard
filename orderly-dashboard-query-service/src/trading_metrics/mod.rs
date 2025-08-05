@@ -784,13 +784,17 @@ pub async fn get_position_rank(
                 }
             }
         }
-
+        let symbol_hash = if let Some(symbol) = &param.symbol {
+            Some(cal_symbol_hash(symbol.as_str()))
+        } else {
+            None
+        };
         // broker and symbol exist or offset + limit >= 1000, read from db and no cache
         return match query_user_perp_max_symbol_holding(
             param.offset,
             param.limit,
             None,
-            param.symbol.clone(),
+            symbol_hash,
             param.broker_id.clone(),
         )
         .await
