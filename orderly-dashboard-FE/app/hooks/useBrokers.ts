@@ -18,7 +18,8 @@ export function useBrokers() {
           error.message = val.message;
           throw error;
         }
-        return val.data.rows as Broker[];
+        const brokers = val.data.rows as Broker[];
+        return brokers.sort((a, b) => a.broker_name.localeCompare(b.broker_name));
       })
   );
 }
