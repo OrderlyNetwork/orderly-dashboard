@@ -155,7 +155,7 @@ pub async fn create_or_update_user_token_summary(
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let mut user_token_summary_vec_ref = user_token_summary_vec.as_slice();
     loop {
-        if user_token_summary_vec.len() >= BATCH_UPSERT_LEN {
+        if user_token_summary_vec_ref.len() >= BATCH_UPSERT_LEN {
             let values1: &[&UserTokenSummary];
             (values1, user_token_summary_vec_ref) =
                 user_token_summary_vec_ref.split_at(BATCH_UPSERT_LEN);

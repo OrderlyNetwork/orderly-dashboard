@@ -121,7 +121,7 @@ pub async fn create_or_update_orderly_token_summary(
     let mut hourly_data_vec_ref = p_hourly_data_vec.as_slice();
 
     loop {
-        if p_hourly_data_vec.len() >= BATCH_UPSERT_LEN {
+        if hourly_data_vec_ref.len() >= BATCH_UPSERT_LEN {
             let values1: &[&OrderlyTokenSummary];
             (values1, hourly_data_vec_ref) = hourly_data_vec_ref.split_at(BATCH_UPSERT_LEN);
             #[allow(suspicious_double_ref_op)]
