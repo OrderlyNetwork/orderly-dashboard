@@ -146,7 +146,7 @@ pub async fn create_or_update_orderly_perp_summary(
     let mut p_orderly_perp_summary_vec_ref = p_orderly_perp_summary_vec.as_slice();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
-        if p_orderly_perp_summary_vec.len() >= BATCH_UPSERT_LEN {
+        if p_orderly_perp_summary_vec_ref.len() >= BATCH_UPSERT_LEN {
             let values1: &[&OrderlyPerpSummary];
             (values1, p_orderly_perp_summary_vec_ref) =
                 p_orderly_perp_summary_vec_ref.split_at(BATCH_UPSERT_LEN);

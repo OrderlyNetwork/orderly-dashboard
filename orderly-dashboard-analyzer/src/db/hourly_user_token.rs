@@ -132,7 +132,7 @@ pub async fn create_or_update_hourly_user_token(
     let mut hourly_data_vec_ref = hourly_data_vec.as_slice();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
-        if hourly_data_vec.len() >= BATCH_UPSERT_LEN {
+        if hourly_data_vec_ref.len() >= BATCH_UPSERT_LEN {
             let values1: &[&HourlyUserToken];
             (values1, hourly_data_vec_ref) = hourly_data_vec_ref.split_at(BATCH_UPSERT_LEN);
             #[allow(suspicious_double_ref_op)]
