@@ -5,7 +5,22 @@ import { match } from 'ts-pattern';
 import { useAppState } from '~/App';
 
 type SearchType = 'address' | 'accountId' | undefined;
-export type AddressData = { address: string; account_id: string; broker_id: string };
+type AccountRow = {
+  user_id: number;
+  account_id: string;
+  broker_id: string;
+  chain_type: string;
+  user_type: string;
+};
+
+export type AddressData = {
+  address: string;
+  account_id: string;
+  broker_id: string;
+  user_id?: number;
+  chain_type?: string;
+  user_type?: string;
+};
 export type ChainNamespace = 'evm' | 'sol';
 
 export const useSearchAddress = (
@@ -46,7 +61,6 @@ export const useSearchAddress = (
   }, [loadingCount, addressData, setAddressData]);
 
   useEffect(() => {
-    // Reset state when query changes
     setIndex(0);
     setLoadingCount(1_000);
 
@@ -59,10 +73,11 @@ export const useSearchAddress = (
           .then((res) => res.json())
           .then((res) => {
             const brokerIds: string[] = res.data.broker_id;
+            const uniqueBrokerIds = [...new Set(brokerIds)];
             setUrls(
-              brokerIds.map(
+              uniqueBrokerIds.map(
                 (brokerId) =>
-                  `${evmApiUrl}/v1/get_account?address=${query}&broker_id=${brokerId}${isSol ? '&chain_type=SOL' : ''}`
+                  `${evmApiUrl}/v1/get_all_accounts?address=${query}&broker_id=${brokerId}${isSol ? '&chain_type=SOL' : ''}`
               )
             );
           })
@@ -94,21 +109,26 @@ export const useSearchAddress = (
             setIndex((currentIndex) => currentIndex + 1);
             throw new Error(val.message);
           }
-          const data: AddressData | undefined = match(searchType)
+          const data: AddressData[] | undefined = match(searchType)
             .with('address', () => {
               const uri = new URL(url);
               const broker_id = uri.searchParams.get('broker_id');
               if (!broker_id) throw new Error();
-              return {
+              // Handle the new response format with rows array
+              const rows = val.data.rows || [];
+              return rows.map((row: AccountRow) => ({
                 address: query!,
                 broker_id,
-                account_id: val.data.account_id
-              };
+                account_id: row.account_id,
+                user_id: row.user_id,
+                chain_type: row.chain_type,
+                user_type: row.user_type
+              }));
             })
-            .with('accountId', () => ({ ...val.data, account_id: query! }))
+            .with('accountId', () => [{ ...val.data, account_id: query! }])
             .otherwise(() => undefined);
           if (!data) throw new Error();
-          setAddressData((cur) => [...(cur ?? []), data]);
+          setAddressData((cur) => [...(cur ?? []), ...data]);
           setLoadingCount((count) => count - 1);
           setIndex((currentIndex) => currentIndex + 1);
         }),
