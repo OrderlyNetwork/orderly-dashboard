@@ -52,8 +52,7 @@ export type TradingEventCursor = {
 };
 
 export type EventsParams = {
-  address: ChainAddress;
-  broker_id: string;
+  account_id: string;
   event_type?: EventType;
   from_time?: Dayjs | null;
   to_time?: Dayjs | null;
@@ -69,8 +68,6 @@ export type ChainNamespace = 'evm' | 'sol';
 
 type EventsV2RequestBody = {
   account_id?: string;
-  broker_id?: string;
-  address?: string;
   event_type?: EventType;
   from_time?: number;
   to_time?: number;
@@ -96,8 +93,7 @@ export function useEvents(query: EventsParams | null) {
 
       return [
         'events_v2',
-        query.address.address,
-        query.broker_id,
+        query.account_id,
         query.event_type,
         query.from_time?.valueOf(),
         query.to_time?.valueOf(),
@@ -120,8 +116,7 @@ export function useEvents(query: EventsParams | null) {
     setPageSizeLimit(0);
     setTradesCount(0);
   }, [
-    query?.address.address,
-    query?.broker_id,
+    query?.account_id,
     query?.event_type,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     query?.from_time?.valueOf(),
@@ -192,8 +187,7 @@ async function fetchEvents(
 }> {
   const requestBody: EventsV2RequestBody = {};
 
-  requestBody.broker_id = query.broker_id;
-  requestBody.address = query.address.address;
+  requestBody.account_id = query.account_id;
 
   if (query.event_type != null) {
     requestBody.event_type = query.event_type;

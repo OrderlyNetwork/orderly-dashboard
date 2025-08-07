@@ -9,7 +9,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Button, IconButton, Popover, Table, Tabs } from '@radix-ui/themes';
 import { LoaderFunctionArgs } from '@remix-run/node';
-import { json, useLoaderData, useSearchParams } from '@remix-run/react';
+import { json, useLoaderData, useSearchParams, useNavigate } from '@remix-run/react';
 import {
   ExpandedState,
   PaginationState,
@@ -72,6 +72,7 @@ const defaultVisibility = {
 };
 
 export const Address: FC = () => {
+  const navigate = useNavigate();
   const [eventType, setEventType] = useState<EventType | 'ALL'>('ALL');
 
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([
@@ -107,6 +108,7 @@ export const Address: FC = () => {
 
   const [searchParams] = useSearchParams();
   const broker_id = searchParams.get('broker_id');
+  const user_id = searchParams.get('user_id');
 
   useEffect(() => {
     if (dateRange[0] && dateRange[1]) {
@@ -119,12 +121,48 @@ export const Address: FC = () => {
     pageSize: 10
   });
 
+  const { evmApiUrl } = useAppState();
+  const { data: accountsData } = useSWR<{
+    rows: Array<{
+      user_id: number;
+      account_id: string;
+      broker_id: string;
+      chain_type: string;
+      user_type: string;
+    }>;
+  }>(
+    broker_id != null
+      ? `${evmApiUrl}/v1/get_all_accounts?address=${address.address}&broker_id=${broker_id}&chain_type=${address.chain_namespace.toUpperCase()}`
+      : undefined,
+    (url: string) =>
+      fetch(url)
+        .then((r) => r.json())
+        .then((val) => {
+          return val.data;
+        })
+  );
+
+  const selectedAccount = useMemo(() => {
+    if (!accountsData?.rows || accountsData.rows.length === 0) return null;
+
+    if (user_id) {
+      const targetUserId = parseInt(user_id);
+      return (
+        accountsData.rows.find((account) => account.user_id === targetUserId) ||
+        accountsData.rows[0]
+      );
+    }
+
+    return accountsData.rows[0];
+  }, [accountsData, user_id]);
+
+  const accountId = selectedAccount?.account_id;
+
   const eventsParams = useMemo(
     () =>
-      broker_id != null
+      broker_id != null && selectedAccount != null
         ? ({
-            address,
-            broker_id,
+            account_id: selectedAccount.account_id,
             event_type: match(eventType)
               .with('ALL', () => undefined)
               .with('LIQUIDATIONV2', () => 'LIQUIDATION')
@@ -134,20 +172,7 @@ export const Address: FC = () => {
             to_time: validDateRange[1] ? dayjs(validDateRange[1]).endOf('day') : null
           } satisfies EventsParams)
         : null,
-    [broker_id, address, eventType, validDateRange]
-  );
-
-  const { evmApiUrl } = useAppState();
-  const { data: accountId } = useSWR<string>(
-    broker_id != null
-      ? `${evmApiUrl}/v1/get_account?address=${address.address}&broker_id=${broker_id}&chain_type=${address.chain_namespace.toUpperCase()}`
-      : undefined,
-    (url: string) =>
-      fetch(url)
-        .then((r) => r.json())
-        .then((val) => {
-          return val.data.account_id;
-        })
+    [broker_id, selectedAccount, eventType, validDateRange]
   );
 
   const { columns, events, error, isLoading, isLoadingMore, loadMore, hasMore, tradesCount } =
@@ -295,6 +320,39 @@ export const Address: FC = () => {
               <CopyIcon height="12" />
             </IconButton>
           </div>
+        </div>
+      )}
+
+      {accountsData?.rows && accountsData.rows.length > 1 && (
+        <div className="flex flex-col [&>*:first-child]:font-bold text-sm sm:text-base">
+          <div>Account Type:</div>
+          <select
+            value={selectedAccount?.user_id || ''}
+            onChange={(e) => {
+              const selectedUserId = e.target.value;
+              if (selectedUserId) {
+                const searchParams = new URLSearchParams();
+                searchParams.set('broker_id', broker_id!);
+                searchParams.set('user_id', selectedUserId);
+                navigate({
+                  pathname: `/address/${address.address}`,
+                  search: `?${searchParams.toString()}`
+                });
+              }
+            }}
+            className="bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+          >
+            {accountsData.rows.map((account) => (
+              <option key={account.user_id} value={account.user_id}>
+                {account.user_type === 'MAIN'
+                  ? 'Main'
+                  : account.user_type === 'SUB'
+                    ? 'Sub'
+                    : account.user_type}
+                {account.user_type === 'SUB' ? ` (ID: ${account.user_id})` : ''}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
