@@ -408,6 +408,8 @@ LIMIT $2;
             "
     SELECT
         u.account_id,
+        us.address,
+        us.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
