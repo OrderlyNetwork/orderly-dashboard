@@ -91,6 +91,9 @@ export const Address: FC = () => {
   ]);
 
   const { address: rawAddress } = useLoaderData<typeof loader>();
+
+  const isAccountId = useMemo(() => rawAddress.match(/^0x[0-9a-fA-F]{64}$/), [rawAddress]);
+
   const address: ChainAddress = useMemo(() => {
     if (rawAddress.match(/^0x[0-9a-fA-F]{40}$/)) {
       return {
@@ -102,9 +105,14 @@ export const Address: FC = () => {
         address: rawAddress,
         chain_namespace: 'sol'
       };
+    } else if (isAccountId) {
+      return {
+        address: rawAddress,
+        chain_namespace: 'evm'
+      };
     }
     throw new Error(`Could not match address ${rawAddress}`);
-  }, [rawAddress]);
+  }, [rawAddress, isAccountId]);
 
   const [searchParams] = useSearchParams();
   const broker_id = searchParams.get('broker_id');
@@ -122,6 +130,64 @@ export const Address: FC = () => {
   });
 
   const { evmApiUrl } = useAppState();
+
+  const { data: accountIdData } = useSWR<{
+    address: string;
+    broker_id: string;
+  }>(
+    isAccountId ? `${evmApiUrl}/v1/public/account?account_id=${rawAddress}` : undefined,
+    (url: string) =>
+      fetch(url)
+        .then((r) => r.json())
+        .then((val) => {
+          if (!val.success) {
+            throw new Error(val.message || 'Failed to fetch account data');
+          }
+          return val.data;
+        })
+  );
+
+  const { data: accountIdSubaccounts } = useSWR<{
+    rows: Array<{
+      user_id: number;
+      account_id: string;
+      broker_id: string;
+      chain_type: string;
+      user_type: string;
+    }>;
+  }>(
+    isAccountId && accountIdData
+      ? `${evmApiUrl}/v1/get_all_accounts?address=${accountIdData.address}&broker_id=${accountIdData.broker_id}`
+      : undefined,
+    (url: string) =>
+      fetch(url)
+        .then((r) => r.json())
+        .then((val) => {
+          if (!val.success) {
+            throw new Error(val.message || 'Failed to fetch subaccounts');
+          }
+          return val.data;
+        })
+  );
+
+  useEffect(() => {
+    if (isAccountId && accountIdData && accountIdSubaccounts?.rows) {
+      const matchingSubaccount = accountIdSubaccounts.rows.find(
+        (account) => account.account_id === rawAddress
+      );
+
+      const searchParams = new URLSearchParams();
+      searchParams.set('broker_id', accountIdData.broker_id);
+      if (matchingSubaccount) {
+        searchParams.set('user_id', matchingSubaccount.user_id.toString());
+      }
+      navigate({
+        pathname: `/address/${accountIdData.address}`,
+        search: `?${searchParams.toString()}`
+      });
+    }
+  }, [isAccountId, accountIdData, accountIdSubaccounts, rawAddress, navigate]);
+
   const { data: accountsData } = useSWR<{
     rows: Array<{
       user_id: number;
@@ -199,6 +265,32 @@ export const Address: FC = () => {
 
   if (error) {
     return error.message ?? '';
+  }
+
+  if (accountsData?.rows && accountsData.rows.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+        <div className="text-xl font-semibold text-gray-300">Account Not Found</div>
+        <div className="text-gray-500 max-w-md">
+          No accounts found for address{' '}
+          <code className="bg-gray-800 px-2 py-1 rounded text-sm">{address.address}</code>
+          {broker_id && (
+            <>
+              {' '}
+              with broker ID{' '}
+              <code className="bg-gray-800 px-2 py-1 rounded text-sm">{broker_id}</code>
+            </>
+          )}
+        </div>
+        <Button onClick={() => navigate(`/search?q=${address.address}`)} className="mt-4">
+          Search All Accounts for This Address
+        </Button>
+      </div>
+    );
+  }
+
+  if (isAccountId) {
+    return <Spinner size="2.5rem" />;
   }
 
   const renderPagination = () => (

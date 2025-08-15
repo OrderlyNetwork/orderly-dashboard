@@ -7,6 +7,28 @@ import { Spinner } from '~/components';
 import { ChainNamespace, useSearchAddress } from '~/hooks';
 import { base64UrlSafeDecode } from '~/util';
 
+const formatNumber = (value?: number): string => {
+  if (value == null) return '-';
+  if (value >= 1_000_000) {
+    return `$${(value / 1_000_000).toFixed(1)}M`;
+  }
+  if (value >= 1_000) {
+    return `$${(value / 1_000).toFixed(1)}K`;
+  }
+  return `$${value.toFixed(2)}`;
+};
+
+const formatPnL = (value?: number): { text: string; color: string } => {
+  if (value == null) return { text: '-', color: 'text-gray-400' };
+  const formatted = formatNumber(Math.abs(value));
+  if (value > 0) {
+    return { text: `+${formatted}`, color: 'text-green-400' };
+  } else if (value < 0) {
+    return { text: `-${formatted}`, color: 'text-red-400' };
+  }
+  return { text: formatted, color: 'text-gray-400' };
+};
+
 export const Search: FC = () => {
   const [searchParams] = useSearchParams();
   const rawAddress = searchParams.get('q');
@@ -30,6 +52,7 @@ export const Search: FC = () => {
   return (
     <div className="flex flex-col gap-4 sm:gap-8 max-w-full lg:max-w-[60rem] px-2 sm:px-4 flex-justify-center flex-items-center">
       <h2 className="text-lg sm:text-xl break-all text-center">{address}</h2>
+      <p className="text-sm text-gray-400 text-center">Stats shown are for the last 90 days</p>
 
       {addressData.length === 0 && !loading && (
         <div className="text-center text-sm sm:text-base">Account not found on any broker</div>
@@ -42,6 +65,8 @@ export const Search: FC = () => {
           if (data.user_id) {
             searchParams.set('user_id', data.user_id.toString());
           }
+
+          const pnlDisplay = formatPnL(data.realized_pnl);
 
           return (
             <Link
@@ -76,6 +101,20 @@ export const Search: FC = () => {
                   <div>Account ID:</div>
                   <div className="break-all">
                     {data.account_id.substring(0, 7)}...{data.account_id.substr(-7)}
+                  </div>
+                </div>
+
+                {/* Volume and PnL Stats */}
+                <div className="flex flex-col gap-2 pt-2 border-t border-gray-700">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-400">Volume:</span>
+                    <span className="text-sm font-medium">{formatNumber(data.perp_volume)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-400">PnL:</span>
+                    <span className={`text-sm font-medium ${pnlDisplay.color}`}>
+                      {pnlDisplay.text}
+                    </span>
                   </div>
                 </div>
               </Card>

@@ -1,4 +1,4 @@
-import { SearchInput } from '~/components';
+import { SearchInput, Leaderboard } from '~/components';
 
 export default function Index() {
   return (
@@ -12,12 +12,15 @@ export default function Index() {
         liquidations.
         <br />
         <br />
-        You can either search via wallet address or account ID:
+        <span className="hidden sm:block">
+          You can either search via wallet address or account ID:
+        </span>
       </div>
 
-      <div className="w-full max-w-md hidden sm:flex flex-col items-center">
+      <div className="w-full max-w-md hidden sm:flex flex-col items-center mb-10">
         <SearchInput />
       </div>
+      <Leaderboard />
     </div>
   );
 }
