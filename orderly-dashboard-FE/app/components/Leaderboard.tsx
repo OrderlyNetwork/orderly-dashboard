@@ -387,24 +387,24 @@ export const Leaderboard: FC = () => {
   }
 
   const renderPagination = () => (
-    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-xs sm:text-sm">
-      <div className="flex items-center gap-1 sm:gap-2">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-bg-primary rounded-xl border border-border-primary">
+      <div className="flex items-center gap-2">
         <button
-          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handleInputChange('page', 1)}
           disabled={!displayData || displayData.meta.current_page <= 1}
         >
-          <DoubleArrowLeftIcon />
+          <DoubleArrowLeftIcon className="h-4 w-4" />
         </button>
         <button
-          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handleInputChange('page', (displayData?.meta.current_page || 1) - 1)}
           disabled={!displayData || displayData.meta.current_page <= 1}
         >
-          <ChevronLeftIcon />
+          <ChevronLeftIcon className="h-4 w-4" />
         </button>
         <button
-          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handleInputChange('page', (displayData?.meta.current_page || 1) + 1)}
           disabled={
             !displayData ||
@@ -412,10 +412,10 @@ export const Leaderboard: FC = () => {
               Math.ceil((displayData?.meta.total || 0) / (displayData?.meta.records_per_page || 1))
           }
         >
-          <ChevronRightIcon />
+          <ChevronRightIcon className="h-4 w-4" />
         </button>
         <button
-          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() =>
             handleInputChange(
               'page',
@@ -428,21 +428,23 @@ export const Leaderboard: FC = () => {
               Math.ceil((displayData?.meta.total || 0) / (displayData?.meta.records_per_page || 1))
           }
         >
-          <DoubleArrowRightIcon />
+          <DoubleArrowRightIcon className="h-4 w-4" />
         </button>
       </div>
-      <div className="flex flex-row items-center gap-1 sm:gap-2">
-        <span className="flex items-center gap-1 text-xs">
-          <div>Page</div>
-          <strong>
+
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm">
+        <span className="flex items-center gap-2 text-gray-300">
+          <span>Page</span>
+          <strong className="text-white">
             {displayData?.meta.current_page || 1} of{' '}
             {displayData
               ? Math.ceil(displayData.meta.total / displayData.meta.records_per_page)
               : 1}
           </strong>
         </span>
-        <span className="flex items-center gap-1 text-xs">
-          | Go to page:
+
+        <div className="flex items-center gap-2">
+          <span className="text-gray-300">Go to:</span>
           <input
             type="number"
             defaultValue={displayData?.meta.current_page || 1}
@@ -450,244 +452,271 @@ export const Leaderboard: FC = () => {
               const page = e.target.value ? Number(e.target.value) : 1;
               handleInputChange('page', page);
             }}
-            className="border p-1 rounded w-12 sm:w-16 text-xs"
+            className="w-16 px-2 py-1 text-center"
+            min="1"
           />
-        </span>
-        <select
-          value={displayData?.meta.records_per_page || 20}
-          onChange={(e) => {
-            handleInputChange('size', Number(e.target.value));
-          }}
-          className="text-xs"
-        >
-          {[10, 20, 30, 40, 50].map((pageSize) => (
-            <option key={pageSize} value={pageSize}>
-              Show {pageSize}
-            </option>
-          ))}
-        </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-gray-300">Show:</span>
+          <select
+            value={displayData?.meta.records_per_page || 20}
+            onChange={(e) => {
+              handleInputChange('size', Number(e.target.value));
+            }}
+            className="px-2 py-1"
+          >
+            {[10, 20, 30, 40, 50].map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                {pageSize}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full px-2 sm:px-0 max-w-full">
-      <h2 className="mb-2 text-lg sm:text-xl">Leaderboard</h2>
-      <p className="text-sm text-gray-400 mb-4 max-w-2xl text-center">
-        Track trading performance across different addresses, accounts, and brokers. View perp
-        volume, fees, and realized PnL with customizable date ranges and aggregation options.
-      </p>
-
-      {/* Query Form */}
-      <div className="flex flex-col sm:flex-row flex-items-center gap-2 w-full max-w-2xl">
-        <DatePicker
-          type="range"
-          value={dateRange}
-          maxLevel="year"
-          allowSingleDateInRange={true}
-          maxDate={
-            dateRange[0] && dateRange[1]
-              ? dayjs().format('YYYY-MM-DD')
-              : dateRange[0]
-                ? (() => {
-                    const today = dayjs();
-                    const maxRangeDate = dayjs(dateRange[0]).add(89, 'day');
-                    return today.isBefore(maxRangeDate)
-                      ? today.format('YYYY-MM-DD')
-                      : maxRangeDate.format('YYYY-MM-DD');
-                  })()
-                : dayjs().format('YYYY-MM-DD')
-          }
-          onChange={handleDateChange}
-          highlightToday={true}
-        />
+    <div className="space-y-8 animate-fade-in flex flex-col align-center">
+      <div className="text-center space-y-4">
+        <h2 className="text-2xl font-bold text-white">Trading Leaderboard</h2>
+        <p className="text-gray-300 max-w-3xl mx-auto">
+          Track trading performance across different addresses, accounts, and brokers. View perp
+          volume, fees, and realized PnL with customizable date ranges and aggregation options.
+        </p>
       </div>
 
-      {/* Aggregate By */}
-      <div className="flex flex-col text-left max-w-2xl">
-        <label htmlFor="aggregate-by" className="text-sm font-medium mb-1">
-          Aggregate By:
-        </label>
-        <select
-          id="aggregate-by"
-          value={queryParams.aggregateBy || ''}
-          onChange={(e) => {
-            const value = e.target.value;
-            handleAggregateByChange(
-              value as 'address' | 'address_per_builder' | 'date' | 'account' | ''
-            );
-          }}
-          className="bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-        >
-          <option value="">No aggregation</option>
-          <option value="address">Address (Sum across all builders)</option>
-          <option value="address_per_builder">
-            Address per builder (Sum separately for each builder)
-          </option>
-          <option value="date">Date</option>
-          <option value="account">Account</option>
-        </select>
-      </div>
-
-      {/* Additional Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
-        <div className="text-left">
-          <label htmlFor="broker-id" className="text-sm font-medium mb-1 block">
-            Broker ID
+      {/* Filters Section */}
+      <div className="card space-y-6 max-w-2xl mxa min-w-[min-content]">
+        {/* Date Range */}
+        <div className="space-y-2">
+          <label htmlFor="date-range" className="text-sm font-medium text-white">
+            Date Range
           </label>
-          <select
-            id="broker-id"
-            value={queryParams.broker_id || ''}
-            onChange={(e) => handleInputChange('broker_id', e.target.value)}
-            className="w-full bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-          >
-            <option value="">All brokers</option>
-            {brokers?.map((broker) => (
-              <option key={broker.broker_id} value={broker.broker_id}>
-                {broker.broker_name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="text-left">
-          <label htmlFor="address-input" className="text-sm font-medium mb-1 block">
-            Address
-          </label>
-          <input
-            id="address-input"
-            type="text"
-            placeholder="Enter EVM or Solana address"
-            value={addressInput}
-            onChange={(e) => {
-              handleAddressChange(e.target.value);
-            }}
-            className="w-full bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+          <DatePicker
+            id="date-range"
+            type="range"
+            value={dateRange}
+            maxLevel="year"
+            allowSingleDateInRange={true}
+            maxDate={
+              dateRange[0] && dateRange[1]
+                ? dayjs().format('YYYY-MM-DD')
+                : dateRange[0]
+                  ? (() => {
+                      const today = dayjs();
+                      const maxRangeDate = dayjs(dateRange[0]).add(89, 'day');
+                      return today.isBefore(maxRangeDate)
+                        ? today.format('YYYY-MM-DD')
+                        : maxRangeDate.format('YYYY-MM-DD');
+                    })()
+                  : dayjs().format('YYYY-MM-DD')
+            }
+            onChange={handleDateChange}
+            highlightToday={true}
           />
         </div>
-      </div>
 
-      {/* Column Filters */}
-      <div className="max-w-2xl flex">
-        <Popover.Root>
-          <Popover.Trigger className="w-auto flex-self-start">
-            <Button variant="soft" className="text-sm">
-              <MixerHorizontalIcon width="16" height="16" />
-              Column Filters
-            </Button>
-          </Popover.Trigger>
-          <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw]">
-            <div className="flex flex-col [&>*]:text-size-4 gap-2">
-              <div className="px-1">
-                <Button
-                  onClick={() => {
-                    table.resetColumnVisibility();
-                  }}
-                >
-                  Reset to default
-                </Button>
-              </div>
-              <div className="px-1">
-                <label>
-                  <input
-                    {...{
-                      type: 'checkbox',
-                      checked: table.getIsAllColumnsVisible(),
-                      onChange: table.getToggleAllColumnsVisibilityHandler()
-                    }}
-                  />{' '}
-                  Toggle All
-                </label>
-              </div>
-              <hr className="w-full" />
-              {table.getAllLeafColumns().map((column) => {
-                return (
-                  <div key={column.id} className="px-1">
-                    <label className="text-sm">
-                      <input
-                        {...{
-                          type: 'checkbox',
-                          checked: column.getIsVisible(),
-                          onChange: column.getToggleVisibilityHandler()
-                        }}
-                      />{' '}
-                      {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        flexRender(column.columnDef.header, undefined as any)
-                      }{' '}
-                      ({column.id})
-                    </label>
-                  </div>
-                );
-              })}
-            </div>
-          </Popover.Content>
-        </Popover.Root>
-      </div>
+        {/* Aggregate By */}
+        <div className="space-y-2">
+          <label htmlFor="aggregate-by" className="text-sm font-medium text-white">
+            Aggregate By
+          </label>
+          <select
+            id="aggregate-by"
+            value={queryParams.aggregateBy || ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleAggregateByChange(
+                value as 'address' | 'address_per_builder' | 'date' | 'account' | ''
+              );
+            }}
+            className="w-full"
+          >
+            <option value="">No aggregation</option>
+            <option value="address">Address (Sum across all builders)</option>
+            <option value="address_per_builder">
+              Address per builder (Sum separately for each builder)
+            </option>
+            <option value="date">Date</option>
+            <option value="account">Account</option>
+          </select>
+        </div>
 
-      {!displayData ? (
-        <Spinner size="2.5rem" />
-      ) : (
-        <>
-          {renderPagination()}
-
-          <div className="w-full overflow-x-auto relative">
-            {isLoading && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
-                <Spinner size="2rem" />
-              </div>
-            )}
-            <Table.Root className="max-w-full min-w-[800px]">
-              <Table.Header>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Table.Row key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Table.ColumnHeaderCell key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder ? null : (
-                          <div
-                            className={
-                              header.column.getCanSort()
-                                ? 'cursor-pointer select-none hover:bg-[--accent-3] text-sm'
-                                : 'text-sm'
-                            }
-                            onClick={header.column.getToggleSortingHandler()}
-                            onKeyDown={(ev) => {
-                              if (ev.key === 'Enter') {
-                                header.column.getToggleSortingHandler();
-                              }
-                            }}
-                            role="button"
-                            tabIndex={0}
-                          >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            {{
-                              asc: ' 🔼',
-                              desc: ' 🔽'
-                            }[header.column.getIsSorted() as string] ?? null}
-                          </div>
-                        )}
-                      </Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                ))}
-              </Table.Header>
-
-              <Table.Body>
-                {table.getRowModel().rows.map((row) => (
-                  <Table.Row key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <Table.Cell key={cell.id} className="align-middle text-sm">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </Table.Cell>
-                    ))}
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
+        {/* Additional Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="broker-id" className="text-sm font-medium text-white">
+              Broker ID
+            </label>
+            <select
+              id="broker-id"
+              value={queryParams.broker_id || ''}
+              onChange={(e) => handleInputChange('broker_id', e.target.value)}
+              className="w-full"
+            >
+              <option value="">All brokers</option>
+              {brokers?.map((broker) => (
+                <option key={broker.broker_id} value={broker.broker_id}>
+                  {broker.broker_name}
+                </option>
+              ))}
+            </select>
           </div>
+          <div className="space-y-2">
+            <label htmlFor="address-input" className="text-sm font-medium text-white">
+              Address
+            </label>
+            <input
+              id="address-input"
+              type="text"
+              placeholder="Enter EVM or Solana address"
+              value={addressInput}
+              onChange={(e) => {
+                handleAddressChange(e.target.value);
+              }}
+              className="w-full"
+            />
+          </div>
+        </div>
+      </div>
 
-          {renderPagination()}
-        </>
-      )}
+      {/* Table Section */}
+      <div className="card">
+        {!displayData ? (
+          <div className="flex justify-center py-12 w-full">
+            <Spinner size="2.5rem" />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Column Filters */}
+            <div className="flex justify-start">
+              <Popover.Root>
+                <Popover.Trigger className="w-auto">
+                  <Button variant="soft" className="btn btn-secondary">
+                    <MixerHorizontalIcon width="16" height="16" />
+                    Column Filters
+                  </Button>
+                </Popover.Trigger>
+                <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw] card">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          table.resetColumnVisibility();
+                        }}
+                        className="btn btn-primary"
+                      >
+                        Reset to default
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={table.getIsAllColumnsVisible()}
+                        onChange={table.getToggleAllColumnsVisibilityHandler()}
+                        className="rounded"
+                      />
+                      <label htmlFor="toggle-all" className="text-sm text-white">
+                        Toggle All
+                      </label>
+                    </div>
+                    <hr className="w-full border-border-primary" />
+                    {table.getAllLeafColumns().map((column) => {
+                      return (
+                        <div key={column.id} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={column.getIsVisible()}
+                            onChange={column.getToggleVisibilityHandler()}
+                            className="rounded"
+                          />
+                          <label className="text-sm text-white">
+                            {
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                              flexRender(column.columnDef.header, undefined as any)
+                            }{' '}
+                            ({column.id})
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Popover.Content>
+              </Popover.Root>
+            </div>
+
+            {renderPagination()}
+
+            <div className="w-full overflow-x-auto relative">
+              {isLoading && (
+                <div className="absolute inset-0 bg-bg-overlay flex items-center justify-center z-10 rounded-xl">
+                  <Spinner size="2rem" />
+                </div>
+              )}
+              <Table.Root className="max-w-full min-w-[800px]">
+                <Table.Header>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <Table.Row key={headerGroup.id} className="border-b border-border-primary">
+                      {headerGroup.headers.map((header) => (
+                        <Table.ColumnHeaderCell
+                          key={header.id}
+                          colSpan={header.colSpan}
+                          className="py-4 px-4"
+                        >
+                          {header.isPlaceholder ? null : (
+                            <div
+                              className={
+                                header.column.getCanSort()
+                                  ? 'cursor-pointer select-none hover:text-primary-light transition-colors duration-150 text-sm font-medium'
+                                  : 'text-sm font-medium'
+                              }
+                              onClick={header.column.getToggleSortingHandler()}
+                              onKeyDown={(ev) => {
+                                if (ev.key === 'Enter') {
+                                  header.column.getToggleSortingHandler();
+                                }
+                              }}
+                              role="button"
+                              tabIndex={0}
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              {{
+                                asc: ' 🔼',
+                                desc: ' 🔽'
+                              }[header.column.getIsSorted() as string] ?? null}
+                            </div>
+                          )}
+                        </Table.ColumnHeaderCell>
+                      ))}
+                    </Table.Row>
+                  ))}
+                </Table.Header>
+
+                <Table.Body>
+                  {table.getRowModel().rows.map((row, index) => (
+                    <Table.Row
+                      key={row.id}
+                      className={`border-b border-border-primary hover:bg-bg-tertiary transition-colors duration-150 ${
+                        index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
+                      }`}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <Table.Cell key={cell.id} className="align-middle text-sm py-3 px-4">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </Table.Cell>
+                      ))}
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Root>
+            </div>
+
+            {renderPagination()}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

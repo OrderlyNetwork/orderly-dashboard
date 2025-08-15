@@ -5,13 +5,16 @@ import { BrokerSelection, SearchInput } from '.';
 
 export const NavBar: FC = () => {
   return (
-    <nav className="w-full flex flex-col sm:flex-row flex-self-stretch flex-items-center gap-3 sm:gap-sm p-4">
-      <h2 className="flex-auto m0 text-center sm:text-left">
-        <Link to="/" className="color-unset">
-          Orderly Dashboard
+    <nav className="glass-no-radius w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-6 mb-8">
+      <div className="flex items-center gap-4">
+        <Link to="/" className="group">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent group-hover:from-primary-light group-hover:to-primary transition-all duration-300">
+            Orderly Dashboard
+          </h2>
         </Link>
-      </h2>
-      <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-sm w-full sm:w-auto">
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
         <BrokerSelection />
         <SearchInput />
       </div>

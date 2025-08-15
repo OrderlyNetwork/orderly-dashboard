@@ -52,21 +52,19 @@ export const SearchInput: FC = () => {
   }, [state, location.pathname, setSearch]);
 
   return (
-    <div className="relative w-full sm:w-[20rem]">
-      <MagnifyingGlassIcon
-        className="absolute left-0 top-0 max-w-full max-h-full p-[0.4rem] pointer-events-none"
-        height="40"
-        width="40"
-      />
+    <div className="relative w-full sm:w-80 group">
+      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 group-focus-within:text-primary-light transition-colors duration-200" />
+      </div>
       <input
-        className="p-[0.3rem_0_0.3rem_40px] h-full w-full sm:w-[20rem] text-sm sm:text-base"
+        className="w-full pl-12 pr-4 py-3 bg-bg-secondary border border-border-primary rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 backdrop-blur-md"
         type="text"
-        placeholder="Search via wallet or account ID"
+        placeholder="Search wallet or account ID..."
         onChange={(event) => {
           setSearch(event.target.value);
         }}
         value={search}
-      />
-    </div>
+              />
+      </div>
   );
 };

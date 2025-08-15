@@ -1,4 +1,3 @@
-import { Select } from '@radix-ui/themes';
 import { useSearchParams } from '@remix-run/react';
 import { FC, useEffect, useState } from 'react';
 
@@ -34,22 +33,20 @@ export const BrokerSelection: FC = () => {
 
   return (
     <div className="w-full sm:w-auto">
-      <Select.Root
-        onValueChange={(value) => {
-          setBroker(value === 'select' ? undefined : value);
+      <select
+        value={broker || ''}
+        onChange={(e) => {
+          setBroker(e.target.value === '' ? undefined : e.target.value);
         }}
-        value={broker ?? 'select'}
+        className="w-full sm:w-64"
       >
-        <Select.Trigger className="w-full sm:w-auto" />
-        <Select.Content>
-          <Select.Item value="select">Select Broker</Select.Item>
-          {brokers.map(({ broker_id, broker_name }) => (
-            <Select.Item key={broker_id} value={broker_id}>
-              {broker_name}
-            </Select.Item>
-          ))}
-        </Select.Content>
-      </Select.Root>
+        <option value="">All Brokers</option>
+        {brokers.map(({ broker_id, broker_name }) => (
+          <option key={broker_id} value={broker_id}>
+            {broker_name}
+          </option>
+        ))}
+      </select>
     </div>
   );
 };

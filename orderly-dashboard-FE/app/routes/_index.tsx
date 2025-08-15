@@ -2,25 +2,55 @@ import { SearchInput, Leaderboard } from '~/components';
 
 export default function Index() {
   return (
-    <div className="flex flex-col flex-items-center gap-4 sm:gap-6 text-center">
-      <h1 className="text-2xl sm:text-3xl lg:text-4xl">Orderly Network Dashboard</h1>
+    <div className="space-y-12 animate-fade-in">
+      {/* Hero Section */}
+      <div className="text-center space-y-8">
+        <div className="space-y-6">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+            Orderly Network Dashboard
+          </h1>
+          <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Advanced analytics and insights for decentralized trading on the Orderly Network
+          </p>
+        </div>
 
-      <div className="text-sm sm:text-base max-w-lg px-4">
-        Welcome to the Orderly Network Dashboard!
-        <br />
-        Here you can query information about users like executed trades, deposits & withdrawals and
-        liquidations.
-        <br />
-        <br />
-        <span className="hidden sm:block">
-          You can either search via wallet address or account ID:
-        </span>
+        <div className="card max-w-2xl mx-auto p-8 space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold text-white">Explore Trading Data</h3>
+            <p className="text-gray-300 leading-relaxed">
+              Search for wallet addresses or account IDs to view detailed trading information
+              including executed trades, deposits & withdrawals, liquidations, and performance
+              metrics.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-center space-x-4 text-sm text-gray-400">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-success rounded-full"></div>
+                <span>EVM Addresses</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-info rounded-full"></div>
+                <span>Solana Addresses</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-warning rounded-full"></div>
+                <span>Account IDs</span>
+              </div>
+            </div>
+
+            <div className="hidden sm:flex justify-center w-full">
+              <SearchInput />
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="w-full max-w-md hidden sm:flex flex-col items-center mb-10">
-        <SearchInput />
+      {/* Leaderboard Section */}
+      <div className="mt-16">
+        <Leaderboard />
       </div>
-      <Leaderboard />
     </div>
   );
 }
