@@ -19,6 +19,7 @@ pub async fn analyzer_perp_trade(
     trades: Vec<Trade>,
     pulled_block_height: i64,
     context: &mut AnalyzeContext,
+    tx: Option<tokio::sync::mpsc::Sender<String>>,
 ) -> i64 {
     if trades.is_empty() {
         return 0;
@@ -26,6 +27,9 @@ pub async fn analyzer_perp_trade(
     let mut max_perp_trade_id = 0i64;
     let trade_len = trades.len();
     for perp_trade in trades {
+        if let Some(tx) = &tx {
+            tx.try_send(perp_trade.account_id.clone()).ok();
+        }
         max_perp_trade_id = max(max_perp_trade_id, perp_trade.trade_id as i64);
 
         let trade_qty: BigDecimal = perp_trade.trade_qty.parse().unwrap();
@@ -241,7 +245,7 @@ mod tests {
             },
         ];
         let block_number = 1000000;
-        analyzer_perp_trade(trades, block_number, &mut context).await;
+        analyzer_perp_trade(trades, block_number, &mut context, None).await;
         {
             let alice_eth = context.get_user_perp_cache(&alice_eth_perp_key);
             println!(

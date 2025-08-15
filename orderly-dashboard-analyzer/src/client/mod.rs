@@ -37,6 +37,12 @@ pub struct MarketDataInfo {
     pub _24h_amount: f64,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct CefiAccountInfo {
+    pub address: String,
+    pub broker_id: String,
+}
+
 pub async fn list_market_infos(base_url: &str) -> anyhow::Result<ResponseData<MarketDataInfos>> {
     let res = get_market_infos(base_url).await?;
 
@@ -55,6 +61,32 @@ async fn get_market_infos(base_url: &str) -> anyhow::Result<String> {
     }
 }
 
+pub async fn cefi_get_account_info(
+    base_url: &str,
+    account_id: &str,
+) -> anyhow::Result<ResponseData<CefiAccountInfo>> {
+    let res = _get_account_info(base_url, account_id).await?;
+
+    let response_data: ResponseData<CefiAccountInfo> = serde_json::from_str(&res)?;
+    Ok(response_data)
+}
+
+async fn _get_account_info(base_url: &str, account_id: &str) -> anyhow::Result<String> {
+    let response = reqwest::get(format!(
+        "{}/v1/public/account?account_id={}",
+        base_url, account_id
+    ))
+    .await;
+    match response {
+        Ok(res) => Ok(res.text().await?),
+        Err(err) => Err(anyhow::anyhow!(
+            "reqwest _get_account_info faield with err: {:?} for account_id: {}",
+            err,
+            account_id
+        )),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -64,5 +96,17 @@ mod tests {
     async fn test_list_market_infos() {
         let res = list_market_infos("https://api.orderly.org").await.unwrap();
         println!("{:?}", res);
+    }
+
+    #[ignore]
+    #[actix_web::test]
+    async fn test_get_account_info() {
+        let res = cefi_get_account_info(
+            "https://api.orderly.org",
+            "0x459171fde490477c0bcaea14f20d1d3037eb6bca0a67347a473ce5a894a2057b",
+        )
+        .await
+        .unwrap();
+        println!("account info: {:?}", res);
     }
 }

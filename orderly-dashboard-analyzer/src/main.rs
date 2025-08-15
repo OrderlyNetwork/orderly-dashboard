@@ -13,6 +13,7 @@ use sync_market_data::update_market_infos_task;
 use crate::analyzer::analyzer_job::start_analyzer_trade_job;
 use crate::config::{AnalyzerConfig, Opts};
 use crate::db::{get_database_credentials, init_database_url};
+use crate::sync_account::sync_account_handler;
 
 #[allow(unused_assignments)]
 pub mod analyzer;
@@ -20,6 +21,7 @@ mod client;
 mod config;
 mod db;
 mod schema;
+pub mod sync_account;
 mod sync_broker;
 pub mod sync_market_data;
 
@@ -34,13 +36,14 @@ fn init_log() {
         .init();
 }
 
-fn start_analyze_job(config: AnalyzerConfig) {
+fn start_analyze_job(config: AnalyzerConfig, tx: tokio::sync::mpsc::Sender<String>) {
     tracing::info!(target:ORDERLY_DASHBOARD_ANALYZER,"config loaded: {:?}",config);
     start_analyzer_trade_job(
         config.pull_interval,
         config.indexer_address.clone(),
         config.start_block,
         config.batch_block_num,
+        tx,
     );
     // start_analyzer_gas_job(
     //     config.pull_interval,
@@ -79,13 +82,15 @@ async fn main() -> std::io::Result<()> {
     let config: AnalyzerConfig =
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     init_database_url(get_database_credentials());
-    orderly_dashboard_indexer::runtime::init_pool_workers_num(1);
+    orderly_dashboard_indexer::runtime::init_pool_workers_num(2);
     let port = config.server_port;
     let sync_broker_url = config.get_broker_url.clone();
 
-    start_analyze_job(config.clone());
+    let (tx, rx) = tokio::sync::mpsc::channel::<String>(10_000);
+    start_analyze_job(config.clone(), tx);
     start_sync_brokers(sync_broker_url);
     update_market_infos_task(config.base_url.clone());
+    orderly_dashboard_indexer::runtime::spawn_future(sync_account_handler(rx, config.base_url));
     HttpServer::new(|| App::new().service(health).service(status))
         .bind(("0.0.0.0", port))?
         .run()

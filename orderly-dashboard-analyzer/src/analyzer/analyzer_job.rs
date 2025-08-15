@@ -28,6 +28,7 @@ pub fn start_analyzer_trade_job(
     base_url: String,
     start_block: i64,
     batch_block_num: u64,
+    tx: tokio::sync::mpsc::Sender<String>,
 ) {
     let mut interval_ms = interval_seconds * 1000;
     tokio::spawn(async move {
@@ -69,7 +70,7 @@ pub fn start_analyzer_trade_job(
 
                     let mut context = AnalyzeContext::new_context();
                     let (pulled_block_time, latest_block_height, pulled_perp_trade_id) =
-                        parse_and_analyzer(result.unwrap(), &mut context).await;
+                        parse_and_analyzer(result.unwrap(), &mut context, Some(tx.clone())).await;
 
                     if round_to_block > latest_block_height {
                         tracing::info!(target: ANALYZER_CONTEXT,"continue to pull blocks, from time: {}, to_time: {}, diff mins: {}, from num {} to numb {}, latest_block_height: {}. cost:{}", from_time, to_time, (to_time - from_time) / 60,round_from_block, round_to_block, latest_block_height, Utc::now().timestamp_millis()-timestamp);
@@ -140,6 +141,7 @@ fn cal_to_time(from_time: i64, batch_block_num: u64) -> i64 {
 pub async fn parse_and_analyzer(
     response: IndexerQueryResponse<TradingEventsResponse>,
     context: &mut AnalyzeContext,
+    tx: Option<tokio::sync::mpsc::Sender<String>>,
 ) -> (i64, i64, i64) {
     let mut pulled_block_time = 0i64;
     #[cfg(not(test))]
@@ -201,7 +203,8 @@ pub async fn parse_and_analyzer(
                         batch_id: _,
                         trades,
                     } => {
-                        let trade_id = analyzer_perp_trade(trades, block_num, context).await;
+                        let trade_id =
+                            analyzer_perp_trade(trades, block_num, context, tx.clone()).await;
                         latest_perp_trade_id = max(latest_perp_trade_id, trade_id);
                     }
                     TradingEventInnerData::SettlementResult {
@@ -212,6 +215,9 @@ pub async fn parse_and_analyzer(
                         insurance_transfer_amount,
                         settlement_executions,
                     } => {
+                        if let Some(tx) = &tx {
+                            tx.try_send(account_id.clone()).ok();
+                        }
                         analyzer_settlement(
                             account_id,
                             settled_amount,
