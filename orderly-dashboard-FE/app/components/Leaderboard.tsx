@@ -5,7 +5,8 @@ import {
   ClipboardCopyIcon,
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
-  MixerHorizontalIcon
+  MixerHorizontalIcon,
+  MagnifyingGlassIcon
 } from '@radix-ui/react-icons';
 import { Button, Popover, Table, Tooltip } from '@radix-ui/themes';
 import { Link } from '@remix-run/react';
@@ -169,6 +170,12 @@ export const Leaderboard: FC = () => {
                 <ClipboardCopyIcon
                   className="w-3 h-3 text-gray-400 hover:text-white cursor-pointer"
                   onClick={() => navigator.clipboard.writeText(row.original.address!)}
+                />
+              </Tooltip>
+              <Tooltip content="Filter by this address">
+                <MagnifyingGlassIcon
+                  className="w-3 h-3 text-gray-400 hover:text-blue-400 cursor-pointer"
+                  onClick={() => handleAddressChange(row.original.address!)}
                 />
               </Tooltip>
             </div>
