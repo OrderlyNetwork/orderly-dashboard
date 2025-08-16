@@ -596,9 +596,9 @@ export const Leaderboard: FC = () => {
             <Spinner size="2.5rem" />
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-2">
             {/* Column Filters */}
-            <div className="flex justify-start">
+            <div className="flex justify-start pb-0! p-3 sm:p-4">
               <Popover.Root>
                 <Popover.Trigger className="w-auto">
                   <Button variant="soft" className="btn btn-secondary">

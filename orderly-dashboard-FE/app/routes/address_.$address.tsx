@@ -557,7 +557,7 @@ export const Address: FC = () => {
       </div>
 
       {/* Data Table */}
-      <div className="card p-4 sm:p-6 space-y-4 sm:space-y-6 w-full max-w-full">
+      <div className="card p-4 sm:p-6 space-y-2 w-full max-w-full">
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <h3 className="text-xl font-semibold text-white">Event Data</h3>
         </div>
@@ -570,7 +570,7 @@ export const Address: FC = () => {
           <>
             {renderLoadMore()}
 
-            <div className="flex justify-start">
+            <div className="flex justify-start px-3 sm:px-4">
               <Popover.Root>
                 <Popover.Trigger className="w-auto">
                   <Button variant="soft" className="text-sm">
