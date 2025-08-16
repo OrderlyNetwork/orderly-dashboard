@@ -569,7 +569,6 @@ export const Address: FC = () => {
         ) : (
           <>
             {renderLoadMore()}
-            {renderPagination()}
 
             <div className="flex justify-start">
               <Popover.Root>
@@ -627,6 +626,8 @@ export const Address: FC = () => {
                 </Popover.Content>
               </Popover.Root>
             </div>
+
+            {renderPagination()}
 
             <div className="w-full overflow-x-auto">
               <Table.Root className="max-w-full min-w-[600px] bg-bg-primary rounded-lg border border-border-primary overflow-hidden">
