@@ -4,7 +4,7 @@ import { match } from 'ts-pattern';
 
 import { Spinner } from '~/components';
 import { ChainNamespace, useSearchAddress } from '~/hooks';
-import { base64UrlSafeDecode } from '~/util';
+import { base64UrlSafeDecode, base64UrlSafeEncode } from '~/util';
 
 const formatNumber = (value?: number): string => {
   if (value == null) return '-';
@@ -100,7 +100,14 @@ export const Search: FC = () => {
               return (
                 <Link
                   key={`${data.broker_id}-${data.account_id}`}
-                  to={`/address/${data.address}?${searchParams.toString()}`}
+                  to={(() => {
+                    const isSol = data.address.match(/^[0-9a-zA-Z]{43,44}$/);
+                    if (isSol) {
+                      return `/address/${base64UrlSafeEncode(data.address)}?${searchParams.toString()}`;
+                    } else {
+                      return `/address/${data.address}?${searchParams.toString()}`;
+                    }
+                  })()}
                   className="no-underline text-white hover:text-white group"
                 >
                   <div className="card hover:scale-105 transition-all duration-300 cursor-pointer">

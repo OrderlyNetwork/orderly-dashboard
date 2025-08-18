@@ -31,6 +31,7 @@ import { useRenderColumns } from './address';
 import { useAppState } from '~/App';
 import { Spinner } from '~/components';
 import { ChainAddress, EventsParams, EventTableData, EventType } from '~/hooks';
+import { base64UrlSafeEncode, base64UrlSafeDecode } from '~/util';
 
 export function loader({ params }: LoaderFunctionArgs) {
   return json({ address: params.address ?? '' });
@@ -92,27 +93,42 @@ export const Address: FC = () => {
 
   const { address: rawAddress } = useLoaderData<typeof loader>();
 
-  const isAccountId = useMemo(() => rawAddress.match(/^0x[0-9a-fA-F]{64}$/), [rawAddress]);
-
   const address: ChainAddress = useMemo(() => {
+    try {
+      const decodedAddress = base64UrlSafeDecode(rawAddress);
+      if (decodedAddress.match(/^[0-9a-zA-Z]{43,44}$/)) {
+        return {
+          address: decodedAddress,
+          chain_namespace: 'sol'
+        };
+      }
+    } catch {
+      // If decoding fails, continue with raw address matching
+    }
+
     if (rawAddress.match(/^0x[0-9a-fA-F]{40}$/)) {
       return {
         address: rawAddress,
         chain_namespace: 'evm'
       };
-    } else if (rawAddress.match(/^[0-9a-zA-Z]{43,44}$/)) {
+    }
+
+    if (rawAddress.match(/^[0-9a-zA-Z]{43,44}$/)) {
       return {
         address: rawAddress,
         chain_namespace: 'sol'
       };
-    } else if (isAccountId) {
+    }
+
+    if (rawAddress.match(/^0x[0-9a-fA-F]{64}$/)) {
       return {
         address: rawAddress,
         chain_namespace: 'evm'
       };
     }
+
     throw new Error(`Could not match address ${rawAddress}`);
-  }, [rawAddress, isAccountId]);
+  }, [rawAddress]);
 
   const [searchParams] = useSearchParams();
   const broker_id = searchParams.get('broker_id');
@@ -135,7 +151,9 @@ export const Address: FC = () => {
     address: string;
     broker_id: string;
   }>(
-    isAccountId ? `${evmApiUrl}/v1/public/account?account_id=${rawAddress}` : undefined,
+    rawAddress.match(/^0x[0-9a-fA-F]{64}$/)
+      ? `${evmApiUrl}/v1/public/account?account_id=${rawAddress}`
+      : undefined,
     (url: string) =>
       fetch(url)
         .then((r) => r.json())
@@ -156,7 +174,7 @@ export const Address: FC = () => {
       user_type: string;
     }>;
   }>(
-    isAccountId && accountIdData
+    rawAddress.match(/^0x[0-9a-fA-F]{64}$/) && accountIdData
       ? `${evmApiUrl}/v1/get_all_accounts?address=${accountIdData.address}&broker_id=${accountIdData.broker_id}`
       : undefined,
     (url: string) =>
@@ -171,7 +189,7 @@ export const Address: FC = () => {
   );
 
   useEffect(() => {
-    if (isAccountId && accountIdData && accountIdSubaccounts?.rows) {
+    if (rawAddress.match(/^0x[0-9a-fA-F]{64}$/) && accountIdData && accountIdSubaccounts?.rows) {
       const matchingSubaccount = accountIdSubaccounts.rows.find(
         (account) => account.account_id === rawAddress
       );
@@ -182,11 +200,18 @@ export const Address: FC = () => {
         searchParams.set('user_id', matchingSubaccount.user_id.toString());
       }
       navigate({
-        pathname: `/address/${accountIdData.address}`,
+        pathname: (() => {
+          const isSol = accountIdData.address.match(/^[0-9a-zA-Z]{43,44}$/);
+          if (isSol) {
+            return `/address/${base64UrlSafeEncode(accountIdData.address)}`;
+          } else {
+            return `/address/${accountIdData.address}`;
+          }
+        })(),
         search: `?${searchParams.toString()}`
       });
     }
-  }, [isAccountId, accountIdData, accountIdSubaccounts, rawAddress, navigate]);
+  }, [accountIdData, accountIdSubaccounts, rawAddress, navigate]);
 
   const { data: accountsData } = useSWR<{
     rows: Array<{
@@ -289,7 +314,7 @@ export const Address: FC = () => {
     );
   }
 
-  if (isAccountId) {
+  if (rawAddress.match(/^0x[0-9a-fA-F]{64}$/)) {
     return <Spinner size="2.5rem" />;
   }
 
@@ -472,7 +497,14 @@ export const Address: FC = () => {
                     searchParams.set('broker_id', broker_id!);
                     searchParams.set('user_id', selectedUserId);
                     navigate({
-                      pathname: `/address/${address.address}`,
+                      pathname: (() => {
+                        const isSol = address.address.match(/^[0-9a-zA-Z]{43,44}$/);
+                        if (isSol) {
+                          return `/address/${base64UrlSafeEncode(address.address)}`;
+                        } else {
+                          return `/address/${address.address}`;
+                        }
+                      })(),
                       search: `?${searchParams.toString()}`
                     });
                   }

@@ -21,12 +21,13 @@ import {
   useReactTable
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import { useMemo, useState, useEffect, FC } from 'react';
+import { useMemo, useState, useEffect, FC, useCallback } from 'react';
 
 import { Spinner } from '~/components';
 import { useBrokers } from '~/hooks';
 import { useLeaderboard, LeaderboardParams, LeaderboardSortOption } from '~/hooks/useLeaderboard';
 import { LeaderboardEntry, LeaderboardResponse } from '~/types/leaderboard';
+import { base64UrlSafeEncode } from '~/util';
 
 const defaultVisibility = {
   date: false,
@@ -97,24 +98,30 @@ export const Leaderboard: FC = () => {
     }
   };
 
-  const handleInputChange = (field: keyof LeaderboardParams, value: string | number) => {
-    setQueryParams((prev) => ({
-      ...prev,
-      [field]: value,
-      ...(field !== 'page' && field !== 'size' && { page: 1 })
-    }));
-  };
+  const handleInputChange = useCallback(
+    (field: keyof LeaderboardParams, value: string | number) => {
+      setQueryParams((prev) => ({
+        ...prev,
+        [field]: value,
+        ...(field !== 'page' && field !== 'size' && { page: 1 })
+      }));
+    },
+    []
+  );
 
-  const handleAddressChange = (value: string) => {
-    setAddressInput(value);
+  const handleAddressChange = useCallback(
+    (value: string) => {
+      setAddressInput(value);
 
-    const isValidAddress =
-      value === '' || value.match(/^0x[0-9a-fA-F]{40}$/) || value.match(/^[0-9a-zA-Z]{43,44}$/);
+      const isValidAddress =
+        value === '' || value.match(/^0x[0-9a-fA-F]{40}$/) || value.match(/^[0-9a-zA-Z]{43,44}$/);
 
-    if (isValidAddress) {
-      handleInputChange('address', value);
-    }
-  };
+      if (isValidAddress) {
+        handleInputChange('address', value);
+      }
+    },
+    [handleInputChange]
+  );
 
   const handleAggregateByChange = (
     aggregateBy: 'address' | 'address_per_builder' | 'date' | 'account' | ''
@@ -160,7 +167,14 @@ export const Leaderboard: FC = () => {
                 to={
                   row.original.broker_id
                     ? `/address/${row.original.address}?broker_id=${row.original.broker_id}`
-                    : `/search?q=${row.original.address}&chain_namespace=${row.original.address.match(/^0x[0-9a-fA-F]{40}$/) ? 'evm' : 'sol'}`
+                    : (() => {
+                        const isSol = row.original.address!.match(/^[0-9a-zA-Z]{43,44}$/);
+                        if (isSol) {
+                          return `/search?q=${base64UrlSafeEncode(row.original.address!)}&chain_namespace=sol`;
+                        } else {
+                          return `/search?q=${row.original.address}&chain_namespace=evm`;
+                        }
+                      })()
                 }
                 className="font-mono text-sm text-blue-400 hover:text-blue-300 hover:underline"
               >
@@ -255,7 +269,7 @@ export const Leaderboard: FC = () => {
         enableSorting: false
       }
     ],
-    [currentRequestedPage, displayData?.meta.records_per_page]
+    [currentRequestedPage, displayData?.meta.records_per_page, handleAddressChange]
   );
 
   const table = useReactTable<LeaderboardEntry>({

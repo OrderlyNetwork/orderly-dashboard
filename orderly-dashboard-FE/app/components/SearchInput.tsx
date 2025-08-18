@@ -27,7 +27,7 @@ export const SearchInput: FC = () => {
   useEffect(() => {
     if (!searchValue) return;
     const isEvm = searchValue.match(/^0x[0-9a-fA-F]{40}$/);
-    const isSol = searchValue.match(/^[0-9a-zA-Z]{44}$/);
+    const isSol = searchValue.match(/^[0-9a-zA-Z]{43,44}$/);
     const isAccountId = searchValue.match(/^0x[0-9a-fA-F]{64}$/);
     if (!isEvm && !isSol && !isAccountId) return;
 
@@ -64,7 +64,7 @@ export const SearchInput: FC = () => {
           setSearch(event.target.value);
         }}
         value={search}
-              />
-      </div>
+      />
+    </div>
   );
 };
