@@ -7,7 +7,7 @@ import {
   DoubleArrowRightIcon,
   MixerHorizontalIcon
 } from '@radix-ui/react-icons';
-import { Button, IconButton, Popover, Table, Tabs } from '@radix-ui/themes';
+import { Button, IconButton, Popover, Table } from '@radix-ui/themes';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { json, useLoaderData, useSearchParams, useNavigate } from '@remix-run/react';
 import {
@@ -91,6 +91,9 @@ export const Address: FC = () => {
   ]);
 
   const { address: rawAddress } = useLoaderData<typeof loader>();
+
+  const isAccountId = useMemo(() => rawAddress.match(/^0x[0-9a-fA-F]{64}$/), [rawAddress]);
+
   const address: ChainAddress = useMemo(() => {
     if (rawAddress.match(/^0x[0-9a-fA-F]{40}$/)) {
       return {
@@ -102,9 +105,14 @@ export const Address: FC = () => {
         address: rawAddress,
         chain_namespace: 'sol'
       };
+    } else if (isAccountId) {
+      return {
+        address: rawAddress,
+        chain_namespace: 'evm'
+      };
     }
     throw new Error(`Could not match address ${rawAddress}`);
-  }, [rawAddress]);
+  }, [rawAddress, isAccountId]);
 
   const [searchParams] = useSearchParams();
   const broker_id = searchParams.get('broker_id');
@@ -122,6 +130,64 @@ export const Address: FC = () => {
   });
 
   const { evmApiUrl } = useAppState();
+
+  const { data: accountIdData } = useSWR<{
+    address: string;
+    broker_id: string;
+  }>(
+    isAccountId ? `${evmApiUrl}/v1/public/account?account_id=${rawAddress}` : undefined,
+    (url: string) =>
+      fetch(url)
+        .then((r) => r.json())
+        .then((val) => {
+          if (!val.success) {
+            throw new Error(val.message || 'Failed to fetch account data');
+          }
+          return val.data;
+        })
+  );
+
+  const { data: accountIdSubaccounts } = useSWR<{
+    rows: Array<{
+      user_id: number;
+      account_id: string;
+      broker_id: string;
+      chain_type: string;
+      user_type: string;
+    }>;
+  }>(
+    isAccountId && accountIdData
+      ? `${evmApiUrl}/v1/get_all_accounts?address=${accountIdData.address}&broker_id=${accountIdData.broker_id}`
+      : undefined,
+    (url: string) =>
+      fetch(url)
+        .then((r) => r.json())
+        .then((val) => {
+          if (!val.success) {
+            throw new Error(val.message || 'Failed to fetch subaccounts');
+          }
+          return val.data;
+        })
+  );
+
+  useEffect(() => {
+    if (isAccountId && accountIdData && accountIdSubaccounts?.rows) {
+      const matchingSubaccount = accountIdSubaccounts.rows.find(
+        (account) => account.account_id === rawAddress
+      );
+
+      const searchParams = new URLSearchParams();
+      searchParams.set('broker_id', accountIdData.broker_id);
+      if (matchingSubaccount) {
+        searchParams.set('user_id', matchingSubaccount.user_id.toString());
+      }
+      navigate({
+        pathname: `/address/${accountIdData.address}`,
+        search: `?${searchParams.toString()}`
+      });
+    }
+  }, [isAccountId, accountIdData, accountIdSubaccounts, rawAddress, navigate]);
+
   const { data: accountsData } = useSWR<{
     rows: Array<{
       user_id: number;
@@ -201,47 +267,75 @@ export const Address: FC = () => {
     return error.message ?? '';
   }
 
+  if (accountsData?.rows && accountsData.rows.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+        <div className="text-xl font-semibold text-gray-300">Account Not Found</div>
+        <div className="text-gray-500 max-w-md">
+          No accounts found for address{' '}
+          <code className="bg-gray-800 px-2 py-1 rounded text-sm">{address.address}</code>
+          {broker_id && (
+            <>
+              {' '}
+              with broker ID{' '}
+              <code className="bg-gray-800 px-2 py-1 rounded text-sm">{broker_id}</code>
+            </>
+          )}
+        </div>
+        <Button onClick={() => navigate(`/search?q=${address.address}`)} className="mt-4">
+          Search All Accounts for This Address
+        </Button>
+      </div>
+    );
+  }
+
+  if (isAccountId) {
+    return <Spinner size="2.5rem" />;
+  }
+
   const renderPagination = () => (
-    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-xs sm:text-sm">
-      <div className="flex items-center gap-1 sm:gap-2">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-bg-primary rounded-xl border border-border-primary">
+      <div className="flex items-center gap-2">
         <button
-          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => table.firstPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          <DoubleArrowLeftIcon />
+          <DoubleArrowLeftIcon className="h-4 w-4" />
         </button>
         <button
-          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          <ChevronLeftIcon />
+          <ChevronLeftIcon className="h-4 w-4" />
         </button>
         <button
-          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          <ChevronRightIcon />
+          <ChevronRightIcon className="h-4 w-4" />
         </button>
         <button
-          className="border rounded p-1 hover:bg-gray-700 disabled:opacity-50 text-xs"
+          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => table.lastPage()}
           disabled={!table.getCanNextPage()}
         >
-          <DoubleArrowRightIcon />
+          <DoubleArrowRightIcon className="h-4 w-4" />
         </button>
       </div>
-      <div className="flex flex-row items-center gap-1 sm:gap-2">
-        <span className="flex items-center gap-1 text-xs">
-          <div>Page</div>
-          <strong>
+
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm">
+        <span className="flex items-center gap-2 text-gray-300">
+          <span>Page</span>
+          <strong className="text-white">
             {table.getState().pagination.pageIndex + 1} of {table.getPageCount().toLocaleString()}
           </strong>
         </span>
-        <span className="flex items-center gap-1 text-xs">
-          | Go to page:
+
+        <div className="flex items-center gap-2">
+          <span className="text-gray-300">Go to:</span>
           <input
             type="number"
             defaultValue={table.getState().pagination.pageIndex + 1}
@@ -249,22 +343,27 @@ export const Address: FC = () => {
               const page = e.target.value ? Number(e.target.value) - 1 : 0;
               table.setPageIndex(page);
             }}
-            className="border p-1 rounded w-12 sm:w-16 text-xs"
+            className="w-16 px-2 py-1 text-center"
+            min="1"
           />
-        </span>
-        <select
-          value={table.getState().pagination.pageSize}
-          onChange={(e) => {
-            table.setPageSize(Number(e.target.value));
-          }}
-          className="text-xs"
-        >
-          {[10, 20, 30, 40, 50].map((pageSize) => (
-            <option key={pageSize} value={pageSize}>
-              Show {pageSize}
-            </option>
-          ))}
-        </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-gray-300">Show:</span>
+          <select
+            value={table.getState().pagination.pageSize}
+            onChange={(e) => {
+              table.setPageSize(Number(e.target.value));
+            }}
+            className="px-2 py-1"
+          >
+            {[10, 20, 30, 40, 50].map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                {pageSize}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );
@@ -277,260 +376,328 @@ export const Address: FC = () => {
     const remainingEvents = Math.max(0, totalAvailable - loadedEvents);
 
     return (
-      <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <Button onClick={loadMore} disabled={isLoadingMore} className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-bg-secondary rounded-lg border border-border-primary">
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+          <Button
+            onClick={loadMore}
+            disabled={isLoadingMore}
+            className="btn btn-primary flex items-center gap-2"
+          >
             {isLoadingMore ? (
               <>
                 <Spinner size="1rem" />
                 Loading...
               </>
             ) : (
-              'Load More'
+              'Load More Events'
             )}
           </Button>
-          <span className="text-xs sm:text-sm text-gray-600 text-center">
+          <div className="text-sm text-gray-300 text-center">
             {remainingEvents > 0
               ? `${remainingEvents.toLocaleString()} more events available (${loadedEvents.toLocaleString()}/${totalAvailable.toLocaleString()} loaded)`
               : 'All events loaded'}
-          </span>
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full [&>*]:max-w-full lg:max-w-[50rem] px-2 sm:px-0">
-      <h2 className="mb-2 text-lg sm:text-xl break-all">{address.address}</h2>
-
-      {accountId != null && (
-        <div className="flex flex-col [&>*:first-child]:font-bold text-sm sm:text-base">
-          <div>Account ID:</div>
-          <div className="break-all">
-            {accountId.substring(0, 7)}...{accountId.substr(-7)}
+    <div className="space-y-8 animate-fade-in flex flex-col items-center">
+      {/* Header Section */}
+      <div className="card p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-2xl">
+        <div className="space-y-3 sm:space-y-4">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            Address Details
+          </h1>
+          <div className="flex items-center gap-3 p-3 bg-bg-secondary rounded-lg border border-border-primary">
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-gray-400 mb-1">Address</div>
+              <div className="font-mono text-white break-all">{address.address}</div>
+            </div>
             <IconButton
-              className="ml-1"
-              size="1"
+              size="2"
               variant="soft"
               onClick={async () => {
-                if (accountId == null) return;
-                navigator.clipboard.writeText(accountId);
+                navigator.clipboard.writeText(address.address);
               }}
+              className="flex-shrink-0"
             >
-              <CopyIcon height="12" />
+              <CopyIcon height="16" />
             </IconButton>
           </div>
         </div>
-      )}
 
-      {accountsData?.rows && accountsData.rows.length > 1 && (
-        <div className="flex flex-col [&>*:first-child]:font-bold text-sm sm:text-base">
-          <div>Account Type:</div>
-          <select
-            value={selectedAccount?.user_id || ''}
-            onChange={(e) => {
-              const selectedUserId = e.target.value;
-              if (selectedUserId) {
-                const searchParams = new URLSearchParams();
-                searchParams.set('broker_id', broker_id!);
-                searchParams.set('user_id', selectedUserId);
-                navigate({
-                  pathname: `/address/${address.address}`,
-                  search: `?${searchParams.toString()}`
-                });
-              }
-            }}
-            className="bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-          >
-            {accountsData.rows.map((account) => (
-              <option key={account.user_id} value={account.user_id}>
-                {account.user_type === 'MAIN'
-                  ? 'Main'
-                  : account.user_type === 'SUB'
-                    ? 'Sub'
-                    : account.user_type}
-                {account.user_type === 'SUB' ? ` (ID: ${account.user_id})` : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      <div className="flex flex-col [&>*:first-child]:font-bold text-sm sm:text-base">
-        <div>Chain Namespace:</div>
-        <div>
-          {match(address.chain_namespace)
-            .with('evm', () => 'EVM')
-            .with('sol', () => 'Solana')
-            .exhaustive()}
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row flex-items-center gap-2 w-full">
-        <DatePicker
-          type="range"
-          value={dateRange}
-          maxLevel="year"
-          allowSingleDateInRange={true}
-          maxDate={
-            dateRange[0] && dateRange[1]
-              ? dayjs().format('YYYY-MM-DD')
-              : dateRange[0]
-                ? (() => {
-                    const today = dayjs();
-                    const maxRangeDate = dayjs(dateRange[0]).add(30, 'day');
-                    return today.isBefore(maxRangeDate)
-                      ? today.format('YYYY-MM-DD')
-                      : maxRangeDate.format('YYYY-MM-DD');
-                  })()
-                : dayjs().format('YYYY-MM-DD')
-          }
-          onChange={(value) => {
-            setDateRange(value);
-          }}
-          highlightToday={true}
-        />
-      </div>
-
-      <div className="w-full overflow-x-auto">
-        <Tabs.Root
-          value={eventType}
-          defaultValue="ALL"
-          onValueChange={(value) => {
-            setEventType(value as EventType);
-            table.resetColumnVisibility();
-          }}
-        >
-          <Tabs.List className="flex-wrap">
-            <Tabs.Trigger value="ALL">All</Tabs.Trigger>
-            <Tabs.Trigger value="TRANSACTION">Transactions</Tabs.Trigger>
-            <Tabs.Trigger value="PERPTRADE">Trades</Tabs.Trigger>
-            <Tabs.Trigger value="SETTLEMENT">Pnl Settlements</Tabs.Trigger>
-            <Tabs.Trigger value="LIQUIDATIONV2">Liquidations</Tabs.Trigger>
-            <Tabs.Trigger value="LIQUIDATION">Liquidations (old)</Tabs.Trigger>
-            <Tabs.Trigger value="ADLV2">ADL</Tabs.Trigger>
-            <Tabs.Trigger value="ADL">ADL (old)</Tabs.Trigger>
-          </Tabs.List>
-        </Tabs.Root>
-      </div>
-
-      <div>
-        <Popover.Root>
-          <Popover.Trigger className="w-auto flex-self-start">
-            <Button variant="soft" className="text-sm">
-              <MixerHorizontalIcon width="16" height="16" />
-              Column Filters
-            </Button>
-          </Popover.Trigger>
-          <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw]">
-            <div className="flex flex-col [&>*]:text-size-4 gap-2">
-              <div className="px-1">
-                <Button
-                  onClick={() => {
-                    table.resetColumnVisibility();
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {accountId != null && (
+            <div className="p-3 sm:p-4 bg-bg-secondary rounded-lg border border-border-primary">
+              <div className="text-sm text-gray-400 mb-2">Account ID</div>
+              <div className="flex items-center gap-2">
+                <div className="font-mono text-white text-sm break-all">
+                  {accountId.substring(0, 7)}...{accountId.substr(-7)}
+                </div>
+                <IconButton
+                  size="1"
+                  variant="soft"
+                  onClick={async () => {
+                    if (accountId == null) return;
+                    navigator.clipboard.writeText(accountId);
                   }}
                 >
-                  Reset to default
-                </Button>
+                  <CopyIcon height="12" />
+                </IconButton>
               </div>
-              <div className="px-1">
-                <label>
-                  <input
-                    {...{
-                      type: 'checkbox',
-                      checked: table.getIsAllColumnsVisible(),
-                      onChange: table.getToggleAllColumnsVisibilityHandler()
-                    }}
-                  />{' '}
-                  Toggle All
-                </label>
-              </div>
-              <hr className="w-full" />
-              {table.getAllLeafColumns().map((column) => {
-                return (
-                  <div key={column.id} className="px-1">
-                    <label className="text-sm">
-                      <input
-                        {...{
-                          type: 'checkbox',
-                          checked: column.getIsVisible(),
-                          onChange: column.getToggleVisibilityHandler()
-                        }}
-                      />{' '}
-                      {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        flexRender(column.columnDef.header, undefined as any)
-                      }{' '}
-                      ({column.id})
-                    </label>
-                  </div>
-                );
-              })}
             </div>
-          </Popover.Content>
-        </Popover.Root>
-      </div>
+          )}
 
-      {!events || isLoading ? (
-        <Spinner size="2.5rem" />
-      ) : (
-        <>
-          {renderLoadMore()}
-          {renderPagination()}
-
-          <div className="w-full overflow-x-auto">
-            <Table.Root className="max-w-full min-w-[600px]">
-              <Table.Header>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Table.Row key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Table.ColumnHeaderCell key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder ? null : (
-                          <div
-                            className={
-                              header.column.getCanSort()
-                                ? 'cursor-pointer select-none hover:bg-[--accent-3] text-sm'
-                                : 'text-sm'
-                            }
-                            onClick={header.column.getToggleSortingHandler()}
-                            onKeyDown={(ev) => {
-                              if (ev.key === 'Enter') {
-                                header.column.getToggleSortingHandler();
-                              }
-                            }}
-                            role="button"
-                            tabIndex={0}
-                          >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            {{
-                              asc: ' 🔼',
-                              desc: ' 🔽'
-                            }[header.column.getIsSorted() as string] ?? null}
-                          </div>
-                        )}
-                      </Table.ColumnHeaderCell>
-                    ))}
-                  </Table.Row>
-                ))}
-              </Table.Header>
-
-              <Table.Body>
-                {table.getRowModel().rows.map((row) => (
-                  <Table.Row key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <Table.Cell key={cell.id} className="align-middle text-sm">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </Table.Cell>
-                    ))}
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
+          <div className="p-3 sm:p-4 bg-bg-secondary rounded-lg border border-border-primary">
+            <div className="text-sm text-gray-400 mb-2">Chain Namespace</div>
+            <div className="text-white font-medium">
+              {match(address.chain_namespace)
+                .with('evm', () => 'EVM')
+                .with('sol', () => 'Solana')
+                .exhaustive()}
+            </div>
           </div>
 
-          {renderPagination()}
-        </>
-      )}
+          {accountsData?.rows && accountsData.rows.length > 1 && (
+            <div className="p-3 sm:p-4 bg-bg-secondary rounded-lg border border-border-primary">
+              <div className="text-sm text-gray-400 mb-2">Account Type</div>
+              <select
+                value={selectedAccount?.user_id || ''}
+                onChange={(e) => {
+                  const selectedUserId = e.target.value;
+                  if (selectedUserId) {
+                    const searchParams = new URLSearchParams();
+                    searchParams.set('broker_id', broker_id!);
+                    searchParams.set('user_id', selectedUserId);
+                    navigate({
+                      pathname: `/address/${address.address}`,
+                      search: `?${searchParams.toString()}`
+                    });
+                  }
+                }}
+                className="w-full bg-bg-primary text-white border border-border-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+              >
+                {accountsData.rows.map((account) => (
+                  <option key={account.user_id} value={account.user_id}>
+                    {account.user_type === 'MAIN'
+                      ? 'Main'
+                      : account.user_type === 'SUB'
+                        ? 'Sub'
+                        : account.user_type}
+                    {account.user_type === 'SUB' ? ` (ID: ${account.user_id})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Filters Section */}
+      <div className="card p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-2xl">
+        <div className="space-y-3 sm:space-y-4">
+          <h3 className="text-xl font-semibold text-white">Filters</h3>
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div>
+              <label htmlFor="date-range" className="block text-sm text-gray-300 mb-2">
+                Date Range
+              </label>
+              <DatePicker
+                id="date-range"
+                type="range"
+                value={dateRange}
+                maxLevel="year"
+                allowSingleDateInRange={true}
+                maxDate={
+                  dateRange[0] && dateRange[1]
+                    ? dayjs().format('YYYY-MM-DD')
+                    : dateRange[0]
+                      ? (() => {
+                          const today = dayjs();
+                          const maxRangeDate = dayjs(dateRange[0]).add(30, 'day');
+                          return today.isBefore(maxRangeDate)
+                            ? today.format('YYYY-MM-DD')
+                            : maxRangeDate.format('YYYY-MM-DD');
+                        })()
+                      : dayjs().format('YYYY-MM-DD')
+                }
+                onChange={(value) => {
+                  setDateRange(value);
+                }}
+                highlightToday={true}
+              />
+            </div>
+            <div>
+              <label htmlFor="event-type" className="block text-sm text-gray-300 mb-2">
+                Event Type
+              </label>
+              <select
+                id="event-type"
+                value={eventType}
+                onChange={(e) => {
+                  setEventType(e.target.value as EventType);
+                  table.resetColumnVisibility();
+                }}
+                className="w-full bg-bg-primary text-white border border-border-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+              >
+                <option value="ALL">All Events</option>
+                <option value="TRANSACTION">Transactions</option>
+                <option value="PERPTRADE">Trades</option>
+                <option value="SETTLEMENT">Pnl Settlements</option>
+                <option value="LIQUIDATIONV2">Liquidations</option>
+                <option value="LIQUIDATION">Liquidations (old)</option>
+                <option value="ADLV2">ADL</option>
+                <option value="ADL">ADL (old)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Data Table */}
+      <div className="card p-4 sm:p-6 space-y-2 w-full max-w-full">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+          <h3 className="text-xl font-semibold text-white">Event Data</h3>
+        </div>
+
+        {!events || isLoading ? (
+          <div className="flex justify-center py-12">
+            <Spinner size="2.5rem" />
+          </div>
+        ) : (
+          <>
+            {renderLoadMore()}
+
+            <div className="flex justify-start px-3 sm:px-4">
+              <Popover.Root>
+                <Popover.Trigger className="w-auto">
+                  <Button variant="soft" className="text-sm">
+                    <MixerHorizontalIcon width="16" height="16" />
+                    Column Filters
+                  </Button>
+                </Popover.Trigger>
+                <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw]">
+                  <div className="flex flex-col [&>*]:text-size-4 gap-2">
+                    <div className="px-1">
+                      <Button
+                        onClick={() => {
+                          table.resetColumnVisibility();
+                        }}
+                      >
+                        Reset to default
+                      </Button>
+                    </div>
+                    <div className="px-1">
+                      <label>
+                        <input
+                          {...{
+                            type: 'checkbox',
+                            checked: table.getIsAllColumnsVisible(),
+                            onChange: table.getToggleAllColumnsVisibilityHandler()
+                          }}
+                        />{' '}
+                        Toggle All
+                      </label>
+                    </div>
+                    <hr className="w-full" />
+                    {table.getAllLeafColumns().map((column) => {
+                      return (
+                        <div key={column.id} className="px-1">
+                          <label className="text-sm">
+                            <input
+                              {...{
+                                type: 'checkbox',
+                                checked: column.getIsVisible(),
+                                onChange: column.getToggleVisibilityHandler()
+                              }}
+                            />{' '}
+                            {
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                              flexRender(column.columnDef.header, undefined as any)
+                            }{' '}
+                            ({column.id})
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Popover.Content>
+              </Popover.Root>
+            </div>
+
+            {renderPagination()}
+
+            <div className="w-full overflow-x-auto">
+              <Table.Root className="max-w-full min-w-[600px] bg-bg-primary rounded-lg border border-border-primary overflow-hidden">
+                <Table.Header>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <Table.Row
+                      key={headerGroup.id}
+                      className="bg-bg-secondary border-b border-border-primary"
+                    >
+                      {headerGroup.headers.map((header) => (
+                        <Table.ColumnHeaderCell
+                          key={header.id}
+                          colSpan={header.colSpan}
+                          className="p-4"
+                        >
+                          {header.isPlaceholder ? null : (
+                            <div
+                              className={
+                                header.column.getCanSort()
+                                  ? 'cursor-pointer select-none hover:bg-bg-tertiary text-sm font-medium text-white p-2 rounded transition-colors duration-200'
+                                  : 'text-sm font-medium text-white'
+                              }
+                              onClick={header.column.getToggleSortingHandler()}
+                              onKeyDown={(ev) => {
+                                if (ev.key === 'Enter') {
+                                  header.column.getToggleSortingHandler();
+                                }
+                              }}
+                              role="button"
+                              tabIndex={0}
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              {{
+                                asc: ' 🔼',
+                                desc: ' 🔽'
+                              }[header.column.getIsSorted() as string] ?? null}
+                            </div>
+                          )}
+                        </Table.ColumnHeaderCell>
+                      ))}
+                    </Table.Row>
+                  ))}
+                </Table.Header>
+
+                <Table.Body>
+                  {table.getRowModel().rows.map((row, index) => (
+                    <Table.Row
+                      key={row.id}
+                      className={`border-b border-border-primary hover:bg-bg-tertiary transition-colors duration-200 ${
+                        index % 2 === 0 ? 'bg-bg-primary' : 'bg-bg-secondary'
+                      }`}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <Table.Cell
+                          key={cell.id}
+                          className="align-middle text-sm p-4 text-gray-300"
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </Table.Cell>
+                      ))}
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Root>
+            </div>
+
+            {renderPagination()}
+          </>
+        )}
+      </div>
     </div>
   );
 };

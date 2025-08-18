@@ -1,4 +1,3 @@
-import { Select } from '@radix-ui/themes';
 import { useSearchParams } from '@remix-run/react';
 import { FC, useEffect, useState } from 'react';
 
@@ -14,19 +13,17 @@ export const BrokerSelection: FC = () => {
   const { data: brokers, isLoading } = useBrokers();
 
   useEffect(() => {
-    if (broker != null || brokers == null) return;
-    setBroker(brokers[0].broker_id);
-  }, [broker, brokers]);
-
-  useEffect(() => {
     const broker_id = searchParams.get('broker_id');
     if (broker_id == null) return;
     setBroker(broker_id);
   }, [searchParams]);
 
   useEffect(() => {
-    if (broker == null) return;
-    searchParams.set('broker_id', broker);
+    if (broker == null) {
+      searchParams.delete('broker_id');
+    } else {
+      searchParams.set('broker_id', broker);
+    }
     setSearchParams(searchParams);
   }, [broker, searchParams, setSearchParams]);
 
@@ -36,22 +33,20 @@ export const BrokerSelection: FC = () => {
 
   return (
     <div className="w-full sm:w-auto">
-      <Select.Root
-        defaultValue={brokers[0].broker_id}
-        onValueChange={(value) => {
-          setBroker(value);
+      <select
+        value={broker || ''}
+        onChange={(e) => {
+          setBroker(e.target.value === '' ? undefined : e.target.value);
         }}
-        value={broker}
+        className="w-full sm:w-64"
       >
-        <Select.Trigger className="w-full sm:w-auto" />
-        <Select.Content>
-          {brokers.map(({ broker_id, broker_name }) => (
-            <Select.Item key={broker_id} value={broker_id}>
-              {broker_name}
-            </Select.Item>
-          ))}
-        </Select.Content>
-      </Select.Root>
+        <option value="">All Brokers</option>
+        {brokers.map(({ broker_id, broker_name }) => (
+          <option key={broker_id} value={broker_id}>
+            {broker_name}
+          </option>
+        ))}
+      </select>
     </div>
   );
 };

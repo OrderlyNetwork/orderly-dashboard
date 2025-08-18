@@ -6,6 +6,7 @@ import { P, match } from 'ts-pattern';
 
 import { Shortened } from './Shortened';
 import { Timestamp } from './Timestamp';
+import { TransactionLink } from './TransactionLink';
 
 import {
   EventTableData,
@@ -47,7 +48,7 @@ export function useRenderColumns(
           columnHelper.accessor('transaction_id', {
             header: 'Transaction ID',
             enableSorting: false,
-            cell: (info) => <Shortened value={info.getValue()} />
+            cell: (info) => <TransactionLink value={info.getValue()} />
           })
         ]
       })
