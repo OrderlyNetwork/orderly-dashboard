@@ -19,3 +19,23 @@ export type LeaderboardResponse = {
   };
   snapshot_time: number;
 };
+
+export type PositionEntry = {
+  account_id: string;
+  address: string;
+  broker_id: string;
+  symbol: string;
+  symbol_hash: string;
+  holding: string;
+  total_realized_pnl: string;
+  index_price: string;
+  mark_price: string;
+  holding_value: string;
+  opening_cost: string;
+  average_entry_price: string;
+  un_realized_pnl: string;
+};
+
+export type PositionsResponse = {
+  rows: PositionEntry[];
+};
