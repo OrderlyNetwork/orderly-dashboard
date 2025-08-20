@@ -20,7 +20,22 @@ export function loader({ params }: LoaderFunctionArgs) {
 
 export const Address: FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'events' | 'positions'>('events');
+  const [searchParams] = useSearchParams();
+
+  const initialTab = searchParams.get('tab') as 'events' | 'positions' | null;
+  const [activeTab, setActiveTab] = useState<'events' | 'positions'>(
+    initialTab === 'events' || initialTab === 'positions' ? initialTab : 'events'
+  );
+
+  useEffect(() => {
+    const currentTab = searchParams.get('tab') as 'events' | 'positions' | null;
+    if (currentTab === 'events' || currentTab === 'positions') {
+      setActiveTab(currentTab);
+    } else {
+      setActiveTab('events');
+    }
+  }, [searchParams]);
+
   const [eventType, setEventType] = useState<EventType | 'ALL'>('ALL');
 
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([
@@ -71,9 +86,24 @@ export const Address: FC = () => {
     throw new Error(`Could not match address ${rawAddress}`);
   }, [rawAddress]);
 
-  const [searchParams] = useSearchParams();
   const broker_id = searchParams.get('broker_id');
   const user_id = searchParams.get('user_id');
+
+  const handleTabChange = (newTab: 'events' | 'positions') => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (newTab === 'events') {
+      newSearchParams.delete('tab');
+    } else {
+      newSearchParams.set('tab', newTab);
+    }
+
+    navigate({
+      pathname: window.location.pathname,
+      search: `?${newSearchParams.toString()}`
+    });
+
+    setActiveTab(newTab);
+  };
 
   useEffect(() => {
     if (dateRange[0] && dateRange[1]) {
@@ -365,13 +395,13 @@ export const Address: FC = () => {
       <div className="flex justify-center mb-8">
         <div className="flex gap-2">
           <button
-            onClick={() => setActiveTab('events')}
+            onClick={() => handleTabChange('events')}
             className={`btn ${activeTab === 'events' ? 'btn-primary' : 'btn-secondary'}`}
           >
             Events
           </button>
           <button
-            onClick={() => setActiveTab('positions')}
+            onClick={() => handleTabChange('positions')}
             className={`btn ${activeTab === 'positions' ? 'btn-primary' : 'btn-secondary'}`}
           >
             Positions

@@ -1,9 +1,41 @@
-import { useState } from 'react';
+import { useSearchParams, useNavigate } from '@remix-run/react';
+import { useState, useEffect } from 'react';
 
 import { SearchInput, Leaderboard, Positions } from '~/components';
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState<'trading' | 'positions'>('trading');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const initialTab = searchParams.get('tab') as 'trading' | 'positions' | null;
+  const [activeTab, setActiveTab] = useState<'trading' | 'positions'>(
+    initialTab === 'trading' || initialTab === 'positions' ? initialTab : 'trading'
+  );
+
+  useEffect(() => {
+    const currentTab = searchParams.get('tab') as 'trading' | 'positions' | null;
+    if (currentTab === 'trading' || currentTab === 'positions') {
+      setActiveTab(currentTab);
+    } else {
+      setActiveTab('trading');
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (newTab: 'trading' | 'positions') => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (newTab === 'trading') {
+      newSearchParams.delete('tab');
+    } else {
+      newSearchParams.set('tab', newTab);
+    }
+
+    navigate({
+      pathname: window.location.pathname,
+      search: `?${newSearchParams.toString()}`
+    });
+
+    setActiveTab(newTab);
+  };
 
   return (
     <div className="space-y-12 animate-fade-in">
@@ -57,13 +89,13 @@ export default function Index() {
         <div className="flex justify-center mb-8">
           <div className="flex gap-2">
             <button
-              onClick={() => setActiveTab('trading')}
+              onClick={() => handleTabChange('trading')}
               className={`btn ${activeTab === 'trading' ? 'btn-primary' : 'btn-secondary'}`}
             >
               Trading Leaderboard
             </button>
             <button
-              onClick={() => setActiveTab('positions')}
+              onClick={() => handleTabChange('positions')}
               className={`btn ${activeTab === 'positions' ? 'btn-primary' : 'btn-secondary'}`}
             >
               Positions Leaderboard

@@ -48,6 +48,7 @@ const defaultVisibility = {
 };
 
 const addressPageVisibility = {
+  rank: false,
   account_id: false,
   address: false,
   broker_id: false,
@@ -751,22 +752,22 @@ export const Positions: FC<PositionsProps> = ({
 
       {/* Address Search Modal */}
       <Dialog.Root open={showAddressModal} onOpenChange={setShowAddressModal}>
-        <Dialog.Content className="card max-w-4xl w-full sm:w-[95vw] max-h-[90vh] overflow-hidden mx-0 sm:mx-auto">
-          <Dialog.Title className="text-lg sm:text-xl font-semibold text-white mb-4 break-all">
+        <Dialog.Content className="card max-w-4xl w-full sm:w-[95vw] max-h-[90vh] mx-0 sm:mx-auto flex flex-col">
+          <Dialog.Title className="text-lg sm:text-xl font-semibold text-white mb-4 break-all flex-shrink-0">
             Search Results for {addressInput}
           </Dialog.Title>
 
           {addressLoading ? (
-            <div className="flex justify-center py-8">
+            <div className="flex justify-center py-8 flex-1">
               <Spinner size="2rem" />
             </div>
           ) : addressData && addressData.length > 0 ? (
-            <div className="space-y-4 flex flex-col h-full">
-              <p className="text-sm sm:text-base text-gray-300">
+            <div className="flex flex-col flex-1 min-h-0">
+              <p className="text-sm sm:text-base text-gray-300 mb-4 flex-shrink-0">
                 Found {addressData.filter((account) => (account.perp_volume || 0) > 0).length}{' '}
                 account(s) with trading volume
               </p>
-              <div className="grid grid-cols-1 gap-3 flex-1 overflow-y-auto min-h-0">
+              <div className="grid grid-cols-1 gap-3 overflow-y-auto flex-1">
                 {addressData
                   .filter((account) => (account.perp_volume || 0) > 0)
                   .map((data) => (
@@ -834,7 +835,7 @@ export const Positions: FC<PositionsProps> = ({
               </div>
             </div>
           ) : (
-            <div className="text-center py-8">
+            <div className="text-center py-8 flex-1">
               <div className="text-lg sm:text-xl text-gray-300 mb-2">No Results Found</div>
               <div className="text-sm sm:text-base text-gray-400">
                 No accounts with trading volume found for this address
@@ -842,7 +843,7 @@ export const Positions: FC<PositionsProps> = ({
             </div>
           )}
 
-          <div className="flex justify-end gap-2 mt-6">
+          <div className="flex justify-end gap-2 mt-6 flex-shrink-0">
             <button onClick={() => setShowAddressModal(false)} className="btn btn-secondary">
               Close
             </button>

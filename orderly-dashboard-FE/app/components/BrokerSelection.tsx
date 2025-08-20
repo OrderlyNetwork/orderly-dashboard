@@ -1,4 +1,4 @@
-import { useSearchParams } from '@remix-run/react';
+import { useSearchParams, useNavigate } from '@remix-run/react';
 import { FC, useEffect, useState } from 'react';
 
 import { Spinner } from '.';
@@ -6,7 +6,8 @@ import { Spinner } from '.';
 import { useBrokers } from '~/hooks';
 
 export const BrokerSelection: FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [broker, setBroker] = useState<string | undefined>(
     searchParams.get('broker_id') ?? undefined
   );
@@ -18,14 +19,21 @@ export const BrokerSelection: FC = () => {
     setBroker(broker_id);
   }, [searchParams]);
 
-  useEffect(() => {
-    if (broker == null) {
-      searchParams.delete('broker_id');
+  const handleBrokerChange = (newBroker: string | undefined) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (newBroker == null) {
+      newSearchParams.delete('broker_id');
     } else {
-      searchParams.set('broker_id', broker);
+      newSearchParams.set('broker_id', newBroker);
     }
-    setSearchParams(searchParams);
-  }, [broker, searchParams, setSearchParams]);
+
+    navigate({
+      pathname: window.location.pathname,
+      search: `?${newSearchParams.toString()}`
+    });
+
+    setBroker(newBroker);
+  };
 
   if (!brokers || isLoading) {
     return <Spinner size="1.2rem" inline />;
@@ -36,7 +44,7 @@ export const BrokerSelection: FC = () => {
       <select
         value={broker || ''}
         onChange={(e) => {
-          setBroker(e.target.value === '' ? undefined : e.target.value);
+          handleBrokerChange(e.target.value === '' ? undefined : e.target.value);
         }}
         className="w-full sm:w-64"
       >
