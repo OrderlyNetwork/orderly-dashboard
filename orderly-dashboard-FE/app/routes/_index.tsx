@@ -1,6 +1,10 @@
-import { SearchInput, Leaderboard } from '~/components';
+import { useState } from 'react';
+
+import { SearchInput, Leaderboard, Positions } from '~/components';
 
 export default function Index() {
+  const [activeTab, setActiveTab] = useState<'trading' | 'positions'>('trading');
+
   return (
     <div className="space-y-12 animate-fade-in">
       {/* Hero Section */}
@@ -49,7 +53,26 @@ export default function Index() {
 
       {/* Leaderboard Section */}
       <div className="mt-16">
-        <Leaderboard />
+        {/* Tab Navigation */}
+        <div className="flex justify-center mb-8">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('trading')}
+              className={`btn ${activeTab === 'trading' ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              Trading Leaderboard
+            </button>
+            <button
+              onClick={() => setActiveTab('positions')}
+              className={`btn ${activeTab === 'positions' ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              Positions Leaderboard
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'trading' ? <Leaderboard /> : <Positions />}
       </div>
     </div>
   );

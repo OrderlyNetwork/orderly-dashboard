@@ -151,13 +151,13 @@ export const Search: FC = () => {
 
                       {/* Stats */}
                       <div className="space-y-3 pt-4 border-t border-border-primary">
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center gap-2">
                           <span className="text-sm text-gray-400">Trading Volume</span>
                           <span className="text-lg font-semibold text-white">
                             {formatNumber(data.perp_volume)}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center gap-2">
                           <span className="text-sm text-gray-400">Realized PnL</span>
                           <span className={`text-lg font-semibold ${pnlDisplay.color}`}>
                             {pnlDisplay.text}

@@ -211,7 +211,12 @@ export function useRenderColumns(
               columnHelper.accessor('trade.symbol_hash', {
                 header: 'Symbol',
                 enableSorting: false,
-                cell: (info) => getSymbolName(info.getValue(), symbols)
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
               }),
               columnHelper.accessor('trade.side', {
                 header: 'Side',

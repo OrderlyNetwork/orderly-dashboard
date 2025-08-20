@@ -133,10 +133,13 @@ export const Leaderboard: FC = () => {
     }));
   };
 
-  const formatNumber = (value: number) => {
+  const formatNumberShort = (value: number) => {
     return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      style: 'currency',
+      currency: 'USD',
+      notation: 'compact',
+      maximumFractionDigits: 3,
+      minimumFractionDigits: 0
     }).format(value);
   };
 
@@ -225,25 +228,25 @@ export const Leaderboard: FC = () => {
       {
         accessorKey: 'perp_volume',
         header: 'Perp Volume',
-        cell: ({ row }) => formatNumber(row.original.perp_volume),
+        cell: ({ row }) => formatNumberShort(row.original.perp_volume),
         enableSorting: true
       },
       {
         accessorKey: 'perp_taker_volume',
         header: 'Taker Volume',
-        cell: ({ row }) => formatNumber(row.original.perp_taker_volume),
+        cell: ({ row }) => formatNumberShort(row.original.perp_taker_volume),
         enableSorting: false
       },
       {
         accessorKey: 'perp_maker_volume',
         header: 'Maker Volume',
-        cell: ({ row }) => formatNumber(row.original.perp_maker_volume),
+        cell: ({ row }) => formatNumberShort(row.original.perp_maker_volume),
         enableSorting: false
       },
       {
         accessorKey: 'total_fee',
         header: 'Total Fee',
-        cell: ({ row }) => formatNumber(row.original.total_fee),
+        cell: ({ row }) => formatNumberShort(row.original.total_fee),
         enableSorting: false
       },
       {
@@ -251,7 +254,7 @@ export const Leaderboard: FC = () => {
         header: 'Realized PnL',
         cell: ({ row }) => (
           <span className={row.original.realized_pnl >= 0 ? 'text-green-400' : 'text-red-400'}>
-            {formatNumber(row.original.realized_pnl)}
+            {formatNumberShort(row.original.realized_pnl)}
           </span>
         ),
         enableSorting: true

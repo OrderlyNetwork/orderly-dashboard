@@ -5,6 +5,7 @@ import { useAppState } from '~/App';
 
 export type PerpSymbol = {
   symbol: string;
+  base_tick: number;
 };
 
 const encoder = new TextEncoder();
@@ -28,4 +29,20 @@ export const useSymbols = () => {
 
 export function getSymbolName(name: string, symbols: PerpSymbol[] | undefined) {
   return symbols?.find(({ symbol }) => keccak256(encoder.encode(symbol)) === name)?.symbol ?? '';
+}
+
+export function getSymbolBaseTick(name: string, symbols: PerpSymbol[] | undefined) {
+  return (
+    symbols?.find(({ symbol }) => keccak256(encoder.encode(symbol)) === name)?.base_tick ?? 0.01
+  );
+}
+
+export function getMaxFractionDigits(baseTick: number): number {
+  if (baseTick >= 1) return 0;
+
+  const baseTickStr = baseTick.toString();
+  const decimalIndex = baseTickStr.indexOf('.');
+  if (decimalIndex === -1) return 0;
+
+  return baseTickStr.length - decimalIndex - 1;
 }
