@@ -47,6 +47,8 @@ export const Address: FC = () => {
     dayjs(new Date()).format('YYYY-MM-DD')
   ]);
 
+  const [aggregateTrades, setAggregateTrades] = useState<boolean>(true);
+
   const [showBrokerModal, setShowBrokerModal] = useState(false);
 
   const { address: rawAddress } = useLoaderData<typeof loader>();
@@ -261,7 +263,7 @@ export const Address: FC = () => {
   );
 
   const { columns, events, error, isLoading, isLoadingMore, loadMore, hasMore, tradesCount } =
-    useRenderColumns(eventsParams, eventType, setEventType);
+    useRenderColumns(eventsParams, eventType, setEventType, aggregateTrades);
 
   if (error) {
     return error.message ?? '';
@@ -451,6 +453,8 @@ export const Address: FC = () => {
           setEventType={setEventType}
           dateRange={dateRange}
           setDateRange={setDateRange}
+          aggregateTrades={aggregateTrades}
+          setAggregateTrades={setAggregateTrades}
         />
       ) : (
         <AddressPositions />

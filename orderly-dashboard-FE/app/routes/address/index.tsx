@@ -22,7 +22,8 @@ import {
 export function useRenderColumns(
   query: EventsParams | null,
   eventType: EventType | 'ALL',
-  setEventType: Dispatch<SetStateAction<EventType | 'ALL'>>
+  setEventType: Dispatch<SetStateAction<EventType | 'ALL'>>,
+  aggregateTrades: boolean = false
 ) {
   const { events, error, isLoading, isLoadingMore, loadMore, hasMore, tradesCount, pageSizeLimit } =
     useEvents(query);
@@ -31,6 +32,119 @@ export function useRenderColumns(
 
   const tokens = useTokens();
   const symbols = useSymbols();
+
+  const processedEvents = useMemo(() => {
+    if (!aggregateTrades || !events || eventType !== 'PERPTRADE') {
+      return events;
+    }
+
+    const aggregatedEvents: EventTableData[] = [];
+    const tradeGroups = new Map<string, EventTableData[]>();
+
+    events.forEach((event) => {
+      if (event.type === 'trade') {
+        const key = `${event.transaction_id}_${event.block_number}_${event.transaction_index}_${event.trade.symbol_hash}`;
+        if (!tradeGroups.has(key)) {
+          tradeGroups.set(key, []);
+        }
+        tradeGroups.get(key)!.push(event);
+      } else {
+        aggregatedEvents.push(event);
+      }
+    });
+
+    tradeGroups.forEach((group) => {
+      if (group.length === 1) {
+        aggregatedEvents.push(group[0]);
+        return;
+      }
+
+      const firstTrade = group[0];
+      if (firstTrade.type !== 'trade') return;
+      const aggregatedTrade: EventTableData = {
+        ...firstTrade,
+        trade: {
+          ...firstTrade.trade,
+          trade_qty: group.reduce((sum, event) => {
+            if (event.type !== 'trade') return sum;
+            try {
+              const currentQty = new FixedNumber(event.trade.trade_qty, 8);
+              const sumQty = new FixedNumber(sum, 8);
+              return sumQty.add(currentQty).valueOf().toString();
+            } catch (error) {
+              return sum;
+            }
+          }, '0'),
+          notional: group.reduce((sum, event) => {
+            if (event.type !== 'trade') return sum;
+            try {
+              const currentNotional = new FixedNumber(event.trade.notional, 6);
+              const sumNotional = new FixedNumber(sum, 6);
+              return sumNotional.add(currentNotional).valueOf().toString();
+            } catch (error) {
+              return sum;
+            }
+          }, '0'),
+          fee: group.reduce((sum, event) => {
+            if (event.type !== 'trade') return sum;
+            try {
+              const currentFee = new FixedNumber(event.trade.fee, 6);
+              const sumFee = new FixedNumber(sum, 6);
+              return sumFee.add(currentFee).valueOf().toString();
+            } catch (error) {
+              return sum;
+            }
+          }, '0'),
+          sum_unitary_fundings: group.reduce((sum, event) => {
+            if (event.type !== 'trade') return sum;
+            try {
+              const currentFunding = new FixedNumber(event.trade.sum_unitary_fundings, 8);
+              const sumFunding = new FixedNumber(sum, 8);
+              return sumFunding.add(currentFunding).valueOf().toString();
+            } catch (error) {
+              return sum;
+            }
+          }, '0'),
+          executed_price: (() => {
+            let totalQty = new FixedNumber('0', 8);
+            let weightedPrice = new FixedNumber('0', 8);
+
+            group.forEach((event) => {
+              if (event.type !== 'trade') return;
+              try {
+                const qty = new FixedNumber(event.trade.trade_qty, 8);
+                const price = new FixedNumber(event.trade.executed_price, 8);
+                const contribution = price.mul(qty);
+
+                totalQty = totalQty.add(qty);
+                weightedPrice = weightedPrice.add(contribution);
+              } catch (error) {
+                console.warn('Error processing trade for aggregation:', error);
+              }
+            });
+
+            try {
+              if (totalQty.valueOf() <= 0n) {
+                return firstTrade.trade.executed_price;
+              }
+
+              const result = weightedPrice.div(totalQty);
+              return result.valueOf().toString();
+            } catch (error) {
+              console.error('Error calculating weighted average:', error);
+              return firstTrade.trade.executed_price;
+            }
+          })(),
+          match_id: firstTrade.trade.match_id,
+          trade_id: firstTrade.trade.trade_id
+        }
+      };
+
+      aggregatedEvents.push(aggregatedTrade);
+    });
+    return aggregatedEvents;
+  }, [events, aggregateTrades, eventType]);
+
   const columns = useMemo<GroupColumnDef<EventTableData, unknown>[]>(() => {
     const columns = [
       columnHelper.group({
@@ -60,8 +174,8 @@ export function useRenderColumns(
             header: 'Event Type',
             enableSorting: false,
             cell: (info) => {
-              if (events == null) return '';
-              const event = events[info.row.index];
+              if (processedEvents == null) return '';
+              const event = processedEvents[info.row.index];
               const [renderedValue, newEventType] = match(event.data)
                 .with(
                   {
@@ -172,7 +286,6 @@ export function useRenderColumns(
               columnHelper.accessor('data.Transaction.fail_reason', {
                 header: 'Fail Reason',
                 enableSorting: false,
-
                 cell: (info) => info.getValue()
               }),
               columnHelper.accessor('data.Transaction.fee', {
@@ -198,123 +311,132 @@ export function useRenderColumns(
         );
       })
       .with('PERPTRADE', () => {
+        const tradeColumns = [
+          columnHelper.accessor('data.ProcessedTrades.batch_id', {
+            header: 'Batch ID',
+            enableSorting: false,
+            cell: (info) => info.getValue()
+          }),
+          columnHelper.accessor('trade.symbol_hash', {
+            header: 'Symbol',
+            enableSorting: false,
+            cell: (info) => {
+              const symbol = getSymbolName(info.getValue(), symbols);
+              const parts = symbol.split('_');
+              const baseToken = parts.length >= 2 ? parts[1] : symbol;
+              return <span className="font-mono text-sm">{baseToken}</span>;
+            }
+          }),
+          columnHelper.accessor('trade.side', {
+            header: 'Side',
+            enableSorting: false,
+            cell: (info) => {
+              const value = info.getValue();
+              return (
+                <span className={value === 'BUY' ? 'color-green-3' : 'color-red-3'}>{value}</span>
+              );
+            }
+          }),
+          columnHelper.accessor('trade.trade_qty', {
+            header: 'Trade Qty',
+            enableSorting: false,
+            cell: (info) => {
+              const value = info.getValue();
+              if (value == null) return '';
+              const res = new FixedNumber(value, 8);
+              return (
+                <span className={res.valueOf() > 0n ? 'color-green-3' : 'color-red-3'}>
+                  {res.format({
+                    maximumFractionDigits: 2
+                  })}
+                </span>
+              );
+            }
+          }),
+          columnHelper.accessor('trade.notional', {
+            header: 'Notional',
+            enableSorting: false,
+            cell: (info) => {
+              const value = info.getValue();
+              if (value == null) return '';
+              return new FixedNumber(value, 6).format({
+                maximumFractionDigits: 2
+              });
+            }
+          }),
+          columnHelper.accessor('trade.executed_price', {
+            header: aggregateTrades ? 'Avg Executed Price' : 'Executed Price',
+            enableSorting: false,
+            cell: (info) => {
+              const value = info.getValue();
+              if (value == null) return '';
+              // FIXME why API returns as 8 decimals?
+              return new FixedNumber(value, 8).format({
+                maximumFractionDigits: 2
+              });
+            }
+          }),
+          columnHelper.accessor('trade.fee', {
+            header: 'Fee',
+            enableSorting: false,
+            cell: (info) =>
+              new FixedNumber(info.getValue(), 6).format({
+                maximumFractionDigits: 2
+              })
+          }),
+          columnHelper.accessor('trade.fee_asset_hash', {
+            header: 'Fee Asset',
+            enableSorting: false,
+            cell: (info) => getTokenName(info.getValue(), tokens)
+          }),
+          columnHelper.accessor('trade.timestamp', {
+            header: 'Timestamp',
+            enableSorting: false,
+            cell: (info) => <Timestamp timestamp={info.getValue()} />
+          }),
+          columnHelper.accessor('trade.account_id', {
+            header: 'Account ID',
+            enableSorting: false,
+            cell: (info) => <Shortened value={info.getValue()} />
+          }),
+          columnHelper.accessor('trade.sum_unitary_fundings', {
+            header: 'Sum Uni. Funding',
+            enableSorting: false,
+            cell: (info) => {
+              const value = info.getValue();
+              if (value == null) return '';
+              // FIXME how many decimals?
+              return new FixedNumber(value, 8).format({
+                maximumFractionDigits: 2
+              });
+            }
+          })
+        ];
+
+        if (!aggregateTrades) {
+          tradeColumns.push(
+            columnHelper.accessor('trade.match_id', {
+              header: 'Match ID',
+              enableSorting: false,
+              cell: (info) => <Shortened value={info.getValue()} displayCount={3} />
+              // FIXME types
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }) as any,
+            columnHelper.accessor('trade.trade_id', {
+              header: 'Trade ID',
+              enableSorting: false,
+              cell: (info) => info.getValue()
+              // FIXME types
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }) as any
+          );
+        }
+
         columns.push(
           columnHelper.group({
             id: 'perptrade',
             header: 'Trades',
-            columns: [
-              columnHelper.accessor('data.ProcessedTrades.batch_id', {
-                header: 'Batch ID',
-                enableSorting: false,
-                cell: (info) => info.getValue()
-              }),
-              columnHelper.accessor('trade.symbol_hash', {
-                header: 'Symbol',
-                enableSorting: false,
-                cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
-                  return <span className="font-mono text-sm">{baseToken}</span>;
-                }
-              }),
-              columnHelper.accessor('trade.side', {
-                header: 'Side',
-                enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  return (
-                    <span className={value === 'BUY' ? 'color-green-3' : 'color-red-3'}>
-                      {value}
-                    </span>
-                  );
-                }
-              }),
-              columnHelper.accessor('trade.trade_qty', {
-                header: 'Trade Qty',
-                enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  const res = new FixedNumber(value, 8);
-                  return (
-                    <span className={res.valueOf() > 0n ? 'color-green-3' : 'color-red-3'}>
-                      {res.format({
-                        maximumFractionDigits: 2
-                      })}
-                    </span>
-                  );
-                }
-              }),
-              columnHelper.accessor('trade.notional', {
-                header: 'Notional',
-                enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return new FixedNumber(value, 6).format({
-                    maximumFractionDigits: 2
-                  });
-                }
-              }),
-              columnHelper.accessor('trade.executed_price', {
-                header: 'Executed Price',
-                enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  // FIXME why API returns as 8 decimals?
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
-                }
-              }),
-              columnHelper.accessor('trade.fee', {
-                header: 'Fee',
-                enableSorting: false,
-                cell: (info) =>
-                  new FixedNumber(info.getValue(), 6).format({
-                    maximumFractionDigits: 2
-                  })
-              }),
-              columnHelper.accessor('trade.fee_asset_hash', {
-                header: 'Fee Asset',
-                enableSorting: false,
-                cell: (info) => getTokenName(info.getValue(), tokens)
-              }),
-              columnHelper.accessor('trade.timestamp', {
-                header: 'Timestamp',
-                enableSorting: false,
-                cell: (info) => <Timestamp timestamp={info.getValue()} />
-              }),
-              columnHelper.accessor('trade.account_id', {
-                header: 'Account ID',
-                enableSorting: false,
-                cell: (info) => <Shortened value={info.getValue()} />
-              }),
-              columnHelper.accessor('trade.match_id', {
-                header: 'Match ID',
-                enableSorting: false,
-                cell: (info) => <Shortened value={info.getValue()} displayCount={3} />
-              }),
-              columnHelper.accessor('trade.sum_unitary_fundings', {
-                header: 'Sum Uni. Funding',
-                enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  // FIXME how many decimals?
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
-                }
-              }),
-              columnHelper.accessor('trade.trade_id', {
-                header: 'Trade ID',
-                enableSorting: false,
-                cell: (info) => info.getValue()
-              })
-            ]
+            columns: tradeColumns
           })
         );
       })
@@ -713,11 +835,11 @@ export function useRenderColumns(
       })
       .exhaustive();
     return columns;
-  }, [columnHelper, eventType, setEventType, events, tokens, symbols]);
+  }, [columnHelper, eventType, setEventType, processedEvents, tokens, symbols, aggregateTrades]);
 
   return {
     columns,
-    events,
+    events: processedEvents,
     error,
     isLoading,
     isLoadingMore,

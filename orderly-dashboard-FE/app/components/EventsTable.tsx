@@ -20,7 +20,7 @@ import {
   useReactTable
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 
 import { Spinner } from '~/components';
 import { EventTableData, EventType } from '~/hooks';
@@ -37,43 +37,57 @@ interface EventsTableProps {
   setEventType: (type: EventType | 'ALL') => void;
   dateRange: [string | null, string | null];
   setDateRange: (range: [string | null, string | null]) => void;
+  aggregateTrades?: boolean;
+  setAggregateTrades?: (value: boolean) => void;
 }
 
-const defaultVisibility = {
-  block_number: false,
-  'data_Transaction.account_id': false,
-  'data_Transaction.broker_hash': false,
-  'data_Transaction.fail_reason': false,
-  'data_Transaction.withdraw_nonce': false,
-  data_ProcessedTrades_batch_id: false,
-  trade_timestamp: false,
-  trade_account_id: false,
-  trade_match_id: false,
-  trade_sum_unitary_fundings: false,
-  trade_trade_id: false,
-  trade_fee: false,
-  trade_fee_asset_hash: false,
-  'data_SettlementResult.account_id': false,
-  'data_SettlementResult.settled_amount': false,
-  'data_SettlementResult.insurance_transfer_amount': false,
-  'data_SettlementResult.insurance_account_id': false,
-  settlement_sum_unitary_fundings: false,
-  'data_LiquidationResult.liquidated_account_id': false,
-  'data_LiquidationResult.insurance_account_id': false,
-  'data_LiquidationResult.insurance_transfer_amount': false,
-  liquidation_cost_position_transfer: false,
-  liquidation_insurance_fee: false,
-  liquidation_liquidation_transfer_id: false,
-  liquidation_liquidator_fee: false,
-  liquidation_sum_unitary_fundings: false,
-  'data_LiquidationResultV2.account_id': false,
-  'data_LiquidationResultV2.insurance_transfer_amount': false,
-  liquidationv2_cost_position_transfer: false,
-  liquidationv2_account_id: false,
-  liquidationv2_sum_unitary_fundings: false,
-  'data_AdlResult.account_id': false,
-  'data_AdlResult.insurance_account_id': false,
-  'data_AdlResult.sum_unitary_fundings': false
+const getDefaultVisibility = (aggregateTrades?: boolean, eventType?: EventType | 'ALL') => {
+  const baseVisibility = {
+    block_number: false,
+    'data_Transaction.account_id': false,
+    'data_Transaction.broker_hash': false,
+    'data_Transaction.fail_reason': false,
+    'data_Transaction.withdraw_nonce': false,
+    data_ProcessedTrades_batch_id: false,
+    trade_timestamp: false,
+    trade_account_id: false,
+    trade_match_id: false,
+    trade_sum_unitary_fundings: false,
+    trade_trade_id: false,
+    trade_fee: false,
+    trade_fee_asset_hash: false,
+    'data_SettlementResult.account_id': false,
+    'data_SettlementResult.settled_amount': false,
+    'data_SettlementResult.insurance_transfer_amount': false,
+    'data_SettlementResult.insurance_account_id': false,
+    settlement_sum_unitary_fundings: false,
+    'data_LiquidationResult.liquidated_account_id': false,
+    'data_LiquidationResult.insurance_account_id': false,
+    'data_LiquidationResult.insurance_transfer_amount': false,
+    liquidation_cost_position_transfer: false,
+    liquidation_insurance_fee: false,
+    liquidation_liquidation_transfer_id: false,
+    liquidation_liquidator_fee: false,
+    liquidation_sum_unitary_fundings: false,
+    'data_LiquidationResultV2.account_id': false,
+    'data_LiquidationResultV2.insurance_transfer_amount': false,
+    liquidationv2_cost_position_transfer: false,
+    liquidationv2_account_id: false,
+    liquidationv2_sum_unitary_fundings: false,
+    'data_AdlResult.account_id': false,
+    'data_AdlResult.insurance_account_id': false,
+    'data_AdlResult.sum_unitary_fundings': false
+  };
+
+  if (aggregateTrades && eventType === 'PERPTRADE') {
+    return {
+      ...baseVisibility,
+      trade_match_id: true,
+      trade_trade_id: true
+    };
+  }
+
+  return baseVisibility;
 };
 
 export const EventsTable: FC<EventsTableProps> = ({
@@ -87,7 +101,9 @@ export const EventsTable: FC<EventsTableProps> = ({
   eventType,
   setEventType,
   dateRange,
-  setDateRange
+  setDateRange,
+  aggregateTrades,
+  setAggregateTrades
 }) => {
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -110,7 +126,7 @@ export const EventsTable: FC<EventsTableProps> = ({
       sorting
     },
     initialState: {
-      columnVisibility: defaultVisibility
+      columnVisibility: getDefaultVisibility(aggregateTrades, eventType)
     },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -119,6 +135,11 @@ export const EventsTable: FC<EventsTableProps> = ({
     getSortedRowModel: getSortedRowModel(),
     onPaginationChange: setPagination
   });
+
+  useEffect(() => {
+    const newVisibility = getDefaultVisibility(aggregateTrades, eventType);
+    table.setColumnVisibility(newVisibility);
+  }, [aggregateTrades, eventType, table]);
 
   const renderPagination = () => (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-bg-primary rounded-xl border border-border-primary">
@@ -274,7 +295,11 @@ export const EventsTable: FC<EventsTableProps> = ({
                 value={eventType}
                 onChange={(e) => {
                   setEventType(e.target.value as EventType);
-                  table.resetColumnVisibility();
+                  const newVisibility = getDefaultVisibility(
+                    aggregateTrades,
+                    e.target.value as EventType
+                  );
+                  table.setColumnVisibility(newVisibility);
                 }}
                 className="w-full bg-bg-primary text-white border border-border-primary rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
               >
@@ -288,6 +313,23 @@ export const EventsTable: FC<EventsTableProps> = ({
                 <option value="ADL">ADL (old)</option>
               </select>
             </div>
+            {eventType === 'PERPTRADE' && setAggregateTrades && (
+              <div>
+                <label className="flex items-center gap-2 text-sm text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={aggregateTrades}
+                    onChange={(e) => setAggregateTrades(e.target.checked)}
+                    className="w-4 h-4 text-primary bg-bg-primary border border-border-primary rounded focus:ring-2 focus:ring-primary focus:ring-offset-0"
+                  />
+                  Aggregate Trade Data
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Combine trades with the same transaction ID and batch ID into a single row.
+                  Numeric fields are summed, executed price uses weighted average by trade quantity.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -319,7 +361,8 @@ export const EventsTable: FC<EventsTableProps> = ({
                     <div className="px-1">
                       <Button
                         onClick={() => {
-                          table.resetColumnVisibility();
+                          const newVisibility = getDefaultVisibility(aggregateTrades, eventType);
+                          table.setColumnVisibility(newVisibility);
                         }}
                       >
                         Reset to default
