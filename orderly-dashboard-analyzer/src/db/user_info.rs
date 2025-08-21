@@ -54,3 +54,21 @@ pub async fn create_user_info(p_user: &UserInfo) -> Result<usize, DBException> {
     }
     return Ok(1);
 }
+
+pub async fn get_user_info(account_id_: String) -> anyhow::Result<Option<UserInfo>> {
+    use crate::schema::user_info::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let result = user_info
+        .filter(account_id.eq(account_id_))
+        .limit(1)
+        .get_result::<UserInfo>(&mut conn)
+        .await;
+
+    match result {
+        Ok(user) => Ok(Some(user)),
+        Err(error) => match error {
+            diesel::NotFound => return Ok(None),
+            _ => return Err(anyhow::anyhow!(error)),
+        },
+    }
+}

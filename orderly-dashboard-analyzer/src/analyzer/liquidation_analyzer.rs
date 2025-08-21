@@ -913,7 +913,7 @@ mod tests {
             _ => {}
         }
         let mut context = AnalyzeContext::new_context();
-        parse_and_analyzer(result_data, &mut context).await;
+        parse_and_analyzer(result_data, &mut context, None).await;
     }
 
     const TRADE_AND_LIQ_DATA2: &str = r#"
@@ -1101,7 +1101,7 @@ mod tests {
             UserPerpSummary::new_empty_user_perp_summary(&p_account_id, &symbol),
         );
         println!("1111111111111goooooooo");
-        parse_and_analyzer(result_data, &mut context).await;
+        parse_and_analyzer(result_data, &mut context, None).await;
         let user_perp = context.get_user_perp(&perp_key).await;
         println!(
             "total_realized_pnl: {}",
@@ -1255,7 +1255,7 @@ mod tests {
             account_id: P_ACCOUNT_ID.to_string(),
             symbol: SYMBOL.to_string(),
         };
-        parse_and_analyzer(result_data, &mut context).await;
+        parse_and_analyzer(result_data, &mut context, None).await;
         let user_perp = context.get_user_perp(&perp_key).await;
         println!(
             "total_realized_pnl: {}",
