@@ -39,6 +39,7 @@ interface EventsTableProps {
   setDateRange: (range: [string | null, string | null]) => void;
   aggregateTrades?: boolean;
   setAggregateTrades?: (value: boolean) => void;
+  rawEventsCount?: number;
 }
 
 const getDefaultVisibility = (aggregateTrades?: boolean, eventType?: EventType | 'ALL') => {
@@ -103,7 +104,8 @@ export const EventsTable: FC<EventsTableProps> = ({
   dateRange,
   setDateRange,
   aggregateTrades,
-  setAggregateTrades
+  setAggregateTrades,
+  rawEventsCount
 }) => {
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -219,7 +221,7 @@ export const EventsTable: FC<EventsTableProps> = ({
   const renderLoadMore = () => {
     if (!hasMore) return null;
 
-    const loadedEvents = events?.length || 0;
+    const loadedEvents = rawEventsCount || events?.length || 0;
     const totalAvailable = tradesCount;
     const remainingEvents = Math.max(0, totalAvailable - loadedEvents);
 

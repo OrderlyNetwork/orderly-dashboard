@@ -846,6 +846,7 @@ export function useRenderColumns(
     loadMore,
     hasMore,
     tradesCount,
-    pageSizeLimit
+    pageSizeLimit,
+    rawEventsCount: events?.length || 0
   };
 }

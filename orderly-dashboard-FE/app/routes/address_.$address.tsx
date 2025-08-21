@@ -262,8 +262,17 @@ export const Address: FC = () => {
     [broker_id, selectedAccount, eventType, validDateRange]
   );
 
-  const { columns, events, error, isLoading, isLoadingMore, loadMore, hasMore, tradesCount } =
-    useRenderColumns(eventsParams, eventType, setEventType, aggregateTrades);
+  const {
+    columns,
+    events,
+    error,
+    isLoading,
+    isLoadingMore,
+    loadMore,
+    hasMore,
+    tradesCount,
+    rawEventsCount
+  } = useRenderColumns(eventsParams, eventType, setEventType, aggregateTrades);
 
   if (error) {
     return error.message ?? '';
@@ -455,6 +464,7 @@ export const Address: FC = () => {
           setDateRange={setDateRange}
           aggregateTrades={aggregateTrades}
           setAggregateTrades={setAggregateTrades}
+          rawEventsCount={rawEventsCount}
         />
       ) : (
         <AddressPositions />
