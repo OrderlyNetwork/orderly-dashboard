@@ -405,8 +405,9 @@ export const EventsTable: FC<EventsTableProps> = ({
                   Aggregate Trade Data
                 </label>
                 <p className="text-xs text-gray-500 mt-1">
-                  Combine trades with the same transaction ID and batch ID into a single row.
-                  Numeric fields are summed, executed price uses weighted average by trade quantity.
+                  Combine trades with the same transaction ID, batch ID, and trade side (buy/sell)
+                  into a single row. Numeric fields are summed, executed price uses weighted average
+                  by trade quantity.
                 </p>
               </div>
             )}

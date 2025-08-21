@@ -45,7 +45,7 @@ export function useRenderColumns(
 
     events.forEach((event) => {
       if (event.type === 'trade') {
-        const key = `${event.transaction_id}_${event.block_number}_${event.transaction_index}_${event.trade.symbol_hash}`;
+        const key = `${event.transaction_id}_${event.block_number}_${event.transaction_index}_${event.trade.symbol_hash}_${event.trade.side}`;
         if (!tradeGroups.has(key)) {
           tradeGroups.set(key, []);
         }
