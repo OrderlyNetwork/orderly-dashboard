@@ -240,10 +240,12 @@ export const Address: FC = () => {
 
     return (
       <div className="p-4 sm:p-6 max-w-full">
-        <h2 className="text-2xl font-bold text-white mb-2 mx-2 md:mx-4">Positions History</h2>
+        <h2 className="text-2xl font-bold text-white mb-2 mx-2 md:mx-4">Positions</h2>
         <p className="text-gray-300 mb-6 mx-2 md:mx-4">
-          Historical positions for this account. Currently only supports sorting by holding value.
-          Date information not yet available.
+          Current positions for this account. Shows current position data for each symbol, including
+          closed positions. Realized PnL is aggregated across all historical positions for each
+          symbol. Currently only supports sorting by holding value. Date information not yet
+          available. Note: Sub-accounts are not yet supported.
         </p>
         <Positions
           accountId={accountId}
