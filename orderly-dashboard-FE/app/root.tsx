@@ -13,6 +13,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { App, AppContext, AppContextType } from './App';
 import { ClientStyleContext, ServerStyleContext } from './styles';
 
+import favicon from '~/assets/favicon.svg?url';
 import globalCss from '~/global.css?url';
 import uno from '~/styles/uno.css?url';
 
@@ -27,7 +28,8 @@ export const links: LinksFunction = () => [
     rel: 'stylesheet',
     href: radixTheme
   },
-  { rel: 'stylesheet', href: uno }
+  { rel: 'stylesheet', href: uno },
+  { rel: 'icon', href: favicon, type: 'image/svg+xml' }
 ];
 
 export const meta: MetaFunction = () => {

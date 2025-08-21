@@ -336,7 +336,11 @@ export const Positions: FC<PositionsProps> = ({
       },
       {
         accessorKey: 'total_realized_pnl',
-        header: 'Realized PnL',
+        header: (
+          <Tooltip content="Aggregated realized PnL across all historical positions for this symbol">
+            <span className="cursor-help">Realized PnL</span>
+          </Tooltip>
+        ) as unknown as string,
         cell: ({ row }) => (
           <span
             className={
@@ -436,7 +440,7 @@ export const Positions: FC<PositionsProps> = ({
   if (error) {
     return (
       <div className="flex flex-col gap-4 flex-items-center [&>*]:w-full [&>*]:max-w-full lg:max-w-[50rem] px-2 sm:px-0">
-        <h2 className="mb-2 text-lg sm:text-xl">Positions Leaderboard</h2>
+        <h2 className="mb-2 text-lg sm:text-xl">Positions</h2>
         <div className="text-red-500">Error: {error.message}</div>
       </div>
     );
@@ -500,10 +504,12 @@ export const Positions: FC<PositionsProps> = ({
     <div className="space-y-8 animate-fade-in flex flex-col align-center">
       {!hideTitle && (
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold text-white">Positions Leaderboard</h2>
+          <h2 className="text-2xl font-bold text-white">Positions</h2>
           <p className="text-gray-300 max-w-3xl mx-auto">
-            Track current positions across different addresses, accounts, and brokers. View holding
-            values, realized and unrealized PnL with customizable filters and sorting options.
+            Track positions across different addresses, accounts, and brokers. View holding values,
+            realized and unrealized PnL with customizable filters. Shows current position data for
+            each symbol, including closed positions. Realized PnL is aggregated across all
+            historical positions for each symbol.
           </p>
         </div>
       )}
@@ -620,6 +626,10 @@ export const Positions: FC<PositionsProps> = ({
           <div className="flex justify-center py-12 w-full">
             <Spinner size="2.5rem" />
           </div>
+        ) : displayData.rows.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">
+            <p>No positions found for the selected criteria.</p>
+          </div>
         ) : (
           <div className="space-y-2">
             {/* Column Filters */}
@@ -687,7 +697,7 @@ export const Positions: FC<PositionsProps> = ({
                   <Spinner size="2rem" />
                 </div>
               )}
-              <Table.Root className="max-w-full min-w-[800px]">
+              <Table.Root className="w-full">
                 <Table.Header>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <Table.Row key={headerGroup.id} className="border-b border-border-primary">
@@ -695,7 +705,7 @@ export const Positions: FC<PositionsProps> = ({
                         <Table.ColumnHeaderCell
                           key={header.id}
                           colSpan={header.colSpan}
-                          className="py-4 px-4"
+                          className="py-2 px-2 sm:py-4 sm:px-4"
                         >
                           {header.isPlaceholder ? null : (
                             <div
@@ -735,7 +745,10 @@ export const Positions: FC<PositionsProps> = ({
                       }`}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <Table.Cell key={cell.id} className="align-middle text-sm py-3 px-4">
+                        <Table.Cell
+                          key={cell.id}
+                          className="align-middle text-sm py-2 px-2 sm:py-3 sm:px-4"
+                        >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </Table.Cell>
                       ))}

@@ -262,7 +262,17 @@ export const Leaderboard: FC = () => {
       {
         accessorKey: 'broker_id',
         header: 'Broker ID',
-        cell: ({ row }) => row.original.broker_id || '-',
+        cell: ({ row }) => (
+          <div className="flex items-center gap-1">
+            <span>{row.original.broker_id || '-'}</span>
+            <Tooltip content="Filter by this broker">
+              <MagnifyingGlassIcon
+                className="w-3 h-3 text-gray-400 hover:text-blue-400 cursor-pointer"
+                onClick={() => handleInputChange('broker_id', row.original.broker_id || '')}
+              />
+            </Tooltip>
+          </div>
+        ),
         enableSorting: false
       },
       {
@@ -272,7 +282,12 @@ export const Leaderboard: FC = () => {
         enableSorting: false
       }
     ],
-    [currentRequestedPage, displayData?.meta.records_per_page, handleAddressChange]
+    [
+      currentRequestedPage,
+      displayData?.meta.records_per_page,
+      handleAddressChange,
+      handleInputChange
+    ]
   );
 
   const table = useReactTable<LeaderboardEntry>({
@@ -679,7 +694,7 @@ export const Leaderboard: FC = () => {
                   <Spinner size="2rem" />
                 </div>
               )}
-              <Table.Root className="max-w-full min-w-[800px]">
+              <Table.Root className="w-full">
                 <Table.Header>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <Table.Row key={headerGroup.id} className="border-b border-border-primary">
@@ -687,7 +702,7 @@ export const Leaderboard: FC = () => {
                         <Table.ColumnHeaderCell
                           key={header.id}
                           colSpan={header.colSpan}
-                          className="py-4 px-4"
+                          className="py-2 px-2 sm:py-4 sm:px-4"
                         >
                           {header.isPlaceholder ? null : (
                             <div
@@ -727,7 +742,10 @@ export const Leaderboard: FC = () => {
                       }`}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <Table.Cell key={cell.id} className="align-middle text-sm py-3 px-4">
+                        <Table.Cell
+                          key={cell.id}
+                          className="align-middle text-sm py-2 px-2 sm:py-3 sm:px-4"
+                        >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </Table.Cell>
                       ))}

@@ -3,14 +3,14 @@ import { Button, IconButton } from '@radix-ui/themes';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { json, useLoaderData, useSearchParams, useNavigate } from '@remix-run/react';
 import dayjs from 'dayjs';
-import { FC, useMemo, useState, useEffect } from 'react';
+import { FC, useMemo, useState, useEffect, useCallback } from 'react';
 import useSWR from 'swr';
 import { match } from 'ts-pattern';
 
 import { useRenderColumns } from './address';
 
 import { useAppState } from '~/App';
-import { Spinner, Positions, EventsTable } from '~/components';
+import { Spinner, Positions, EventsTable, BrokerSelectionModal, PnLStats } from '~/components';
 import { ChainAddress, EventsParams, EventType } from '~/hooks';
 import { base64UrlSafeEncode, base64UrlSafeDecode } from '~/util';
 
@@ -46,6 +46,20 @@ export const Address: FC = () => {
     dayjs(new Date()).subtract(30, 'days').format('YYYY-MM-DD'),
     dayjs(new Date()).format('YYYY-MM-DD')
   ]);
+
+  const [aggregateTrades, setAggregateTrades] = useState<boolean>(true);
+
+  const [showBrokerModal, setShowBrokerModal] = useState(false);
+
+  const [symbolFilter, setSymbolFilter] = useState<string>('');
+
+  const handleSymbolFilter = useCallback(
+    (symbolHash: string) => {
+      setEventType('PERPTRADE');
+      setSymbolFilter(symbolHash);
+    },
+    [setEventType]
+  );
 
   const { address: rawAddress } = useLoaderData<typeof loader>();
 
@@ -226,10 +240,12 @@ export const Address: FC = () => {
 
     return (
       <div className="p-4 sm:p-6 max-w-full">
-        <h2 className="text-2xl font-bold text-white mb-2 mx-2 md:mx-4">Positions History</h2>
+        <h2 className="text-2xl font-bold text-white mb-2 mx-2 md:mx-4">Positions</h2>
         <p className="text-gray-300 mb-6 mx-2 md:mx-4">
-          Historical positions for this account. Currently only supports sorting by holding value.
-          Date information not yet available.
+          Current positions for this account. Shows current position data for each symbol, including
+          closed positions. Realized PnL is aggregated across all historical positions for each
+          symbol. Currently only supports sorting by holding value. Date information not yet
+          available. Note: Sub-accounts are not yet supported.
         </p>
         <Positions
           accountId={accountId}
@@ -258,8 +274,17 @@ export const Address: FC = () => {
     [broker_id, selectedAccount, eventType, validDateRange]
   );
 
-  const { columns, events, error, isLoading, isLoadingMore, loadMore, hasMore, tradesCount } =
-    useRenderColumns(eventsParams, eventType, setEventType);
+  const {
+    columns,
+    events,
+    error,
+    isLoading,
+    isLoadingMore,
+    loadMore,
+    hasMore,
+    tradesCount,
+    rawEventsCount
+  } = useRenderColumns(eventsParams, eventType, setEventType, aggregateTrades, handleSymbolFilter);
 
   if (error) {
     return error.message ?? '';
@@ -349,6 +374,23 @@ export const Address: FC = () => {
             </div>
           </div>
 
+          {broker_id && (
+            <div className="p-3 sm:p-4 bg-bg-secondary rounded-lg border border-border-primary">
+              <div className="text-sm text-gray-400 mb-2">Current Broker</div>
+              <div className="flex items-center justify-between">
+                <div className="text-white font-medium">{broker_id}</div>
+                <Button
+                  size="1"
+                  variant="soft"
+                  onClick={() => setShowBrokerModal(true)}
+                  className="text-xs"
+                >
+                  Change
+                </Button>
+              </div>
+            </div>
+          )}
+
           {accountsData?.rows && accountsData.rows.length > 1 && (
             <div className="p-3 sm:p-4 bg-bg-secondary rounded-lg border border-border-primary">
               <div className="text-sm text-gray-400 mb-2">Account Type</div>
@@ -389,7 +431,21 @@ export const Address: FC = () => {
             </div>
           )}
         </div>
+
+        {/* Change Broker Button - only show if no broker is selected */}
+        {!broker_id && (
+          <div className="flex justify-center">
+            <Button onClick={() => setShowBrokerModal(true)} className="btn btn-primary">
+              Select Broker ID
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* PnL Statistics Section */}
+      {broker_id && (
+        <PnLStats address={address.address} brokerId={broker_id} accountId={accountId} />
+      )}
 
       {/* Tab Navigation */}
       <div className="flex justify-center mb-8">
@@ -423,10 +479,22 @@ export const Address: FC = () => {
           setEventType={setEventType}
           dateRange={dateRange}
           setDateRange={setDateRange}
+          aggregateTrades={aggregateTrades}
+          setAggregateTrades={setAggregateTrades}
+          rawEventsCount={rawEventsCount}
+          symbolFilter={symbolFilter}
+          setSymbolFilter={setSymbolFilter}
         />
       ) : (
         <AddressPositions />
       )}
+
+      {/* Broker Selection Modal */}
+      <BrokerSelectionModal
+        open={showBrokerModal}
+        onOpenChange={setShowBrokerModal}
+        address={address.address}
+      />
     </div>
   );
 };
