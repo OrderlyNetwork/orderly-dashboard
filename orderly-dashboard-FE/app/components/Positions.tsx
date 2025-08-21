@@ -697,7 +697,7 @@ export const Positions: FC<PositionsProps> = ({
                   <Spinner size="2rem" />
                 </div>
               )}
-              <Table.Root className="max-w-full min-w-[800px]">
+              <Table.Root className="w-full">
                 <Table.Header>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <Table.Row key={headerGroup.id} className="border-b border-border-primary">
@@ -705,7 +705,7 @@ export const Positions: FC<PositionsProps> = ({
                         <Table.ColumnHeaderCell
                           key={header.id}
                           colSpan={header.colSpan}
-                          className="py-4 px-4"
+                          className="py-2 px-2 sm:py-4 sm:px-4"
                         >
                           {header.isPlaceholder ? null : (
                             <div
@@ -745,7 +745,10 @@ export const Positions: FC<PositionsProps> = ({
                       }`}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <Table.Cell key={cell.id} className="align-middle text-sm py-3 px-4">
+                        <Table.Cell
+                          key={cell.id}
+                          className="align-middle text-sm py-2 px-2 sm:py-3 sm:px-4"
+                        >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </Table.Cell>
                       ))}

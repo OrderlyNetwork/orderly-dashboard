@@ -496,7 +496,7 @@ export const EventsTable: FC<EventsTableProps> = ({
             {renderPagination()}
 
             <div className="w-full overflow-x-auto">
-              <Table.Root className="max-w-full min-w-[600px] bg-bg-primary rounded-lg border border-border-primary overflow-hidden">
+              <Table.Root className="w-full bg-bg-primary rounded-lg border border-border-primary overflow-hidden">
                 <Table.Header>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <Table.Row
@@ -507,7 +507,7 @@ export const EventsTable: FC<EventsTableProps> = ({
                         <Table.ColumnHeaderCell
                           key={header.id}
                           colSpan={header.colSpan}
-                          className="p-4"
+                          className="p-2 sm:p-4"
                         >
                           {header.isPlaceholder ? null : (
                             <div
@@ -549,7 +549,7 @@ export const EventsTable: FC<EventsTableProps> = ({
                       {row.getVisibleCells().map((cell) => (
                         <Table.Cell
                           key={cell.id}
-                          className="align-middle text-sm p-4 text-gray-300"
+                          className="align-middle text-sm p-2 sm:p-4 text-gray-300"
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </Table.Cell>
