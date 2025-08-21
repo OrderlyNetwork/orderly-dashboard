@@ -10,7 +10,7 @@ import { match } from 'ts-pattern';
 import { useRenderColumns } from './address';
 
 import { useAppState } from '~/App';
-import { Spinner, Positions, EventsTable, BrokerSelectionModal } from '~/components';
+import { Spinner, Positions, EventsTable, BrokerSelectionModal, PnLStats } from '~/components';
 import { ChainAddress, EventsParams, EventType } from '~/hooks';
 import { base64UrlSafeEncode, base64UrlSafeDecode } from '~/util';
 
@@ -441,6 +441,11 @@ export const Address: FC = () => {
           </div>
         )}
       </div>
+
+      {/* PnL Statistics Section */}
+      {broker_id && (
+        <PnLStats address={address.address} brokerId={broker_id} accountId={accountId} />
+      )}
 
       {/* Tab Navigation */}
       <div className="flex justify-center mb-8">
