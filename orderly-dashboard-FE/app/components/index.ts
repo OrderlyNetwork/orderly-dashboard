@@ -1,4 +1,4 @@
-export * from './BrokerSelection';
+export * from './BrokerSelectionModal';
 export * from './EventsTable';
 export * from './Leaderboard';
 export * from './NavBar';

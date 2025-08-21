@@ -1,7 +1,7 @@
 import { Link } from '@remix-run/react';
 import { FC } from 'react';
 
-import { BrokerSelection, SearchInput } from '.';
+import { SearchInput } from '.';
 
 export const NavBar: FC = () => {
   return (
@@ -15,7 +15,6 @@ export const NavBar: FC = () => {
       </div>
 
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-        <BrokerSelection />
         <SearchInput />
       </div>
     </nav>

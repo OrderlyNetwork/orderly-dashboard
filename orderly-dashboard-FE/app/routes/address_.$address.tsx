@@ -10,7 +10,7 @@ import { match } from 'ts-pattern';
 import { useRenderColumns } from './address';
 
 import { useAppState } from '~/App';
-import { Spinner, Positions, EventsTable } from '~/components';
+import { Spinner, Positions, EventsTable, BrokerSelectionModal } from '~/components';
 import { ChainAddress, EventsParams, EventType } from '~/hooks';
 import { base64UrlSafeEncode, base64UrlSafeDecode } from '~/util';
 
@@ -46,6 +46,8 @@ export const Address: FC = () => {
     dayjs(new Date()).subtract(30, 'days').format('YYYY-MM-DD'),
     dayjs(new Date()).format('YYYY-MM-DD')
   ]);
+
+  const [showBrokerModal, setShowBrokerModal] = useState(false);
 
   const { address: rawAddress } = useLoaderData<typeof loader>();
 
@@ -349,6 +351,23 @@ export const Address: FC = () => {
             </div>
           </div>
 
+          {broker_id && (
+            <div className="p-3 sm:p-4 bg-bg-secondary rounded-lg border border-border-primary">
+              <div className="text-sm text-gray-400 mb-2">Current Broker</div>
+              <div className="flex items-center justify-between">
+                <div className="text-white font-medium">{broker_id}</div>
+                <Button
+                  size="1"
+                  variant="soft"
+                  onClick={() => setShowBrokerModal(true)}
+                  className="text-xs"
+                >
+                  Change
+                </Button>
+              </div>
+            </div>
+          )}
+
           {accountsData?.rows && accountsData.rows.length > 1 && (
             <div className="p-3 sm:p-4 bg-bg-secondary rounded-lg border border-border-primary">
               <div className="text-sm text-gray-400 mb-2">Account Type</div>
@@ -389,6 +408,15 @@ export const Address: FC = () => {
             </div>
           )}
         </div>
+
+        {/* Change Broker Button - only show if no broker is selected */}
+        {!broker_id && (
+          <div className="flex justify-center">
+            <Button onClick={() => setShowBrokerModal(true)} className="btn btn-primary">
+              Select Broker ID
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Tab Navigation */}
@@ -427,6 +455,13 @@ export const Address: FC = () => {
       ) : (
         <AddressPositions />
       )}
+
+      {/* Broker Selection Modal */}
+      <BrokerSelectionModal
+        open={showBrokerModal}
+        onOpenChange={setShowBrokerModal}
+        address={address.address}
+      />
     </div>
   );
 };
