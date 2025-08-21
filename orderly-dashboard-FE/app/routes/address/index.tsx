@@ -449,7 +449,12 @@ export function useRenderColumns(
               columnHelper.accessor('settlement.symbol_hash', {
                 header: 'Symbol',
                 enableSorting: false,
-                cell: (info) => getSymbolName(info.getValue(), symbols)
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
               }),
               columnHelper.accessor('data.SettlementResult.account_id', {
                 header: 'Account ID',
@@ -533,6 +538,16 @@ export function useRenderColumns(
             id: 'liquidation',
             header: 'Liquidation',
             columns: [
+              columnHelper.accessor('liquidation.symbol_hash', {
+                header: 'Symbol',
+                enableSorting: false,
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
+              }),
               columnHelper.accessor('data.LiquidationResult.liquidated_account_id', {
                 header: 'Liquidated Account ID',
                 enableSorting: false,
@@ -650,7 +665,12 @@ export function useRenderColumns(
               columnHelper.accessor('liquidationv2.symbol_hash', {
                 header: 'Symbol',
                 enableSorting: false,
-                cell: (info) => getSymbolName(info.getValue(), symbols)
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
               }),
               columnHelper.accessor('liquidationv2.mark_price', {
                 header: 'Mark Price',
@@ -733,7 +753,12 @@ export function useRenderColumns(
               columnHelper.accessor('data.AdlResult.symbol_hash', {
                 header: 'Symbol',
                 enableSorting: false,
-                cell: (info) => getSymbolName(info.getValue(), symbols)
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
               }),
               columnHelper.accessor('data.AdlResult.account_id', {
                 header: 'Account ID',
@@ -790,7 +815,12 @@ export function useRenderColumns(
               columnHelper.accessor('data.AdlResultV2.symbol_hash', {
                 header: 'Symbol',
                 enableSorting: false,
-                cell: (info) => getSymbolName(info.getValue(), symbols)
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
               }),
               columnHelper.accessor('data.AdlResultV2.account_id', {
                 header: 'Account ID',
