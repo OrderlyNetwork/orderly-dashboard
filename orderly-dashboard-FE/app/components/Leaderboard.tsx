@@ -262,7 +262,17 @@ export const Leaderboard: FC = () => {
       {
         accessorKey: 'broker_id',
         header: 'Broker ID',
-        cell: ({ row }) => row.original.broker_id || '-',
+        cell: ({ row }) => (
+          <div className="flex items-center gap-1">
+            <span>{row.original.broker_id || '-'}</span>
+            <Tooltip content="Filter by this broker">
+              <MagnifyingGlassIcon
+                className="w-3 h-3 text-gray-400 hover:text-blue-400 cursor-pointer"
+                onClick={() => handleInputChange('broker_id', row.original.broker_id || '')}
+              />
+            </Tooltip>
+          </div>
+        ),
         enableSorting: false
       },
       {
@@ -272,7 +282,12 @@ export const Leaderboard: FC = () => {
         enableSorting: false
       }
     ],
-    [currentRequestedPage, displayData?.meta.records_per_page, handleAddressChange]
+    [
+      currentRequestedPage,
+      displayData?.meta.records_per_page,
+      handleAddressChange,
+      handleInputChange
+    ]
   );
 
   const table = useReactTable<LeaderboardEntry>({
