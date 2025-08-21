@@ -20,10 +20,10 @@ import {
   useReactTable
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useMemo, useCallback } from 'react';
 
 import { Spinner } from '~/components';
-import { EventTableData, EventType } from '~/hooks';
+import { EventTableData, EventType, useSymbols, getSymbolName } from '~/hooks';
 
 interface EventsTableProps {
   events: EventTableData[] | undefined;
@@ -40,6 +40,8 @@ interface EventsTableProps {
   aggregateTrades?: boolean;
   setAggregateTrades?: (value: boolean) => void;
   rawEventsCount?: number;
+  symbolFilter?: string;
+  setSymbolFilter?: (value: string) => void;
 }
 
 const getDefaultVisibility = (aggregateTrades?: boolean, eventType?: EventType | 'ALL') => {
@@ -105,7 +107,9 @@ export const EventsTable: FC<EventsTableProps> = ({
   setDateRange,
   aggregateTrades,
   setAggregateTrades,
-  rawEventsCount
+  rawEventsCount,
+  symbolFilter: externalSymbolFilter,
+  setSymbolFilter: setExternalSymbolFilter
 }) => {
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -119,8 +123,50 @@ export const EventsTable: FC<EventsTableProps> = ({
     pageSize: 10
   });
 
+  const [internalSymbolFilter, setInternalSymbolFilter] = useState<string>('');
+  const symbolFilter =
+    externalSymbolFilter !== undefined ? externalSymbolFilter : internalSymbolFilter;
+  const setSymbolFilter = setExternalSymbolFilter || setInternalSymbolFilter;
+
+  const symbols = useSymbols();
+
+  const getShortSymbolName = useCallback(
+    (symbolHash: string) => {
+      const symbolName = getSymbolName(symbolHash, symbols);
+      const parts = symbolName ? symbolName.split('_') : [];
+      return parts.length >= 2 ? parts[1] : symbolName || symbolHash;
+    },
+    [symbols]
+  );
+
+  const uniqueSymbols = useMemo(() => {
+    if (!events || eventType !== 'PERPTRADE') return [];
+
+    const symbols = new Set<string>();
+    events.forEach((event) => {
+      if (event.type === 'trade') {
+        symbols.add(event.trade.symbol_hash);
+      }
+    });
+
+    return Array.from(symbols).sort();
+  }, [events, eventType]);
+
+  const filteredEvents = useMemo(() => {
+    if (!events || eventType !== 'PERPTRADE' || !symbolFilter) {
+      return events;
+    }
+
+    return events.filter((event) => {
+      if (event.type === 'trade') {
+        return event.trade.symbol_hash === symbolFilter;
+      }
+      return true;
+    });
+  }, [events, eventType, symbolFilter]);
+
   const table = useReactTable<EventTableData>({
-    data: events ?? [],
+    data: filteredEvents ?? [],
     columns,
     state: {
       expanded: (eventType !== 'ALL') as ExpandedState,
@@ -142,6 +188,16 @@ export const EventsTable: FC<EventsTableProps> = ({
     const newVisibility = getDefaultVisibility(aggregateTrades, eventType);
     table.setColumnVisibility(newVisibility);
   }, [aggregateTrades, eventType, table]);
+
+  useEffect(() => {
+    if (eventType !== 'PERPTRADE') {
+      setSymbolFilter('');
+    }
+  }, [eventType, setSymbolFilter]);
+
+  useEffect(() => {
+    table.setPageIndex(0);
+  }, [symbolFilter, table]);
 
   const renderPagination = () => (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-bg-primary rounded-xl border border-border-primary">
@@ -315,6 +371,28 @@ export const EventsTable: FC<EventsTableProps> = ({
                 <option value="ADL">ADL (old)</option>
               </select>
             </div>
+            {eventType === 'PERPTRADE' && (
+              <div>
+                <label htmlFor="symbol-filter" className="block text-sm text-gray-300 mb-2">
+                  Symbol Filter
+                </label>
+                <div className="relative">
+                  <select
+                    id="symbol-filter"
+                    value={symbolFilter}
+                    onChange={(e) => setSymbolFilter(e.target.value)}
+                    className="w-full bg-bg-primary text-white border border-border-primary rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                  >
+                    <option value="">All Symbols</option>
+                    {uniqueSymbols.map((symbolHash) => (
+                      <option key={symbolHash} value={symbolHash}>
+                        {getShortSymbolName(symbolHash)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
             {eventType === 'PERPTRADE' && setAggregateTrades && (
               <div>
                 <label className="flex items-center gap-2 text-sm text-gray-300">
@@ -340,6 +418,12 @@ export const EventsTable: FC<EventsTableProps> = ({
       <div className="card p-4 sm:p-6 space-y-2 w-full max-w-full">
         <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <h3 className="text-xl font-semibold text-white">Event Data</h3>
+          {eventType === 'PERPTRADE' && symbolFilter && (
+            <div className="text-sm text-gray-300">
+              Showing {filteredEvents?.length || 0} of {events?.length || 0} events
+              {symbolFilter && ` (filtered by ${getShortSymbolName(symbolFilter)})`}
+            </div>
+          )}
         </div>
 
         {!events || isLoading ? (

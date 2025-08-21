@@ -3,7 +3,7 @@ import { Button, IconButton } from '@radix-ui/themes';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { json, useLoaderData, useSearchParams, useNavigate } from '@remix-run/react';
 import dayjs from 'dayjs';
-import { FC, useMemo, useState, useEffect } from 'react';
+import { FC, useMemo, useState, useEffect, useCallback } from 'react';
 import useSWR from 'swr';
 import { match } from 'ts-pattern';
 
@@ -50,6 +50,16 @@ export const Address: FC = () => {
   const [aggregateTrades, setAggregateTrades] = useState<boolean>(true);
 
   const [showBrokerModal, setShowBrokerModal] = useState(false);
+
+  const [symbolFilter, setSymbolFilter] = useState<string>('');
+
+  const handleSymbolFilter = useCallback(
+    (symbolHash: string) => {
+      setEventType('PERPTRADE');
+      setSymbolFilter(symbolHash);
+    },
+    [setEventType]
+  );
 
   const { address: rawAddress } = useLoaderData<typeof loader>();
 
@@ -272,7 +282,7 @@ export const Address: FC = () => {
     hasMore,
     tradesCount,
     rawEventsCount
-  } = useRenderColumns(eventsParams, eventType, setEventType, aggregateTrades);
+  } = useRenderColumns(eventsParams, eventType, setEventType, aggregateTrades, handleSymbolFilter);
 
   if (error) {
     return error.message ?? '';
@@ -465,6 +475,8 @@ export const Address: FC = () => {
           aggregateTrades={aggregateTrades}
           setAggregateTrades={setAggregateTrades}
           rawEventsCount={rawEventsCount}
+          symbolFilter={symbolFilter}
+          setSymbolFilter={setSymbolFilter}
         />
       ) : (
         <AddressPositions />

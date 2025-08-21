@@ -1,4 +1,5 @@
-import { Button } from '@radix-ui/themes';
+import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
+import { Button, Tooltip } from '@radix-ui/themes';
 import { GroupColumnDef, createColumnHelper } from '@tanstack/react-table';
 import { FixedNumber } from '@tarnadas/fixed-number';
 import { Dispatch, SetStateAction, useMemo } from 'react';
@@ -23,7 +24,8 @@ export function useRenderColumns(
   query: EventsParams | null,
   eventType: EventType | 'ALL',
   setEventType: Dispatch<SetStateAction<EventType | 'ALL'>>,
-  aggregateTrades: boolean = false
+  aggregateTrades: boolean = false,
+  onSymbolFilter?: (symbolHash: string) => void
 ) {
   const { events, error, isLoading, isLoadingMore, loadMore, hasMore, tradesCount, pageSizeLimit } =
     useEvents(query);
@@ -324,7 +326,19 @@ export function useRenderColumns(
               const symbol = getSymbolName(info.getValue(), symbols);
               const parts = symbol.split('_');
               const baseToken = parts.length >= 2 ? parts[1] : symbol;
-              return <span className="font-mono text-sm">{baseToken}</span>;
+              return (
+                <div className="flex items-center gap-1">
+                  <span className="font-mono text-sm">{baseToken}</span>
+                  {onSymbolFilter && (
+                    <Tooltip content="Filter by this symbol">
+                      <MagnifyingGlassIcon
+                        className="w-3 h-3 text-gray-400 hover:text-blue-400 cursor-pointer"
+                        onClick={() => onSymbolFilter(info.getValue())}
+                      />
+                    </Tooltip>
+                  )}
+                </div>
+              );
             }
           }),
           columnHelper.accessor('trade.side', {
@@ -865,7 +879,16 @@ export function useRenderColumns(
       })
       .exhaustive();
     return columns;
-  }, [columnHelper, eventType, setEventType, processedEvents, tokens, symbols, aggregateTrades]);
+  }, [
+    columnHelper,
+    eventType,
+    processedEvents,
+    setEventType,
+    tokens,
+    aggregateTrades,
+    symbols,
+    onSymbolFilter
+  ]);
 
   return {
     columns,
