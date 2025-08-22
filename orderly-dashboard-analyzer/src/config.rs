@@ -28,7 +28,7 @@ pub struct AnalyzerConfig {
     pub server_port: u16,
     pub get_broker_url: String,
     #[serde(default = "default_base_url")]
-    pub base_url: String,
+    pub be_api_base_url: String,
 }
 
 fn default_base_url() -> String {
