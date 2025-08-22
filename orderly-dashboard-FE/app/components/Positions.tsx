@@ -38,12 +38,12 @@ const defaultVisibility = {
   broker_id: false,
   symbol: true,
   holding: true,
-  total_realized_pnl: true,
+  total_realized_pnl: false,
   index_price: false,
-  mark_price: false,
+  mark_price: true,
   holding_value: true,
   opening_cost: false,
-  average_entry_price: false,
+  average_entry_price: true,
   un_realized_pnl: true
 };
 
@@ -54,12 +54,12 @@ const addressPageVisibility = {
   broker_id: false,
   symbol: true,
   holding: true,
-  total_realized_pnl: true,
+  total_realized_pnl: false,
   index_price: false,
-  mark_price: false,
+  mark_price: true,
   holding_value: true,
   opening_cost: false,
-  average_entry_price: false,
+  average_entry_price: true,
   un_realized_pnl: true
 };
 
@@ -86,6 +86,7 @@ export const Positions: FC<PositionsProps> = ({
   const [accountIdInput, setAccountIdInput] = useState<string>('');
   const [addressInput, setAddressInput] = useState<string>('');
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
+  const [showClosedPositions, setShowClosedPositions] = useState<boolean>(false);
   const [searchedAddress, setSearchedAddress] = useState<string>('');
 
   const { addressData, loading: addressLoading } = useSearchAddress(searchedAddress || null);
@@ -109,7 +110,24 @@ export const Positions: FC<PositionsProps> = ({
 
   const displayData = isLoading && previousData ? previousData : data;
 
-  // Auto-show modal when valid accounts are found
+  const filteredData = useMemo(() => {
+    if (!displayData) return displayData;
+
+    if (!showClosedPositions) {
+      return {
+        ...displayData,
+        rows: displayData.rows.filter((row) => parseFloat(row.holding) !== 0)
+      };
+    }
+
+    return displayData;
+  }, [displayData, showClosedPositions]);
+
+  const hasClosedPositions = useMemo(() => {
+    if (!displayData) return false;
+    return displayData.rows.some((row) => parseFloat(row.holding) === 0);
+  }, [displayData]);
+
   useMemo(() => {
     if (
       addressData &&
@@ -172,11 +190,8 @@ export const Positions: FC<PositionsProps> = ({
   );
 
   const isValidAddress = (address: string): boolean => {
-    // EVM address: 0x followed by 40 hex characters
     const evmPattern = /^0x[a-fA-F0-9]{40}$/;
-    // Solana address: 32-44 base58 characters
     const solPattern = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-    // Account ID: 0x followed by 64 hex characters
     const accountIdPattern = /^0x[a-fA-F0-9]{64}$/;
 
     return evmPattern.test(address) || solPattern.test(address) || accountIdPattern.test(address);
@@ -190,11 +205,9 @@ export const Positions: FC<PositionsProps> = ({
     setAddressInput(value);
     if (isValidAddress(value)) {
       if (isAccountId(value)) {
-        // If it's an account ID, populate the hidden account ID field directly
         handleAccountIdChange(value);
         setSearchedAddress('');
       } else {
-        // If it's an address, search for accounts
         setSearchedAddress(value);
       }
     } else {
@@ -414,7 +427,7 @@ export const Positions: FC<PositionsProps> = ({
   );
 
   const table = useReactTable<PositionEntry>({
-    data: displayData?.rows ?? [],
+    data: filteredData?.rows ?? [],
     columns,
     state: {
       pagination
@@ -435,7 +448,7 @@ export const Positions: FC<PositionsProps> = ({
   };
 
   const currentPage = Math.floor((queryParams.offset || 0) / (queryParams.limit || 30)) + 1;
-  const hasMoreData = displayData?.rows.length === (queryParams.limit || 30);
+  const hasMoreData = filteredData?.rows.length === (queryParams.limit || 30);
 
   if (error) {
     return (
@@ -452,7 +465,7 @@ export const Positions: FC<PositionsProps> = ({
         <button
           className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handlePageChange(0)}
-          disabled={!displayData || (queryParams.offset || 0) <= 0}
+          disabled={!filteredData || (queryParams.offset || 0) <= 0}
         >
           <DoubleArrowLeftIcon className="h-4 w-4" />
         </button>
@@ -461,14 +474,14 @@ export const Positions: FC<PositionsProps> = ({
           onClick={() =>
             handlePageChange(Math.max(0, (queryParams.offset || 0) - (queryParams.limit || 30)))
           }
-          disabled={!displayData || (queryParams.offset || 0) <= 0}
+          disabled={!filteredData || (queryParams.offset || 0) <= 0}
         >
           <ChevronLeftIcon className="h-4 w-4" />
         </button>
         <button
           className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => handlePageChange((queryParams.offset || 0) + (queryParams.limit || 30))}
-          disabled={!displayData || !hasMoreData}
+          disabled={!filteredData || !hasMoreData}
         >
           <ChevronRightIcon className="h-4 w-4" />
         </button>
@@ -622,16 +635,34 @@ export const Positions: FC<PositionsProps> = ({
 
       {/* Table Section */}
       <div className="card">
-        {!displayData ? (
+        {!filteredData ? (
           <div className="flex justify-center py-12 w-full">
             <Spinner size="2.5rem" />
           </div>
-        ) : displayData.rows.length === 0 ? (
+        ) : filteredData.rows.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <p>No positions found for the selected criteria.</p>
           </div>
         ) : (
           <div className="space-y-2">
+            {/* Closed Positions Filter */}
+            {hasClosedPositions && (
+              <div className="flex justify-start pb-0! p-3 sm:p-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    id="show-closed-positions"
+                    type="checkbox"
+                    checked={showClosedPositions}
+                    onChange={(e) => setShowClosedPositions(e.target.checked)}
+                    className="rounded"
+                  />
+                  <label htmlFor="show-closed-positions" className="text-sm font-medium text-white">
+                    Show closed positions
+                  </label>
+                </div>
+              </div>
+            )}
+
             {/* Column Filters */}
             <div className="flex justify-start pb-0! p-3 sm:p-4">
               <Popover.Root>
