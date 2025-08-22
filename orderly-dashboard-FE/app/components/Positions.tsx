@@ -38,12 +38,12 @@ const defaultVisibility = {
   broker_id: false,
   symbol: true,
   holding: true,
-  total_realized_pnl: true,
+  total_realized_pnl: false,
   index_price: false,
-  mark_price: false,
+  mark_price: true,
   holding_value: true,
   opening_cost: false,
-  average_entry_price: false,
+  average_entry_price: true,
   un_realized_pnl: true
 };
 
@@ -54,12 +54,12 @@ const addressPageVisibility = {
   broker_id: false,
   symbol: true,
   holding: true,
-  total_realized_pnl: true,
+  total_realized_pnl: false,
   index_price: false,
-  mark_price: false,
+  mark_price: true,
   holding_value: true,
   opening_cost: false,
-  average_entry_price: false,
+  average_entry_price: true,
   un_realized_pnl: true
 };
 
