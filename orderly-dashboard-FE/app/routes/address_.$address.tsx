@@ -239,9 +239,9 @@ export const Address: FC = () => {
     }
 
     return (
-      <div className="p-4 sm:p-6 max-w-full">
+      <>
         <h2 className="text-2xl font-bold text-white mb-2 mx-2 md:mx-4">Positions</h2>
-        <p className="text-gray-300 mb-6 mx-2 md:mx-4">
+        <p className="text-gray-300 mb-6 mx-2 md:mx-4 max-w-2xl">
           Current positions for this account. Shows current position data for each symbol, including
           closed positions. Realized PnL is aggregated across all historical positions for each
           symbol. Currently only supports sorting by holding value. Date information not yet
@@ -253,7 +253,7 @@ export const Address: FC = () => {
           hideTitle={true}
           hideQuickActions={true}
         />
-      </div>
+      </>
     );
   };
 
