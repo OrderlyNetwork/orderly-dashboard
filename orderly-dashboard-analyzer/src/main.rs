@@ -37,7 +37,6 @@ fn init_log() {
 }
 
 fn start_analyze_job(config: AnalyzerConfig, tx: tokio::sync::mpsc::Sender<String>) {
-    tracing::info!(target:ORDERLY_DASHBOARD_ANALYZER,"config loaded: {:?}",config);
     start_analyzer_trade_job(
         config.pull_interval,
         config.indexer_address.clone(),
@@ -81,6 +80,7 @@ async fn main() -> std::io::Result<()> {
         std::fs::read_to_string(&opts.config_path).expect("missing_common_config_file");
     let config: AnalyzerConfig =
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
+    tracing::info!(target: ORDERLY_DASHBOARD_ANALYZER,"config loaded: {:?}",config);
     init_database_url(get_database_credentials());
     orderly_dashboard_indexer::runtime::init_pool_workers_num(2);
     let port = config.server_port;
@@ -89,8 +89,11 @@ async fn main() -> std::io::Result<()> {
     let (tx, rx) = tokio::sync::mpsc::channel::<String>(10_000);
     start_analyze_job(config.clone(), tx);
     start_sync_brokers(sync_broker_url);
-    update_market_infos_task(config.base_url.clone());
-    orderly_dashboard_indexer::runtime::spawn_future(sync_account_handler(rx, config.base_url));
+    update_market_infos_task(config.be_api_base_url.clone());
+    orderly_dashboard_indexer::runtime::spawn_future(sync_account_handler(
+        rx,
+        config.be_api_base_url,
+    ));
     HttpServer::new(|| App::new().service(health).service(status))
         .bind(("0.0.0.0", port))?
         .run()
