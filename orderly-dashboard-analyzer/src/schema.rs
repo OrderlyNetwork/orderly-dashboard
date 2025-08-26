@@ -20,6 +20,21 @@ diesel::table! {
 }
 
 diesel::table! {
+    collateral_info (token) {
+        token -> Text,
+        token_hash -> Text,
+        decimals -> Int2,
+        minimum_withdraw_amount -> Numeric,
+        base_weight -> Numeric,
+        discount_factor -> Nullable<Numeric>,
+        haircut -> Numeric,
+        user_max_qty -> Numeric,
+        is_collateral -> Bool,
+        update_time -> Timestamp,
+    }
+}
+
+diesel::table! {
     hourly_gas_fee (event_type, block_hour) {
         block_hour -> Timestamp,
         gas_fee -> Numeric,
@@ -47,7 +62,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    hourly_orderly_token (token, block_hour) {
+    hourly_orderly_token (token, block_hour, chain_id) {
         token -> Text,
         block_hour -> Timestamp,
         chain_id -> Text,
@@ -55,6 +70,18 @@ diesel::table! {
         withdraw_count -> Int8,
         deposit_amount -> Numeric,
         deposit_count -> Int8,
+        pulled_block_height -> Int8,
+        pulled_block_time -> Timestamp,
+    }
+}
+
+diesel::table! {
+    hourly_user_fee_distribution (account_id, block_hour, token) {
+        account_id -> Text,
+        token -> Text,
+        block_hour -> Timestamp,
+        net_amount -> Numeric,
+        net_count -> Int8,
         pulled_block_height -> Int8,
         pulled_block_time -> Timestamp,
     }
@@ -73,6 +100,19 @@ diesel::table! {
         latest_sum_unitary_funding -> Numeric,
         liquidation_amount -> Numeric,
         liquidation_count -> Int8,
+        pulled_block_height -> Int8,
+        pulled_block_time -> Timestamp,
+    }
+}
+
+diesel::table! {
+    hourly_user_swap_result_uploaded (account_id, block_hour, token, chain_id) {
+        account_id -> Text,
+        token -> Text,
+        block_hour -> Timestamp,
+        chain_id -> Text,
+        net_amount -> Numeric,
+        net_count -> Int8,
         pulled_block_height -> Int8,
         pulled_block_time -> Timestamp,
     }
@@ -144,6 +184,16 @@ diesel::table! {
 }
 
 diesel::table! {
+    user_balance_summary (account_id, token) {
+        account_id -> Text,
+        token -> Text,
+        balance -> Numeric,
+        pulled_block_height -> Int8,
+        pulled_block_time -> Timestamp,
+    }
+}
+
+diesel::table! {
     user_info (account_id) {
         account_id -> Text,
         broker_id -> Text,
@@ -190,15 +240,19 @@ diesel::table! {
 diesel::allow_tables_to_appear_in_same_query!(
     block_summary,
     broker_info,
+    collateral_info,
     hourly_gas_fee,
     hourly_orderly_perp,
     hourly_orderly_token,
+    hourly_user_fee_distribution,
     hourly_user_perp,
+    hourly_user_swap_result_uploaded,
     hourly_user_token,
     market_info,
     orderly_perp_summary,
     orderly_token_summary,
     symbols,
+    user_balance_summary,
     user_info,
     user_perp_summary,
     user_token_summary,

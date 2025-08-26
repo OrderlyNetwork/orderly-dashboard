@@ -8,6 +8,7 @@ use actix_web::{get, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
 use orderly_dashboard_analyzer::sync_broker::start_sync_brokers;
 use serde_json::json;
+use sync_backend_data::supported_collaterall::update_collecteral_infos_task;
 use sync_market_data::update_market_infos_task;
 
 use crate::analyzer::analyzer_job::start_analyzer_trade_job;
@@ -22,6 +23,7 @@ mod config;
 mod db;
 mod schema;
 pub mod sync_account;
+pub mod sync_backend_data;
 mod sync_broker;
 pub mod sync_market_data;
 
@@ -90,6 +92,7 @@ async fn main() -> std::io::Result<()> {
     start_analyze_job(config.clone(), tx);
     start_sync_brokers(sync_broker_url);
     update_market_infos_task(config.be_api_base_url.clone());
+    update_collecteral_infos_task(config.be_api_base_url.clone());
     orderly_dashboard_indexer::runtime::spawn_future(sync_account_handler(
         rx,
         config.be_api_base_url,
