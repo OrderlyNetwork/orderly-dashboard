@@ -10,6 +10,7 @@ use once_cell::sync::{Lazy, OnceCell};
 
 pub mod block_summary;
 pub mod broker_info;
+pub mod collateral_info;
 pub mod hourly_gas_fee;
 pub mod hourly_orderly_perp;
 pub mod hourly_orderly_token;

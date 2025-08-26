@@ -38,6 +38,35 @@ pub struct MarketDataInfo {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct CollecteralInfos {
+    pub rows: Vec<CollecteralInfo>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct CollecteralInfo {
+    pub token: String,
+    pub token_hash: String,
+    pub decimals: u8,
+    pub minimum_withdraw_amount: Value,
+    pub base_weight: Value,
+    pub discount_factor: Option<Value>,
+    pub haircut: Value,
+    pub user_max_qty: Value,
+    pub is_collateral: bool,
+    pub chain_details: Vec<CollecteralChainDetail>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+pub struct CollecteralChainDetail {
+    pub chain_id: String,
+    pub contract_address: String,
+    pub decimals: u8,
+    pub withdrawal_fee: Value,
+    pub cross_chain_withdrawal_fee: Value,
+    pub display_name: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct CefiAccountInfo {
     pub address: String,
     pub broker_id: String,
@@ -87,6 +116,26 @@ async fn _get_account_info(base_url: &str, account_id: &str) -> anyhow::Result<S
     }
 }
 
+pub async fn list_collecteral_infos(
+    base_url: &str,
+) -> anyhow::Result<ResponseData<CollecteralInfos>> {
+    let res = get_collecteral_infos(base_url).await?;
+
+    let response_data: ResponseData<CollecteralInfos> = serde_json::from_str(&res)?;
+    Ok(response_data)
+}
+
+async fn get_collecteral_infos(base_url: &str) -> anyhow::Result<String> {
+    let response = reqwest::get(format!("{}/v1/public/token", base_url)).await;
+    match response {
+        Ok(res) => Ok(res.text().await?),
+        Err(err) => Err(anyhow::anyhow!(
+            "reqwest get_collecteral_infos faield with err: {:?}",
+            err
+        )),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -108,5 +157,14 @@ mod tests {
         .await
         .unwrap();
         println!("account info: {:?}", res);
+    }
+
+    #[ignore]
+    #[actix_web::test]
+    async fn test_list_collecteral_info() {
+        let res = list_collecteral_infos("https://api.orderly.org")
+            .await
+            .unwrap();
+        println!("list_collecteral_info: {:?}", res);
     }
 }

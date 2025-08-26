@@ -7,4 +7,5 @@ pub mod client;
 pub mod config;
 pub mod db;
 pub mod schema;
+pub mod sync_backend_data;
 pub mod sync_broker;

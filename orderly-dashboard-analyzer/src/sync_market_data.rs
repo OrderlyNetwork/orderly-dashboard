@@ -14,8 +14,9 @@ pub fn update_market_infos_task(base_url: String) {
         loop {
             if let Err(err) = upsert_market_infos(&base_url).await {
                 tracing::warn!("upsert_market_infos failed with err: {}", err);
+                tokio::time::sleep(Duration::from_secs(30)).await;
             } else {
-                tokio::time::sleep(Duration::from_secs(5)).await;
+                tokio::time::sleep(Duration::from_secs(60)).await;
             }
         }
         #[allow(unreachable_code)]
