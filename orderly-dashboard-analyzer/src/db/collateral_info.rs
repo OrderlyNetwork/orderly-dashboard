@@ -73,6 +73,28 @@ pub async fn create_or_update_collateral_infos(
     Ok(())
 }
 
+pub async fn find_collateral_info_by_hash(
+    token_hash_: String,
+) -> anyhow::Result<Option<DBCollateralInfo>> {
+    use crate::schema::collateral_info::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let select_result = collateral_info
+        .filter(token_hash.eq(token_hash_))
+        .first::<DBCollateralInfo>(&mut conn)
+        .await;
+
+    match select_result {
+        Ok(collateral_data) => Ok(Some(collateral_data)),
+        Err(error) => match error {
+            diesel::NotFound => Ok(None),
+            _ => Err(anyhow::anyhow!(
+                "find_collateral_info_by_hash execute err: {}",
+                error
+            )),
+        },
+    }
+}
+
 #[cfg(test)]
 mod tests {
     fn init_log() {
