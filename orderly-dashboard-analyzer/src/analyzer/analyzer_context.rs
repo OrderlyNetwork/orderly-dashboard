@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use chrono::NaiveDateTime;
 
+use crate::db::collateral_info::{find_collateral_info_by_hash, DBCollateralInfo};
 use crate::db::hourly_orderly_perp::{
     create_or_update_hourly_orderly_perp, find_hourly_orderly_perp, HourlyOrderlyPerp,
     HourlyOrderlyPerpKey,
@@ -45,6 +46,7 @@ pub struct AnalyzeContext {
 
     #[allow(dead_code)]
     symbol_cache: HashMap<String, String>,
+    pub collecteral_info: HashMap<String, DBCollateralInfo>,
 }
 
 impl AnalyzeContext {
@@ -59,6 +61,7 @@ impl AnalyzeContext {
             orderly_token_cache: HashMap::new(),
             user_token_cache: HashMap::new(),
             symbol_cache: HashMap::new(),
+            collecteral_info: HashMap::new(),
         }
     }
 
@@ -304,5 +307,18 @@ impl AnalyzeContext {
             self.user_perp_cache.insert(perp_key.clone(), saved_summary);
         }
         self.user_perp_cache.get_mut(&perp_key.clone()).unwrap()
+    }
+
+    pub async fn get_collecteral_info(
+        &mut self,
+        token_hash: &str,
+    ) -> Option<&mut DBCollateralInfo> {
+        if !self.collecteral_info.contains_key(token_hash) {
+            let collecteral_info = find_collateral_info_by_hash(token_hash.to_string()).await;
+            if let Ok(Some(data)) = collecteral_info {
+                self.collecteral_info.insert(token_hash.to_string(), data);
+            }
+        }
+        self.collecteral_info.get_mut(token_hash)
     }
 }

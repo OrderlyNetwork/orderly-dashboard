@@ -29,7 +29,11 @@ pub async fn analyzer_transaction(
 ) {
     tracing::info!(target:TRANSACTION_ANALYZER,"receive {:?} - account:{},amount:{}",side.clone(),account_id.clone(),token_amount.clone());
     let token_amo: BigDecimal = token_amount.clone().parse().unwrap();
-    let fixed_amount = token_amo.div(get_cost_position_prec());
+    let fixed_amount = if let Some(collecteral) = context.get_collecteral_info(&token_hash).await {
+        token_amo.div(BigDecimal::from(10_u128.pow(collecteral.decimals as u32)))
+    } else {
+        token_amo.div(get_cost_position_prec())
+    };
 
     let deposit;
     match side {
