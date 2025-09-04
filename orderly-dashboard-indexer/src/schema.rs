@@ -25,11 +25,13 @@ diesel::table! {
         log_index -> Int4,
         transaction_id -> Text,
         block_time -> Numeric,
-        account_id -> Text,
+        from_account_id -> Text,
+        to_account_id -> Text,
         amount -> Numeric,
         token_hash -> Text,
         is_from_account_id -> Bool,
         transfer_type -> Int2,
+        transfer_id -> Numeric,
     }
 }
 

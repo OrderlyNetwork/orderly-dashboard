@@ -639,7 +639,12 @@
         "internalType": "struct EventTypes.BalanceTransfer",
         "components": [
           {
-            "name": "accountId",
+            "name": "fromAccountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "toAccountId",
             "type": "bytes32",
             "internalType": "bytes32"
           },
@@ -662,6 +667,11 @@
             "name": "transferType",
             "type": "uint8",
             "internalType": "uint8"
+          },
+          {
+            "name": "transferId",
+            "type": "uint256",
+            "internalType": "uint256"
           }
         ]
       },
@@ -1672,6 +1682,42 @@
   },
   {
     "type": "function",
+    "name": "getBalanceTransferState",
+    "inputs": [
+      {
+        "name": "transferId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct EventTypes.InternalTransferTrack",
+        "components": [
+          {
+            "name": "side",
+            "type": "uint8",
+            "internalType": "enum EventTypes.TransferSide"
+          },
+          {
+            "name": "tokenHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "amount",
+            "type": "uint128",
+            "internalType": "uint128"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getFrozenWithdrawNonce",
     "inputs": [
       {
@@ -1683,6 +1729,78 @@
         "name": "withdrawNonce",
         "type": "uint64",
         "internalType": "uint64"
+      },
+      {
+        "name": "tokenHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserEscrowBalance",
+    "inputs": [
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserTokenBalance",
+    "inputs": [
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "int128",
+        "internalType": "int128"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUserTotalFrozenBalance",
+    "inputs": [
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "tokenHash",
@@ -2950,9 +3068,21 @@
         "internalType": "uint64"
       },
       {
-        "name": "accountId",
-        "type": "bytes32",
+        "name": "transferId",
+        "type": "uint256",
         "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "fromAccountId",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "toAccountId",
+        "type": "bytes32",
+        "indexed": false,
         "internalType": "bytes32"
       },
       {
@@ -3248,6 +3378,43 @@
         "type": "bytes32",
         "indexed": false,
         "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "InternalTransferFinalised",
+    "inputs": [
+      {
+        "name": "eventId",
+        "type": "uint64",
+        "indexed": true,
+        "internalType": "uint64"
+      },
+      {
+        "name": "transferId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "toAccountId",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tokenHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
       }
     ],
     "anonymous": false
@@ -4163,6 +4330,22 @@
     "inputs": [
       {
         "name": "balance",
+        "type": "int128",
+        "internalType": "int128"
+      },
+      {
+        "name": "withdrawAmount",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "WithdrawEscrowBalanceNotEnough",
+    "inputs": [
+      {
+        "name": "availableBalance",
         "type": "int128",
         "internalType": "int128"
       },

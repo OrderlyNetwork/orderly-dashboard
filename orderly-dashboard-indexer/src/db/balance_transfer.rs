@@ -5,6 +5,20 @@ use bigdecimal::BigDecimal;
 use diesel::{Insertable, Queryable};
 use diesel_async::RunQueryDsl;
 
+/*
+        block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        transaction_id -> Text,
+        block_time -> Numeric,
+        from_account_id -> Text,
+        to_account_id -> Text,
+        amount -> Numeric,
+        token_hash -> Text,
+        is_from_account_id -> Bool,
+        transfer_type -> Int2,
+        transfer_id -> Numeric,
+*/
 #[derive(Insertable, Queryable, Debug)]
 #[diesel(table_name = balance_transfer)]
 pub struct DbBalanceTransferEvent {
@@ -13,11 +27,13 @@ pub struct DbBalanceTransferEvent {
     pub log_index: i32,
     pub transaction_id: String,
     pub block_time: BigDecimal,
-    pub account_id: String,
+    pub from_account_id: String,
+    pub to_account_id: String,
     pub amount: BigDecimal,
     pub token_hash: String,
     pub is_from_account_id: bool,
     pub transfer_type: i16,
+    pub transfer_id: BigDecimal,
 }
 
 pub async fn create_balance_transfer_events(
