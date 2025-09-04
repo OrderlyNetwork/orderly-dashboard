@@ -1204,11 +1204,13 @@ pub(crate) async fn handle_log(
                             log_index: log.log_index.unwrap_or_default().as_u64() as i32,
                             transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
                             block_time: (block_t.unwrap_or_default() as i64).into(),
-                            account_id: to_hex_format(&event.account_id),
+                            from_account_id: to_hex_format(&event.from_account_id),
+                            to_account_id: to_hex_format(&event.to_account_id),
                             amount: convert_amount(event.amount as i128)?,
                             token_hash: to_hex_format(&event.token_hash),
                             is_from_account_id: event.is_from_account_id,
                             transfer_type: event.transfer_type as i16,
+                            transfer_id: convert_amount(event.amount as i128)?,
                         }])
                         .await?;
                     }

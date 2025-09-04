@@ -413,10 +413,12 @@ pub mod user_ledger {
                                     kind: ::ethers::core::abi::ethabi::ParamType::Tuple(
                                         ::std::vec![
                                             ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
                                             ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
                                             ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
                                             ::ethers::core::abi::ethabi::ParamType::Bool,
                                             ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(256usize),
                                         ],
                                     ),
                                     internal_type: ::core::option::Option::Some(
@@ -1057,6 +1059,46 @@ pub mod user_ledger {
                     ],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("getBalanceTransferState"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Function {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "getBalanceTransferState",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("transferId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        256usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("uint256"),
+                                    ),
+                                },
+                            ],
+                            outputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::string::String::new(),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Tuple(
+                                        ::std::vec![
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                        ],
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned(
+                                            "struct EventTypes.InternalTransferTrack",
+                                        ),
+                                    ),
+                                },
+                            ],
+                            constant: ::core::option::Option::None,
+                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
+                        },
+                    ],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("getFrozenWithdrawNonce"),
                     ::std::vec![
                         ::ethers::core::abi::ethabi::Function {
@@ -1078,6 +1120,133 @@ pub mod user_ledger {
                                     kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
                                     internal_type: ::core::option::Option::Some(
                                         ::std::borrow::ToOwned::to_owned("uint64"),
+                                    ),
+                                },
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("tokenHash"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("bytes32"),
+                                    ),
+                                },
+                            ],
+                            outputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::string::String::new(),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        128usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("uint128"),
+                                    ),
+                                },
+                            ],
+                            constant: ::core::option::Option::None,
+                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("getUserEscrowBalance"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Function {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "getUserEscrowBalance",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("accountId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("bytes32"),
+                                    ),
+                                },
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("tokenHash"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("bytes32"),
+                                    ),
+                                },
+                            ],
+                            outputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::string::String::new(),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        128usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("uint128"),
+                                    ),
+                                },
+                            ],
+                            constant: ::core::option::Option::None,
+                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("getUserTokenBalance"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Function {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "getUserTokenBalance",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("accountId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("bytes32"),
+                                    ),
+                                },
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("tokenHash"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("bytes32"),
+                                    ),
+                                },
+                            ],
+                            outputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::string::String::new(),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("int128"),
+                                    ),
+                                },
+                            ],
+                            constant: ::core::option::Option::None,
+                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("getUserTotalFrozenBalance"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Function {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "getUserTotalFrozenBalance",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("accountId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("bytes32"),
                                     ),
                                 },
                                 ::ethers::core::abi::ethabi::Param {
@@ -2540,11 +2709,25 @@ pub mod user_ledger {
                                     indexed: true,
                                 },
                                 ::ethers::core::abi::ethabi::EventParam {
-                                    name: ::std::borrow::ToOwned::to_owned("accountId"),
+                                    name: ::std::borrow::ToOwned::to_owned("transferId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        256usize,
+                                    ),
+                                    indexed: true,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("fromAccountId"),
                                     kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
                                         32usize,
                                     ),
-                                    indexed: true,
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("toAccountId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: false,
                                 },
                                 ::ethers::core::abi::ethabi::EventParam {
                                     name: ::std::borrow::ToOwned::to_owned("amount"),
@@ -2876,6 +3059,52 @@ pub mod user_ledger {
                                     name: ::std::borrow::ToOwned::to_owned("tokenHash"),
                                     kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
                                         32usize,
+                                    ),
+                                    indexed: false,
+                                },
+                            ],
+                            anonymous: false,
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("InternalTransferFinalised"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Event {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "InternalTransferFinalised",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("eventId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                    indexed: true,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("transferId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        256usize,
+                                    ),
+                                    indexed: true,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("toAccountId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("tokenHash"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("amount"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        128usize,
                                     ),
                                     indexed: false,
                                 },
@@ -4215,6 +4444,34 @@ pub mod user_ledger {
                     ],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("WithdrawEscrowBalanceNotEnough"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::AbiError {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "WithdrawEscrowBalanceNotEnough",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("availableBalance"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("int128"),
+                                    ),
+                                },
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("withdrawAmount"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        128usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("uint128"),
+                                    ),
+                                },
+                            ],
+                        },
+                    ],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("WithdrawFeeTooLarge"),
                     ::std::vec![
                         ::ethers::core::abi::ethabi::AbiError {
@@ -4437,14 +4694,14 @@ pub mod user_ledger {
                 .method_hash([249, 122, 37, 156], (adl, event_id))
                 .expect("method not found (this should never happen)")
         }
-        ///Calls the contract's `executeBalanceTransfer` (0x972f9ad7) function
+        ///Calls the contract's `executeBalanceTransfer` (0xf83bd887) function
         pub fn execute_balance_transfer(
             &self,
             balance_transfer: BalanceTransfer,
             event_id: u64,
         ) -> ::ethers::contract::builders::ContractCall<M, ()> {
             self.0
-                .method_hash([151, 47, 154, 215], (balance_transfer, event_id))
+                .method_hash([248, 59, 216, 135], (balance_transfer, event_id))
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `executeDelegateSigner` (0x0997c228) function
@@ -4583,6 +4840,15 @@ pub mod user_ledger {
                 .method_hash([210, 5, 12, 181], (withdraw, event_id))
                 .expect("method not found (this should never happen)")
         }
+        ///Calls the contract's `getBalanceTransferState` (0x55b39141) function
+        pub fn get_balance_transfer_state(
+            &self,
+            transfer_id: ::ethers::core::types::U256,
+        ) -> ::ethers::contract::builders::ContractCall<M, InternalTransferTrack> {
+            self.0
+                .method_hash([85, 179, 145, 65], transfer_id)
+                .expect("method not found (this should never happen)")
+        }
         ///Calls the contract's `getFrozenWithdrawNonce` (0x782e97e3) function
         pub fn get_frozen_withdraw_nonce(
             &self,
@@ -4595,6 +4861,36 @@ pub mod user_ledger {
                     [120, 46, 151, 227],
                     (account_id, withdraw_nonce, token_hash),
                 )
+                .expect("method not found (this should never happen)")
+        }
+        ///Calls the contract's `getUserEscrowBalance` (0xa9d31363) function
+        pub fn get_user_escrow_balance(
+            &self,
+            account_id: [u8; 32],
+            token_hash: [u8; 32],
+        ) -> ::ethers::contract::builders::ContractCall<M, u128> {
+            self.0
+                .method_hash([169, 211, 19, 99], (account_id, token_hash))
+                .expect("method not found (this should never happen)")
+        }
+        ///Calls the contract's `getUserTokenBalance` (0x69732a98) function
+        pub fn get_user_token_balance(
+            &self,
+            account_id: [u8; 32],
+            token_hash: [u8; 32],
+        ) -> ::ethers::contract::builders::ContractCall<M, i128> {
+            self.0
+                .method_hash([105, 115, 42, 152], (account_id, token_hash))
+                .expect("method not found (this should never happen)")
+        }
+        ///Calls the contract's `getUserTotalFrozenBalance` (0x9d2aff5f) function
+        pub fn get_user_total_frozen_balance(
+            &self,
+            account_id: [u8; 32],
+            token_hash: [u8; 32],
+        ) -> ::ethers::contract::builders::ContractCall<M, u128> {
+            self.0
+                .method_hash([157, 42, 255, 95], (account_id, token_hash))
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `initialize` (0x8129fc1c) function
@@ -4936,6 +5232,16 @@ pub mod user_ledger {
             &self,
         ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, FeeDistributionFilter>
         {
+            self.0.event()
+        }
+        ///Gets the contract's `InternalTransferFinalised` event
+        pub fn internal_transfer_finalised_filter(
+            &self,
+        ) -> ::ethers::contract::builders::Event<
+            ::std::sync::Arc<M>,
+            M,
+            InternalTransferFinalisedFilter,
+        > {
             self.0.event()
         }
         ///Gets the contract's `LiquidationResult` event
@@ -5702,6 +6008,25 @@ pub mod user_ledger {
         pub balance: i128,
         pub withdraw_amount: u128,
     }
+    ///Custom Error type `WithdrawEscrowBalanceNotEnough` with signature `WithdrawEscrowBalanceNotEnough(int128,uint128)` and selector `0x700f5d9f`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthError,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[etherror(
+        name = "WithdrawEscrowBalanceNotEnough",
+        abi = "WithdrawEscrowBalanceNotEnough(int128,uint128)"
+    )]
+    pub struct WithdrawEscrowBalanceNotEnough {
+        pub available_balance: i128,
+        pub withdraw_amount: u128,
+    }
     ///Custom Error type `WithdrawFeeTooLarge` with signature `WithdrawFeeTooLarge(uint128,uint128)` and selector `0x2595b4f7`
     #[derive(
         Clone,
@@ -5839,6 +6164,7 @@ pub mod user_ledger {
         TotalSettleAmountNotMatch(TotalSettleAmountNotMatch),
         UserPerpPositionQtyZero(UserPerpPositionQtyZero),
         WithdrawBalanceNotEnough(WithdrawBalanceNotEnough),
+        WithdrawEscrowBalanceNotEnough(WithdrawEscrowBalanceNotEnough),
         WithdrawFeeTooLarge(WithdrawFeeTooLarge),
         WithdrawToAddressZero(WithdrawToAddressZero),
         WithdrawVaultBalanceNotEnough(WithdrawVaultBalanceNotEnough),
@@ -6055,6 +6381,11 @@ pub mod user_ledger {
                 return Ok(Self::WithdrawBalanceNotEnough(decoded));
             }
             if let Ok(decoded) =
+                <WithdrawEscrowBalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::WithdrawEscrowBalanceNotEnough(decoded));
+            }
+            if let Ok(decoded) =
                 <WithdrawFeeTooLarge as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::WithdrawFeeTooLarge(decoded));
@@ -6182,6 +6513,9 @@ pub mod user_ledger {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::WithdrawBalanceNotEnough(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::WithdrawEscrowBalanceNotEnough(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::WithdrawFeeTooLarge(element) => {
@@ -6381,6 +6715,10 @@ pub mod user_ledger {
                     true
                 }
                 _ if selector
+                    == <WithdrawEscrowBalanceNotEnough as ::ethers::contract::EthError>::selector() => {
+                    true
+                }
+                _ if selector
                     == <WithdrawFeeTooLarge as ::ethers::contract::EthError>::selector() => {
                     true
                 }
@@ -6461,6 +6799,9 @@ pub mod user_ledger {
                 Self::TotalSettleAmountNotMatch(element) => ::core::fmt::Display::fmt(element, f),
                 Self::UserPerpPositionQtyZero(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawBalanceNotEnough(element) => ::core::fmt::Display::fmt(element, f),
+                Self::WithdrawEscrowBalanceNotEnough(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
                 Self::WithdrawFeeTooLarge(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawToAddressZero(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawVaultBalanceNotEnough(element) => {
@@ -6696,6 +7037,11 @@ pub mod user_ledger {
     impl ::core::convert::From<WithdrawBalanceNotEnough> for user_ledgerErrors {
         fn from(value: WithdrawBalanceNotEnough) -> Self {
             Self::WithdrawBalanceNotEnough(value)
+        }
+    }
+    impl ::core::convert::From<WithdrawEscrowBalanceNotEnough> for user_ledgerErrors {
+        fn from(value: WithdrawEscrowBalanceNotEnough) -> Self {
+            Self::WithdrawEscrowBalanceNotEnough(value)
         }
     }
     impl ::core::convert::From<WithdrawFeeTooLarge> for user_ledgerErrors {
@@ -7210,13 +7556,15 @@ pub mod user_ledger {
     )]
     #[ethevent(
         name = "BalanceTransfer",
-        abi = "BalanceTransfer(uint64,bytes32,uint128,bytes32,bool,uint8)"
+        abi = "BalanceTransfer(uint64,uint256,bytes32,bytes32,uint128,bytes32,bool,uint8)"
     )]
     pub struct BalanceTransferFilter {
         #[ethevent(indexed)]
         pub event_id: u64,
         #[ethevent(indexed)]
-        pub account_id: [u8; 32],
+        pub transfer_id: ::ethers::core::types::U256,
+        pub from_account_id: [u8; 32],
+        pub to_account_id: [u8; 32],
         pub amount: u128,
         pub token_hash: [u8; 32],
         pub is_from_account_id: bool,
@@ -7435,6 +7783,29 @@ pub mod user_ledger {
         pub to_account_id: [u8; 32],
         pub amount: u128,
         pub token_hash: [u8; 32],
+    }
+    #[derive(
+        Clone,
+        ::ethers::contract::EthEvent,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethevent(
+        name = "InternalTransferFinalised",
+        abi = "InternalTransferFinalised(uint64,uint256,bytes32,bytes32,uint128)"
+    )]
+    pub struct InternalTransferFinalisedFilter {
+        #[ethevent(indexed)]
+        pub event_id: u64,
+        #[ethevent(indexed)]
+        pub transfer_id: ::ethers::core::types::U256,
+        pub to_account_id: [u8; 32],
+        pub token_hash: [u8; 32],
+        pub amount: u128,
     }
     #[derive(
         Clone,
@@ -7719,6 +8090,7 @@ pub mod user_ledger {
         ChangeVaultManagerFilter(ChangeVaultManagerFilter),
         DelegateSignerFilter(DelegateSignerFilter),
         FeeDistributionFilter(FeeDistributionFilter),
+        InternalTransferFinalisedFilter(InternalTransferFinalisedFilter),
         LiquidationResultFilter(LiquidationResultFilter),
         LiquidationResultV2Filter(LiquidationResultV2Filter),
         LiquidationTransferFilter(LiquidationTransferFilter),
@@ -7824,6 +8196,9 @@ pub mod user_ledger {
             if let Ok(decoded) = FeeDistributionFilter::decode_log(log) {
                 return Ok(user_ledgerEvents::FeeDistributionFilter(decoded));
             }
+            if let Ok(decoded) = InternalTransferFinalisedFilter::decode_log(log) {
+                return Ok(user_ledgerEvents::InternalTransferFinalisedFilter(decoded));
+            }
             if let Ok(decoded) = LiquidationResultFilter::decode_log(log) {
                 return Ok(user_ledgerEvents::LiquidationResultFilter(decoded));
             }
@@ -7908,6 +8283,9 @@ pub mod user_ledger {
                 Self::ChangeVaultManagerFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::DelegateSignerFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::FeeDistributionFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::InternalTransferFinalisedFilter(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
                 Self::LiquidationResultFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::LiquidationResultV2Filter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::LiquidationTransferFilter(element) => ::core::fmt::Display::fmt(element, f),
@@ -8073,6 +8451,11 @@ pub mod user_ledger {
     impl ::core::convert::From<FeeDistributionFilter> for user_ledgerEvents {
         fn from(value: FeeDistributionFilter) -> Self {
             Self::FeeDistributionFilter(value)
+        }
+    }
+    impl ::core::convert::From<InternalTransferFinalisedFilter> for user_ledgerEvents {
+        fn from(value: InternalTransferFinalisedFilter) -> Self {
+            Self::InternalTransferFinalisedFilter(value)
         }
     }
     impl ::core::convert::From<LiquidationResultFilter> for user_ledgerEvents {
@@ -8270,7 +8653,7 @@ pub mod user_ledger {
         pub adl: AdlV2,
         pub event_id: u64,
     }
-    ///Container type for all input parameters for the `executeBalanceTransfer` function with signature `executeBalanceTransfer((bytes32,uint128,bytes32,bool,uint8),uint64)` and selector `0x972f9ad7`
+    ///Container type for all input parameters for the `executeBalanceTransfer` function with signature `executeBalanceTransfer((bytes32,bytes32,uint128,bytes32,bool,uint8,uint256),uint64)` and selector `0xf83bd887`
     #[derive(
         Clone,
         ::ethers::contract::EthCall,
@@ -8283,7 +8666,7 @@ pub mod user_ledger {
     )]
     #[ethcall(
         name = "executeBalanceTransfer",
-        abi = "executeBalanceTransfer((bytes32,uint128,bytes32,bool,uint8),uint64)"
+        abi = "executeBalanceTransfer((bytes32,bytes32,uint128,bytes32,bool,uint8,uint256),uint64)"
     )]
     pub struct ExecuteBalanceTransferCall {
         pub balance_transfer: BalanceTransfer,
@@ -8533,6 +8916,24 @@ pub mod user_ledger {
         pub withdraw: WithdrawDataSol,
         pub event_id: u64,
     }
+    ///Container type for all input parameters for the `getBalanceTransferState` function with signature `getBalanceTransferState(uint256)` and selector `0x55b39141`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(
+        name = "getBalanceTransferState",
+        abi = "getBalanceTransferState(uint256)"
+    )]
+    pub struct GetBalanceTransferStateCall {
+        pub transfer_id: ::ethers::core::types::U256,
+    }
     ///Container type for all input parameters for the `getFrozenWithdrawNonce` function with signature `getFrozenWithdrawNonce(bytes32,uint64,bytes32)` and selector `0x782e97e3`
     #[derive(
         Clone,
@@ -8551,6 +8952,63 @@ pub mod user_ledger {
     pub struct GetFrozenWithdrawNonceCall {
         pub account_id: [u8; 32],
         pub withdraw_nonce: u64,
+        pub token_hash: [u8; 32],
+    }
+    ///Container type for all input parameters for the `getUserEscrowBalance` function with signature `getUserEscrowBalance(bytes32,bytes32)` and selector `0xa9d31363`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(
+        name = "getUserEscrowBalance",
+        abi = "getUserEscrowBalance(bytes32,bytes32)"
+    )]
+    pub struct GetUserEscrowBalanceCall {
+        pub account_id: [u8; 32],
+        pub token_hash: [u8; 32],
+    }
+    ///Container type for all input parameters for the `getUserTokenBalance` function with signature `getUserTokenBalance(bytes32,bytes32)` and selector `0x69732a98`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(
+        name = "getUserTokenBalance",
+        abi = "getUserTokenBalance(bytes32,bytes32)"
+    )]
+    pub struct GetUserTokenBalanceCall {
+        pub account_id: [u8; 32],
+        pub token_hash: [u8; 32],
+    }
+    ///Container type for all input parameters for the `getUserTotalFrozenBalance` function with signature `getUserTotalFrozenBalance(bytes32,bytes32)` and selector `0x9d2aff5f`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(
+        name = "getUserTotalFrozenBalance",
+        abi = "getUserTotalFrozenBalance(bytes32,bytes32)"
+    )]
+    pub struct GetUserTotalFrozenBalanceCall {
+        pub account_id: [u8; 32],
         pub token_hash: [u8; 32],
     }
     ///Container type for all input parameters for the `initialize` function with signature `initialize()` and selector `0x8129fc1c`
@@ -8784,7 +9242,11 @@ pub mod user_ledger {
         ExecuteWithdraw2Contract(ExecuteWithdraw2ContractCall),
         ExecuteWithdrawAction(ExecuteWithdrawActionCall),
         ExecuteWithdrawSolAction(ExecuteWithdrawSolActionCall),
+        GetBalanceTransferState(GetBalanceTransferStateCall),
         GetFrozenWithdrawNonce(GetFrozenWithdrawNonceCall),
+        GetUserEscrowBalance(GetUserEscrowBalanceCall),
+        GetUserTokenBalance(GetUserTokenBalanceCall),
+        GetUserTotalFrozenBalance(GetUserTotalFrozenBalanceCall),
         Initialize(InitializeCall),
         RebalanceBurnFinish(RebalanceBurnFinishCall),
         RebalanceMintFinish(RebalanceMintFinishCall),
@@ -8919,9 +9381,29 @@ pub mod user_ledger {
                 return Ok(Self::ExecuteWithdrawSolAction(decoded));
             }
             if let Ok(decoded) =
+                <GetBalanceTransferStateCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::GetBalanceTransferState(decoded));
+            }
+            if let Ok(decoded) =
                 <GetFrozenWithdrawNonceCall as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::GetFrozenWithdrawNonce(decoded));
+            }
+            if let Ok(decoded) =
+                <GetUserEscrowBalanceCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::GetUserEscrowBalance(decoded));
+            }
+            if let Ok(decoded) =
+                <GetUserTokenBalanceCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::GetUserTokenBalance(decoded));
+            }
+            if let Ok(decoded) =
+                <GetUserTotalFrozenBalanceCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::GetUserTotalFrozenBalance(decoded));
             }
             if let Ok(decoded) = <InitializeCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Initialize(decoded));
@@ -9050,7 +9532,19 @@ pub mod user_ledger {
                 Self::ExecuteWithdrawSolAction(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
+                Self::GetBalanceTransferState(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
                 Self::GetFrozenWithdrawNonce(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::GetUserEscrowBalance(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::GetUserTokenBalance(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::GetUserTotalFrozenBalance(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::Initialize(element) => ::ethers::core::abi::AbiEncode::encode(element),
@@ -9113,7 +9607,11 @@ pub mod user_ledger {
                 Self::ExecuteWithdraw2Contract(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ExecuteWithdrawAction(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ExecuteWithdrawSolAction(element) => ::core::fmt::Display::fmt(element, f),
+                Self::GetBalanceTransferState(element) => ::core::fmt::Display::fmt(element, f),
                 Self::GetFrozenWithdrawNonce(element) => ::core::fmt::Display::fmt(element, f),
+                Self::GetUserEscrowBalance(element) => ::core::fmt::Display::fmt(element, f),
+                Self::GetUserTokenBalance(element) => ::core::fmt::Display::fmt(element, f),
+                Self::GetUserTotalFrozenBalance(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Initialize(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceBurnFinish(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceMintFinish(element) => ::core::fmt::Display::fmt(element, f),
@@ -9245,9 +9743,29 @@ pub mod user_ledger {
             Self::ExecuteWithdrawSolAction(value)
         }
     }
+    impl ::core::convert::From<GetBalanceTransferStateCall> for user_ledgerCalls {
+        fn from(value: GetBalanceTransferStateCall) -> Self {
+            Self::GetBalanceTransferState(value)
+        }
+    }
     impl ::core::convert::From<GetFrozenWithdrawNonceCall> for user_ledgerCalls {
         fn from(value: GetFrozenWithdrawNonceCall) -> Self {
             Self::GetFrozenWithdrawNonce(value)
+        }
+    }
+    impl ::core::convert::From<GetUserEscrowBalanceCall> for user_ledgerCalls {
+        fn from(value: GetUserEscrowBalanceCall) -> Self {
+            Self::GetUserEscrowBalance(value)
+        }
+    }
+    impl ::core::convert::From<GetUserTokenBalanceCall> for user_ledgerCalls {
+        fn from(value: GetUserTokenBalanceCall) -> Self {
+            Self::GetUserTokenBalance(value)
+        }
+    }
+    impl ::core::convert::From<GetUserTotalFrozenBalanceCall> for user_ledgerCalls {
+        fn from(value: GetUserTotalFrozenBalanceCall) -> Self {
+            Self::GetUserTotalFrozenBalance(value)
         }
     }
     impl ::core::convert::From<InitializeCall> for user_ledgerCalls {
@@ -9339,6 +9857,18 @@ pub mod user_ledger {
         Hash,
     )]
     pub struct BatchGetUserLedgerWithTokensReturn(pub ::std::vec::Vec<AccountSnapshot>);
+    ///Container type for all return fields from the `getBalanceTransferState` function with signature `getBalanceTransferState(uint256)` and selector `0x55b39141`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct GetBalanceTransferStateReturn(pub InternalTransferTrack);
     ///Container type for all return fields from the `getFrozenWithdrawNonce` function with signature `getFrozenWithdrawNonce(bytes32,uint64,bytes32)` and selector `0x782e97e3`
     #[derive(
         Clone,
@@ -9351,6 +9881,42 @@ pub mod user_ledger {
         Hash,
     )]
     pub struct GetFrozenWithdrawNonceReturn(pub u128);
+    ///Container type for all return fields from the `getUserEscrowBalance` function with signature `getUserEscrowBalance(bytes32,bytes32)` and selector `0xa9d31363`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct GetUserEscrowBalanceReturn(pub u128);
+    ///Container type for all return fields from the `getUserTokenBalance` function with signature `getUserTokenBalance(bytes32,bytes32)` and selector `0x69732a98`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct GetUserTokenBalanceReturn(pub i128);
+    ///Container type for all return fields from the `getUserTotalFrozenBalance` function with signature `getUserTotalFrozenBalance(bytes32,bytes32)` and selector `0x9d2aff5f`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct GetUserTotalFrozenBalanceReturn(pub u128);
     ///`AccountDeposit(bytes32,bytes32,address,bytes32,uint256,uint128,uint64)`
     #[derive(
         Clone,
@@ -9517,7 +10083,7 @@ pub mod user_ledger {
         pub timestamp: u64,
         pub is_insurance_account: bool,
     }
-    ///`BalanceTransfer(bytes32,uint128,bytes32,bool,uint8)`
+    ///`BalanceTransfer(bytes32,bytes32,uint128,bytes32,bool,uint8,uint256)`
     #[derive(
         Clone,
         ::ethers::contract::EthAbiType,
@@ -9529,11 +10095,13 @@ pub mod user_ledger {
         Hash,
     )]
     pub struct BalanceTransfer {
-        pub account_id: [u8; 32],
+        pub from_account_id: [u8; 32],
+        pub to_account_id: [u8; 32],
         pub amount: u128,
         pub token_hash: [u8; 32],
         pub is_from_account_id: bool,
         pub transfer_type: u8,
+        pub transfer_id: ::ethers::core::types::U256,
     }
     ///`DelegateSigner(address,address,bytes32,uint256)`
     #[derive(
@@ -9568,6 +10136,22 @@ pub mod user_ledger {
         pub to_account_id: [u8; 32],
         pub amount: u128,
         pub token_hash: [u8; 32],
+    }
+    ///`InternalTransferTrack(uint8,bytes32,uint128)`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct InternalTransferTrack {
+        pub side: u8,
+        pub token_hash: [u8; 32],
+        pub amount: u128,
     }
     ///`Liquidation(bytes32,bytes32,bytes32,uint128,uint64,(bytes32,bytes32,int128,int128,int128,int128,int128,uint128,int128,uint64)[])`
     #[derive(
