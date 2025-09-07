@@ -12,8 +12,9 @@ use crate::db::trading_metrics::orderly_daily_perp::{daily_gas_fee, daily_orderl
 use crate::db::trading_metrics::orderly_daily_token::get_daily_token;
 use crate::db::trading_metrics::ranking::{
     get_daily_trading_volume_ranking, get_pnl_ranking, get_token_ranking,
-    get_user_perp_holding_ranking, query_user_perp_max_symbol_holding,
-    query_user_perp_max_symbol_realized_pnl, UserSymbolSummaryRank,
+    get_user_perp_holding_ranking, query_user_perp_holding_by_address_and_opt_broker,
+    query_user_perp_max_symbol_holding, query_user_perp_max_symbol_realized_pnl,
+    UserSymbolSummaryRank,
 };
 use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
 use crate::error_code::{
@@ -721,6 +722,29 @@ pub async fn get_position_rank(
     }
     if param.limit == 0 {
         return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number should not be 0");
+    }
+    if param.account_id.is_none() {
+        if let Some(address) = &param.address {
+            // filter by address & broker id
+            return match query_user_perp_holding_by_address_and_opt_broker(
+                param.offset,
+                param.limit,
+                address.to_string(),
+                param.symbol.clone(),
+                param.broker_id.clone(),
+            )
+            .await
+            {
+                Ok(user_perp_holding) => {
+                    let user_perp_holding = user_perp_holding
+                        .into_iter()
+                        .map(Into::into)
+                        .collect::<Vec<UserSumaryRankingData>>();
+                    write_response(UserSummaryRankExtern::new(user_perp_holding))
+                }
+                Err(err) => write_failed_response(QUERY_OVER_EXECUTION_ERR, &err.to_string()),
+            };
+        }
     }
     if !param.check_account_id_valid_and_cal() {
         return write_failed_response(
