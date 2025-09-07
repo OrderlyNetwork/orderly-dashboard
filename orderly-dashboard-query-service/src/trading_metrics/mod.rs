@@ -723,6 +723,9 @@ pub async fn get_position_rank(
     if param.limit == 0 {
         return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number should not be 0");
     }
+    if let Some(address) = &param.address {
+        param.address = Some(address.to_lowercase());
+    }
     if param.account_id.is_none() {
         if let Some(address) = &param.address {
             // filter by address & broker id
