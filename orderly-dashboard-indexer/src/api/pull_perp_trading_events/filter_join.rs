@@ -552,6 +552,13 @@ pub async fn join_partitioned_perp_trades(
     from_block: i64,
     to_block: i64,
 ) -> Result<Vec<TradingEvent>> {
+    tracing::info!(
+        "join_partitioned_perp_trades from_time: {}, to_time: {}, from_block: {}, to_block: {}",
+        from_time,
+        to_time,
+        from_block,
+        to_block
+    );
     let executed_trades = query_partitioned_executed_trades(
         NaiveDateTime::from_timestamp_opt(from_time, 0)
             .ok_or_else(|| anyhow!("timestamp of from_time should be valid"))?,

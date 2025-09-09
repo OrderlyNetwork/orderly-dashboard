@@ -149,6 +149,11 @@ impl Display for CommonConfigs {
             layerzero_config.scan_url,
         )?;
         write!(f, "perp_symbols:{:?};", self.perp_symbols_config,)?;
-        write!(f, "sol_chain_config:{:?}.", self.sol_chain_config,)
+        write!(f, "sol_chain_config:{:?}.", self.sol_chain_config,)?;
+        write!(
+            f,
+            "db_query_limit: {}, option_query_from_partitioning_executed_trades: {}",
+            self.db_query_limit, self.option_query_from_partitioning_executed_trades
+        )
     }
 }

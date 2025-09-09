@@ -43,9 +43,13 @@ async fn check_and_gen_partition(
 ) -> Result<()> {
     let now = chrono::Utc::now();
     let target_date = now + Duration::from_secs(3600 * 24 * 31);
-    let target_year = target_date.year() as u64;
+    let mut target_year = target_date.year() as u64;
     // target quarter is next quater
-    let target_quarter = (target_date.month() as u64 - 1) / 3 + 2;
+    let mut target_quarter = (target_date.month() as u64 - 1) / 3 + 2;
+    if target_quarter > 4 {
+        target_quarter = target_quarter % 4;
+        target_year += 1;
+    }
     let exist_year = executed_trades_partition_cfg.created_table_quarter / 100;
     let exist_quarter = executed_trades_partition_cfg.created_table_quarter % 100;
     let differ_quarters =
@@ -171,6 +175,7 @@ fn gen_diff_table_quarters(
     mut exist_year: u64,
     mut exist_quarter: u64,
 ) -> Vec<u64> {
+    tracing::info!("gen_diff_table_quarters target_year: {}, target_quarter: {}, exist_year: {}, exist_quarter: {}", target_year, target_quarter, exist_year, exist_quarter);
     let mut results: Vec<u64> = Vec::new();
     while exist_year <= target_year {
         exist_quarter += 1;
