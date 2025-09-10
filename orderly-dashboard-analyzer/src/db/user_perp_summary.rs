@@ -9,7 +9,7 @@ use diesel_async::RunQueryDsl;
 use crate::analyzer::get_cost_position_decimal;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
-use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
+use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
 use crate::schema::user_perp_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
@@ -346,6 +346,8 @@ pub async fn create_or_update_user_perp_summary(
         return Ok(0);
     }
     use crate::schema::user_perp_summary::dsl::*;
+    let length = p_user_perp_summary_vec.len();
+    tracing::info!(target: DB_CONTEXT, "dbwrite create_or_update_user_perp_summary start length: {}", length);
 
     let mut row_nums = 0;
     let mut user_perp_summary_vec_ref = p_user_perp_summary_vec.as_slice();
@@ -448,6 +450,8 @@ pub async fn create_or_update_user_perp_summary(
             elapse_ms,
             len
         );
+    } else {
+        tracing::info!(target: DB_CONTEXT, "dbwrite create_or_update_user_perp_summary end length: {}, time cost: {:?} ms", length, elapse_ms);
     }
 
     Ok(row_nums)
