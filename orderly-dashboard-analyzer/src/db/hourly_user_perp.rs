@@ -4,7 +4,7 @@ use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 
-use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, POOL};
+use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
 use crate::schema::hourly_user_perp;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
@@ -172,11 +172,13 @@ pub async fn create_or_update_hourly_user_perp(
     if p_hourly_user_perp_vec.is_empty() {
         return Ok(0);
     }
-    use crate::schema::hourly_user_perp::dsl::*;
+
+    let length = p_hourly_user_perp_vec.len();
+    tracing::info!(target: DB_CONTEXT, "dbwrite create_or_update_hourly_user_perp start length: {}", length);
+    let inst = std::time::Instant::now();
 
     let mut row_nums = 0;
     let mut p_hourly_user_perp_vec_ref = p_hourly_user_perp_vec.as_slice();
-    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     loop {
         if p_hourly_user_perp_vec_ref.len() >= BATCH_UPSERT_LEN {
             let values1: &[&HourlyUserPerp];
@@ -188,24 +190,7 @@ pub async fn create_or_update_hourly_user_perp(
                 .map(|v| v.clone().clone())
                 .collect::<Vec<HourlyUserPerp>>();
 
-            let update_result = diesel::insert_into(hourly_user_perp)
-                .values(values1)
-                .on_conflict(on_constraint("hourly_user_perp_uq"))
-                .do_update()
-                .set((
-                    trading_fee.eq(excluded(trading_fee)),
-                    trading_volume.eq(excluded(trading_volume)),
-                    trading_count.eq(excluded(trading_count)),
-                    realized_pnl.eq(excluded(realized_pnl)),
-                    un_realized_pnl.eq(excluded(un_realized_pnl)),
-                    latest_sum_unitary_funding.eq(excluded(latest_sum_unitary_funding)),
-                    liquidation_amount.eq(excluded(liquidation_amount)),
-                    liquidation_count.eq(excluded(liquidation_count)),
-                    pulled_block_height.eq(excluded(pulled_block_height)),
-                    pulled_block_time.eq(excluded(pulled_block_time)),
-                ))
-                .execute(&mut conn)
-                .await;
+            let update_result = _create_or_update_hourly_user_perp(values1).await;
 
             match update_result {
                 Ok(len) => {
@@ -221,24 +206,7 @@ pub async fn create_or_update_hourly_user_perp(
                 .iter()
                 .map(|v| v.clone().clone())
                 .collect::<Vec<HourlyUserPerp>>();
-            let update_result = diesel::insert_into(hourly_user_perp)
-                .values(values1)
-                .on_conflict(on_constraint("hourly_user_perp_uq"))
-                .do_update()
-                .set((
-                    trading_fee.eq(excluded(trading_fee)),
-                    trading_volume.eq(excluded(trading_volume)),
-                    trading_count.eq(excluded(trading_count)),
-                    realized_pnl.eq(excluded(realized_pnl)),
-                    un_realized_pnl.eq(excluded(un_realized_pnl)),
-                    latest_sum_unitary_funding.eq(excluded(latest_sum_unitary_funding)),
-                    liquidation_amount.eq(excluded(liquidation_amount)),
-                    liquidation_count.eq(excluded(liquidation_count)),
-                    pulled_block_height.eq(excluded(pulled_block_height)),
-                    pulled_block_time.eq(excluded(pulled_block_time)),
-                ))
-                .execute(&mut conn)
-                .await;
+            let update_result = _create_or_update_hourly_user_perp(values1).await;
 
             match update_result {
                 Ok(len) => {
@@ -252,5 +220,34 @@ pub async fn create_or_update_hourly_user_perp(
         }
     }
 
+    tracing::info!(target: DB_CONTEXT, "dbwrite create_or_update_hourly_user_perp end length: {}, time cost: {:?}", length, inst.elapsed());
+
     Ok(row_nums)
+}
+
+async fn _create_or_update_hourly_user_perp(
+    hourly_user_perp_vec: Vec<HourlyUserPerp>,
+) -> Result<usize, diesel::result::Error> {
+    use crate::schema::hourly_user_perp::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
+    let update_result = diesel::insert_into(hourly_user_perp)
+        .values(hourly_user_perp_vec)
+        .on_conflict(on_constraint("hourly_user_perp_uq"))
+        .do_update()
+        .set((
+            trading_fee.eq(excluded(trading_fee)),
+            trading_volume.eq(excluded(trading_volume)),
+            trading_count.eq(excluded(trading_count)),
+            realized_pnl.eq(excluded(realized_pnl)),
+            un_realized_pnl.eq(excluded(un_realized_pnl)),
+            latest_sum_unitary_funding.eq(excluded(latest_sum_unitary_funding)),
+            liquidation_amount.eq(excluded(liquidation_amount)),
+            liquidation_count.eq(excluded(liquidation_count)),
+            pulled_block_height.eq(excluded(pulled_block_height)),
+            pulled_block_time.eq(excluded(pulled_block_time)),
+        ))
+        .execute(&mut conn)
+        .await;
+    update_result
 }
