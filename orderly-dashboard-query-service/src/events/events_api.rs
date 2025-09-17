@@ -140,80 +140,77 @@ fn now_time() -> i64 {
     Utc::now().timestamp()
 }
 
-/// Get user token/trading events informations[This api will be deprecated as it may return too manay data without pagelization, please use `/events_v2` api]
+/// Get user token/trading events informations[This api is deprecated as it may return too manay data without pagelization, please use `/events_v2` api]
 #[utoipa::path(
     responses(
         (status = 200, description = "Get Account events response on orderly", body = IndexerQueryExternResponse<AccountTradingEventsResponse>),
         (status = 1000, description = "Invalid Request")
     ),
-    params(("param" = GetAccountEventsRequest, Query, description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal enum with value \"TRANSACTION | PERPTRADE | SETTLEMENT | LIQUIDATION | ADL\". if `event_type` is not be set, this api will return all event types")),
+    params(("param" = GetAccountEventsRequest, Query, description = "")),
 )]
 #[get("/events")]
 pub async fn list_events(
-    mut param: web::Query<GetAccountEventsRequest>,
+    param: web::Query<GetAccountEventsRequest>,
 ) -> actix_web::Result<HttpResponse> {
     tracing::info!(
         target: QUERY_ACCOUNT_EVENT_CONTEXT,
         "query account events start broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?}",
         param.broker_id, param.address, param.from_time, param.to_time, param.event_type,
     );
-    let inst = Instant::now();
-    if !param.check_account_id_valid_and_cal() {
-        let resp = FailureResponse::new(
-            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR,
-            ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE.to_string(),
-        );
-        return Ok(HttpResponse::Ok().json(resp));
-    }
-    // let user_info_res = match UserInfo::try_new(param.broker_id.clone(), param.address.clone()) {
-    //     Ok(user_info_res) => user_info_res,
+    let resp = FailureResponse::new(
+        1000,
+        "This api is deprecated, please use `/events_v2` api instead".to_string(),
+    );
+    return Ok(HttpResponse::Ok().json(resp));
+    // let inst = Instant::now();
+    // if !param.check_account_id_valid_and_cal() {
+    //     let resp = FailureResponse::new(
+    //         ACCOUNT_ID_CONFLICT_OR_INVALID_ERR,
+    //         ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE.to_string(),
+    //     );
+    //     return Ok(HttpResponse::Ok().json(resp));
+    // }
+    // let elapsed_new_user = inst.elapsed().as_millis();
+
+    // let indexer_data = get_indexer_data(
+    //     param.from_time,
+    //     param.to_time,
+    //     param.account_id.clone().unwrap_or_default(),
+    //     param.event_type.as_deref().map(str::to_uppercase),
+    //     get_common_cfg().indexer_address.clone(),
+    // )
+    // .await;
+    // let elapse_get_data = inst.elapsed().as_millis() - elapsed_new_user;
+
+    // match indexer_data {
+    //     Ok(response) => {
+    //         let length = match &response {
+    //             IndexerQueryResponse::Success(sucs) => match sucs.as_data() {
+    //                 Some(data) => data.events.len(),
+    //                 None => 0 as usize,
+    //             },
+    //             _ => 0 as usize,
+    //         };
+    //         tracing::info!(
+    //             target: QUERY_ACCOUNT_EVENT_CONTEXT,
+    //             "query account events sucs account_id: {:?}, broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
+    //             param.account_id, param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis(), elapsed_new_user, elapse_get_data,
+    //         );
+    //         return Ok(HttpResponse::Ok().json(response));
+    //     }
     //     Err(err) => {
-    //         let resp =
-    //             FailureResponse::new(1000, format!("parse account_id failed with err: {}", err));
+    //         let resp = FailureResponse::new(
+    //             1000,
+    //             format!("get_indexer_data parse event_type failed with err: {}", err),
+    //         );
+    //         tracing::warn!(
+    //             target: QUERY_ACCOUNT_EVENT_CONTEXT,
+    //             "query account events failed account_id: {:?}, broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?} with err: {}, cost: {} ms",
+    //             param.account_id, param.broker_id, param.address, param.from_time, param.to_time, param.event_type, err, inst.elapsed().as_millis(),
+    //         );
     //         return Ok(HttpResponse::Ok().json(resp));
     //     }
     // };
-    let elapsed_new_user = inst.elapsed().as_millis();
-
-    let indexer_data = get_indexer_data(
-        param.from_time,
-        param.to_time,
-        param.account_id.clone().unwrap_or_default(),
-        param.event_type.as_deref().map(str::to_uppercase),
-        get_common_cfg().indexer_address.clone(),
-    )
-    .await;
-    let elapse_get_data = inst.elapsed().as_millis() - elapsed_new_user;
-
-    match indexer_data {
-        Ok(response) => {
-            let length = match &response {
-                IndexerQueryResponse::Success(sucs) => match sucs.as_data() {
-                    Some(data) => data.events.len(),
-                    None => 0 as usize,
-                },
-                _ => 0 as usize,
-            };
-            tracing::info!(
-                target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query account events sucs account_id: {:?}, broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
-                param.account_id, param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis(), elapsed_new_user, elapse_get_data,
-            );
-            return Ok(HttpResponse::Ok().json(response));
-        }
-        Err(err) => {
-            let resp = FailureResponse::new(
-                1000,
-                format!("get_indexer_data parse event_type failed with err: {}", err),
-            );
-            tracing::warn!(
-                target: QUERY_ACCOUNT_EVENT_CONTEXT,
-                "query account events failed account_id: {:?}, broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?} with err: {}, cost: {} ms",
-                param.account_id, param.broker_id, param.address, param.from_time, param.to_time, param.event_type, err, inst.elapsed().as_millis(),
-            );
-            return Ok(HttpResponse::Ok().json(resp));
-        }
-    };
 }
 
 /// Get user token/trading events informations with pagelization
@@ -428,6 +425,7 @@ pub async fn list_sol_events(
     };
 }
 
+#[allow(dead_code)]
 async fn get_indexer_data(
     from_time: i64,
     to_time: i64,
