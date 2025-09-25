@@ -1,13 +1,16 @@
 use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
+use crate::formats_external::trading_events::AccoutTradingCursor;
 use crate::schema::liquidation_transfer;
 use anyhow::Result;
 use bigdecimal::{BigDecimal, FromPrimitive};
+use diesel::dsl::sql;
 use diesel::prelude::*;
 use diesel::sql_types::Numeric;
 use diesel::QueryDsl;
 use diesel::{sql_query, ExpressionMethods};
 use diesel::{Insertable, Queryable};
 use diesel_async::RunQueryDsl;
+use num_traits::ToPrimitive;
 use std::collections::BTreeSet;
 use std::time::Instant;
 
@@ -194,21 +197,46 @@ pub async fn query_account_liquidation_transfers_by_time(
     from_time: i64,
     to_time: i64,
     account_id: String,
-    offset: Option<u32>,
-) -> Result<Vec<DbLiquidationTransfer>> {
-    if offset.unwrap_or_default() != 0 {
-        return Ok(vec![]);
-    }
+    limit: Option<u32>,
+    _offset_block_time: Option<i64>,
+    offset_block_number: Option<i64>,
+    offset_transaction_index: Option<i32>,
+    offset_log_index: Option<i32>,
+) -> Result<(Vec<DbLiquidationTransfer>, Option<AccoutTradingCursor>)> {
+    // if offset.unwrap_or_default() != 0 {
+    //     return Ok(vec![]);
+    // }
     use crate::schema::liquidation_transfer::dsl::*;
+    use diesel::sql_types::Bool;
     let start_time = Instant::now();
+    let mut cursor: Option<AccoutTradingCursor> = None;
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
-
-    let result = liquidation_transfer
-        .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
-        .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
-        .filter(liquidator_account_id.eq(account_id))
-        .load::<DbLiquidationTransfer>(&mut conn)
-        .await;
+    let result = if let Some(offset_block_number) = offset_block_number {
+        let tuple_condition = sql::<Bool>(&format!(
+            "(block_number, transaction_index, log_index) > ({}, {}, {})",
+            offset_block_number,
+            offset_transaction_index.unwrap_or_default(),
+            offset_log_index.unwrap_or_default()
+        ));
+        liquidation_transfer
+            .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
+            .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
+            .filter(liquidator_account_id.eq(account_id))
+            .filter(tuple_condition)
+            .order_by((block_number, transaction_index, log_index))
+            .limit(limit.unwrap_or_default() as i64)
+            .load::<DbLiquidationTransfer>(&mut conn)
+            .await
+    } else {
+        liquidation_transfer
+            .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
+            .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
+            .filter(liquidator_account_id.eq(account_id))
+            .order_by((block_number, transaction_index, log_index))
+            .limit(limit.unwrap_or_default() as i64)
+            .load::<DbLiquidationTransfer>(&mut conn)
+            .await
+    };
     let dur_ms = (Instant::now() - start_time).as_millis();
 
     let events = match result {
@@ -219,6 +247,20 @@ pub async fn query_account_liquidation_transfers_by_time(
                 events.len(),
                 dur_ms
             );
+            if events.len() as u32 == limit.unwrap_or_default() {
+                if let Some(last) = events.last() {
+                    cursor = Some(AccoutTradingCursor {
+                        block_time: last
+                            .block_time
+                            .clone()
+                            .map(|f| f.to_i64().unwrap_or_default())
+                            .unwrap_or_default(),
+                        block_number: last.block_number,
+                        transaction_index: last.transaction_index,
+                        log_index: last.log_index,
+                    });
+                }
+            }
             events
         }
         Err(error) => match error {
@@ -242,7 +284,34 @@ pub async fn query_account_liquidation_transfers_by_time(
         },
     };
 
-    Ok(events)
+    Ok((events, cursor))
+}
+
+pub async fn query_account_liquidation_transfers_count_by_time(
+    from_time: i64,
+    to_time: i64,
+    account_id: String,
+) -> Result<i64> {
+    use crate::schema::liquidation_transfer::dsl::*;
+    let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let count = liquidation_transfer
+        .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
+        .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
+        .filter(liquidator_account_id.eq(account_id))
+        .count()
+        .get_result::<i64>(&mut conn)
+        .await?;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_account_liquidation_transfers_count_by_time success. count:{}, used time:{} ms",
+        count,
+        dur_ms
+    );
+
+    Ok(count)
 }
 
 pub async fn query_account_liquidation_transfers_by_time_and_result_keys(

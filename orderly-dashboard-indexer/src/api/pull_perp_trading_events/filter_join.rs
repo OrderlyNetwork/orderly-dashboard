@@ -13,7 +13,8 @@ use crate::db::liquidation_result::{
 };
 use crate::db::liquidation_transfer::{
     query_account_liquidation_transfers_by_time,
-    query_account_liquidation_transfers_by_time_and_result_keys, query_liquidation_transfers,
+    query_account_liquidation_transfers_by_time_and_result_keys,
+    query_account_liquidation_transfers_count_by_time, query_liquidation_transfers,
     query_liquidation_transfers_with_time, DbLiquidationTransfer,
 };
 
@@ -24,8 +25,9 @@ use crate::db::serial_batches::{
 };
 use crate::db::settings::{get_sol_sync_block_time, get_sol_sync_signature};
 use crate::db::settlement_execution::{
-    query_account_settlement_executions, query_settlement_executions,
-    query_settlement_executions_with_time, DbSettlementExecution, DbSettlementExecutionView,
+    query_account_settlement_executions, query_account_settlement_executions_count,
+    query_settlement_executions, query_settlement_executions_with_time, DbSettlementExecution,
+    DbSettlementExecutionView,
 };
 use crate::db::settlement_result::{query_settlement_results, query_settlement_results_with_time};
 
@@ -248,6 +250,9 @@ pub async fn account_perp_trading_join_events(
                     to_time,
                     None,
                     None,
+                    None,
+                    None,
+                    None,
                 )
                 .await?
                 .0;
@@ -259,8 +264,12 @@ pub async fn account_perp_trading_join_events(
                     to_time,
                     None,
                     None,
+                    None,
+                    None,
+                    None,
                 )
-                .await?;
+                .await?
+                .0;
             }
             TradingEventType::ADL => {
                 trading_events =
@@ -294,12 +303,30 @@ pub async fn account_perp_trading_join_events(
             .await?
             .0
     };
-    let settlements =
-        join_account_settlements(account_id.to_string(), from_time, to_time, None, None)
-            .await?
-            .0;
-    let liquidations =
-        join_account_liquidations(account_id.to_string(), from_time, to_time, None, None).await?;
+    let settlements = join_account_settlements(
+        account_id.to_string(),
+        from_time,
+        to_time,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    .await?
+    .0;
+    let liquidations = join_account_liquidations(
+        account_id.to_string(),
+        from_time,
+        to_time,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    .await?
+    .0;
     let adls = join_account_adls(account_id.to_string(), from_time, to_time, None, None).await?;
     let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
     trading_events.sort();
@@ -317,6 +344,14 @@ pub async fn account_perp_trading_join_events_v2(
     offset_block_number: Option<i64>,
     offset_transaction_index: Option<i32>,
     offset_log_index: Option<i32>,
+    settlement_offset_block_time: Option<i64>,
+    settlement_offset_block_number: Option<i64>,
+    settlement_offset_transaction_index: Option<i32>,
+    settlement_offset_log_index: Option<i32>,
+    liquidation_offset_block_time: Option<i64>,
+    liquidation_offset_block_number: Option<i64>,
+    liquidation_offset_transaction_index: Option<i32>,
+    liquidation_offset_log_index: Option<i32>,
 ) -> Result<AccountTradingEventsResponse> {
     let mut response = AccountTradingEventsResponse::default();
     if let Some(event_type) = event_type {
@@ -365,24 +400,50 @@ pub async fn account_perp_trading_join_events_v2(
                 response.page_size_limit = Some(limit);
             }
             TradingEventType::SETTLEMENT => {
-                (trading_events, _) = join_account_settlements(
+                let cursor: Option<AccoutTradingCursor>;
+                let settlement_size = query_account_settlement_executions_count(
+                    account_id.to_string(),
+                    from_time,
+                    to_time,
+                )
+                .await?;
+                (trading_events, cursor) = join_account_settlements(
                     account_id.to_string(),
                     from_time,
                     to_time,
                     None,
-                    None,
+                    settlement_offset_block_time,
+                    settlement_offset_block_number,
+                    settlement_offset_transaction_index,
+                    settlement_offset_log_index,
                 )
                 .await?;
+                response.settlement_event_next_cursor = cursor;
+                response.settlement_count = Some(settlement_size as u32);
+                response.page_size_limit = Some(limit);
             }
             TradingEventType::LIQUIDATION => {
-                trading_events = join_account_liquidations(
+                let cursor: Option<AccoutTradingCursor>;
+                let liquidation_size = query_account_liquidation_transfers_count_by_time(
+                    from_time,
+                    to_time,
+                    account_id.to_string(),
+                )
+                .await?;
+                (trading_events, cursor) = join_account_liquidations(
                     account_id.to_string(),
                     from_time,
                     to_time,
                     None,
-                    None,
+                    liquidation_offset_block_time,
+                    liquidation_offset_block_number,
+                    liquidation_offset_transaction_index,
+                    liquidation_offset_log_index,
                 )
                 .await?;
+                response.liquidation_event_next_cursor = cursor;
+                response.liquidation_count = Some(liquidation_size as u32);
+                response.page_size_limit = Some(limit);
             }
             TradingEventType::ADL => {
                 trading_events =
@@ -408,39 +469,94 @@ pub async fn account_perp_trading_join_events_v2(
         acc_range_insert(account_id, from_time, to_time, trade_size as u32);
         trade_size as u32
     };
-    let (perp_trades, cursor) = join_account_partitioned_perp_trades(
-        account_id.to_string(),
-        from_time,
-        to_time,
-        Some(limit),
-        offset_block_time,
-        offset_block_number,
-        offset_transaction_index,
-        offset_log_index,
-    )
-    .await?;
+    let (perp_trades, cursor) = if offset_block_number.is_some()
+        || liquidation_offset_block_number.is_none() && settlement_offset_block_number.is_none()
+    {
+        join_account_partitioned_perp_trades(
+            account_id.to_string(),
+            from_time,
+            to_time,
+            Some(limit),
+            offset_block_time,
+            offset_block_number,
+            offset_transaction_index,
+            offset_log_index,
+        )
+        .await?
+    } else {
+        (vec![], None)
+    };
     response.trading_event_next_cursor = cursor;
     response.trades_count = Some(trade_size);
     response.page_size_limit = Some(limit);
-    let (balance_trans, settlements, liquidations, adls) = if offset_block_number.is_some() {
-        (vec![], vec![], vec![], vec![])
+    let balance_trans = if offset_block_number.is_none()
+        && settlement_offset_block_number.is_none()
+        && liquidation_offset_block_number.is_none()
+    {
+        join_account_balance_transactions(account_id.to_string(), from_time, to_time, None, None)
+            .await?
     } else {
-        (
-            join_account_balance_transactions(
-                account_id.to_string(),
-                from_time,
-                to_time,
-                None,
-                None,
-            )
-            .await?,
-            join_account_settlements(account_id.to_string(), from_time, to_time, None, None)
-                .await?
-                .0,
-            join_account_liquidations(account_id.to_string(), from_time, to_time, None, None)
-                .await?,
-            join_account_adls(account_id.to_string(), from_time, to_time, None, None).await?,
+        vec![]
+    };
+
+    let settlement_size =
+        query_account_settlement_executions_count(account_id.to_string(), from_time, to_time)
+            .await?;
+    let (settlements, cursor) = if offset_block_number.is_none()
+        && liquidation_offset_block_number.is_none()
+        || settlement_offset_block_number.is_some()
+    {
+        join_account_settlements(
+            account_id.to_string(),
+            from_time,
+            to_time,
+            Some(limit),
+            settlement_offset_block_time,
+            settlement_offset_block_number,
+            settlement_offset_log_index,
+            settlement_offset_log_index,
         )
+        .await?
+    } else {
+        (vec![], None)
+    };
+    response.settlement_event_next_cursor = cursor;
+    response.settlement_count = Some(settlement_size as u32);
+
+    let liquidation_size = query_account_liquidation_transfers_count_by_time(
+        from_time,
+        to_time,
+        account_id.to_string(),
+    )
+    .await?;
+    let (liquidations, cursor) = if offset_block_number.is_none()
+        && settlement_offset_block_number.is_none()
+        || liquidation_offset_block_number.is_some()
+    {
+        join_account_liquidations(
+            account_id.to_string(),
+            from_time,
+            to_time,
+            Some(limit),
+            liquidation_offset_block_time,
+            liquidation_offset_block_number,
+            liquidation_offset_transaction_index,
+            liquidation_offset_log_index,
+        )
+        .await?
+    } else {
+        (vec![], None)
+    };
+    response.settlement_event_next_cursor = cursor;
+    response.liquidation_count = Some(liquidation_size as u32);
+
+    let adls = if offset_block_number.is_none()
+        && settlement_offset_block_number.is_none()
+        && liquidation_offset_block_number.is_none()
+    {
+        join_account_adls(account_id.to_string(), from_time, to_time, None, None).await?
+    } else {
+        vec![]
     };
     let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
     trading_events.sort();
@@ -854,17 +970,28 @@ pub async fn join_account_settlements(
     account_id: String,
     from_time: i64,
     to_time: i64,
-    offset: Option<u32>,
     limit: Option<u32>,
-) -> Result<(Vec<TradingEvent>, bool)> {
-    let settlement_executions =
-        query_account_settlement_executions(account_id.clone(), from_time, to_time, offset, limit)
-            .await?;
-    let has_next_offset = if let Some(limit) = limit {
-        settlement_executions.len() >= limit as usize
-    } else {
-        false
-    };
+    offset_block_time: Option<i64>,
+    offset_block_number: Option<i64>,
+    offset_transaction_index: Option<i32>,
+    offset_log_index: Option<i32>,
+) -> Result<(Vec<TradingEvent>, Option<AccoutTradingCursor>)> {
+    let (settlement_executions, cursor) = query_account_settlement_executions(
+        account_id.clone(),
+        from_time,
+        to_time,
+        limit,
+        offset_block_time,
+        offset_block_number,
+        offset_transaction_index,
+        offset_log_index,
+    )
+    .await?;
+    // let has_next_offset = if let Some(limit) = limit {
+    //     settlement_executions.len() >= limit as usize
+    // } else {
+    //     false
+    // };
     let mut settlement_execution_map: BTreeMap<(i64, i32), Vec<DbSettlementExecutionView>> =
         BTreeMap::new();
     settlement_executions
@@ -886,7 +1013,7 @@ pub async fn join_account_settlements(
             executions,
         ));
     }
-    Ok((settlement_result_vec, has_next_offset))
+    Ok((settlement_result_vec, cursor))
 }
 
 pub async fn join_liquidations(from_block: i64, to_block: i64) -> Result<Vec<TradingEvent>> {
@@ -960,13 +1087,24 @@ pub async fn join_account_liquidations(
     account_id: String,
     from_time: i64,
     to_time: i64,
-    offset: Option<u32>,
-    _limit: Option<u32>,
-) -> Result<Vec<TradingEvent>> {
+    limit: Option<u32>,
+    offset_block_time: Option<i64>,
+    offset_block_number: Option<i64>,
+    offset_transaction_index: Option<i32>,
+    offset_log_index: Option<i32>,
+) -> Result<(Vec<TradingEvent>, Option<AccoutTradingCursor>)> {
     // as liquidator account role in v1 or normal account in v2
-    let liquidation_transfers =
-        query_account_liquidation_transfers_by_time(from_time, to_time, account_id.clone(), offset)
-            .await?;
+    let (liquidation_transfers, cursor) = query_account_liquidation_transfers_by_time(
+        from_time,
+        to_time,
+        account_id.clone(),
+        limit,
+        offset_block_time,
+        offset_block_number,
+        offset_transaction_index,
+        offset_log_index,
+    )
+    .await?;
     let mut liquidation_res_keys: BTreeSet<(i64, i32)> = BTreeSet::new();
     let mut liquidation_transfer_map: BTreeMap<(i64, i32), Vec<DbLiquidationTransfer>> =
         BTreeMap::new();
@@ -982,6 +1120,14 @@ pub async fn join_account_liquidations(
                 liquidation_transfer_map.insert(batch_key, vec);
             }
         });
+
+    tracing::info!(
+        "account_id: {}, from_time: {}, to_time: {}, liquidation_res_keys length: {}",
+        account_id,
+        from_time,
+        to_time,
+        liquidation_res_keys.len()
+    );
 
     let liquidation_results =
         query_liquidation_results_by_time_and_keys(from_time, to_time, liquidation_res_keys)
@@ -999,7 +1145,7 @@ pub async fn join_account_liquidations(
 
     // all data are liquidation v2 data, return directly, 1725120000->2024-09-01 00:00:00
     if from_time > 1725120000 {
-        return Ok(liquidation_result_map.values().cloned().collect());
+        return Ok((liquidation_result_map.values().cloned().collect(), cursor));
     }
 
     // as liquidated role
@@ -1039,7 +1185,7 @@ pub async fn join_account_liquidations(
         }
     }
 
-    Ok(liquidation_result_map.values().cloned().collect())
+    Ok((liquidation_result_map.values().cloned().collect(), cursor))
 }
 
 pub async fn join_adls(from_block: i64, to_block: i64) -> Result<Vec<TradingEvent>> {
