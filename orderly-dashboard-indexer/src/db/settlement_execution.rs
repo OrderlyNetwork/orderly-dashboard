@@ -1,4 +1,5 @@
 use crate::db::{DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
+use crate::formats_external::trading_events::AccoutTradingCursor;
 use crate::schema::settlement_execution;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
@@ -8,6 +9,7 @@ use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
 use diesel_async::RunQueryDsl;
+use num_traits::ToPrimitive;
 use std::time::Instant;
 
 #[derive(Insertable, Queryable, Debug, Clone)]
@@ -202,17 +204,21 @@ pub async fn query_account_settlement_executions(
     account_id_: String,
     from_time: i64,
     to_time: i64,
-    offset: Option<u32>,
     limit: Option<u32>,
-) -> Result<Vec<DbSettlementExecutionView>> {
+    _offset_block_time: Option<i64>,
+    offset_block_number: Option<i64>,
+    offset_transaction_index: Option<i32>,
+    offset_log_index: Option<i32>,
+) -> Result<(Vec<DbSettlementExecutionView>, Option<AccoutTradingCursor>)> {
     use diesel::sql_query;
     tracing::info!(
         target: DB_CONTEXT,
         "query_account_settlement_executions start",
     );
+    let mut cursor: Option<AccoutTradingCursor> = None;
     let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
-    let result = if let Some(offset) = offset {
+    let result = if let Some(offset_block_number) = offset_block_number {
         sql_query(
             "select
                     result.settled_amount as result_settled_amount,
@@ -238,14 +244,17 @@ pub async fn query_account_settlement_executions(
                     and result.block_time <= $2
                     and executions.block_time >= $1
                     and executions.block_time <= $2
+                    and (executions.block_number, executions.transaction_index, executions.log_index) > ($4, $5, $6)
                     order by block_number, transaction_index, log_index
-                    offset $4 limit $5
+                    limit $7
                     ;",
         )
             .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
             .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
             .bind::<diesel::sql_types::Text, _>(account_id_)
-            .bind::<diesel::sql_types::BigInt, _>(offset as i64)
+            .bind::<diesel::sql_types::BigInt, _>(offset_block_number)
+            .bind::<diesel::sql_types::Integer, _>(offset_transaction_index.unwrap_or_default())
+            .bind::<diesel::sql_types::Integer, _>(offset_log_index.unwrap_or_default())
             .bind::<diesel::sql_types::BigInt, _>(limit.unwrap_or_default() as i64)
             .get_results::<DbSettlementExecutionView>(&mut conn)
             .await
@@ -274,11 +283,15 @@ pub async fn query_account_settlement_executions(
                     and result.block_time >= $1
                     and result.block_time <= $2
                     and executions.block_time >= $1
-                    and executions.block_time <= $2;",
+                    and executions.block_time <= $2
+                order by block_number, transaction_index, log_index
+                    limit $4
+                    ;",
         )
             .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
             .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
             .bind::<diesel::sql_types::Text, _>(account_id_)
+            .bind::<diesel::sql_types::BigInt, _>(limit.unwrap_or_default() as i64)
             .get_results::<DbSettlementExecutionView>(&mut conn)
             .await
     };
@@ -293,6 +306,20 @@ pub async fn query_account_settlement_executions(
                 events.len(),
                 dur_ms
             );
+            if events.len() as u32 == limit.unwrap_or_default() {
+                if let Some(last) = events.last() {
+                    cursor = Some(AccoutTradingCursor {
+                        block_time: last
+                            .block_time
+                            .clone()
+                            .map(|f| f.to_i64().unwrap_or_default())
+                            .unwrap_or_default(),
+                        block_number: last.block_number,
+                        transaction_index: last.transaction_index,
+                        log_index: last.log_index,
+                    });
+                }
+            }
             events
         }
         Err(error) => match error {
@@ -316,5 +343,63 @@ pub async fn query_account_settlement_executions(
         },
     };
 
-    Ok(events)
+    Ok((events, cursor))
+}
+
+pub async fn query_account_settlement_executions_count(
+    account_id_: String,
+    from_time: i64,
+    to_time: i64,
+) -> Result<i64> {
+    use diesel::sql_query;
+    tracing::info!(
+        target: DB_CONTEXT,
+        "query_account_settlement_executions_count start",
+    );
+    let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let result  = sql_query(
+            "select
+                    count(*)
+                  from
+                    settlement_result result
+                    left join settlement_execution executions on result.block_number = executions.block_number
+                    and result.log_index = executions.settlement_result_log_idx
+                  where
+                    result.account_id = $3
+                    and result.block_time >= $1
+                    and result.block_time <= $2
+                    and executions.block_time >= $1
+                    and executions.block_time <= $2;",
+        )
+            .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(from_time))
+            .bind::<diesel::sql_types::Numeric, _>(BigDecimal::from(to_time))
+            .bind::<diesel::sql_types::Text, _>(account_id_)
+            .get_result::<crate::db::utils::Count>(&mut conn)
+            .await;
+
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let count = match result {
+        Ok(count) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_account_settlement_executions_count success. count:{}, used time:{} ms",
+                count.count,
+                dur_ms
+            );
+            count.count
+        }
+        Err(error) => {
+            tracing::warn!(
+                target: DB_CONTEXT,
+                "query_account_settlement_executions fail. err:{:?}, used time:{} ms",
+                error,
+                dur_ms
+            );
+            Err(error)?
+        }
+    };
+
+    Ok(count)
 }

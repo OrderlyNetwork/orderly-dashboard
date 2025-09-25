@@ -627,7 +627,11 @@ pub struct AccoutTradingCursor {
 pub struct AccountTradingEventsResponse {
     pub events: Vec<TradingEvent>,
     pub trading_event_next_cursor: Option<AccoutTradingCursor>,
+    pub settlement_event_next_cursor: Option<AccoutTradingCursor>,
+    pub liquidation_event_next_cursor: Option<AccoutTradingCursor>,
     pub trades_count: Option<u32>,
+    pub settlement_count: Option<u32>,
+    pub liquidation_count: Option<u32>,
     pub page_size_limit: Option<u32>,
 }
 
