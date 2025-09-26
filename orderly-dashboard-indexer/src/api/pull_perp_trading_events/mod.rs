@@ -247,9 +247,66 @@ pub async fn pull_perp_trading_events_by_account_v2(
         )));
     }
 
+    let settlement_offset_block_time =
+        if let Some(settlement_offset_block_time) = params.get("settlement_offset_block_time") {
+            Some(i64::from_str(settlement_offset_block_time)?)
+        } else {
+            None
+        };
+    let settlement_offset_block_number = if let Some(settlement_offset_block_number) =
+        params.get("settlement_offset_block_number")
+    {
+        Some(i64::from_str(settlement_offset_block_number)?)
+    } else {
+        None
+    };
+    let settlement_offset_transaction_index = if let Some(settlement_offset_transaction_index) =
+        params.get("settlement_offset_transaction_index")
+    {
+        Some(i32::from_str(settlement_offset_transaction_index)?)
+    } else {
+        None
+    };
+    let settlement_offset_log_index =
+        if let Some(settlement_offset_log_index) = params.get("settlement_offset_log_index") {
+            Some(i32::from_str(settlement_offset_log_index)?)
+        } else {
+            None
+        };
+
+    let liquidation_offset_block_time =
+        if let Some(liquidation_offset_block_time) = params.get("liquidation_offset_block_time") {
+            Some(i64::from_str(liquidation_offset_block_time)?)
+        } else {
+            None
+        };
+    let liquidation_offset_block_number = if let Some(liquidation_offset_block_number) =
+        params.get("liquidation_offset_block_number")
+    {
+        Some(i64::from_str(liquidation_offset_block_number)?)
+    } else {
+        None
+    };
+    let liquidation_offset_transaction_index = if let Some(liquidation_offset_transaction_index) =
+        params.get("liquidation_offset_transaction_index")
+    {
+        Some(i32::from_str(liquidation_offset_transaction_index)?)
+    } else {
+        None
+    };
+    let liquidation_offset_log_index =
+        if let Some(liquidation_offset_log_index) = params.get("liquidation_offset_log_index") {
+            Some(i32::from_str(liquidation_offset_log_index)?)
+        } else {
+            None
+        };
+
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER,
-        "events v2 account_id: {}, from_time: {}, to_time: {} e_type: {:?}, limit: {}, offset_block_time: {:?}, offset_block_number: {:?}, offset_transaction_index: {:?}, offset_log_index: {:?}", account_id, from_time, to_time, e_type, limit as u32,
+        "events v2 account_id: {}, from_time: {}, to_time: {} e_type: {:?}, limit: {}, offset_block_time: {:?}, offset_block_number: {:?}, offset_transaction_index: {:?}, offset_log_index: {:?}, settlement_offset_block_time: {:?}, settlement_offset_block_number: {:?}, settlement_offset_transaction_index: {:?}, settlement_offset_log_index: {:?}, liquidation_offset_block_time: {:?}, liquidation_offset_block_number: {:?}, liquidation_offset_transaction_index: {:?}, liquidation_offset_log_index: {:?}",
+        account_id, from_time, to_time, e_type, limit as u32,
         offset_block_time, offset_block_number, offset_transaction_index, offset_log_index,
+        settlement_offset_block_time, settlement_offset_block_number, settlement_offset_transaction_index, settlement_offset_log_index,
+        liquidation_offset_block_time, liquidation_offset_block_number, liquidation_offset_transaction_index, liquidation_offset_log_index,
     );
 
     let response = filter_join::account_perp_trading_join_events_v2(
@@ -262,6 +319,14 @@ pub async fn pull_perp_trading_events_by_account_v2(
         offset_block_number,
         offset_transaction_index,
         offset_log_index,
+        settlement_offset_block_time,
+        settlement_offset_block_number,
+        settlement_offset_transaction_index,
+        settlement_offset_log_index,
+        liquidation_offset_block_time,
+        liquidation_offset_block_number,
+        liquidation_offset_transaction_index,
+        liquidation_offset_log_index,
     )
     .await?;
 

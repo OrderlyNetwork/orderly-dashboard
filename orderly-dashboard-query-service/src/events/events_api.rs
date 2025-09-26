@@ -88,6 +88,8 @@ pub struct GetAccountEventsV2Request {
     to_time: i64,
     event_type: Option<String>,
     trading_event_next_cursor: Option<AccoutTradingCursor>,
+    settlement_event_next_cursor: Option<AccoutTradingCursor>,
+    liquidation_event_next_cursor: Option<AccoutTradingCursor>,
 }
 
 impl GetAccountEventsV2Request {
@@ -325,6 +327,8 @@ pub async fn list_events_v2(
         param.account_id.clone().unwrap_or_default(),
         param.event_type.as_deref().map(str::to_uppercase),
         &param.trading_event_next_cursor,
+        &param.settlement_event_next_cursor,
+        &param.liquidation_event_next_cursor,
         get_common_cfg().indexer_address.clone(),
     )
     .await;
@@ -484,6 +488,8 @@ async fn get_indexer_v2_data(
     p_account_id: String,
     event_type: Option<String>,
     trading_event_next_cursor: &Option<AccoutTradingCursor>,
+    settlement_event_next_cursor: &Option<AccoutTradingCursor>,
+    liquidation_event_next_cursor: &Option<AccoutTradingCursor>,
     base_url: String,
 ) -> anyhow::Result<IndexerQueryResponse<AccountTradingEventsResponse>> {
     let mut indexer_url = if let Some(event_type) = event_type {
@@ -501,6 +507,18 @@ async fn get_indexer_v2_data(
         indexer_url = format!(
             "{}&offset_block_time={}&offset_block_number={}&offset_transaction_index={}&offset_log_index={}", 
             indexer_url, trading_event_next_cursor.block_time, trading_event_next_cursor.block_number, trading_event_next_cursor.transaction_index, trading_event_next_cursor.log_index,
+        );
+    }
+    if let Some(settlement_event_next_cursor) = settlement_event_next_cursor {
+        indexer_url = format!(
+            "{}&settlement_offset_block_time={}&settlement_offset_block_number={}&settlement_offset_transaction_index={}&settlement_offset_log_index={}", 
+            indexer_url, settlement_event_next_cursor.block_time, settlement_event_next_cursor.block_number, settlement_event_next_cursor.transaction_index, settlement_event_next_cursor.log_index,
+        );
+    }
+    if let Some(liquidation_event_next_cursor) = liquidation_event_next_cursor {
+        indexer_url = format!(
+            "{}&liquidation_offset_block_time={}&liquidation_offset_block_number={}&liquidation_offset_transaction_index={}&liquidation_offset_log_index={}", 
+            indexer_url, liquidation_event_next_cursor.block_time, liquidation_event_next_cursor.block_number, liquidation_event_next_cursor.transaction_index, liquidation_event_next_cursor.log_index,
         );
     }
     let response = CLIENT.get(indexer_url).send().await;
