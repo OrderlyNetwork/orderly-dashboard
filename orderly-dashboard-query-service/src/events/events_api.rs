@@ -180,11 +180,14 @@ pub async fn list_events(
     request_body(
         content = GetAccountEventsV2Request, content_type = "application/json", 
         description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal `enum` with value \"`TRANSACTION` | `PERPTRADE` | `SETTLEMENT` | `LIQUIDATION` | `ADL`. if `event_type` is not be set, this api will return all events without filtering by type.\n
-If the returning events data have `PERPTRADE` events, and `trading_event_next_cursor` is not null request, the `PERPTRADE` events were paginated, need to take `trading_event_next_cursor` into request body to query next page of `PERPTRADE` events.
 
-If the returning events data have `SETTLEMENT` events, and `settlement_event_next_cursor` is not null request, the `PERPTRADE` events were paginated, need to take `settlement_event_next_cursor` into request body to query next page of `SETTLEMENT` events.
+All of `TRANSACTION` and `ADL` events will be returned at first page of the request, without `***_event_next_cursor` params in the request body.
 
-If the returning events data have `LIQUIDATION` events, and `liquidation_event_next_cursor` is not null request, the `LIQUIDATION` events were paginated, need to take `liquidation_event_next_cursor` into request body to query next page of `LIQUIDATION` events.
+If the returning events data have `PERPTRADE` events, and `trading_event_next_cursor` is not null in response, the `PERPTRADE` events were paginated, need to take `trading_event_next_cursor` into request body to query next page of `PERPTRADE` events.
+
+If the returning events data have `SETTLEMENT` events, and `settlement_event_next_cursor` is not null in response, the `PERPTRADE` events were paginated, need to take `settlement_event_next_cursor` into request body to query next page of `SETTLEMENT` events.
+
+If the returning events data have `LIQUIDATION` events, and `liquidation_event_next_cursor` is not null in response, the `LIQUIDATION` events were paginated, need to take `liquidation_event_next_cursor` into request body to query next page of `LIQUIDATION` events.
 
 example1: query first page by `account_id` and time range \n
 ```json
