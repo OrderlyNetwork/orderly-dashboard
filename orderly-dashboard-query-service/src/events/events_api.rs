@@ -164,62 +164,15 @@ pub async fn list_events(
         "This api is deprecated, please use `/events_v2` api instead".to_string(),
     );
     return Ok(HttpResponse::Ok().json(resp));
-    // let inst = Instant::now();
-    // if !param.check_account_id_valid_and_cal() {
-    //     let resp = FailureResponse::new(
-    //         ACCOUNT_ID_CONFLICT_OR_INVALID_ERR,
-    //         ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE.to_string(),
-    //     );
-    //     return Ok(HttpResponse::Ok().json(resp));
-    // }
-    // let elapsed_new_user = inst.elapsed().as_millis();
-
-    // let indexer_data = get_indexer_data(
-    //     param.from_time,
-    //     param.to_time,
-    //     param.account_id.clone().unwrap_or_default(),
-    //     param.event_type.as_deref().map(str::to_uppercase),
-    //     get_common_cfg().indexer_address.clone(),
-    // )
-    // .await;
-    // let elapse_get_data = inst.elapsed().as_millis() - elapsed_new_user;
-
-    // match indexer_data {
-    //     Ok(response) => {
-    //         let length = match &response {
-    //             IndexerQueryResponse::Success(sucs) => match sucs.as_data() {
-    //                 Some(data) => data.events.len(),
-    //                 None => 0 as usize,
-    //             },
-    //             _ => 0 as usize,
-    //         };
-    //         tracing::info!(
-    //             target: QUERY_ACCOUNT_EVENT_CONTEXT,
-    //             "query account events sucs account_id: {:?}, broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?}, result len: {}, cost: {} ms, elapsed_new_user: {} ms, elapsed_get_data: {} ms",
-    //             param.account_id, param.broker_id, param.address, param.from_time, param.to_time, param.event_type, length, inst.elapsed().as_millis(), elapsed_new_user, elapse_get_data,
-    //         );
-    //         return Ok(HttpResponse::Ok().json(response));
-    //     }
-    //     Err(err) => {
-    //         let resp = FailureResponse::new(
-    //             1000,
-    //             format!("get_indexer_data parse event_type failed with err: {}", err),
-    //         );
-    //         tracing::warn!(
-    //             target: QUERY_ACCOUNT_EVENT_CONTEXT,
-    //             "query account events failed account_id: {:?}, broker_id: {:?}, address: {:?}, from_time: {}, to_time: {}, event_type: {:?} with err: {}, cost: {} ms",
-    //             param.account_id, param.broker_id, param.address, param.from_time, param.to_time, param.event_type, err, inst.elapsed().as_millis(),
-    //         );
-    //         return Ok(HttpResponse::Ok().json(resp));
-    //     }
-    // };
 }
 
 /// Get user token/trading events informations with pagelization
 #[utoipa::path(
     responses(
-        (status = 200, description = "Get Account events response on orderly, it will return account's `trading events` and `trading_event_next_cursor`, if `trading_event_next_cursor` is not null, you need to to take this data as a param of next page's request. 
-        `trading_event_next_cursor` is only filled when `PERPTRADE` were requested(`event_type` is null or `event_type`  is `PERPTRADE` on request_body) and next page exist", 
+        (status = 200, description = "Get Account events response on orderly, it will return account's `trading events` and `***_event_next_cursor`, if `***_event_next_cursor` is not null, you need to to take this data as a param of next page's request. 
+        \n`trading_event_next_cursor` is filled when `PERPTRADE` were requested(`event_type` is null or `event_type` is `PERPTRADE` on request_body) and next page exist. 
+        \n `settlement_event_next_cursor` were requested(`event_type` is null or `event_type` is `SETTLEMENT` on request_body) and next page exist. 
+        \n `liquidation_event_next_cursor` were requested(`event_type` is null or `event_type` is `LIQUIDATION` on request_body) and next page exist.", 
             body = IndexerQueryExternResponse<AccountTradingEventsResponse>
         ),
         (status = 1000, description = "Invalid Request")
@@ -227,8 +180,12 @@ pub async fn list_events(
     request_body(
         content = GetAccountEventsV2Request, content_type = "application/json", 
         description = "account events, filter by `account_id` or `broker_id` + `address`, timestamp of `from_time` and `to_time`, `from_time` has a defualt value of two weeks ago, `to_time` has a default value of current timestamp, and `event_type` is optinal `enum` with value \"`TRANSACTION` | `PERPTRADE` | `SETTLEMENT` | `LIQUIDATION` | `ADL`. if `event_type` is not be set, this api will return all events without filtering by type.\n
-If the returning events data have `PERPTRADE` and other `event_type` events, all other `event_type` events will return on first page without `trading_event_next_cursor` param in request, only `PERPTRADE` events were paginated.
-    
+If the returning events data have `PERPTRADE` events, and `trading_event_next_cursor` is not null request, the `PERPTRADE` events were paginated, need to take `trading_event_next_cursor` into request body to query next page of `PERPTRADE` events.
+
+If the returning events data have `SETTLEMENT` events, and `settlement_event_next_cursor` is not null request, the `PERPTRADE` events were paginated, need to take `settlement_event_next_cursor` into request body to query next page of `SETTLEMENT` events.
+
+If the returning events data have `LIQUIDATION` events, and `liquidation_event_next_cursor` is not null request, the `LIQUIDATION` events were paginated, need to take `liquidation_event_next_cursor` into request body to query next page of `LIQUIDATION` events.
+
 example1: query first page by `account_id` and time range \n
 ```json
 { 
