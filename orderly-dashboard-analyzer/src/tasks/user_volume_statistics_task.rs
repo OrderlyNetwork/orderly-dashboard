@@ -1,0 +1,257 @@
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    time::Instant,
+};
+
+use bigdecimal::BigDecimal;
+use chrono::{Duration, Utc};
+use orderly_dashboard_analyzer::db::{
+    user_info::get_user_infos,
+    user_volume_statistics::{create_or_user_volume_statistics, DBNewUserVolumeStatistics},
+};
+
+use crate::{
+    client::cefi_get_account_info,
+    db::{
+        hourly_user_perp::get_user_trading_volume_in_time_range,
+        user_info::{create_user_info, UserInfo},
+        user_perp_summary::get_user_ltd_trading_volume,
+    },
+    sync_broker::cal_broker_hash,
+};
+
+pub async fn cal_user_volume_statistics_task(base_url: String) -> anyhow::Result<()> {
+    loop {
+        if let Err(err) = cal_user_volume_statistics(&base_url).await {
+            tracing::warn!("cal_user_volume_statistics err: {}", err);
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+    }
+}
+
+pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
+    let limit: usize = 1000;
+    let mut offset_account_id = None;
+    let (ytd_from, ytd_to) = get_ytd_time_range();
+    let (d30_from, d30_to) = get_30d_time_range();
+    let (d7_from, d7_to) = get_7d_time_range();
+    let (d1_from, d1_to) = get_1d_time_range();
+
+    let inst = std::time::Instant::now();
+    loop {
+        let inst1 = Instant::now();
+        let ltd_res1 = get_user_ltd_trading_volume(offset_account_id.clone(), limit as i64).await?;
+        tracing::info!(
+            "get_user_trading_volume_in_time_range ltd time cost: {} s",
+            inst1.elapsed().as_secs()
+        );
+
+        let mut account_set = BTreeSet::new();
+        let mut account_ids = Vec::with_capacity(limit);
+        for res in ltd_res1.iter() {
+            account_ids.push(res.account_id.clone());
+            account_set.insert(res.account_id.clone());
+        }
+        let account_brokers = get_user_infos(account_ids.clone()).await?;
+        let mut account_broker_map = account_brokers
+            .iter()
+            .map(|v| (v.account_id.clone(), v.broker_id.clone()))
+            .collect::<BTreeMap<_, _>>();
+        if account_brokers.len() != ltd_res1.len() {
+            let diff_len = ltd_res1.len() - account_brokers.len();
+            tracing::info!("missed account length: {}", diff_len);
+            for res in ltd_res1.iter() {
+                if !account_broker_map.contains_key(&res.account_id) {
+                    loop {
+                        match cefi_get_account_info(base_url, &res.account_id).await {
+                            Ok(account_info) => {
+                                if account_info.success {
+                                    account_broker_map.insert(
+                                        res.account_id.clone(),
+                                        account_info.data.broker_id.clone(),
+                                    );
+                                    create_user_info(&UserInfo {
+                                        account_id: res.account_id.clone(),
+                                        broker_id: account_info.data.broker_id.clone(),
+                                        broker_hash: cal_broker_hash(&account_info.data.broker_id),
+                                        address: account_info.data.address,
+                                    })
+                                    .await
+                                    .ok();
+                                    break;
+                                } else {
+                                    tracing::warn!(
+                                        "cefi_get_account_info account_id: {} not success",
+                                        res.account_id
+                                    );
+                                }
+                            }
+                            Err(err) => {
+                                tracing::warn!(
+                                    "cefi_get_account_info account_id: {} failed with err: {}",
+                                    res.account_id,
+                                    err
+                                );
+                                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                            }
+                        }
+                    }
+                    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+                }
+            }
+        }
+
+        let inst1 = Instant::now();
+        // ytd
+        let ytd_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), ytd_from, ytd_to)
+            .await?
+            .into_iter()
+            .map(|v| (v.account_id, v.volume))
+            .collect::<BTreeMap<_, _>>();
+        tracing::info!(
+            "get_user_trading_volume_in_time_range ytd time cost: {} s",
+            inst1.elapsed().as_secs()
+        );
+
+        let inst1 = Instant::now();
+        // 30d
+        let d30_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d30_from, d30_to)
+            .await?
+            .into_iter()
+            .map(|v| (v.account_id, v.volume))
+            .collect::<BTreeMap<_, _>>();
+        tracing::info!(
+            "get_user_trading_volume_in_time_range d30 time cost: {} s",
+            inst1.elapsed().as_secs()
+        );
+
+        let inst1 = Instant::now();
+        // 7d
+        let d7_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d7_from, d7_to)
+            .await?
+            .into_iter()
+            .map(|v| (v.account_id, v.volume))
+            .collect::<BTreeMap<_, _>>();
+        tracing::info!(
+            "get_user_trading_volume_in_time_range d7 time cost: {} s",
+            inst1.elapsed().as_secs()
+        );
+
+        let inst1 = Instant::now();
+        // 1d
+        let d1_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d1_from, d1_to)
+            .await?
+            .into_iter()
+            .map(|v| (v.account_id, v.volume))
+            .collect::<BTreeMap<_, _>>();
+        tracing::info!(
+            "get_user_trading_volume_in_time_range d1 time cost: {} s",
+            inst1.elapsed().as_secs()
+        );
+
+        let ltd_res1_len = ltd_res1.len();
+        let last_ltd = ltd_res1.last().cloned();
+
+        let mut user_volume_statistics: Vec<DBNewUserVolumeStatistics> =
+            Vec::with_capacity(ltd_res1_len);
+        for account_v in ltd_res1 {
+            user_volume_statistics.push(DBNewUserVolumeStatistics::new(
+                account_v.account_id.clone(),
+                if let Some(broker_id) = account_broker_map.get(&account_v.account_id) {
+                    broker_id.clone()
+                } else {
+                    "".to_string()
+                },
+                if let Some(volume) = ytd_res1.get(&account_v.account_id) {
+                    volume.clone()
+                } else {
+                    BigDecimal::from(0)
+                },
+                account_v.volume.clone(),
+                d1_res1
+                    .get(&account_v.account_id)
+                    .cloned()
+                    .unwrap_or(BigDecimal::from(0)),
+                d7_res1
+                    .get(&account_v.account_id)
+                    .cloned()
+                    .unwrap_or(BigDecimal::from(0)),
+                d30_res1
+                    .get(&account_v.account_id)
+                    .cloned()
+                    .unwrap_or(BigDecimal::from(0)),
+            ));
+        }
+        create_or_user_volume_statistics(user_volume_statistics).await?;
+
+        if ltd_res1_len < limit {
+            break;
+        } else {
+            if let Some(account) = last_ltd {
+                offset_account_id = Some(account.account_id);
+            }
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
+
+    let time_cost_s = inst.elapsed().as_secs();
+    tracing::info!("cal_user_volume_statistics task cost: {} s", time_cost_s);
+    Ok(())
+}
+
+fn get_ytd_time_range() -> (i64, i64) {
+    // yesterday, yesterday - 365d
+    let now = Utc::now();
+    let to = (now - Duration::days(1))
+        .date_naive()
+        .and_hms_opt(23, 59, 59)
+        .unwrap_or_default();
+    let from = (now - Duration::days(366))
+        .date_naive()
+        .and_hms_opt(0, 0, 0)
+        .unwrap_or_default();
+    (from.timestamp(), to.timestamp())
+}
+
+fn get_30d_time_range() -> (i64, i64) {
+    // yesterday, yesterday - 365d
+    let now = Utc::now();
+    let to = (now - Duration::days(1))
+        .date_naive()
+        .and_hms_opt(23, 59, 59)
+        .unwrap_or_default();
+    let from = (now - Duration::days(31))
+        .date_naive()
+        .and_hms_opt(0, 0, 0)
+        .unwrap_or_default();
+    (from.timestamp(), to.timestamp())
+}
+
+fn get_7d_time_range() -> (i64, i64) {
+    // yesterday, yesterday - 7d
+    let now = Utc::now();
+    let to = (now - Duration::days(1))
+        .date_naive()
+        .and_hms_opt(23, 59, 59)
+        .unwrap_or_default();
+    let from = (now - Duration::days(81))
+        .date_naive()
+        .and_hms_opt(0, 0, 0)
+        .unwrap_or_default();
+    (from.timestamp(), to.timestamp())
+}
+
+fn get_1d_time_range() -> (i64, i64) {
+    // yesterday, yesterday - 7d
+    let now = Utc::now();
+    let to = (now - Duration::days(1))
+        .date_naive()
+        .and_hms_opt(23, 59, 59)
+        .unwrap_or_default();
+    let from = (now - Duration::days(1))
+        .date_naive()
+        .and_hms_opt(0, 0, 0)
+        .unwrap_or_default();
+    (from.timestamp(), to.timestamp())
+}

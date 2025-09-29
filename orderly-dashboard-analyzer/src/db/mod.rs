@@ -23,6 +23,7 @@ pub mod symbols;
 pub mod user_info;
 pub mod user_perp_summary;
 pub mod user_token_summary;
+pub mod user_volume_statistics;
 
 pub const DB_CONTEXT: &str = "DB_operation";
 // row * col <= 32767

@@ -2,6 +2,7 @@ use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
+use diesel::sql_types::*;
 use diesel_async::RunQueryDsl;
 
 use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
@@ -27,6 +28,14 @@ pub struct HourlyUserPerp {
 
     pub pulled_block_height: i64,
     pub pulled_block_time: NaiveDateTime,
+}
+
+#[derive(Debug, QueryableByName, Clone)]
+pub struct AccountVolume {
+    #[diesel(sql_type = Text)]
+    pub account_id: String,
+    #[diesel(sql_type = Numeric)]
+    pub volume: BigDecimal,
 }
 
 impl HourlyUserPerp {
@@ -250,4 +259,43 @@ async fn _create_or_update_hourly_user_perp(
         .execute(&mut conn)
         .await;
     update_result
+}
+
+pub async fn get_user_trading_volume_in_time_range(
+    account_ids: Vec<String>,
+    from_time: i64,
+    to_time: i64,
+) -> anyhow::Result<Vec<AccountVolume>> {
+    if account_ids.is_empty() {
+        return Ok(vec![]);
+    }
+    #[allow(unused_imports)]
+    use crate::{
+        db::{hourly_user_perp::HourlyUserPerp, POOL},
+        schema::hourly_user_perp,
+        schema::hourly_user_perp::dsl::*,
+    };
+
+    let conditions = account_ids
+        .into_iter()
+        .map(|a| format!("'{}'", a))
+        .collect::<Vec<_>>()
+        .join(",");
+    let query = format!(
+        "select account_id,sum(trading_volume) as volume from hourly_user_perp \
+    where block_hour>=$1 and block_hour<$2 and account_id in ({}) group by account_id",
+        conditions
+    );
+
+    let from_time = NaiveDateTime::from_timestamp_opt(from_time, 0).unwrap_or_default();
+    let to_time = NaiveDateTime::from_timestamp_opt(to_time, 0).unwrap_or_default();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
+    let select_result = diesel::sql_query(&query)
+        .bind::<Timestamp, _>(from_time)
+        .bind::<Timestamp, _>(to_time)
+        .get_results::<AccountVolume>(&mut conn)
+        .await?;
+
+    Ok(select_result)
 }

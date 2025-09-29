@@ -26,6 +26,7 @@ pub mod sync_account;
 pub mod sync_backend_data;
 mod sync_broker;
 pub mod sync_market_data;
+pub mod tasks;
 
 #[allow(dead_code)]
 const ORDERLY_DASHBOARD_ANALYZER: &str = "orderly-dashboard-analyzer";
@@ -84,7 +85,7 @@ async fn main() -> std::io::Result<()> {
         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
     tracing::info!(target: ORDERLY_DASHBOARD_ANALYZER,"config loaded: {:?}",config);
     init_database_url(get_database_credentials());
-    orderly_dashboard_indexer::runtime::init_pool_workers_num(2);
+    orderly_dashboard_indexer::runtime::init_pool_workers_num(3);
     let port = config.server_port;
     let sync_broker_url = config.get_broker_url.clone();
 
@@ -95,8 +96,13 @@ async fn main() -> std::io::Result<()> {
     update_collecteral_infos_task(config.be_api_base_url.clone());
     orderly_dashboard_indexer::runtime::spawn_future(sync_account_handler(
         rx,
-        config.be_api_base_url,
+        config.be_api_base_url.clone(),
     ));
+
+    orderly_dashboard_indexer::runtime::spawn_future(
+        tasks::user_volume_statistics_task::cal_user_volume_statistics_task(config.be_api_base_url),
+    );
+
     HttpServer::new(|| App::new().service(health).service(status))
         .bind(("0.0.0.0", port))?
         .run()
