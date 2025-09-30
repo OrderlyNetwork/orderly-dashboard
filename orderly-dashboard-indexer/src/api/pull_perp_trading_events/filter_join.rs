@@ -1185,7 +1185,7 @@ pub async fn join_account_liquidations(
         }
     }
 
-    Ok((liquidation_result_map.values().cloned().collect(), cursor))
+    Ok((liquidation_result_map.values().cloned().collect(), None))
 }
 
 pub async fn join_adls(from_block: i64, to_block: i64) -> Result<Vec<TradingEvent>> {
