@@ -266,8 +266,8 @@ impl TradingEvent {
                 .unwrap(),
             data: TradingEventInnerData::SettlementResult {
                 account_id,
-                settled_amount: settlement_res.settled_amount.to_string(),
-                settled_asset_hash: settlement_res.symbol_hash,
+                settled_amount: settlement_res.result_settled_amount.to_string(),
+                settled_asset_hash: settlement_res.settled_asset_hash,
                 insurance_account_id: settlement_res.insurance_account_id,
                 insurance_transfer_amount: settlement_res.insurance_transfer_amount.to_string(),
                 settlement_executions,

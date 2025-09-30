@@ -46,6 +46,8 @@ pub struct DbSettlementExecutionView {
     pub insurance_account_id: String,
     #[diesel(sql_type = Numeric)]
     pub insurance_transfer_amount: BigDecimal,
+    #[diesel(sql_type = Text)]
+    pub settled_asset_hash: String,
     #[diesel(sql_type = BigInt)]
     pub block_number: i64,
     #[diesel(sql_type = Integer)]
@@ -224,6 +226,7 @@ pub async fn query_account_settlement_executions(
                     result.settled_amount as result_settled_amount,
                     result.insurance_account_id as insurance_account_id,
                     result.insurance_transfer_amount as insurance_transfer_amount,
+                    result.settled_asset_hash as settled_asset_hash,
                     executions.block_number as block_number,
                     executions.transaction_index as transaction_index,
                     executions.log_index as log_index,
@@ -299,7 +302,7 @@ pub async fn query_account_settlement_executions(
     let dur_ms = (Instant::now() - start_time).as_millis();
 
     let events = match result {
-        Ok(events) => {
+        Ok(mut events) => {
             tracing::info!(
                 target: DB_CONTEXT,
                 "query_account_settlement_executions success. length:{}, used time:{} ms",
@@ -307,17 +310,31 @@ pub async fn query_account_settlement_executions(
                 dur_ms
             );
             if events.len() as u32 == limit.unwrap_or_default() {
-                if let Some(last) = events.last() {
-                    cursor = Some(AccoutTradingCursor {
-                        block_time: last
-                            .block_time
-                            .clone()
-                            .map(|f| f.to_i64().unwrap_or_default())
-                            .unwrap_or_default(),
-                        block_number: last.block_number,
-                        transaction_index: last.transaction_index,
-                        log_index: last.log_index,
-                    });
+                // deprecated last block_number, transaction_index, settlement_result_log_idx to avoid a settlment result to be split into 2
+                if let Some(last) = events.pop() {
+                    loop {
+                        if let Some(elem) = events.pop() {
+                            let same_settlement_result = last.block_number == elem.block_number
+                                && last.transaction_index == elem.transaction_index
+                                && last.settlement_result_log_idx == elem.settlement_result_log_idx;
+                            if !same_settlement_result {
+                                events.push(elem);
+                                cursor = Some(AccoutTradingCursor {
+                                    block_time: last
+                                        .block_time
+                                        .clone()
+                                        .map(|f| f.to_i64().unwrap_or_default())
+                                        .unwrap_or_default(),
+                                    block_number: last.block_number,
+                                    transaction_index: last.transaction_index,
+                                    log_index: last.log_index,
+                                });
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
                 }
             }
             events

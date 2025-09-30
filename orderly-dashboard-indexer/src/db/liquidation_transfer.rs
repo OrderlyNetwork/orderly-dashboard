@@ -240,7 +240,7 @@ pub async fn query_account_liquidation_transfers_by_time(
     let dur_ms = (Instant::now() - start_time).as_millis();
 
     let events = match result {
-        Ok(events) => {
+        Ok(mut events) => {
             tracing::info!(
                 target: DB_CONTEXT,
                 "query_account_liquidation_transfers_by_time success. length:{}, used time:{} ms",
@@ -248,17 +248,32 @@ pub async fn query_account_liquidation_transfers_by_time(
                 dur_ms
             );
             if events.len() as u32 == limit.unwrap_or_default() {
-                if let Some(last) = events.last() {
-                    cursor = Some(AccoutTradingCursor {
-                        block_time: last
-                            .block_time
-                            .clone()
-                            .map(|f| f.to_i64().unwrap_or_default())
-                            .unwrap_or_default(),
-                        block_number: last.block_number,
-                        transaction_index: last.transaction_index,
-                        log_index: last.log_index,
-                    });
+                // deprecated last block_number, transaction_index, liquidation_result_log_idx to avoid a liquidation result to be split into 2
+                if let Some(last) = events.pop() {
+                    loop {
+                        if let Some(elem) = events.pop() {
+                            let same_liquidation_result = last.block_number == elem.block_number
+                                && last.transaction_index == elem.transaction_index
+                                && last.liquidation_result_log_idx
+                                    == elem.liquidation_result_log_idx;
+                            if !same_liquidation_result {
+                                events.push(elem);
+                                cursor = Some(AccoutTradingCursor {
+                                    block_time: last
+                                        .block_time
+                                        .clone()
+                                        .map(|f| f.to_i64().unwrap_or_default())
+                                        .unwrap_or_default(),
+                                    block_number: last.block_number,
+                                    transaction_index: last.transaction_index,
+                                    log_index: last.log_index,
+                                });
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
                 }
             }
             events
