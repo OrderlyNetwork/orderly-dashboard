@@ -10,8 +10,9 @@ use crate::{
     events::events_api::{GetAccountEventsRequest, GetAccountEventsV2Request},
     format_extern::{
         trading_metrics::{
-            DailyData, DailyTradingFeeExtern, DailyVolumeExtern, OrderlyPerpDaily,
-            TokenAmountRanking, TradingPnlRanking, TradingVolumeRanking,
+            AccountVolumeStatistic, AccountVolumeStatisticRequest, BrokerVolumeStatistic,
+            BrokerVolumeStatisticRequest, DailyData, DailyTradingFeeExtern, DailyVolumeExtern,
+            OrderlyPerpDaily, TokenAmountRanking, TradingPnlRanking, TradingVolumeRanking,
         },
         QeuryServiceResponse,
     },
@@ -41,6 +42,8 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryExternResponse;
         crate::trading_metrics::get_token_withdraw_rank,
         crate::events::events_api::list_events,
         crate::events::events_api::list_events_v2,
+        crate::trading_metrics::volume_statistic::get_account_volume_statistic,
+        crate::trading_metrics::volume_statistic::get_broker_volume_statistic,
     ),
     components(
         schemas(
@@ -53,6 +56,8 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryExternResponse;
             PnlRankingRequest,
             DepositWithdrawRankingRequest,
             GetAccountEventsV2Request,
+            AccountVolumeStatisticRequest,
+            BrokerVolumeStatisticRequest,
             IndexerQueryExternResponse<AccountTradingEventsResponse>,
             QeuryServiceResponse<DailyData<OrderlyPerpDaily>>,
             QeuryServiceResponse<TradingVolumeRanking>,
@@ -60,6 +65,8 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryExternResponse;
             QeuryServiceResponse<DailyTradingFeeExtern>,
             QeuryServiceResponse<Vec<TradingPnlRanking>>,
             QeuryServiceResponse<Vec<TokenAmountRanking>>,
+            QeuryServiceResponse<AccountVolumeStatistic>,
+            QeuryServiceResponse<BrokerVolumeStatistic>,
         )
     ),
     tags((name = "Orderly DashboardBasicAPI", description = "Orderly Dashboard Basic API")),
