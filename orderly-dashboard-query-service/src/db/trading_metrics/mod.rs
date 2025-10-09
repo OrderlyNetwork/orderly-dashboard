@@ -18,6 +18,7 @@ pub mod average;
 pub mod orderly_daily_perp;
 pub mod orderly_daily_token;
 pub mod ranking;
+pub mod volume_statistic;
 
 #[derive(Debug, Clone, QueryableByName)]
 pub struct DailyVolume {
