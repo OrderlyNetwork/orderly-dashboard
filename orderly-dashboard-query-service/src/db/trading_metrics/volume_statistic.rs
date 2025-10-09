@@ -26,6 +26,8 @@ pub struct DbBrokerVolumeStatistic {
     pub perp_volume_last_7_days: BigDecimal,
     #[diesel(sql_type = Numeric)]
     pub perp_volume_last_30_days: BigDecimal,
+    #[diesel(sql_type = Numeric)]
+    pub perp_volume_last_90_days: BigDecimal,
 }
 
 pub async fn get_user_volume_statistic(
@@ -58,7 +60,8 @@ select
   sum(perp_volume_ltd) as perp_volume_ltd,
   sum(perp_volume_last_1_day) as perp_volume_last_1_day,
   sum(perp_volume_last_7_days) as perp_volume_last_7_days,
-  sum(perp_volume_last_30_days) as perp_volume_last_30_days
+  sum(perp_volume_last_30_days) as perp_volume_last_30_days,
+  sum(perp_volume_last_90_days) as perp_volume_last_90_days
 from
   user_volume_statistics
 where
