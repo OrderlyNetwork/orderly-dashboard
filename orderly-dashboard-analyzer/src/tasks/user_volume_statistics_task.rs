@@ -33,6 +33,7 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
     let limit: usize = 1000;
     let mut offset_account_id = None;
     let (ytd_from, ytd_to) = get_ytd_time_range();
+    let (d90_from, d90_to) = get_90d_time_range();
     let (d30_from, d30_to) = get_30d_time_range();
     let (d7_from, d7_to) = get_7d_time_range();
     let (d1_from, d1_to) = get_1d_time_range();
@@ -53,22 +54,30 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
             account_set.insert(res.account_id.clone());
         }
         let account_brokers = get_user_infos(account_ids.clone()).await?;
-        let mut account_broker_map = account_brokers
+        let mut account_broker_addr_map = account_brokers
             .iter()
-            .map(|v| (v.account_id.clone(), v.broker_id.clone()))
+            .map(|v| {
+                (
+                    v.account_id.clone(),
+                    (v.broker_id.clone(), v.address.clone()),
+                )
+            })
             .collect::<BTreeMap<_, _>>();
         if account_brokers.len() != ltd_res1.len() {
             let diff_len = ltd_res1.len() - account_brokers.len();
             tracing::info!("missed account length: {}", diff_len);
             for res in ltd_res1.iter() {
-                if !account_broker_map.contains_key(&res.account_id) {
+                if !account_broker_addr_map.contains_key(&res.account_id) {
                     loop {
                         match cefi_get_account_info(base_url, &res.account_id).await {
                             Ok(account_info) => {
                                 if account_info.success {
-                                    account_broker_map.insert(
+                                    account_broker_addr_map.insert(
                                         res.account_id.clone(),
-                                        account_info.data.broker_id.clone(),
+                                        (
+                                            account_info.data.broker_id.clone(),
+                                            account_info.data.address.clone(),
+                                        ),
                                     );
                                     create_user_info(&UserInfo {
                                         account_id: res.account_id.clone(),
@@ -114,6 +123,18 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
         );
 
         let inst1 = Instant::now();
+        // 90d
+        let d90_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d90_from, d90_to)
+            .await?
+            .into_iter()
+            .map(|v| (v.account_id, v.volume))
+            .collect::<BTreeMap<_, _>>();
+        tracing::info!(
+            "get_user_trading_volume_in_time_range d30 time cost: {} s",
+            inst1.elapsed().as_secs()
+        );
+
+        let inst1 = Instant::now();
         // 30d
         let d30_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d30_from, d30_to)
             .await?
@@ -155,13 +176,13 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
         let mut user_volume_statistics: Vec<DBNewUserVolumeStatistics> =
             Vec::with_capacity(ltd_res1_len);
         for account_v in ltd_res1 {
+            let (broker_id, address) = account_broker_addr_map
+                .get(&account_v.account_id)
+                .cloned()
+                .unwrap_or_default();
             user_volume_statistics.push(DBNewUserVolumeStatistics::new(
                 account_v.account_id.clone(),
-                if let Some(broker_id) = account_broker_map.get(&account_v.account_id) {
-                    broker_id.clone()
-                } else {
-                    "".to_string()
-                },
+                broker_id,
                 if let Some(volume) = ytd_res1.get(&account_v.account_id) {
                     volume.clone()
                 } else {
@@ -177,6 +198,11 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
                     .cloned()
                     .unwrap_or(BigDecimal::from(0)),
                 d30_res1
+                    .get(&account_v.account_id)
+                    .cloned()
+                    .unwrap_or(BigDecimal::from(0)),
+                address,
+                d90_res1
                     .get(&account_v.account_id)
                     .cloned()
                     .unwrap_or(BigDecimal::from(0)),
@@ -228,6 +254,20 @@ fn get_30d_time_range() -> (i64, i64) {
     (from.timestamp(), to.timestamp())
 }
 
+fn get_90d_time_range() -> (i64, i64) {
+    // yesterday, yesterday - 365d
+    let now = Utc::now();
+    let to = (now - Duration::days(1))
+        .date_naive()
+        .and_hms_opt(23, 59, 59)
+        .unwrap_or_default();
+    let from = (now - Duration::days(91))
+        .date_naive()
+        .and_hms_opt(0, 0, 0)
+        .unwrap_or_default();
+    (from.timestamp(), to.timestamp())
+}
+
 fn get_7d_time_range() -> (i64, i64) {
     // yesterday, yesterday - 7d
     let now = Utc::now();
@@ -235,7 +275,7 @@ fn get_7d_time_range() -> (i64, i64) {
         .date_naive()
         .and_hms_opt(23, 59, 59)
         .unwrap_or_default();
-    let from = (now - Duration::days(81))
+    let from = (now - Duration::days(8))
         .date_naive()
         .and_hms_opt(0, 0, 0)
         .unwrap_or_default();

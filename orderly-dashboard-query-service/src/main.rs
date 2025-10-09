@@ -25,8 +25,9 @@ use orderly_dashboard_query_service::swagger_docs::ApiDoc;
 use orderly_dashboard_query_service::trading_metrics;
 use orderly_dashboard_query_service::trading_metrics::{
     average_opening_count, average_trading_fee, average_trading_volume, block_height,
-    deposit_gas_fee, event_gas_fee, get_daily_orderly_token, get_perp_holding_rank,
-    get_perp_recent_days_pnl_rank, perp_gas_fee, update_positions_task, update_realized_pnl_task,
+    deposit_gas_fee, event_gas_fee, get_account_volume_statistic, get_broker_volume_statistic,
+    get_daily_orderly_token, get_perp_holding_rank, get_perp_recent_days_pnl_rank, perp_gas_fee,
+    update_positions_task, update_realized_pnl_task,
 };
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
@@ -92,7 +93,9 @@ fn service_config(conf: &mut web::ServiceConfig) {
         .service(trading_metrics::get_token_withdraw_rank)
         .service(get_perp_recent_days_pnl_rank)
         .service(list_events)
-        .service(list_events_v2);
+        .service(list_events_v2)
+        .service(get_account_volume_statistic)
+        .service(get_broker_volume_statistic);
 }
 
 #[actix_web::main]

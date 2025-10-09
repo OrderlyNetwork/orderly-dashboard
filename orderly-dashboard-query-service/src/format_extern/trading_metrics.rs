@@ -1,3 +1,5 @@
+use crate::db::trading_metrics::volume_statistic::DbBrokerVolumeStatistic;
+use orderly_dashboard_analyzer::db::user_volume_statistics::DBUserVolumeStatistics;
 use serde::{Deserialize, Serialize};
 use typescript_type_def::TypeDef;
 use utoipa::ToSchema;
@@ -43,6 +45,68 @@ pub struct OrderlyPerpDaily {
     pub liquidation_amount: f64,
     pub liquidation_count: f64,
     pub opening_count: f64,
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct AccountVolumeStatisticRequest {
+    pub account_id: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef, ToSchema)]
+pub struct AccountVolumeStatistic {
+    pub account_id: String,
+    pub broker_id: String,
+    pub address: String,
+    pub perp_volume_ytd: String,
+    pub perp_volume_ltd: String,
+    pub perp_volume_last_1_day: String,
+    pub perp_volume_last_7_days: String,
+    pub perp_volume_last_30_days: String,
+    pub perp_volume_last_90_days: String,
+}
+
+impl From<DBUserVolumeStatistics> for AccountVolumeStatistic {
+    fn from(value: DBUserVolumeStatistics) -> Self {
+        AccountVolumeStatistic {
+            account_id: value.account_id,
+            broker_id: value.broker_id,
+            address: value.address,
+            perp_volume_ytd: value.perp_volume_ytd.to_string(),
+            perp_volume_ltd: value.perp_volume_ltd.to_string(),
+            perp_volume_last_1_day: value.perp_volume_last_1_day.to_string(),
+            perp_volume_last_7_days: value.perp_volume_last_7_days.to_string(),
+            perp_volume_last_30_days: value.perp_volume_last_30_days.to_string(),
+            perp_volume_last_90_days: value.perp_volume_last_90_days.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct BrokerVolumeStatisticRequest {
+    pub broker_id: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef, ToSchema)]
+pub struct BrokerVolumeStatistic {
+    pub perp_volume_ytd: String,
+    pub perp_volume_ltd: String,
+    pub perp_volume_last_1_day: String,
+    pub perp_volume_last_7_days: String,
+    pub perp_volume_last_30_days: String,
+    pub perp_volume_last_90_days: String,
+}
+
+impl From<DbBrokerVolumeStatistic> for BrokerVolumeStatistic {
+    fn from(value: DbBrokerVolumeStatistic) -> Self {
+        BrokerVolumeStatistic {
+            perp_volume_ytd: value.perp_volume_ytd.to_string(),
+            perp_volume_ltd: value.perp_volume_ltd.to_string(),
+            perp_volume_last_1_day: value.perp_volume_last_1_day.to_string(),
+            perp_volume_last_7_days: value.perp_volume_last_7_days.to_string(),
+            perp_volume_last_30_days: value.perp_volume_last_30_days.to_string(),
+            perp_volume_last_90_days: value.perp_volume_last_90_days.to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize, Default, TypeDef)]
