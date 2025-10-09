@@ -62,6 +62,7 @@ pub struct AccountVolumeStatistic {
     pub perp_volume_last_1_day: String,
     pub perp_volume_last_7_days: String,
     pub perp_volume_last_30_days: String,
+    pub perp_volume_last_90_days: String,
 }
 
 impl From<DBUserVolumeStatistics> for AccountVolumeStatistic {
@@ -75,6 +76,7 @@ impl From<DBUserVolumeStatistics> for AccountVolumeStatistic {
             perp_volume_last_1_day: value.perp_volume_last_1_day.to_string(),
             perp_volume_last_7_days: value.perp_volume_last_7_days.to_string(),
             perp_volume_last_30_days: value.perp_volume_last_30_days.to_string(),
+            perp_volume_last_90_days: value.perp_volume_last_90_days.to_string(),
         }
     }
 }
@@ -91,6 +93,7 @@ pub struct BrokerVolumeStatistic {
     pub perp_volume_last_1_day: String,
     pub perp_volume_last_7_days: String,
     pub perp_volume_last_30_days: String,
+    pub perp_volume_last_90_days: String,
 }
 
 impl From<DbBrokerVolumeStatistic> for BrokerVolumeStatistic {
@@ -101,6 +104,7 @@ impl From<DbBrokerVolumeStatistic> for BrokerVolumeStatistic {
             perp_volume_last_1_day: value.perp_volume_last_1_day.to_string(),
             perp_volume_last_7_days: value.perp_volume_last_7_days.to_string(),
             perp_volume_last_30_days: value.perp_volume_last_30_days.to_string(),
+            perp_volume_last_90_days: value.perp_volume_last_90_days.to_string(),
         }
     }
 }

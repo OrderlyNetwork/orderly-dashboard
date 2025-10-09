@@ -19,6 +19,7 @@ pub struct DBNewUserVolumeStatistics {
     pub perp_volume_last_30_days: BigDecimal,
     pub update_time: NaiveDateTime,
     pub address: String,
+    pub perp_volume_last_90_days: BigDecimal,
 }
 
 #[allow(dead_code)]
@@ -35,6 +36,7 @@ pub struct DBUserVolumeStatistics {
     pub perp_volume_last_30_days: BigDecimal,
     pub update_time: NaiveDateTime,
     pub address: String,
+    pub perp_volume_last_90_days: BigDecimal,
 }
 
 impl DBNewUserVolumeStatistics {
@@ -47,6 +49,7 @@ impl DBNewUserVolumeStatistics {
         perp_volume_last_7_days: BigDecimal,
         perp_volume_last_30_days: BigDecimal,
         address: String,
+        perp_volume_last_90_days: BigDecimal,
     ) -> DBNewUserVolumeStatistics {
         DBNewUserVolumeStatistics {
             account_id,
@@ -59,6 +62,7 @@ impl DBNewUserVolumeStatistics {
             update_time: NaiveDateTime::from_timestamp_opt(Utc::now().timestamp(), 0)
                 .unwrap_or_default(),
             address,
+            perp_volume_last_90_days,
         }
     }
 }
@@ -81,6 +85,7 @@ pub async fn create_or_user_volume_statistics(
             perp_volume_last_30_days.eq(excluded(perp_volume_last_30_days)),
             update_time.eq(excluded(update_time)),
             address.eq(excluded(address)),
+            perp_volume_last_90_days.eq(excluded(perp_volume_last_90_days)),
         ))
         .execute(&mut conn)
         .await?;
