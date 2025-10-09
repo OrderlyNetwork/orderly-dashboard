@@ -240,7 +240,7 @@ pub async fn query_account_liquidation_transfers_by_time(
     let dur_ms = (Instant::now() - start_time).as_millis();
 
     let events = match result {
-        Ok(events) => {
+        Ok(mut events) => {
             tracing::info!(
                 target: DB_CONTEXT,
                 "query_account_liquidation_transfers_by_time success. length:{}, used time:{} ms",
@@ -248,18 +248,8 @@ pub async fn query_account_liquidation_transfers_by_time(
                 dur_ms
             );
             if events.len() as u32 == limit.unwrap_or_default() {
-                if let Some(last) = events.last() {
-                    cursor = Some(AccoutTradingCursor {
-                        block_time: last
-                            .block_time
-                            .clone()
-                            .map(|f| f.to_i64().unwrap_or_default())
-                            .unwrap_or_default(),
-                        block_number: last.block_number,
-                        transaction_index: last.transaction_index,
-                        log_index: last.log_index,
-                    });
-                }
+                // deprecated last block_number, transaction_index, liquidation_result_log_idx to avoid a liquidation result to be split into 2
+                cursor = deprecated_last_liquidation_transfer(&mut events);
             }
             events
         }
@@ -285,6 +275,39 @@ pub async fn query_account_liquidation_transfers_by_time(
     };
 
     Ok((events, cursor))
+}
+
+#[inline]
+pub fn deprecated_last_liquidation_transfer(
+    events: &mut Vec<DbLiquidationTransfer>,
+) -> Option<AccoutTradingCursor> {
+    let mut cursor: Option<AccoutTradingCursor> = None;
+    if let Some(last) = events.pop() {
+        loop {
+            if let Some(elem) = events.pop() {
+                let same_liquidation_result = last.block_number == elem.block_number
+                    && last.transaction_index == elem.transaction_index
+                    && last.liquidation_result_log_idx == elem.liquidation_result_log_idx;
+                if !same_liquidation_result {
+                    cursor = Some(AccoutTradingCursor {
+                        block_time: elem
+                            .block_time
+                            .clone()
+                            .map(|f| f.to_i64().unwrap_or_default())
+                            .unwrap_or_default(),
+                        block_number: elem.block_number,
+                        transaction_index: elem.transaction_index,
+                        log_index: elem.log_index,
+                    });
+                    events.push(elem);
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+    }
+    cursor
 }
 
 pub async fn query_account_liquidation_transfers_count_by_time(
@@ -377,4 +400,100 @@ pub async fn query_account_liquidation_transfers_by_time_and_result_keys(
     };
 
     Ok(events)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_deprecated_last_liquidation_transfer() {
+        let mut events = vec![
+            DbLiquidationTransfer {
+                block_number: 1,
+                transaction_index: 1,
+                log_index: 1,
+                liquidation_result_log_idx: 1,
+                transaction_id: "".to_string(),
+                liquidation_transfer_id: BigDecimal::from(1000),
+                liquidator_account_id: "".to_string(),
+                symbol_hash: "".to_string(),
+                position_qty_transfer: BigDecimal::from(1000),
+                cost_position_transfer: BigDecimal::from(1000),
+                liquidator_fee: BigDecimal::from(1000),
+                insurance_fee: BigDecimal::from(1000),
+                mark_price: BigDecimal::from(1000),
+                sum_unitary_fundings: BigDecimal::from(1000),
+                liquidation_fee: BigDecimal::from(1000),
+                block_time: Some(BigDecimal::from(1000)),
+                version: Some(1),
+            },
+            DbLiquidationTransfer {
+                block_number: 1,
+                transaction_index: 1,
+                log_index: 5,
+                liquidation_result_log_idx: 1,
+                transaction_id: "".to_string(),
+                liquidation_transfer_id: BigDecimal::from(1000),
+                liquidator_account_id: "".to_string(),
+                symbol_hash: "".to_string(),
+                position_qty_transfer: BigDecimal::from(1000),
+                cost_position_transfer: BigDecimal::from(1000),
+                liquidator_fee: BigDecimal::from(1000),
+                insurance_fee: BigDecimal::from(1000),
+                mark_price: BigDecimal::from(1000),
+                sum_unitary_fundings: BigDecimal::from(1000),
+                liquidation_fee: BigDecimal::from(1000),
+                block_time: Some(BigDecimal::from(1000)),
+                version: Some(1),
+            },
+            DbLiquidationTransfer {
+                block_number: 1,
+                transaction_index: 1,
+                log_index: 2,
+                liquidation_result_log_idx: 2,
+                transaction_id: "".to_string(),
+                liquidation_transfer_id: BigDecimal::from(1000),
+                liquidator_account_id: "".to_string(),
+                symbol_hash: "".to_string(),
+                position_qty_transfer: BigDecimal::from(1000),
+                cost_position_transfer: BigDecimal::from(1000),
+                liquidator_fee: BigDecimal::from(1000),
+                insurance_fee: BigDecimal::from(1000),
+                mark_price: BigDecimal::from(1000),
+                sum_unitary_fundings: BigDecimal::from(1000),
+                liquidation_fee: BigDecimal::from(1000),
+                block_time: Some(BigDecimal::from(1000)),
+                version: Some(1),
+            },
+            DbLiquidationTransfer {
+                block_number: 1,
+                transaction_index: 1,
+                log_index: 3,
+                liquidation_result_log_idx: 2,
+                transaction_id: "".to_string(),
+                liquidation_transfer_id: BigDecimal::from(1000),
+                liquidator_account_id: "".to_string(),
+                symbol_hash: "".to_string(),
+                position_qty_transfer: BigDecimal::from(1000),
+                cost_position_transfer: BigDecimal::from(1000),
+                liquidator_fee: BigDecimal::from(1000),
+                insurance_fee: BigDecimal::from(1000),
+                mark_price: BigDecimal::from(1000),
+                sum_unitary_fundings: BigDecimal::from(1000),
+                liquidation_fee: BigDecimal::from(1000),
+                block_time: Some(BigDecimal::from(1000)),
+                version: Some(1),
+            },
+        ];
+
+        let cursor = deprecated_last_liquidation_transfer(&mut events);
+        assert!(cursor.is_some());
+        let cursor = cursor.unwrap();
+        assert_eq!(cursor.block_number, 1);
+        assert_eq!(cursor.transaction_index, 1);
+        assert_eq!(cursor.log_index, 5);
+
+        assert_eq!(events.len(), 2);
+    }
 }
