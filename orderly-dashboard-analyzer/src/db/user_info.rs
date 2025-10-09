@@ -72,3 +72,15 @@ pub async fn get_user_info(account_id_: String) -> anyhow::Result<Option<UserInf
         },
     }
 }
+
+#[allow(dead_code)]
+pub async fn get_user_infos(account_ids: Vec<String>) -> anyhow::Result<Vec<UserInfo>> {
+    use crate::schema::user_info::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let result = user_info
+        .filter(account_id.eq_any(account_ids))
+        .get_results::<UserInfo>(&mut conn)
+        .await?;
+
+    Ok(result)
+}

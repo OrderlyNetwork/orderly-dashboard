@@ -4,9 +4,11 @@ use bigdecimal::{BigDecimal, RoundingMode};
 use chrono::NaiveDateTime;
 use diesel::pg::upsert::{excluded, on_constraint};
 use diesel::prelude::*;
+use diesel::sql_types::*;
 use diesel_async::RunQueryDsl;
 
 use crate::analyzer::get_cost_position_decimal;
+use crate::db::hourly_user_perp::AccountVolume;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
 use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
@@ -501,6 +503,65 @@ pub async fn legacy_create_or_update_user_perp_summary(
         }
     }
     Ok(row_nums)
+}
+
+pub async fn get_user_ltd_trading_volume(
+    offset_account_id: Option<String>,
+    limit: i64,
+) -> anyhow::Result<Vec<AccountVolume>> {
+    #[allow(unused_imports)]
+    use crate::{
+        db::{hourly_user_perp::HourlyUserPerp, POOL},
+        schema::user_perp_summary,
+        schema::user_perp_summary::dsl::*,
+    };
+
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
+    let select_result = if let Some(offset_account_id) = offset_account_id {
+        diesel::sql_query(
+            "
+select
+  account_id,
+  sum(total_trading_volume) as volume
+from
+  user_perp_summary
+where
+  account_id > $1
+group by
+  account_id
+order by
+  account_id
+limit
+  $2;
+        ",
+        )
+        .bind::<Text, _>(offset_account_id)
+        .bind::<BigInt, _>(limit)
+        .get_results::<AccountVolume>(&mut conn)
+        .await?
+    } else {
+        diesel::sql_query(
+            "
+select
+  account_id,
+  sum(total_trading_volume) as volume
+from
+  user_perp_summary
+group by
+  account_id
+order by
+  account_id
+limit
+  $1;
+        ",
+        )
+        .bind::<BigInt, _>(limit)
+        .get_results::<AccountVolume>(&mut conn)
+        .await?
+    };
+
+    Ok(select_result)
 }
 
 #[cfg(test)]

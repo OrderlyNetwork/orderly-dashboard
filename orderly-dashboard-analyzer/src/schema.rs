@@ -62,7 +62,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    hourly_orderly_token (token, block_hour, chain_id) {
+    hourly_orderly_token (token, block_hour) {
         token -> Text,
         block_hour -> Timestamp,
         chain_id -> Text,
@@ -70,18 +70,6 @@ diesel::table! {
         withdraw_count -> Int8,
         deposit_amount -> Numeric,
         deposit_count -> Int8,
-        pulled_block_height -> Int8,
-        pulled_block_time -> Timestamp,
-    }
-}
-
-diesel::table! {
-    hourly_user_fee_distribution (account_id, block_hour, token) {
-        account_id -> Text,
-        token -> Text,
-        block_hour -> Timestamp,
-        net_amount -> Numeric,
-        net_count -> Int8,
         pulled_block_height -> Int8,
         pulled_block_time -> Timestamp,
     }
@@ -100,19 +88,6 @@ diesel::table! {
         latest_sum_unitary_funding -> Numeric,
         liquidation_amount -> Numeric,
         liquidation_count -> Int8,
-        pulled_block_height -> Int8,
-        pulled_block_time -> Timestamp,
-    }
-}
-
-diesel::table! {
-    hourly_user_swap_result_uploaded (account_id, block_hour, token, chain_id) {
-        account_id -> Text,
-        token -> Text,
-        block_hour -> Timestamp,
-        chain_id -> Text,
-        net_amount -> Numeric,
-        net_count -> Int8,
         pulled_block_height -> Int8,
         pulled_block_time -> Timestamp,
     }
@@ -184,16 +159,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    user_balance_summary (account_id, token) {
-        account_id -> Text,
-        token -> Text,
-        balance -> Numeric,
-        pulled_block_height -> Int8,
-        pulled_block_time -> Timestamp,
-    }
-}
-
-diesel::table! {
     user_info (account_id) {
         account_id -> Text,
         broker_id -> Text,
@@ -237,6 +202,20 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    user_volume_statistics (account_id) {
+        id -> Int8,
+        account_id -> Text,
+        broker_id -> Text,
+        perp_volume_ytd -> Numeric,
+        perp_volume_ltd -> Numeric,
+        perp_volume_last_1_day -> Numeric,
+        perp_volume_last_7_days -> Numeric,
+        perp_volume_last_30_days -> Numeric,
+        update_time -> Timestamp,
+    }
+}
+
 diesel::allow_tables_to_appear_in_same_query!(
     block_summary,
     broker_info,
@@ -244,16 +223,14 @@ diesel::allow_tables_to_appear_in_same_query!(
     hourly_gas_fee,
     hourly_orderly_perp,
     hourly_orderly_token,
-    hourly_user_fee_distribution,
     hourly_user_perp,
-    hourly_user_swap_result_uploaded,
     hourly_user_token,
     market_info,
     orderly_perp_summary,
     orderly_token_summary,
     symbols,
-    user_balance_summary,
     user_info,
     user_perp_summary,
     user_token_summary,
+    user_volume_statistics,
 );
