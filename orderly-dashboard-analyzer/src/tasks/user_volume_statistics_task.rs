@@ -53,22 +53,30 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
             account_set.insert(res.account_id.clone());
         }
         let account_brokers = get_user_infos(account_ids.clone()).await?;
-        let mut account_broker_map = account_brokers
+        let mut account_broker_addr_map = account_brokers
             .iter()
-            .map(|v| (v.account_id.clone(), v.broker_id.clone()))
+            .map(|v| {
+                (
+                    v.account_id.clone(),
+                    (v.broker_id.clone(), v.address.clone()),
+                )
+            })
             .collect::<BTreeMap<_, _>>();
         if account_brokers.len() != ltd_res1.len() {
             let diff_len = ltd_res1.len() - account_brokers.len();
             tracing::info!("missed account length: {}", diff_len);
             for res in ltd_res1.iter() {
-                if !account_broker_map.contains_key(&res.account_id) {
+                if !account_broker_addr_map.contains_key(&res.account_id) {
                     loop {
                         match cefi_get_account_info(base_url, &res.account_id).await {
                             Ok(account_info) => {
                                 if account_info.success {
-                                    account_broker_map.insert(
+                                    account_broker_addr_map.insert(
                                         res.account_id.clone(),
-                                        account_info.data.broker_id.clone(),
+                                        (
+                                            account_info.data.broker_id.clone(),
+                                            account_info.data.address.clone(),
+                                        ),
                                     );
                                     create_user_info(&UserInfo {
                                         account_id: res.account_id.clone(),
@@ -155,13 +163,13 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
         let mut user_volume_statistics: Vec<DBNewUserVolumeStatistics> =
             Vec::with_capacity(ltd_res1_len);
         for account_v in ltd_res1 {
+            let (broker_id, address) = account_broker_addr_map
+                .get(&account_v.account_id)
+                .cloned()
+                .unwrap_or_default();
             user_volume_statistics.push(DBNewUserVolumeStatistics::new(
                 account_v.account_id.clone(),
-                if let Some(broker_id) = account_broker_map.get(&account_v.account_id) {
-                    broker_id.clone()
-                } else {
-                    "".to_string()
-                },
+                broker_id,
                 if let Some(volume) = ytd_res1.get(&account_v.account_id) {
                     volume.clone()
                 } else {
@@ -180,6 +188,7 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
                     .get(&account_v.account_id)
                     .cloned()
                     .unwrap_or(BigDecimal::from(0)),
+                address,
             ));
         }
         create_or_user_volume_statistics(user_volume_statistics).await?;

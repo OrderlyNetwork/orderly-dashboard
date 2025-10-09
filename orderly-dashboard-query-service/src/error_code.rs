@@ -5,6 +5,7 @@ pub const RAW_QUERY_BAN_ERR: i32 = 10003;
 pub const QUERY_OVER_LIMIT_ERR: i32 = 10004;
 pub const QUERY_OVER_EXECUTION_ERR: i32 = 10005;
 pub const ACCOUNT_ID_CONFLICT_OR_INVALID_ERR: i32 = 10006;
+pub const ACCOUNT_NOT_FOUND: i32 = 10007;
 
 pub const RAW_QUERY_OVERLIMIT_ERR_MESSAGE: &str =
     "too many raw query in parallel, please try later";

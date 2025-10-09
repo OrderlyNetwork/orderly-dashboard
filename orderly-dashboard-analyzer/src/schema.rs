@@ -213,6 +213,7 @@ diesel::table! {
         perp_volume_last_7_days -> Numeric,
         perp_volume_last_30_days -> Numeric,
         update_time -> Timestamp,
+        address -> Text,
     }
 }
 

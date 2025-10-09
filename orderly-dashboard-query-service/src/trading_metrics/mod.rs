@@ -1,3 +1,5 @@
+pub mod volume_statistic;
+
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder, Result};
 use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use orderly_dashboard_analyzer::sync_broker::{
@@ -38,6 +40,8 @@ use std::sync::Arc;
 use std::time::Instant;
 use typescript_type_def::TypeDef;
 use utoipa::ToSchema;
+
+pub use volume_statistic::{get_account_volume_statistic, get_broker_volume_statistic};
 
 const TRADING_METRICS: &str = "trading_metrics_context";
 
