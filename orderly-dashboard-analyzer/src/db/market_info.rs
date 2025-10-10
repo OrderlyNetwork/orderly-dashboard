@@ -84,11 +84,15 @@ mod tests {
         let base_url = "https://api.orderly.org";
         let data = list_market_infos(base_url).await.unwrap();
         tracing::info!("market infos: {:?}", data);
-        let nsecs = data.timestamp % 1000 * 1_000_000;
-        let update_time =
-            NaiveDateTime::from_timestamp_opt(data.timestamp / 1000, nsecs as u32).unwrap();
+        let nsecs = data.timestamp.unwrap_or_default() % 1000 * 1_000_000;
+        let update_time = NaiveDateTime::from_timestamp_opt(
+            data.timestamp.unwrap_or_default() / 1000,
+            nsecs as u32,
+        )
+        .unwrap();
         let market_infos = data
             .data
+            .unwrap()
             .rows
             .into_iter()
             .map(|v| {

@@ -4,8 +4,10 @@ use serde_json::Value;
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct ResponseData<T> {
     pub success: bool,
-    pub data: T,
-    pub timestamp: i64,
+    pub code: Option<i32>,
+    pub message: Option<String>,
+    pub data: Option<T>,
+    pub timestamp: Option<i64>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]

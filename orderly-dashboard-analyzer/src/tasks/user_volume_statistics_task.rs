@@ -72,28 +72,27 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
                         match cefi_get_account_info(base_url, &res.account_id).await {
                             Ok(account_info) => {
                                 if account_info.success {
-                                    account_broker_addr_map.insert(
-                                        res.account_id.clone(),
-                                        (
-                                            account_info.data.broker_id.clone(),
-                                            account_info.data.address.clone(),
-                                        ),
-                                    );
-                                    create_user_info(&UserInfo {
-                                        account_id: res.account_id.clone(),
-                                        broker_id: account_info.data.broker_id.clone(),
-                                        broker_hash: cal_broker_hash(&account_info.data.broker_id),
-                                        address: account_info.data.address,
-                                    })
-                                    .await
-                                    .ok();
-                                    break;
+                                    if let Some(data) = account_info.data {
+                                        account_broker_addr_map.insert(
+                                            res.account_id.clone(),
+                                            (data.broker_id.clone(), data.address.clone()),
+                                        );
+                                        create_user_info(&UserInfo {
+                                            account_id: res.account_id.clone(),
+                                            broker_id: data.broker_id.clone(),
+                                            broker_hash: cal_broker_hash(&data.broker_id),
+                                            address: data.address,
+                                        })
+                                        .await
+                                        .ok();
+                                    }
                                 } else {
                                     tracing::warn!(
-                                        "cefi_get_account_info account_id: {} not success",
-                                        res.account_id
+                                        "cefi_get_account_info account_id: {} not success with code: {:?}, message: {:?}",
+                                        res.account_id, account_info.code, account_info.message,
                                     );
                                 }
+                                break;
                             }
                             Err(err) => {
                                 tracing::warn!(
