@@ -24,12 +24,18 @@ pub fn update_collecteral_infos_task(base_url: String) {
 
 async fn upsert_collecteral_infos(base_url: &str) -> anyhow::Result<()> {
     let data = list_collecteral_infos(base_url).await?;
-    tracing::info!("collecterall lens: {:?}", data.data.rows.len());
-    let nsecs = data.timestamp % 1000 * 1_000_000;
-    let update_time =
-        NaiveDateTime::from_timestamp_opt(data.timestamp / 1000, nsecs as u32).unwrap();
+    if !data.success {
+        return Err(anyhow::anyhow!(
+            "list_collecteral_infos failed with info: {:?}",
+            data
+        ));
+    }
+    let timestamp = data.timestamp.unwrap_or_default();
+    let data = data.data.unwrap_or_default();
+    tracing::info!("collecterall lens: {:?}", data.rows.len());
+    let nsecs = timestamp % 1000 * 1_000_000;
+    let update_time = NaiveDateTime::from_timestamp_opt(timestamp / 1000, nsecs as u32).unwrap();
     let collecterall_infos = data
-        .data
         .rows
         .into_iter()
         .map(|v| {

@@ -26,12 +26,18 @@ pub fn update_market_infos_task(base_url: String) {
 
 async fn upsert_market_infos(base_url: &str) -> anyhow::Result<()> {
     let data = list_market_infos(base_url).await?;
-    tracing::info!("market infos lens: {:?}", data.data.rows.len());
-    let nsecs = data.timestamp % 1000 * 1_000_000;
-    let update_time =
-        NaiveDateTime::from_timestamp_opt(data.timestamp / 1000, nsecs as u32).unwrap();
+    if !data.success {
+        return Err(anyhow::anyhow!(
+            "list_collecteral_infos failed with info: {:?}",
+            data
+        ));
+    }
+    let timestamp = data.timestamp.unwrap_or_default();
+    let data = data.data.unwrap_or_default();
+    tracing::info!("market infos lens: {:?}", data.rows.len());
+    let nsecs = timestamp % 1000 * 1_000_000;
+    let update_time = NaiveDateTime::from_timestamp_opt(timestamp / 1000, nsecs as u32).unwrap();
     let market_infos = data
-        .data
         .rows
         .into_iter()
         .map(|v| {

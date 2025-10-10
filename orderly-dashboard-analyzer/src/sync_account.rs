@@ -41,7 +41,7 @@ async fn sync_account_action(mut rx: Receiver<String>, base_url: String) -> anyh
                     match cefi_get_account_info(&base_url, &account_id).await {
                         Ok(res) => {
                             if res.success {
-                                let data = res.data;
+                                let data = res.data.unwrap_or_default();
                                 create_user_info(&UserInfo {
                                     account_id: account_id,
                                     broker_id: data.broker_id.clone(),
