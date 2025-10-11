@@ -1,5 +1,8 @@
+use std::time::Duration;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use tokio::time::timeout;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct ResponseData<T> {
@@ -96,10 +99,23 @@ pub async fn cefi_get_account_info(
     base_url: &str,
     account_id: &str,
 ) -> anyhow::Result<ResponseData<CefiAccountInfo>> {
-    let res = _get_account_info(base_url, account_id).await?;
-
-    let response_data: ResponseData<CefiAccountInfo> = serde_json::from_str(&res)?;
-    Ok(response_data)
+    let result = timeout(
+        Duration::from_secs(3),
+        _get_account_info(base_url, account_id),
+    )
+    .await;
+    match result {
+        Ok(res) => {
+            let res = res?;
+            let response_data: ResponseData<CefiAccountInfo> = serde_json::from_str(&res)?;
+            Ok(response_data)
+        }
+        Err(err) => Err(anyhow::anyhow!(
+            "cefi_get_account_info request account_id: {} timeout: {}",
+            account_id,
+            err
+        )),
+    }
 }
 
 async fn _get_account_info(base_url: &str, account_id: &str) -> anyhow::Result<String> {
