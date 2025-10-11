@@ -30,7 +30,7 @@ pub async fn cal_user_volume_statistics_task(base_url: String) -> anyhow::Result
 }
 
 pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
-    let limit: usize = 20;
+    let limit: usize = 5;
     let mut offset_account_id = None;
     let (ytd_from, ytd_to) = get_ytd_time_range();
     let (d90_from, d90_to) = get_90d_time_range();

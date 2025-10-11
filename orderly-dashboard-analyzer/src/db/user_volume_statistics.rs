@@ -71,6 +71,9 @@ impl DBNewUserVolumeStatistics {
 pub async fn create_or_user_volume_statistics(
     user_volumes: Vec<DBNewUserVolumeStatistics>,
 ) -> anyhow::Result<()> {
+    if user_volumes.is_empty() {
+        return Ok(());
+    }
     use crate::schema::user_volume_statistics::dsl::*;
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     diesel::insert_into(user_volume_statistics)
