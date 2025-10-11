@@ -262,11 +262,12 @@ async fn _create_or_update_hourly_user_perp(
 }
 
 pub async fn get_user_trading_volume_in_time_range(
-    account_ids: Vec<String>,
+    from_account_id: Option<String>,
+    to_account_id: Option<String>,
     from_time: i64,
     to_time: i64,
 ) -> anyhow::Result<Vec<AccountVolume>> {
-    if account_ids.is_empty() {
+    if from_account_id.is_none() || to_account_id.is_none() {
         return Ok(vec![]);
     }
     #[allow(unused_imports)]
@@ -276,24 +277,18 @@ pub async fn get_user_trading_volume_in_time_range(
         schema::hourly_user_perp::dsl::*,
     };
 
-    let conditions = account_ids
-        .into_iter()
-        .map(|a| format!("'{}'", a))
-        .collect::<Vec<_>>()
-        .join(",");
-    let query = format!(
-        "select account_id,sum(trading_volume) as volume from hourly_user_perp \
-    where block_hour>=$1 and block_hour<$2 and account_id in ({}) group by account_id",
-        conditions
-    );
-
     let from_time = NaiveDateTime::from_timestamp_opt(from_time, 0).unwrap_or_default();
     let to_time = NaiveDateTime::from_timestamp_opt(to_time, 0).unwrap_or_default();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
-    let select_result = diesel::sql_query(&query)
+    let select_result = diesel::sql_query(
+        "select account_id,sum(trading_volume) as volume from hourly_user_perp \
+    where block_hour>=$1 and block_hour<$2 and account_id >= $3 and account_id <= $4 group by account_id"
+)
         .bind::<Timestamp, _>(from_time)
         .bind::<Timestamp, _>(to_time)
+        .bind::<Text, _>(from_account_id.unwrap_or_default())
+        .bind::<Text, _>(to_account_id.unwrap_or_default())
         .get_results::<AccountVolume>(&mut conn)
         .await?;
 

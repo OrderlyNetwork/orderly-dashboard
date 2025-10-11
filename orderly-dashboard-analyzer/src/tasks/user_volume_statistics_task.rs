@@ -43,9 +43,10 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
         let inst1 = Instant::now();
         let ltd_res1 = get_user_ltd_trading_volume(offset_account_id.clone(), limit as i64).await?;
         tracing::info!(
-            "get_user_trading_volume_in_time_range ltd time cost: {} ms, offset_account_id: {:?}",
+            "get_user_trading_volume_in_time_range ltd time cost: {} ms, offset_account_id: {:?}, limit: {}",
             inst1.elapsed().as_millis(),
-            offset_account_id
+            offset_account_id,
+            limit,
         );
 
         let mut account_set = BTreeSet::new();
@@ -112,11 +113,16 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
 
         let inst1 = Instant::now();
         // ytd
-        let ytd_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), ytd_from, ytd_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let ytd_res1 = get_user_trading_volume_in_time_range(
+            account_ids.first().cloned(),
+            account_ids.last().cloned(),
+            ytd_from,
+            ytd_to,
+        )
+        .await?
+        .into_iter()
+        .map(|v| (v.account_id, v.volume))
+        .collect::<BTreeMap<_, _>>();
         tracing::info!(
             "get_user_trading_volume_in_time_range ytd time cost: {} ms",
             inst1.elapsed().as_millis()
@@ -124,11 +130,16 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
 
         let inst1 = Instant::now();
         // 90d
-        let d90_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d90_from, d90_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let d90_res1 = get_user_trading_volume_in_time_range(
+            account_ids.first().cloned(),
+            account_ids.last().cloned(),
+            d90_from,
+            d90_to,
+        )
+        .await?
+        .into_iter()
+        .map(|v| (v.account_id, v.volume))
+        .collect::<BTreeMap<_, _>>();
         tracing::info!(
             "get_user_trading_volume_in_time_range d30 time cost: {} ms",
             inst1.elapsed().as_millis()
@@ -136,23 +147,33 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
 
         let inst1 = Instant::now();
         // 30d
-        let d30_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d30_from, d30_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let d30_res1 = get_user_trading_volume_in_time_range(
+            account_ids.first().cloned(),
+            account_ids.last().cloned(),
+            d30_from,
+            d30_to,
+        )
+        .await?
+        .into_iter()
+        .map(|v| (v.account_id, v.volume))
+        .collect::<BTreeMap<_, _>>();
         tracing::info!(
-            "get_user_trading_volume_in_time_range d30 time cost: {} s",
-            inst1.elapsed().as_secs()
+            "get_user_trading_volume_in_time_range d30 time cost: {} ms",
+            inst1.elapsed().as_millis()
         );
 
         let inst1 = Instant::now();
         // 7d
-        let d7_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d7_from, d7_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let d7_res1 = get_user_trading_volume_in_time_range(
+            account_ids.first().cloned(),
+            account_ids.last().cloned(),
+            d7_from,
+            d7_to,
+        )
+        .await?
+        .into_iter()
+        .map(|v| (v.account_id, v.volume))
+        .collect::<BTreeMap<_, _>>();
         tracing::info!(
             "get_user_trading_volume_in_time_range d7 time cost: {} ms",
             inst1.elapsed().as_millis()
@@ -160,11 +181,16 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
 
         let inst1 = Instant::now();
         // 1d
-        let d1_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d1_from, d1_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let d1_res1 = get_user_trading_volume_in_time_range(
+            account_ids.first().cloned(),
+            account_ids.last().cloned(),
+            d1_from,
+            d1_to,
+        )
+        .await?
+        .into_iter()
+        .map(|v| (v.account_id, v.volume))
+        .collect::<BTreeMap<_, _>>();
         tracing::info!(
             "get_user_trading_volume_in_time_range d1 time cost: {} ms",
             inst1.elapsed().as_millis()
