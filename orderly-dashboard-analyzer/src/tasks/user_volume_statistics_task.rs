@@ -30,7 +30,7 @@ pub async fn cal_user_volume_statistics_task(base_url: String) -> anyhow::Result
 }
 
 pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
-    let limit: usize = 1000;
+    let limit: usize = 20;
     let mut offset_account_id = None;
     let (ytd_from, ytd_to) = get_ytd_time_range();
     let (d90_from, d90_to) = get_90d_time_range();
@@ -142,8 +142,8 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
             .map(|v| (v.account_id, v.volume))
             .collect::<BTreeMap<_, _>>();
         tracing::info!(
-            "get_user_trading_volume_in_time_range d30 time cost: {} s",
-            inst1.elapsed().as_secs()
+            "get_user_trading_volume_in_time_range d30 time cost: {} ms",
+            inst1.elapsed().as_millis()
         );
 
         let inst1 = Instant::now();
@@ -218,7 +218,7 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
             }
         }
 
-        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        tokio::time::sleep(std::time::Duration::from_millis(2)).await;
     }
 
     let time_cost_s = inst.elapsed().as_secs();
