@@ -5,6 +5,7 @@ use std::{
 
 use bigdecimal::BigDecimal;
 use chrono::{Duration, Utc};
+use futures::future::join_all;
 use orderly_dashboard_analyzer::db::{
     user_info::get_user_infos,
     user_volume_statistics::{create_or_user_volume_statistics, DBNewUserVolumeStatistics},
@@ -13,7 +14,7 @@ use orderly_dashboard_analyzer::db::{
 use crate::{
     client::cefi_get_account_info,
     db::{
-        hourly_user_perp::get_user_trading_volume_in_time_range,
+        hourly_user_perp::get_single_user_trading_volume_in_time_range,
         user_info::{create_user_info, UserInfo},
         user_perp_summary::get_user_ltd_trading_volume,
     },
@@ -112,11 +113,8 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
 
         let inst1 = Instant::now();
         // ytd
-        let ytd_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), ytd_from, ytd_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let ytd_res1 =
+            parallel_get_user_trading_volume(&account_ids, ytd_from, ytd_to, "ytd").await?;
         tracing::info!(
             "get_user_trading_volume_in_time_range ytd time cost: {} ms",
             inst1.elapsed().as_millis()
@@ -124,11 +122,8 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
 
         let inst1 = Instant::now();
         // 90d
-        let d90_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d90_from, d90_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let d90_res1 =
+            parallel_get_user_trading_volume(&account_ids, d90_from, d90_to, "d90").await?;
         tracing::info!(
             "get_user_trading_volume_in_time_range d30 time cost: {} ms",
             inst1.elapsed().as_millis()
@@ -136,11 +131,8 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
 
         let inst1 = Instant::now();
         // 30d
-        let d30_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d30_from, d30_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let d30_res1 =
+            parallel_get_user_trading_volume(&account_ids, d30_from, d30_to, "d30").await?;
         tracing::info!(
             "get_user_trading_volume_in_time_range d30 time cost: {} s",
             inst1.elapsed().as_secs()
@@ -148,11 +140,7 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
 
         let inst1 = Instant::now();
         // 7d
-        let d7_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d7_from, d7_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let d7_res1 = parallel_get_user_trading_volume(&account_ids, d7_from, d7_to, "d7").await?;
         tracing::info!(
             "get_user_trading_volume_in_time_range d7 time cost: {} ms",
             inst1.elapsed().as_millis()
@@ -160,11 +148,7 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
 
         let inst1 = Instant::now();
         // 1d
-        let d1_res1 = get_user_trading_volume_in_time_range(account_ids.clone(), d1_from, d1_to)
-            .await?
-            .into_iter()
-            .map(|v| (v.account_id, v.volume))
-            .collect::<BTreeMap<_, _>>();
+        let d1_res1 = parallel_get_user_trading_volume(&account_ids, d1_from, d1_to, "d1").await?;
         tracing::info!(
             "get_user_trading_volume_in_time_range d1 time cost: {} ms",
             inst1.elapsed().as_millis()
@@ -294,4 +278,43 @@ fn get_1d_time_range() -> (i64, i64) {
         .and_hms_opt(0, 0, 0)
         .unwrap_or_default();
     (from.timestamp(), to.timestamp())
+}
+
+async fn parallel_get_user_trading_volume(
+    account_ids: &Vec<String>,
+    from: i64,
+    to: i64,
+    context: &str,
+) -> anyhow::Result<BTreeMap<String, BigDecimal>> {
+    let mut range_res1: BTreeMap<String, _> = BTreeMap::new();
+    for chunk in account_ids.chunks(10) {
+        let mut tasks = Vec::with_capacity(chunk.len());
+        for acc in chunk {
+            let acc = acc.clone();
+            tasks.push(async {
+                let res = get_single_user_trading_volume_in_time_range(acc.clone(), from, to).await;
+                match res {
+                    Ok(res) => Ok((acc, res)),
+                    Err(err) => Err(err),
+                }
+            });
+        }
+        let res = join_all(tasks).await;
+        for r in res {
+            match r {
+                Ok(r) => {
+                    range_res1.insert(r.0, r.1.volume);
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        "get_single_user_trading_volume_in_time_range {} failed with err: {}",
+                        context,
+                        e
+                    );
+                    return Err(e);
+                }
+            }
+        }
+    }
+    Ok(range_res1)
 }
