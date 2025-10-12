@@ -48,7 +48,7 @@ fn initialize_db_pool() -> DbPool {
 
     let connection_manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
     let pool = Pool::builder(connection_manager)
-        .max_size(6)
+        .max_size(12)
         .build()
         .expect("analyzer db should connected success");
     pool
