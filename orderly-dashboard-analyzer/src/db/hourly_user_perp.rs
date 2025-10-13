@@ -38,6 +38,12 @@ pub struct AccountVolume {
     pub volume: BigDecimal,
 }
 
+#[derive(Debug, QueryableByName, Clone)]
+pub struct SingleVolume {
+    #[diesel(sql_type = Nullable<Numeric>)]
+    pub volume: Option<BigDecimal>,
+}
+
 impl HourlyUserPerp {
     pub fn new_emtpy_hourly_user_perp(
         account_id: &str,
@@ -296,6 +302,43 @@ pub async fn get_user_trading_volume_in_time_range(
         .bind::<Timestamp, _>(to_time)
         .get_results::<AccountVolume>(&mut conn)
         .await?;
+
+    Ok(select_result)
+}
+
+pub async fn get_single_user_trading_volume_in_time_range(
+    account_id_: String,
+    from_time: i64,
+    to_time: i64,
+) -> anyhow::Result<SingleVolume> {
+    #[allow(unused_imports)]
+    use crate::{
+        db::{hourly_user_perp::HourlyUserPerp, POOL},
+        schema::hourly_user_perp,
+        schema::hourly_user_perp::dsl::*,
+    };
+
+    let from_time = NaiveDateTime::from_timestamp_opt(from_time, 0).unwrap_or_default();
+    let to_time = NaiveDateTime::from_timestamp_opt(to_time, 0).unwrap_or_default();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
+    let select_result = diesel::sql_query(
+        "
+select
+  sum(trading_volume) as volume
+from
+  hourly_user_perp
+where
+  account_id = $1
+  and block_hour >= $2
+  and block_hour <= $3;
+    ",
+    )
+    .bind::<Text, _>(account_id_)
+    .bind::<Timestamp, _>(from_time)
+    .bind::<Timestamp, _>(to_time)
+    .get_result::<SingleVolume>(&mut conn)
+    .await?;
 
     Ok(select_result)
 }
