@@ -8,7 +8,6 @@ use diesel::sql_types::*;
 use diesel_async::RunQueryDsl;
 
 use crate::analyzer::get_cost_position_decimal;
-use crate::db::hourly_user_perp::AccountVolume;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
 use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
@@ -39,6 +38,16 @@ pub struct UserPerpSummary {
     pub pulled_block_time: NaiveDateTime,
 
     pub sum_unitary_fundings: BigDecimal,
+}
+
+#[derive(Debug, QueryableByName, Clone)]
+pub struct AccountVolumeWithTime {
+    #[diesel(sql_type = Text)]
+    pub account_id: String,
+    #[diesel(sql_type = Numeric)]
+    pub volume: BigDecimal,
+    #[diesel(sql_type = Timestamp)]
+    pub max_update_time: NaiveDateTime,
 }
 
 impl UserPerpSummary {
@@ -508,7 +517,7 @@ pub async fn legacy_create_or_update_user_perp_summary(
 pub async fn get_user_ltd_trading_volume(
     offset_account_id: Option<String>,
     limit: i64,
-) -> anyhow::Result<Vec<AccountVolume>> {
+) -> anyhow::Result<Vec<AccountVolumeWithTime>> {
     #[allow(unused_imports)]
     use crate::{
         db::{hourly_user_perp::HourlyUserPerp, POOL},
@@ -523,7 +532,8 @@ pub async fn get_user_ltd_trading_volume(
             "
 select
   account_id,
-  sum(total_trading_volume) as volume
+  sum(total_trading_volume) as volume,
+  max(pulled_block_time) as max_update_time
 from
   user_perp_summary
 where
@@ -538,14 +548,15 @@ limit
         )
         .bind::<Text, _>(offset_account_id)
         .bind::<BigInt, _>(limit)
-        .get_results::<AccountVolume>(&mut conn)
+        .get_results::<AccountVolumeWithTime>(&mut conn)
         .await?
     } else {
         diesel::sql_query(
             "
 select
   account_id,
-  sum(total_trading_volume) as volume
+  sum(total_trading_volume) as volume,
+  max(pulled_block_time) as max_update_time
 from
   user_perp_summary
 group by
@@ -557,7 +568,7 @@ limit
         ",
         )
         .bind::<BigInt, _>(limit)
-        .get_results::<AccountVolume>(&mut conn)
+        .get_results::<AccountVolumeWithTime>(&mut conn)
         .await?
     };
 

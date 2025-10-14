@@ -111,6 +111,16 @@ pub async fn cal_user_volume_statistics(base_url: &str) -> anyhow::Result<()> {
         }
 
         // ytd
+        let account_ids = ltd_res1
+            .iter()
+            .filter_map(|f| {
+                if f.max_update_time.timestamp() >= ytd_from {
+                    Some(f.account_id.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
         let ytd_res1 =
             seperate_get_user_trading_volume_in_time_range(&account_ids, ytd_from, ytd_to, "ytd")
                 .await?;
