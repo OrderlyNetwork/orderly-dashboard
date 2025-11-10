@@ -56,18 +56,26 @@ async fn check_and_gen_partition(
         gen_diff_table_quarters(target_year, target_quarter, exist_year, exist_quarter);
     tracing::info!("diff year quarters: {:?}", differ_quarters);
     for year_quarter in differ_quarters {
-        if let Err(err) = create_partition(
-            &format_partition_name(year_quarter),
-            PartitionBounds::new_from_year_quarter(year_quarter),
-            PARTITIONED_EXECUTED_TRADES_TABLE_NAME,
-        )
-        .await
-        {
-            tracing::warn!(
-                "create_partition for year_quarter: {} failed with err: {}",
-                year_quarter,
-                err
-            );
+        loop {
+            if let Err(err) = create_partition(
+                &format_partition_name(year_quarter),
+                PartitionBounds::new_from_year_quarter(year_quarter),
+                PARTITIONED_EXECUTED_TRADES_TABLE_NAME,
+            )
+            .await
+            {
+                if err.to_string().contains("already exists") {
+                    break;
+                }
+                tracing::warn!(
+                    "create_partition for year_quarter: {} failed with err: {}",
+                    year_quarter,
+                    err
+                );
+                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+            } else {
+                break;
+            }
         }
     }
     executed_trades_partition_cfg.created_table_quarter = target_year * 100 + target_quarter;
