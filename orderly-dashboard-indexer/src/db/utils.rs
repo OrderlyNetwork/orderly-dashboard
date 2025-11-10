@@ -75,6 +75,7 @@ pub async fn create_partition(
     ",
         table_name, parent_table, from_bound, to_bound
     );
+    tracing::info!("create_partition sql: {}", s);
     let sql = sql_query(s);
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = sql.execute(&mut conn).await?;
