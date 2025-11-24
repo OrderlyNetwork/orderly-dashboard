@@ -74,6 +74,8 @@ type EventsV2RequestBody = {
   trading_event_next_cursor?: TradingEventCursor;
 };
 
+const MAX_TIME_RANGE_SECONDS = 31 * 24 * 3600;
+
 export function useEvents(query: EventsParams | null) {
   const { queryServiceUrl } = useAppState();
   const [allEvents, setAllEvents] = useState<EventTableData[]>([]);
@@ -199,6 +201,14 @@ async function fetchEvents(
 
   if (query.to_time != null) {
     requestBody.to_time = Math.trunc(query.to_time.valueOf() / 1_000);
+  }
+
+  if (
+    requestBody.from_time != null &&
+    requestBody.to_time != null &&
+    requestBody.to_time - requestBody.from_time > MAX_TIME_RANGE_SECONDS
+  ) {
+    requestBody.from_time = requestBody.to_time - MAX_TIME_RANGE_SECONDS;
   }
 
   if (query.trading_event_next_cursor != null) {
