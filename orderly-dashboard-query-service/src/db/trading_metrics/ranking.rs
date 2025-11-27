@@ -62,7 +62,8 @@ pub async fn get_token_ranking(
     let now = Local::now().naive_utc();
     let start_time = now - Duration::hours(hour);
 
-    let mut sql = "select account_id, token, sum(withdraw_amount) as amount from hourly_user_token \
+    let mut sql =
+        "select account_id, token, sum(withdraw_amount) as amount from hourly_user_token \
     where block_hour>=$1 and token=$2 group by account_id, token order by amount desc limit $3";
 
     if !withdraw {

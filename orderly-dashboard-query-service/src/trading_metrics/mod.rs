@@ -5,6 +5,7 @@ use chrono::{Duration, Local, NaiveDate, NaiveDateTime};
 use orderly_dashboard_analyzer::sync_broker::{
     cal_account_id, cal_symbol_hash, get_sol_account_id,
 };
+use orderly_dashboard_indexer::formats_external::FailureResponse;
 use orderly_dashboard_indexer::sdk::solana::pubkey::Pubkey;
 use serde::Serialize;
 use serde_derive::Deserialize;
@@ -21,7 +22,8 @@ use crate::db::trading_metrics::ranking::{
 use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_daily_volume};
 use crate::error_code::{
     ACCOUNT_ID_CONFLICT_OR_INVALID_ERR, ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE,
-    QUERY_OVER_EXECUTION_ERR, QUERY_OVER_LIMIT_ERR,
+    DAYS_RAGE_OVER_LIMIT, DAYS_RAGE_OVER_LIMIT_ERR_MESSAGE, QUERY_OVER_EXECUTION_ERR,
+    QUERY_OVER_LIMIT_ERR, SIZE_OVER_LIMIT_ERR_MESSAGE,
 };
 use crate::format_extern::rank_metrics::UserSummaryRankExtern;
 use crate::format_extern::trading_metrics::{
@@ -657,6 +659,25 @@ pub async fn get_token_deposit_rank(
     param: web::Query<DepositWithdrawRankingRequest>,
 ) -> HttpResponse {
     tracing::debug!(target: TRADING_METRICS, "/ranking/deposit, days: {}, size: {}", param.days, param.size);
+    const MAX_DAYS: u32 = 90;
+    if param.days > MAX_DAYS {
+        let resp = FailureResponse::new(
+            DAYS_RAGE_OVER_LIMIT,
+            format!(
+                "{}, max days is {}",
+                DAYS_RAGE_OVER_LIMIT_ERR_MESSAGE, MAX_DAYS
+            ),
+        );
+        return HttpResponse::Ok().json(resp);
+    }
+    const MAX_SIZE: u32 = 90;
+    if param.size > MAX_SIZE {
+        let resp = FailureResponse::new(
+            DAYS_RAGE_OVER_LIMIT,
+            format!("{}, max size is {}", SIZE_OVER_LIMIT_ERR_MESSAGE, MAX_SIZE),
+        );
+        return HttpResponse::Ok().json(resp);
+    }
     write_response(
         get_token_ranking(
             param.to_hour(),
@@ -687,6 +708,25 @@ pub async fn get_token_withdraw_rank(
     param: web::Query<DepositWithdrawRankingRequest>,
 ) -> HttpResponse {
     tracing::debug!(target: TRADING_METRICS, "/ranking/withdraw, days: {}, size: {}", param.days, param.size);
+    const MAX_DAYS: u32 = 90;
+    if param.days > MAX_DAYS {
+        let resp = FailureResponse::new(
+            DAYS_RAGE_OVER_LIMIT,
+            format!(
+                "{}, max days is {}",
+                DAYS_RAGE_OVER_LIMIT_ERR_MESSAGE, MAX_DAYS
+            ),
+        );
+        return HttpResponse::Ok().json(resp);
+    }
+    const MAX_SIZE: u32 = 90;
+    if param.size > MAX_SIZE {
+        let resp = FailureResponse::new(
+            DAYS_RAGE_OVER_LIMIT,
+            format!("{}, max size is {}", SIZE_OVER_LIMIT_ERR_MESSAGE, MAX_SIZE),
+        );
+        return HttpResponse::Ok().json(resp);
+    }
     write_response(
         get_token_ranking(
             param.to_hour(),
