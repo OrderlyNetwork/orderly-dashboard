@@ -63,11 +63,11 @@ pub async fn get_token_ranking(
     let start_time = now - Duration::hours(hour);
 
     let mut sql = "select account_id, token, sum(withdraw_amount) as amount from hourly_user_token \
-    where block_hour>=$1 and token_hash=$2 group by account_id, token order by volume desc limit $3";
+    where block_hour>=$1 and token=$2 group by account_id, token order by amount desc limit $3";
 
     if !withdraw {
         sql = "select account_id, token, sum(deposit_amount) as amount from hourly_user_token \
-    where block_hour>=$1 and token_hash=$2 group by account_id, token order by volume desc limit $3"
+    where block_hour>=$1 and token=$2 group by account_id, token order by amount desc limit $3"
     }
 
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
@@ -89,7 +89,9 @@ pub async fn get_token_ranking(
                 });
             }
         }
-        Err(_) => {}
+        Err(err) => {
+            tracing::warn!("query deposit/withdraw ranking failed with err: {}", err);
+        }
     }
     deposit_withdraw_vec
 }
