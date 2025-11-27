@@ -23,7 +23,7 @@ use crate::db::trading_metrics::{get_block_height, get_daily_trading_fee, get_da
 use crate::error_code::{
     ACCOUNT_ID_CONFLICT_OR_INVALID_ERR, ACCOUNT_ID_CONFLICT_OR_INVALID_ERR_MESSAGE,
     DAYS_RAGE_OVER_LIMIT, DAYS_RAGE_OVER_LIMIT_ERR_MESSAGE, QUERY_OVER_EXECUTION_ERR,
-    QUERY_OVER_LIMIT_ERR, SIZE_OVER_LIMIT_ERR_MESSAGE,
+    QUERY_OVER_LIMIT_ERR, SIZE_OVER_LIMIT, SIZE_OVER_LIMIT_ERR_MESSAGE,
 };
 use crate::format_extern::rank_metrics::UserSummaryRankExtern;
 use crate::format_extern::trading_metrics::{
@@ -670,10 +670,10 @@ pub async fn get_token_deposit_rank(
         );
         return HttpResponse::Ok().json(resp);
     }
-    const MAX_SIZE: u32 = 90;
+    const MAX_SIZE: u32 = 100;
     if param.size > MAX_SIZE {
         let resp = FailureResponse::new(
-            DAYS_RAGE_OVER_LIMIT,
+            SIZE_OVER_LIMIT,
             format!("{}, max size is {}", SIZE_OVER_LIMIT_ERR_MESSAGE, MAX_SIZE),
         );
         return HttpResponse::Ok().json(resp);
@@ -719,10 +719,10 @@ pub async fn get_token_withdraw_rank(
         );
         return HttpResponse::Ok().json(resp);
     }
-    const MAX_SIZE: u32 = 90;
+    const MAX_SIZE: u32 = 100;
     if param.size > MAX_SIZE {
         let resp = FailureResponse::new(
-            DAYS_RAGE_OVER_LIMIT,
+            SIZE_OVER_LIMIT,
             format!("{}, max size is {}", SIZE_OVER_LIMIT_ERR_MESSAGE, MAX_SIZE),
         );
         return HttpResponse::Ok().json(resp);
