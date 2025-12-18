@@ -21,6 +21,7 @@ use super::adl_analyzer::analyzer_adl_v2;
 use super::liquidation_analyzer::{analyzer_liquidation_v1, analyzer_liquidation_v2};
 
 const ANALYZER_CONTEXT: &str = "Analyzer-Job";
+const TWO_DAY_SEC: i64 = 86400;
 
 #[allow(deprecated)]
 pub fn start_analyzer_trade_job(
@@ -91,7 +92,6 @@ pub fn start_analyzer_trade_job(
                             NaiveDateTime::from_timestamp_opt(pulled_block_time, 0).unwrap();
                     } else {
                         empty_counter += 1;
-                        const TWO_DAY_SEC: i64 = 86400;
                         if empty_counter > 10 && max_block - from_block > TWO_DAY_SEC
                             || empty_counter > 500
                         {
@@ -134,7 +134,7 @@ pub fn start_analyzer_trade_job(
 }
 
 fn cal_to_time(from_time: i64, batch_block_num: u64) -> i64 {
-    from_time + batch_block_num as i64 * 4 + 100
+    from_time + batch_block_num as i64 * 4 + TWO_DAY_SEC
 }
 
 #[allow(deprecated)]
