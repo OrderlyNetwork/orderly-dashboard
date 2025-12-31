@@ -35,5 +35,6 @@
     "start_sig": "3KqRD6KA76a8mBUYkALMhYSLMJePrG9u7Hxg16fxmYskA8urWsxGAMhDePWBvNHgoyvhZHuhPS3xCmUAgAbpwaTb",
     "program_address": "ErBmAD61mGFKvrFNaTJuxoPwqrS8GgtwtqJTJVjFWx9Q",
     "vault_usdc": "77puyQ4K4ov82qzBuda4q9iMh2Ux49YnnBNWqxQkcrXE"
-  }
+  },
+  "option_query_from_partitioning_executed_trades": true
 }
