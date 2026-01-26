@@ -18,6 +18,16 @@ pub struct UserInfo {
     pub address: String,
 }
 
+#[derive(Insertable, Queryable, Debug, Clone)]
+#[diesel(table_name = user_info)]
+pub struct UserInfoView {
+    pub account_id: String,
+    pub broker_id: String,
+    pub broker_hash: String,
+    pub address: String,
+    pub id: i64,
+}
+
 impl UserInfo {
     pub fn try_new(broker_id: String, address: String) -> anyhow::Result<UserInfo> {
         let broker_hash = cal_broker_hash(&broker_id);
@@ -55,13 +65,13 @@ pub async fn create_user_info(p_user: &UserInfo) -> Result<usize, DBException> {
     return Ok(1);
 }
 
-pub async fn get_user_info(account_id_: String) -> anyhow::Result<Option<UserInfo>> {
+pub async fn get_user_info(account_id_: String) -> anyhow::Result<Option<UserInfoView>> {
     use crate::schema::user_info::dsl::*;
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = user_info
         .filter(account_id.eq(account_id_))
         .limit(1)
-        .get_result::<UserInfo>(&mut conn)
+        .get_result::<UserInfoView>(&mut conn)
         .await;
 
     match result {
@@ -74,12 +84,12 @@ pub async fn get_user_info(account_id_: String) -> anyhow::Result<Option<UserInf
 }
 
 #[allow(dead_code)]
-pub async fn get_user_infos(account_ids: Vec<String>) -> anyhow::Result<Vec<UserInfo>> {
+pub async fn get_user_infos(account_ids: Vec<String>) -> anyhow::Result<Vec<UserInfoView>> {
     use crate::schema::user_info::dsl::*;
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let result = user_info
         .filter(account_id.eq_any(account_ids))
-        .get_results::<UserInfo>(&mut conn)
+        .get_results::<UserInfoView>(&mut conn)
         .await?;
 
     Ok(result)

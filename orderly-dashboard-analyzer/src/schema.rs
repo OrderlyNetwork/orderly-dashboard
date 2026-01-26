@@ -164,6 +164,7 @@ diesel::table! {
         broker_id -> Text,
         broker_hash -> Text,
         address -> Text,
+        id -> Int8,
     }
 }
 
