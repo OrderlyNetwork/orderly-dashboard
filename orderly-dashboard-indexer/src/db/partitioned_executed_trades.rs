@@ -38,6 +38,9 @@ pub struct DbPartitionedExecutedTrades {
     pub block_time: NaiveDateTime,
     pub broker_hash: Option<String>,
     pub transaction_id: Option<String>,
+    pub margin_mode: Option<i16>,
+    pub iso_margin_asset_hash: Option<String>,
+    pub margin_from_cross: Option<BigDecimal>,
 }
 
 #[derive(Insertable, Queryable, Debug, Clone)]
@@ -78,6 +81,9 @@ impl From<DbExecutedTrades> for DbPartitionedExecutedTrades {
             block_time: NaiveDateTime::from_timestamp_opt(value.block_time, 0).unwrap_or_default(),
             broker_hash: None,
             transaction_id: None,
+            margin_mode: None,
+            iso_margin_asset_hash: None,
+            margin_from_cross: None,
         }
     }
 }
@@ -518,6 +524,9 @@ mod tests {
                             block_time: NaiveDateTime::from_timestamp_opt(timestamp, 0).unwrap(),
                             broker_hash: None,
                             transaction_id: None,
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
+                            margin_from_cross: None,
                         });
                     }
                     create_partitioned_executed_trades(trades).await.unwrap();

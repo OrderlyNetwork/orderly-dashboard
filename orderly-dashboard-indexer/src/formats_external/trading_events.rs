@@ -7,6 +7,7 @@ use crate::db::partitioned_executed_trades::DbPartitionedExecutedTrades;
 use crate::db::serial_batches::{DbSerialBatches, DbSerialBatchesView};
 use crate::db::settlement_execution::{DbSettlementExecution, DbSettlementExecutionView};
 use crate::db::settlement_result::DbSettlementResult;
+use crate::db::settlement_result::SettlementResultVersion;
 use crate::db::sol_transaction_events::DbSolTransactionEvent;
 use crate::db::transaction_events::DbTransactionEvent;
 use bigdecimal::ToPrimitive;
@@ -224,6 +225,28 @@ impl TradingEvent {
         settlement_res: DbSettlementResult,
         executions: Vec<DbSettlementExecution>,
     ) -> TradingEvent {
+        if settlement_res.version.clone().unwrap_or_default() == SettlementResultVersion::V3.value()
+        {
+            let settlement_executions = executions
+                .into_iter()
+                .map(SettlementExecutionV3::from)
+                .collect::<Vec<_>>();
+            return TradingEvent {
+                block_number: settlement_res.block_number as u64,
+                transaction_index: settlement_res.transaction_index as u32,
+                log_index: settlement_res.log_index as u32,
+                transaction_id: settlement_res.transaction_id,
+                block_timestamp: settlement_res.block_time.to_u64().unwrap(),
+                data: TradingEventInnerData::SettlementResultV3 {
+                    account_id: settlement_res.account_id,
+                    settled_amount: settlement_res.settled_amount.to_string(),
+                    settled_asset_hash: settlement_res.settled_asset_hash,
+                    insurance_account_id: settlement_res.insurance_account_id,
+                    insurance_transfer_amount: settlement_res.insurance_transfer_amount.to_string(),
+                    settlement_executions,
+                },
+            };
+        }
         let settlement_executions = executions
             .into_iter()
             .map(SettlementExecution::from)
@@ -279,11 +302,11 @@ impl TradingEvent {
         liquidation_res: DbLiquidationResult,
         transfers: Vec<DbLiquidationTransfer>,
     ) -> TradingEvent {
-        if liquidation_res
+        let version = liquidation_res
             .version
-            .unwrap_or(LiquidationResultVersion::V1.value())
-            == LiquidationResultVersion::V1.value()
-        {
+            .unwrap_or(LiquidationResultVersion::V1.value());
+
+        if version == LiquidationResultVersion::V1.value() {
             let liquidation_transfers = transfers
                 .into_iter()
                 .map(LiquidationTransfer::from)
@@ -305,9 +328,32 @@ impl TradingEvent {
                 },
             };
         }
+
+        if version == LiquidationResultVersion::V2.value() {
+            let liquidation_transfers = transfers
+                .into_iter()
+                .map(LiquidationTransferV2::from)
+                .collect::<Vec<_>>();
+            return TradingEvent {
+                block_number: liquidation_res.block_number as u64,
+                transaction_index: liquidation_res.transaction_index as u32,
+                log_index: liquidation_res.log_index as u32,
+                transaction_id: liquidation_res.transaction_id,
+                block_timestamp: liquidation_res.block_time.to_u64().unwrap(),
+                data: TradingEventInnerData::LiquidationResultV2 {
+                    account_id: liquidation_res.liquidated_account_id,
+                    liquidated_asset_hash: liquidation_res.liquidated_asset_hash,
+                    insurance_transfer_amount: liquidation_res
+                        .insurance_transfer_amount
+                        .to_string(),
+                    liquidation_transfers,
+                },
+            };
+        }
+
         let liquidation_transfers = transfers
             .into_iter()
-            .map(LiquidationTransferV2::from)
+            .map(LiquidationTransferV3::from)
             .collect::<Vec<_>>();
         TradingEvent {
             block_number: liquidation_res.block_number as u64,
@@ -315,7 +361,7 @@ impl TradingEvent {
             log_index: liquidation_res.log_index as u32,
             transaction_id: liquidation_res.transaction_id,
             block_timestamp: liquidation_res.block_time.to_u64().unwrap(),
-            data: TradingEventInnerData::LiquidationResultV2 {
+            data: TradingEventInnerData::LiquidationResultV3 {
                 account_id: liquidation_res.liquidated_account_id,
                 liquidated_asset_hash: liquidation_res.liquidated_asset_hash,
                 insurance_transfer_amount: liquidation_res.insurance_transfer_amount.to_string(),
@@ -325,7 +371,8 @@ impl TradingEvent {
     }
 
     pub fn from_adl_result(adl: DbAdlResult) -> TradingEvent {
-        if adl.version.unwrap_or(AdlVersion::V1.value()) == AdlVersion::V1.value() {
+        let version = adl.version.unwrap_or(AdlVersion::V1.value());
+        if version == AdlVersion::V1.value() {
             return TradingEvent {
                 block_number: adl.block_number as u64,
                 transaction_index: adl.transaction_index as u32,
@@ -343,19 +390,47 @@ impl TradingEvent {
                 },
             };
         }
+        if version == AdlVersion::V2.value() {
+            return TradingEvent {
+                block_number: adl.block_number as u64,
+                transaction_index: adl.transaction_index as u32,
+                log_index: adl.log_index as u32,
+                transaction_id: adl.transaction_id,
+                block_timestamp: adl.block_time.to_u64().unwrap(),
+                data: TradingEventInnerData::AdlResultV2 {
+                    account_id: adl.account_id,
+                    symbol_hash: adl.symbol_hash,
+                    position_qty_transfer: adl.position_qty_transfer.to_string(),
+                    cost_position_transfer: adl.cost_position_transfer.to_string(),
+                    adl_price: adl.adl_price.to_string(),
+                    sum_unitary_fundings: adl.sum_unitary_fundings.to_string(),
+                },
+            };
+        }
+
         TradingEvent {
             block_number: adl.block_number as u64,
             transaction_index: adl.transaction_index as u32,
             log_index: adl.log_index as u32,
             transaction_id: adl.transaction_id,
             block_timestamp: adl.block_time.to_u64().unwrap(),
-            data: TradingEventInnerData::AdlResultV2 {
+            data: TradingEventInnerData::AdlResultV3 {
                 account_id: adl.account_id,
                 symbol_hash: adl.symbol_hash,
                 position_qty_transfer: adl.position_qty_transfer.to_string(),
                 cost_position_transfer: adl.cost_position_transfer.to_string(),
                 adl_price: adl.adl_price.to_string(),
                 sum_unitary_fundings: adl.sum_unitary_fundings.to_string(),
+                margin_mode: Some(
+                    adl.margin_mode
+                        .unwrap_or_default()
+                        .try_into()
+                        .unwrap_or_else(|_| MarginMode::Cross),
+                ),
+                margin_asset_hash: adl.iso_margin_asset_hash,
+                margin_to_cross: adl
+                    .margin_to_cross
+                    .map(|margin_to_cross| margin_to_cross.to_string()),
             },
         }
     }
@@ -406,6 +481,25 @@ pub enum PurchaseSide {
     Sell,
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, TypeDef, ToSchema, Copy)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum MarginMode {
+    Cross,
+    Isolated,
+}
+
+impl TryFrom<i16> for MarginMode {
+    type Error = anyhow::Error;
+
+    fn try_from(value: i16) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Cross),
+            1 => Ok(Self::Isolated),
+            _ => Err(anyhow::anyhow!("cannot convert integer to TransactionSide")),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
 pub struct Trade {
     pub account_id: String,
@@ -421,6 +515,8 @@ pub struct Trade {
     pub timestamp: u64,
     // buy (false) or sell (true)
     pub side: PurchaseSide,
+    pub margin_mode: Option<MarginMode>,
+    pub margin_from_cross: Option<String>,
 }
 
 impl From<DbExecutedTrades> for Trade {
@@ -442,6 +538,8 @@ impl From<DbExecutedTrades> for Trade {
             } else {
                 PurchaseSide::Buy
             },
+            margin_mode: None,
+            margin_from_cross: None,
         }
     }
 }
@@ -465,6 +563,14 @@ impl From<DbPartitionedExecutedTrades> for Trade {
             } else {
                 PurchaseSide::Buy
             },
+            margin_mode: Some(
+                value
+                    .margin_mode
+                    .unwrap_or_default()
+                    .try_into()
+                    .unwrap_or_else(|_| MarginMode::Cross),
+            ),
+            margin_from_cross: Some(value.margin_from_cross.unwrap_or_default().to_string()),
         }
     }
 }
@@ -484,6 +590,33 @@ impl From<DbSettlementExecution> for SettlementExecution {
             mark_price: value.mark_price.to_string(),
             sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
             settled_amount: value.settled_amount.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
+pub struct SettlementExecutionV3 {
+    pub symbol_hash: String,
+    pub mark_price: String,
+    pub sum_unitary_fundings: String,
+    pub settled_amount: String,
+    pub margin_mode: MarginMode,
+    pub iso_margin_asset_hash: String,
+}
+
+impl From<DbSettlementExecution> for SettlementExecutionV3 {
+    fn from(value: DbSettlementExecution) -> Self {
+        SettlementExecutionV3 {
+            symbol_hash: value.symbol_hash,
+            mark_price: value.mark_price.to_string(),
+            sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
+            settled_amount: value.settled_amount.to_string(),
+            margin_mode: value
+                .margin_mode
+                .unwrap_or_default()
+                .try_into()
+                .unwrap_or_else(|_| MarginMode::Cross),
+            iso_margin_asset_hash: value.iso_margin_asset_hash.unwrap_or_default(),
         }
     }
 }
@@ -556,6 +689,47 @@ impl From<DbLiquidationTransfer> for LiquidationTransferV2 {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
+pub struct LiquidationTransferV3 {
+    pub account_id: String,
+    pub symbol_hash: String,
+    pub position_qty_transfer: String,
+    pub cost_position_transfer: String,
+    pub fee: String,
+    pub mark_price: String,
+    pub sum_unitary_fundings: String,
+    pub margin_mode: Option<MarginMode>,
+    pub margin_asset_hash: Option<String>,
+    pub margin_to_cross: Option<String>,
+}
+
+impl From<DbLiquidationTransfer> for LiquidationTransferV3 {
+    fn from(value: DbLiquidationTransfer) -> Self {
+        LiquidationTransferV3 {
+            account_id: value.liquidator_account_id,
+            symbol_hash: value.symbol_hash,
+            position_qty_transfer: value.position_qty_transfer.to_string(),
+            cost_position_transfer: value.cost_position_transfer.to_string(),
+            fee: value.liquidation_fee.to_string(),
+            mark_price: value.mark_price.to_string(),
+            sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
+            margin_mode: Some(
+                value
+                    .margin_mode
+                    .unwrap_or_default()
+                    .try_into()
+                    .unwrap_or_else(|_| MarginMode::Cross),
+            ),
+            margin_asset_hash: value.iso_margin_asset_hash,
+            margin_to_cross: if let Some(margin_to_cross) = value.margin_to_cross {
+                Some(margin_to_cross.to_string())
+            } else {
+                None
+            },
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, TypeDef, ToSchema)]
 pub enum TradingEventInnerData {
     Transaction {
         account_id: String,
@@ -583,6 +757,14 @@ pub enum TradingEventInnerData {
         insurance_transfer_amount: String,
         settlement_executions: Vec<SettlementExecution>,
     },
+    SettlementResultV3 {
+        account_id: String,
+        settled_amount: String,
+        settled_asset_hash: String,
+        insurance_account_id: String,
+        insurance_transfer_amount: String,
+        settlement_executions: Vec<SettlementExecutionV3>,
+    },
     LiquidationResult {
         liquidated_account_id: String,
         insurance_account_id: String,
@@ -605,6 +787,12 @@ pub enum TradingEventInnerData {
         insurance_transfer_amount: String,
         liquidation_transfers: Vec<LiquidationTransferV2>,
     },
+    LiquidationResultV3 {
+        account_id: String,
+        liquidated_asset_hash: String,
+        insurance_transfer_amount: String,
+        liquidation_transfers: Vec<LiquidationTransferV3>,
+    },
     AdlResultV2 {
         account_id: String,
         symbol_hash: String,
@@ -612,6 +800,17 @@ pub enum TradingEventInnerData {
         cost_position_transfer: String,
         adl_price: String,
         sum_unitary_fundings: String,
+    },
+    AdlResultV3 {
+        account_id: String,
+        symbol_hash: String,
+        position_qty_transfer: String,
+        cost_position_transfer: String,
+        adl_price: String,
+        sum_unitary_fundings: String,
+        margin_mode: Option<MarginMode>,
+        margin_asset_hash: Option<String>,
+        margin_to_cross: Option<String>,
     },
 }
 

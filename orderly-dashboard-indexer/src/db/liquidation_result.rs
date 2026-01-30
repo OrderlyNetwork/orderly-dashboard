@@ -26,12 +26,15 @@ pub struct DbLiquidationResult {
     pub liquidated_asset_hash: String,
     pub insurance_transfer_amount: BigDecimal,
     pub version: Option<i16>,
+    // new added from v3
+    pub is_insurance_account: Option<bool>,
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum LiquidationResultVersion {
     V1 = 1,
     V2 = 2,
+    V3 = 3,
 }
 
 impl LiquidationResultVersion {
@@ -47,6 +50,7 @@ impl TryFrom<i16> for LiquidationResultVersion {
         match value {
             0 | 1 => Ok(Self::V1),
             2 => Ok(Self::V2),
+            3 => Ok(Self::V3),
             _ => Err(anyhow::anyhow!(
                 "cannot convert integer:{} to LiquidationResultVersion",
                 value

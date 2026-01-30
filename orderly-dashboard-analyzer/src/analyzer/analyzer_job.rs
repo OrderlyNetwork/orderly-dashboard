@@ -231,6 +231,16 @@ pub async fn parse_and_analyzer(
                         )
                         .await
                     }
+                    TradingEventInnerData::SettlementResultV3 { 
+                        account_id,
+                        settled_amount,
+                        settled_asset_hash,
+                        insurance_account_id,
+                        insurance_transfer_amount,
+                        settlement_executions,
+                     } => {
+
+                    }
                     TradingEventInnerData::LiquidationResult {
                         liquidated_account_id,
                         insurance_account_id,
@@ -250,6 +260,14 @@ pub async fn parse_and_analyzer(
                             context,
                         )
                         .await
+                    }
+                    TradingEventInnerData::LiquidationResultV3 { 
+                        account_id,
+                        liquidated_asset_hash,
+                        insurance_transfer_amount,
+                        liquidation_transfers 
+                    } => {
+
                     }
                     TradingEventInnerData::AdlResult {
                         account_id,
@@ -273,6 +291,18 @@ pub async fn parse_and_analyzer(
                             context,
                         )
                         .await;
+                    }
+                    TradingEventInnerData::AdlResultV3 { account_id,
+                        symbol_hash,
+                        position_qty_transfer,
+                        cost_position_transfer,
+                        adl_price,
+                        sum_unitary_fundings,
+                        margin_mode,
+                        margin_asset_hash,
+                        margin_to_cross
+                    } => {
+                        
                     }
                     TradingEventInnerData::LiquidationResultV2 {
                         account_id,
