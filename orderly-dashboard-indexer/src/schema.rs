@@ -18,6 +18,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_to_cross -> Nullable<Numeric>,
+        is_insurance_account -> Nullable<Bool>,
     }
 }
 
@@ -441,6 +442,21 @@ diesel::table! {
 }
 
 diesel::table! {
+    margin_transfer (block_number, transaction_index, log_index) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        transaction_id -> Text,
+        log_index -> Int4,
+        block_time -> Numeric,
+        account_id -> Text,
+        transfer_amount -> Numeric,
+        transfer_asset_hash -> Text,
+        iso_symbol_hash -> Text,
+        timestamp -> Int8,
+    }
+}
+
+diesel::table! {
     partitioned_executed_trades (block_number, transaction_index, log_index, block_time) {
         block_number -> Int8,
         transaction_index -> Int4,
@@ -646,6 +662,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     fee_distribution,
     liquidation_result,
     liquidation_transfer,
+    margin_transfer,
     partitioned_executed_trades,
     rebalance_events,
     serial_batches,

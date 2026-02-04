@@ -7,7 +7,7 @@ pub use market_manager::*;
     clippy::upper_case_acronyms,
     clippy::type_complexity,
     dead_code,
-    non_camel_case_types,
+    non_camel_case_types
 )]
 pub mod market_manager {
     #[allow(deprecated)]
@@ -656,9 +656,8 @@ pub mod market_manager {
         }
     }
     ///The parsed JSON ABI of the contract.
-    pub static MARKET_MANAGER_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> = ::ethers::contract::Lazy::new(
-        __abi,
-    );
+    pub static MARKET_MANAGER_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> =
+        ::ethers::contract::Lazy::new(__abi);
     pub struct market_manager<M>(::ethers::contract::Contract<M>);
     impl<M> ::core::clone::Clone for market_manager<M> {
         fn clone(&self) -> Self {
@@ -690,13 +689,11 @@ pub mod market_manager {
             address: T,
             client: ::std::sync::Arc<M>,
         ) -> Self {
-            Self(
-                ::ethers::contract::Contract::new(
-                    address.into(),
-                    MARKET_MANAGER_ABI.clone(),
-                    client,
-                ),
-            )
+            Self(::ethers::contract::Contract::new(
+                address.into(),
+                MARKET_MANAGER_ABI.clone(),
+                client,
+            ))
         }
         ///Calls the contract's `getPerpMarketCfg` (0x0ea7ba41) function
         pub fn get_perp_market_cfg(
@@ -716,10 +713,7 @@ pub mod market_manager {
         ///Calls the contract's `ledgerAddress` (0xd1d20056) function
         pub fn ledger_address(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([209, 210, 0, 86], ())
                 .expect("method not found (this should never happen)")
@@ -727,10 +721,7 @@ pub mod market_manager {
         ///Calls the contract's `operatorManagerAddress` (0x75bf9f6d) function
         pub fn operator_manager_address(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([117, 191, 159, 109], ())
                 .expect("method not found (this should never happen)")
@@ -738,10 +729,7 @@ pub mod market_manager {
         ///Calls the contract's `owner` (0x8da5cb5b) function
         pub fn owner(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([141, 165, 203, 91], ())
                 .expect("method not found (this should never happen)")
@@ -768,9 +756,7 @@ pub mod market_manager {
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `renounceOwnership` (0x715018a6) function
-        pub fn renounce_ownership(
-            &self,
-        ) -> ::ethers::contract::builders::ContractCall<M, ()> {
+        pub fn renounce_ownership(&self) -> ::ethers::contract::builders::ContractCall<M, ()> {
             self.0
                 .method_hash([113, 80, 24, 166], ())
                 .expect("method not found (this should never happen)")
@@ -853,76 +839,56 @@ pub mod market_manager {
         ///Gets the contract's `ChangeLedger` event
         pub fn change_ledger_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeLedgerFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeLedgerFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ChangeOperatorManager` event
         pub fn change_operator_manager_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ChangeOperatorManagerFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ChangeOperatorManagerFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `FundingData` event
         pub fn funding_data_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            FundingDataFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, FundingDataFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `Initialized` event
         pub fn initialized_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            InitializedFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, InitializedFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `MarketData` event
         pub fn market_data_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            MarketDataFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, MarketDataFilter> {
             self.0.event()
         }
         ///Gets the contract's `OwnershipTransferred` event
         pub fn ownership_transferred_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            OwnershipTransferredFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, OwnershipTransferredFilter>
+        {
             self.0.event()
         }
         /// Returns an `Event` builder for all the events of this contract.
         pub fn events(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            market_managerEvents,
-        > {
-            self.0.event_with_filter(::core::default::Default::default())
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, market_managerEvents>
+        {
+            self.0
+                .event_with_filter(::core::default::Default::default())
         }
     }
     impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>>
-    for market_manager<M> {
+        for market_manager<M>
+    {
         fn from(contract: ::ethers::contract::Contract<M>) -> Self {
             Self::new(contract.address(), contract.client())
         }
@@ -936,7 +902,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "LedgerAddressZero", abi = "LedgerAddressZero()")]
     pub struct LedgerAddressZero;
@@ -949,7 +915,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(name = "OnlyLedgerCanCall", abi = "OnlyLedgerCanCall()")]
     pub struct OnlyLedgerCanCall;
@@ -962,7 +928,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "OnlyOperatorManagerCanCall",
@@ -978,7 +944,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[etherror(
         name = "OperatorManagerAddressZero",
@@ -1001,29 +967,27 @@ pub mod market_manager {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded) = <::std::string::String as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <::std::string::String as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RevertString(decoded));
             }
-            if let Ok(decoded) = <LedgerAddressZero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <LedgerAddressZero as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::LedgerAddressZero(decoded));
             }
-            if let Ok(decoded) = <OnlyLedgerCanCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <OnlyLedgerCanCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OnlyLedgerCanCall(decoded));
             }
-            if let Ok(decoded) = <OnlyOperatorManagerCanCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OnlyOperatorManagerCanCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OnlyOperatorManagerCanCall(decoded));
             }
-            if let Ok(decoded) = <OperatorManagerAddressZero as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OperatorManagerAddressZero as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OperatorManagerAddressZero(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -1032,12 +996,8 @@ pub mod market_manager {
     impl ::ethers::core::abi::AbiEncode for market_managerErrors {
         fn encode(self) -> ::std::vec::Vec<u8> {
             match self {
-                Self::LedgerAddressZero(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::OnlyLedgerCanCall(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::LedgerAddressZero(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::OnlyLedgerCanCall(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::OnlyOperatorManagerCanCall(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -1053,19 +1013,23 @@ pub mod market_manager {
             match selector {
                 [0x08, 0xc3, 0x79, 0xa0] => true,
                 _ if selector
-                    == <LedgerAddressZero as ::ethers::contract::EthError>::selector() => {
+                    == <LedgerAddressZero as ::ethers::contract::EthError>::selector() =>
+                {
                     true
                 }
                 _ if selector
-                    == <OnlyLedgerCanCall as ::ethers::contract::EthError>::selector() => {
+                    == <OnlyLedgerCanCall as ::ethers::contract::EthError>::selector() =>
+                {
                     true
                 }
                 _ if selector
-                    == <OnlyOperatorManagerCanCall as ::ethers::contract::EthError>::selector() => {
+                    == <OnlyOperatorManagerCanCall as ::ethers::contract::EthError>::selector() =>
+                {
                     true
                 }
                 _ if selector
-                    == <OperatorManagerAddressZero as ::ethers::contract::EthError>::selector() => {
+                    == <OperatorManagerAddressZero as ::ethers::contract::EthError>::selector() =>
+                {
                     true
                 }
                 _ => false,
@@ -1077,12 +1041,8 @@ pub mod market_manager {
             match self {
                 Self::LedgerAddressZero(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OnlyLedgerCanCall(element) => ::core::fmt::Display::fmt(element, f),
-                Self::OnlyOperatorManagerCanCall(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::OperatorManagerAddressZero(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::OnlyOperatorManagerCanCall(element) => ::core::fmt::Display::fmt(element, f),
+                Self::OperatorManagerAddressZero(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RevertString(s) => ::core::fmt::Display::fmt(s, f),
             }
         }
@@ -1120,7 +1080,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "ChangeLedger", abi = "ChangeLedger(address,address)")]
     pub struct ChangeLedgerFilter {
@@ -1135,7 +1095,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "ChangeOperatorManager",
@@ -1153,7 +1113,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "FundingData", abi = "FundingData(uint64)")]
     pub struct FundingDataFilter {
@@ -1167,7 +1127,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "Initialized", abi = "Initialized(uint8)")]
     pub struct InitializedFilter {
@@ -1181,7 +1141,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "MarketData", abi = "MarketData(uint64)")]
     pub struct MarketDataFilter {
@@ -1195,7 +1155,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "OwnershipTransferred",
@@ -1245,18 +1205,12 @@ pub mod market_manager {
     impl ::core::fmt::Display for market_managerEvents {
         fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
             match self {
-                Self::ChangeLedgerFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::ChangeOperatorManagerFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ChangeLedgerFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::ChangeOperatorManagerFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::FundingDataFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InitializedFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::MarketDataFilter(element) => ::core::fmt::Display::fmt(element, f),
-                Self::OwnershipTransferredFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::OwnershipTransferredFilter(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -1299,7 +1253,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "getPerpMarketCfg", abi = "getPerpMarketCfg(bytes32)")]
     pub struct GetPerpMarketCfgCall {
@@ -1314,7 +1268,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "initialize", abi = "initialize()")]
     pub struct InitializeCall;
@@ -1327,7 +1281,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "ledgerAddress", abi = "ledgerAddress()")]
     pub struct LedgerAddressCall;
@@ -1340,7 +1294,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "operatorManagerAddress", abi = "operatorManagerAddress()")]
     pub struct OperatorManagerAddressCall;
@@ -1353,7 +1307,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "owner", abi = "owner()")]
     pub struct OwnerCall;
@@ -1366,7 +1320,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "perpMarketCfg", abi = "perpMarketCfg(bytes32)")]
     pub struct PerpMarketCfgCall(pub [u8; 32]);
@@ -1379,7 +1333,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "renounceOwnership", abi = "renounceOwnership()")]
     pub struct RenounceOwnershipCall;
@@ -1392,7 +1346,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "setLastFundingUpdated",
@@ -1411,7 +1365,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "setLastMarkPriceUpdated",
@@ -1430,7 +1384,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setLedgerAddress", abi = "setLedgerAddress(address)")]
     pub struct SetLedgerAddressCall {
@@ -1445,7 +1399,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "setOperatorManagerAddress",
@@ -1463,7 +1417,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "setPerpMarketCfg",
@@ -1482,7 +1436,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "transferOwnership", abi = "transferOwnership(address)")]
     pub struct TransferOwnershipCall {
@@ -1497,7 +1451,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "updateMarketUpload",
@@ -1515,7 +1469,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "updateMarketUpload",
@@ -1548,79 +1502,73 @@ pub mod market_manager {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded) = <GetPerpMarketCfgCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <GetPerpMarketCfgCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::GetPerpMarketCfg(decoded));
             }
-            if let Ok(decoded) = <InitializeCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <InitializeCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Initialize(decoded));
             }
-            if let Ok(decoded) = <LedgerAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <LedgerAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::LedgerAddress(decoded));
             }
-            if let Ok(decoded) = <OperatorManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <OperatorManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::OperatorManagerAddress(decoded));
             }
-            if let Ok(decoded) = <OwnerCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <OwnerCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Owner(decoded));
             }
-            if let Ok(decoded) = <PerpMarketCfgCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) = <PerpMarketCfgCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::PerpMarketCfg(decoded));
             }
-            if let Ok(decoded) = <RenounceOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <RenounceOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::RenounceOwnership(decoded));
             }
-            if let Ok(decoded) = <SetLastFundingUpdatedCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetLastFundingUpdatedCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetLastFundingUpdated(decoded));
             }
-            if let Ok(decoded) = <SetLastMarkPriceUpdatedCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetLastMarkPriceUpdatedCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetLastMarkPriceUpdated(decoded));
             }
-            if let Ok(decoded) = <SetLedgerAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetLedgerAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetLedgerAddress(decoded));
             }
-            if let Ok(decoded) = <SetOperatorManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetOperatorManagerAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetOperatorManagerAddress(decoded));
             }
-            if let Ok(decoded) = <SetPerpMarketCfgCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <SetPerpMarketCfgCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetPerpMarketCfg(decoded));
             }
-            if let Ok(decoded) = <TransferOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <TransferOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::TransferOwnership(decoded));
             }
-            if let Ok(decoded) = <UpdateMarketUploadCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <UpdateMarketUploadCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::UpdateMarketUpload(decoded));
             }
-            if let Ok(decoded) = <UpdateMarketUploadWithDataCall as ::ethers::core::abi::AbiDecode>::decode(
-                data,
-            ) {
+            if let Ok(decoded) =
+                <UpdateMarketUploadWithDataCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::UpdateMarketUploadWithData(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -1629,43 +1577,27 @@ pub mod market_manager {
     impl ::ethers::core::abi::AbiEncode for market_managerCalls {
         fn encode(self) -> Vec<u8> {
             match self {
-                Self::GetPerpMarketCfg(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::Initialize(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::LedgerAddress(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::GetPerpMarketCfg(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::Initialize(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::LedgerAddress(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::OperatorManagerAddress(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::Owner(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::PerpMarketCfg(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::RenounceOwnership(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::PerpMarketCfg(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::RenounceOwnership(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::SetLastFundingUpdated(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::SetLastMarkPriceUpdated(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::SetLedgerAddress(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::SetLedgerAddress(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::SetOperatorManagerAddress(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::SetPerpMarketCfg(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::TransferOwnership(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::SetPerpMarketCfg(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::TransferOwnership(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::UpdateMarketUpload(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -1681,30 +1613,18 @@ pub mod market_manager {
                 Self::GetPerpMarketCfg(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Initialize(element) => ::core::fmt::Display::fmt(element, f),
                 Self::LedgerAddress(element) => ::core::fmt::Display::fmt(element, f),
-                Self::OperatorManagerAddress(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::OperatorManagerAddress(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Owner(element) => ::core::fmt::Display::fmt(element, f),
                 Self::PerpMarketCfg(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RenounceOwnership(element) => ::core::fmt::Display::fmt(element, f),
-                Self::SetLastFundingUpdated(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::SetLastMarkPriceUpdated(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::SetLastFundingUpdated(element) => ::core::fmt::Display::fmt(element, f),
+                Self::SetLastMarkPriceUpdated(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetLedgerAddress(element) => ::core::fmt::Display::fmt(element, f),
-                Self::SetOperatorManagerAddress(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::SetOperatorManagerAddress(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetPerpMarketCfg(element) => ::core::fmt::Display::fmt(element, f),
                 Self::TransferOwnership(element) => ::core::fmt::Display::fmt(element, f),
-                Self::UpdateMarketUpload(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::UpdateMarketUploadWithData(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::UpdateMarketUpload(element) => ::core::fmt::Display::fmt(element, f),
+                Self::UpdateMarketUploadWithData(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -1792,7 +1712,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct GetPerpMarketCfgReturn(pub PerpMarketCfg);
     ///Container type for all return fields from the `ledgerAddress` function with signature `ledgerAddress()` and selector `0xd1d20056`
@@ -1804,7 +1724,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct LedgerAddressReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `operatorManagerAddress` function with signature `operatorManagerAddress()` and selector `0x75bf9f6d`
@@ -1816,7 +1736,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct OperatorManagerAddressReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `owner` function with signature `owner()` and selector `0x8da5cb5b`
@@ -1828,7 +1748,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct OwnerReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `perpMarketCfg` function with signature `perpMarketCfg(bytes32)` and selector `0xe8ee090f`
@@ -1840,7 +1760,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct PerpMarketCfgReturn {
         pub base_maintenance_margin: u32,
@@ -1861,7 +1781,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct PerpMarketCfg {
         pub base_maintenance_margin: u32,
@@ -1882,7 +1802,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct PerpPrice {
         pub symbol_hash: [u8; 32],
@@ -1899,7 +1819,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct SumUnitaryFunding {
         pub symbol_hash: [u8; 32],
@@ -1915,7 +1835,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct UploadPerpPrice {
         pub r: [u8; 32],
@@ -1933,7 +1853,7 @@ pub mod market_manager {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct UploadSumUnitaryFundings {
         pub r: [u8; 32],
