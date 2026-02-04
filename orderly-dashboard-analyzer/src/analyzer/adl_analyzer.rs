@@ -1,5 +1,6 @@
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
+use orderly_dashboard_indexer::formats_external::trading_events::MarginMode;
 use std::ops::Div;
 
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
@@ -165,6 +166,111 @@ pub async fn analyzer_adl_v2(
             open_cost_diff,
             pnl_diff,
             need_cal_avg,
+        );
+    }
+}
+
+pub async fn analyzer_adl_v3(
+    account_id: String,
+    symbol_hash: String,
+    position_qty_transfer: String,
+    cost_position_transfer: String,
+    adl_price: String,
+    sum_unitary_fundings: String,
+    block_hour: NaiveDateTime,
+    block_num: i64,
+    margin_mode: Option<MarginMode>,
+    margin_asset_hash: Option<String>,
+    margin_to_cross: Option<String>,
+    is_insurance_account: bool,
+    context: &mut AnalyzeContext,
+) {
+    tracing::info!(target:ADL_ANALYZER,"receiver adl v3 account_id:{},symbol:{},qty:{},cost_position:{}",account_id.clone(),symbol_hash.clone(),position_qty_transfer.clone(),cost_position_transfer.clone());
+    let adl_qty: BigDecimal = position_qty_transfer.parse().unwrap();
+    let adl_price: BigDecimal = adl_price.parse().unwrap();
+    let cpt: BigDecimal = cost_position_transfer.parse().unwrap();
+    let fsuf: BigDecimal = sum_unitary_fundings.parse().unwrap();
+
+    let fixed_adl_qty = adl_qty.clone().div(get_qty_prec());
+    let fixed_adl_perice = adl_price.clone().div(get_price_prec());
+    let fixed_position_transfer = cpt.clone().div(get_cost_position_prec());
+    let fixed_sum_unitary_fundings = fsuf.div(get_unitary_prec());
+
+    {
+        let key = HourlyOrderlyPerpKey::new_key(symbol_hash.clone(), block_hour.clone());
+        let hourly_orderly_perp = context.get_hourly_orderly_perp(&key).await;
+        hourly_orderly_perp
+            .new_liquidation(fixed_adl_perice.clone() * fixed_adl_qty.clone(), block_num);
+    }
+
+    let user_perp_key = UserPerpSummaryKey {
+        account_id: account_id.clone(),
+        symbol: symbol_hash.clone(),
+    };
+    let pnl_diff = if margin_mode == Some(MarginMode::Isolated) {
+        // isolated
+        let user_perp_snap = context.get_iso_user_perp(&user_perp_key.clone()).await;
+        let need_cal_avg = !is_insurance_account;
+        let (open_cost_diff, pnl_diff) = if need_cal_avg {
+            RealizedPnl::calc_realized_pnl(
+                fixed_adl_qty.clone(),
+                -fixed_position_transfer.clone(),
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            )
+        } else {
+            (BigDecimal::from(0), BigDecimal::from(0))
+        };
+        user_perp_snap.charge_funding_fee(fixed_sum_unitary_fundings.clone(), block_num);
+        user_perp_snap.new_user_adl_v3(
+            fixed_adl_qty.clone(),
+            adl_price.clone(),
+            block_num,
+            fixed_position_transfer.clone(),
+            fixed_sum_unitary_fundings.clone(),
+            open_cost_diff,
+            pnl_diff.clone(),
+            need_cal_avg,
+            margin_asset_hash.clone(),
+            margin_to_cross.clone(),
+        );
+        pnl_diff
+    } else {
+        //cross
+        let user_perp_snap = context.get_user_perp(&user_perp_key.clone()).await;
+        let need_cal_avg = !INSURANCE_FUNDS.contains(&account_id.as_str());
+        let (open_cost_diff, pnl_diff) = if need_cal_avg {
+            RealizedPnl::calc_realized_pnl(
+                fixed_adl_qty.clone(),
+                -fixed_position_transfer.clone(),
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            )
+        } else {
+            (BigDecimal::from(0), BigDecimal::from(0))
+        };
+        user_perp_snap.charge_funding_fee(fixed_sum_unitary_fundings.clone(), block_num);
+        user_perp_snap.new_user_adl_v2(
+            fixed_adl_qty.clone(),
+            adl_price.clone(),
+            block_num,
+            fixed_position_transfer.clone(),
+            fixed_sum_unitary_fundings.clone(),
+            open_cost_diff,
+            pnl_diff.clone(),
+            need_cal_avg,
+        );
+        pnl_diff
+    };
+
+    {
+        let key =
+            HourlyUserPerpKey::new_key(account_id.clone(), symbol_hash.clone(), block_hour.clone());
+        let hourly_user_perp = context.get_hourly_user_perp(&key).await;
+        hourly_user_perp.new_liquidation(
+            fixed_adl_perice.clone() * fixed_adl_qty.clone(),
+            block_num,
+            pnl_diff,
         );
     }
 }
