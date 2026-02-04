@@ -377,7 +377,7 @@ mod tests {
 
             let inst = Instant::now();
             let mut batches: Vec<DbExecutedTrades> = vec![];
-            (0..2000).into_iter().for_each(|i| {
+            (0..1000).into_iter().for_each(|i| {
                 batches.push(DbExecutedTrades {
                     block_number: 3,
                     transaction_index: 1,
@@ -420,19 +420,19 @@ mod tests {
     #[test]
     fn test_insert_trades_for_migration() {
         dotenv::dotenv().ok();
-        init_log();
+        // init_log();
         let system = actix::System::new();
         system.block_on(async move {
             let data_time = chrono::Utc::now();
             for (year, q) in [
-                (2023, 1),
-                (2024, 1),
-                (2024, 2),
-                (2024, 3),
+                // (2023, 1),
+                // (2024, 1),
+                // (2024, 2),
+                // (2024, 3),
                 (2024, 4),
                 (2025, 1),
                 (2025, 2),
-                (2025, 3),
+                // (2025, 3),
             ] {
                 let data_time = data_time.with_year(year).unwrap();
                 let data_time = data_time
@@ -477,12 +477,9 @@ mod tests {
                     create_executed_trades(trades).await.unwrap();
 
                     let elapsed_ms = inst.elapsed().as_millis();
-                    tracing::info!(
+                    println!(
                         "create_executed_trades elapsed_ms: {} for year: {}, q: {}, blocknum: {}",
-                        elapsed_ms,
-                        year,
-                        q,
-                        blocknum
+                        elapsed_ms, year, q, blocknum
                     );
                 }
             }

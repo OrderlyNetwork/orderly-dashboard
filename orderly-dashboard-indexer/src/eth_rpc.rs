@@ -10,11 +10,13 @@ use crate::{
             AccountWithdrawApprove1Filter, AccountWithdrawApprove2Filter,
             AccountWithdrawFail1Filter, AccountWithdrawFail2Filter, AccountWithdrawFinish1Filter,
             AccountWithdrawFinish2Filter, AccountWithdrawSolApprove1Filter,
-            AccountWithdrawSolApprove2Filter, BalanceTransferFilter, FeeDistributionFilter,
-            LiquidationResultFilter, LiquidationResultV2Filter, LiquidationTransferFilter,
-            LiquidationTransferV2Filter, ProcessValidatedFutures1Filter,
-            ProcessValidatedFutures2Filter, SettlementExecutionFilter, SettlementResultFilter,
-            SwapResultUploadedFilter,
+            AccountWithdrawSolApprove2Filter, AdlResultV3Filter, BalanceTransferFilter,
+            FeeDistributionFilter, LiquidationResultFilter, LiquidationResultV2Filter,
+            LiquidationResultV3Filter, LiquidationTransferFilter, LiquidationTransferV2Filter,
+            LiquidationTransferV3Filter, MarginTransferV3Filter, ProcessValidatedFutures1Filter,
+            ProcessValidatedFutures2Filter, ProcessValidatedFuturesV3Filter,
+            SettlementExecutionFilter, SettlementExecutionV3Filter, SettlementResultFilter,
+            SettlementResultV3Filter, SwapResultUploadedFilter,
         },
         vault_manager::{
             RebalanceBurnFilter, RebalanceBurnResultFilter, RebalanceMintFilter,
@@ -201,6 +203,13 @@ pub async fn get_block_logs(block_num: u64) -> Result<Vec<Log>> {
         RebalanceMintFilter::signature(),
         RebalanceMintResultFilter::signature(),
         SwapResultUploadedFilter::signature(),
+        ProcessValidatedFuturesV3Filter::signature(),
+        SettlementExecutionV3Filter::signature(),
+        SettlementResultV3Filter::signature(),
+        AdlResultV3Filter::signature(),
+        LiquidationTransferV3Filter::signature(),
+        LiquidationResultV3Filter::signature(),
+        MarginTransferV3Filter::signature(),
     ];
     let address = unsafe { TARGET_ADDRS.get_unchecked() }.clone();
     let filter = Filter::new()

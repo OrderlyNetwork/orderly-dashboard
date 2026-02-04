@@ -1,6 +1,6 @@
 use crate::db::DB_CONTEXT;
 use crate::db::{DB_CONN_ERR_MSG, POOL};
-use crate::schema::adl_result;
+use crate::schema::margin_transfer;
 use diesel_async::RunQueryDsl;
 
 use anyhow::Result;
@@ -11,62 +11,25 @@ use diesel::{Insertable, Queryable};
 use std::time::Instant;
 
 #[derive(Insertable, Queryable, Debug)]
-#[diesel(table_name = adl_result)]
-pub struct DbAdlResult {
+#[diesel(table_name = margin_transfer)]
+pub struct DbMarginTransfer {
     pub block_number: i64,
     pub transaction_index: i32,
-    pub log_index: i32,
     pub transaction_id: String,
+    pub log_index: i32,
     pub block_time: BigDecimal,
     pub account_id: String,
-    // adl v2 removed insuranceAccountId
-    pub insurance_account_id: String,
-    pub symbol_hash: String,
-    pub position_qty_transfer: BigDecimal,
-    pub cost_position_transfer: BigDecimal,
-    pub adl_price: BigDecimal,
-    pub sum_unitary_fundings: BigDecimal,
-    pub version: Option<i16>,
-    pub margin_mode: Option<i16>,
-    pub iso_margin_asset_hash: Option<String>,
-    pub margin_to_cross: Option<BigDecimal>,
-    pub is_insurance_account: Option<bool>,
+    pub transfer_amount: BigDecimal,
+    pub transfer_asset_hash: String,
+    pub iso_symbol_hash: String,
+    pub timestamp: i64,
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum AdlVersion {
-    V1 = 1,
-    V2 = 2,
-    V3 = 3,
-}
-
-impl AdlVersion {
-    pub fn value(&self) -> i16 {
-        *self as i16
-    }
-}
-
-impl TryFrom<i16> for AdlVersion {
-    type Error = anyhow::Error;
-
-    fn try_from(value: i16) -> Result<Self, Self::Error> {
-        match value {
-            0 | 1 => Ok(Self::V1),
-            2 => Ok(Self::V2),
-            3 => Ok(Self::V3),
-            _ => Err(anyhow::anyhow!(
-                "cannot convert integer:{} to AdlVersion",
-                value
-            )),
-        }
-    }
-}
-
-pub async fn create_adl_results(adls: Vec<DbAdlResult>) -> Result<usize> {
-    use crate::schema::adl_result::dsl::*;
+pub async fn create_margin_transfers(adls: Vec<DbMarginTransfer>) -> Result<usize> {
+    use crate::schema::margin_transfer::dsl::*;
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
-    let num_rows = diesel::insert_into(adl_result)
+    let num_rows = diesel::insert_into(margin_transfer)
         .values(adls)
         .on_conflict_do_nothing()
         .execute(&mut conn)
@@ -74,15 +37,18 @@ pub async fn create_adl_results(adls: Vec<DbAdlResult>) -> Result<usize> {
     Ok(num_rows)
 }
 
-pub async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbAdlResult>> {
-    use crate::schema::adl_result::dsl::*;
+pub async fn query_margin_transfers(
+    from_block: i64,
+    to_block: i64,
+) -> Result<Vec<DbMarginTransfer>> {
+    use crate::schema::margin_transfer::dsl::*;
     let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
-    let result = adl_result
+    let result = margin_transfer
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
-        .load::<DbAdlResult>(&mut conn)
+        .load::<DbMarginTransfer>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -90,7 +56,7 @@ pub async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbA
         Ok(events) => {
             tracing::info!(
                 target: DB_CONTEXT,
-                "query_adl_results success. length:{}, used time:{} ms",
+                "query_margin_transfers success. length:{}, used time:{} ms",
                 events.len(),
                 dur_ms
             );
@@ -101,7 +67,7 @@ pub async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbA
             diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
-                    "query_adl_results success. length:0, used time:{} ms",
+                    "query_margin_transfers success. length:0, used time:{} ms",
                     dur_ms
                 );
                 vec![]
@@ -109,7 +75,7 @@ pub async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbA
             _ => {
                 tracing::warn!(
                     target: DB_CONTEXT,
-                    "query_adl_results fail. err:{:?}, used time:{} ms",
+                    "query_margin_transfers fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );
@@ -121,22 +87,22 @@ pub async fn query_adl_results(from_block: i64, to_block: i64) -> Result<Vec<DbA
     Ok(events)
 }
 
-pub async fn query_adl_results_with_time(
+pub async fn query_margin_transfers_with_time(
     from_block: i64,
     to_block: i64,
     from_time: i64,
     to_time: i64,
-) -> Result<Vec<DbAdlResult>> {
-    use crate::schema::adl_result::dsl::*;
+) -> Result<Vec<DbMarginTransfer>> {
+    use crate::schema::margin_transfer::dsl::*;
     let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
-    let result = adl_result
+    let result = margin_transfer
         .filter(block_number.ge(from_block))
         .filter(block_number.le(to_block))
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
-        .load::<DbAdlResult>(&mut conn)
+        .load::<DbMarginTransfer>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -144,7 +110,7 @@ pub async fn query_adl_results_with_time(
         Ok(events) => {
             tracing::info!(
                 target: DB_CONTEXT,
-                "query_adl_results_with_time success. length:{}, used time:{} ms",
+                "query_margin_transfers_with_time success. length:{}, used time:{} ms",
                 events.len(),
                 dur_ms
             );
@@ -154,7 +120,7 @@ pub async fn query_adl_results_with_time(
             diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
-                    "query_adl_results_with_time success. length:0, used time:{} ms",
+                    "query_margin_transfers_with_time success. length:0, used time:{} ms",
                     dur_ms
                 );
                 vec![]
@@ -162,7 +128,7 @@ pub async fn query_adl_results_with_time(
             _ => {
                 tracing::warn!(
                     target: DB_CONTEXT,
-                    "query_adl_results_with_time fail. err:{:?}, used time:{} ms",
+                    "query_margin_transfers_with_time fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );
@@ -174,20 +140,20 @@ pub async fn query_adl_results_with_time(
     Ok(events)
 }
 
-pub async fn query_account_adl_results(
+pub async fn query_account_margin_transfers(
     account: String,
     from_time: i64,
     to_time: i64,
-) -> Result<Vec<DbAdlResult>> {
-    use crate::schema::adl_result::dsl::*;
+) -> Result<Vec<DbMarginTransfer>> {
+    use crate::schema::margin_transfer::dsl::*;
     let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
-    let result = adl_result
+    let result = margin_transfer
         .filter(block_time.ge(BigDecimal::from_i64(from_time).unwrap_or_default()))
         .filter(block_time.le(BigDecimal::from_i64(to_time).unwrap_or_default()))
         .filter(account_id.eq(account))
-        .load::<DbAdlResult>(&mut conn)
+        .load::<DbMarginTransfer>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -195,7 +161,7 @@ pub async fn query_account_adl_results(
         Ok(events) => {
             tracing::info!(
                 target: DB_CONTEXT,
-                "query_account_adl_results success. length:{}, used time:{} ms",
+                "query_account_margin_transfers success. length:{}, used time:{} ms",
                 events.len(),
                 dur_ms
             );
@@ -205,7 +171,7 @@ pub async fn query_account_adl_results(
             diesel::NotFound => {
                 tracing::info!(
                     target: DB_CONTEXT,
-                    "query_account_adl_results success. length:0, used time:{} ms",
+                    "query_account_margin_transfers success. length:0, used time:{} ms",
                     dur_ms
                 );
                 vec![]
@@ -213,7 +179,7 @@ pub async fn query_account_adl_results(
             _ => {
                 tracing::warn!(
                     target: DB_CONTEXT,
-                    "query_account_adl_results fail. err:{:?}, used time:{} ms",
+                    "query_account_margin_transfers fail. err:{:?}, used time:{} ms",
                     error,
                     dur_ms
                 );

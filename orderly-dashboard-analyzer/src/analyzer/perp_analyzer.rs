@@ -4,7 +4,7 @@ use bigdecimal::BigDecimal;
 use chrono::{NaiveDateTime, Timelike};
 use std::ops::Div;
 
-use orderly_dashboard_indexer::formats_external::trading_events::Trade;
+use orderly_dashboard_indexer::formats_external::trading_events::{MarginMode, Trade};
 
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
@@ -75,26 +75,23 @@ pub async fn analyzer_perp_trade(
             account_id: perp_trade.account_id.clone(),
             symbol: perp_symbol.clone(),
         };
-
-        //user_summary
-        let mut user_perp_snap = context
-            .get_user_perp(&user_perp_summary_key.clone())
-            .await
-            .clone();
-
-        let suf: BigDecimal = perp_trade.sum_unitary_fundings.parse().unwrap();
-
-        // should no check and update log idx for charge funding fee
-        user_perp_snap.charge_funding_fee(suf.div(get_unitary_prec()), pulled_block_height);
-        let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
-            fixed_qty.clone(),
-            quoted_diff.clone(),
-            user_perp_snap.holding.clone(),
-            user_perp_snap.opening_cost.clone(),
-        );
+        let (opening, new_user, pnl_diff) = if perp_trade.margin_mode.is_none()
+            || perp_trade.margin_mode == Some(MarginMode::Cross)
         {
-            let user_perp_summary = context.get_user_perp(&user_perp_summary_key).await;
-            let (opening, new_user) = user_perp_summary.new_trade(
+            //user_summary
+            let user_perp_snap = context.get_user_perp(&user_perp_summary_key.clone()).await;
+
+            let suf: BigDecimal = perp_trade.sum_unitary_fundings.parse().unwrap();
+
+            // should no check and update log idx for charge funding fee
+            user_perp_snap.charge_funding_fee(suf.div(get_unitary_prec()), pulled_block_height);
+            let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
+                fixed_qty.clone(),
+                quoted_diff.clone(),
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            );
+            let (opening, new_user) = user_perp_snap.new_trade(
                 fixed_fee.clone(),
                 fixed_notional.clone(),
                 pulled_block_height.clone(),
@@ -102,19 +99,56 @@ pub async fn analyzer_perp_trade(
                 fixed_qty.clone(),
                 pnl_diff.clone(),
             );
-            if opening {
-                context
-                    .get_hourly_orderly_perp(&hour_orderly_perp_key)
-                    .await
-                    .new_opening();
+            (opening, new_user, pnl_diff)
+        } else {
+            //user_iso_summary
+            let user_perp_snap = context
+                .get_iso_user_perp(&user_perp_summary_key.clone())
+                .await;
+
+            let suf: BigDecimal = perp_trade.sum_unitary_fundings.parse().unwrap();
+
+            // should no check and update log idx for charge funding fee
+            user_perp_snap.charge_funding_fee(suf.div(get_unitary_prec()), pulled_block_height);
+            let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
+                fixed_qty.clone(),
+                quoted_diff.clone(),
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            );
+            let (opening, new_user) = user_perp_snap.new_trade(
+                fixed_fee.clone(),
+                fixed_notional.clone(),
+                pulled_block_height.clone(),
+                open_cost_diff.clone(),
+                fixed_qty.clone(),
+                pnl_diff.clone(),
+            );
+            if let Some(margin_from_cross) = perp_trade.margin_from_cross {
+                let margin_from_cross: BigDecimal = margin_from_cross.parse().unwrap();
+                if margin_from_cross > BigDecimal::from(0) {
+                    if let Some(iso_margin_asset_hash) = &perp_trade.iso_margin_asset_hash {
+                        user_perp_snap.margin_token = iso_margin_asset_hash.to_string();
+                        user_perp_snap.margin_qty =
+                            user_perp_snap.margin_qty.clone() + margin_from_cross;
+                    }
+                }
             }
-            if new_user {
-                context
-                    .get_orderly_perp(&perp_symbol)
-                    .await
-                    .new_user(pulled_block_height);
-            }
+            (opening, new_user, pnl_diff)
+        };
+        if opening {
+            context
+                .get_hourly_orderly_perp(&hour_orderly_perp_key)
+                .await
+                .new_opening();
         }
+        if new_user {
+            context
+                .get_orderly_perp(&perp_symbol)
+                .await
+                .new_user(pulled_block_height);
+        }
+        // }
 
         //hourly_user
         {
@@ -163,8 +197,8 @@ mod tests {
     use orderly_dashboard_indexer::formats_external::trading_events::PurchaseSide;
     use orderly_dashboard_indexer::formats_external::trading_events::Trade;
 
-    const ALICE: &str = "0xa11ce00000000000000000000000000000000000000000000000000000000000";
-    const BOB: &str = "0xb0b0000000000000000000000000000000000000000000000000000000000000";
+    const ALICE: &str = "0xa11ce";
+    const BOB: &str = "0xb0b";
 
     #[actix_web::test]
     async fn test_perp_trades() {
@@ -228,6 +262,9 @@ mod tests {
                 match_id: 1678975214714862536,
                 timestamp: (block_time * 1000) as u64,
                 side: PurchaseSide::Sell,
+                margin_mode: None,
+                margin_from_cross: None,
+                iso_margin_asset_hash: None,
             },
             Trade {
                 account_id: BOB.to_string(),
@@ -242,6 +279,9 @@ mod tests {
                 match_id: 1678975214714862536,
                 timestamp: (block_time * 1000) as u64,
                 side: PurchaseSide::Buy,
+                margin_mode: None,
+                margin_from_cross: None,
+                iso_margin_asset_hash: None,
             },
         ];
         let block_number = 1000000;
@@ -266,5 +306,30 @@ mod tests {
             assert_eq!(bob_eth.holding, BigDecimal::from(2));
             println!("bob_eth perp summary: {:?}", bob_eth);
         }
+
+        let new_trade = Trade {
+            account_id: ALICE.to_string(),
+            symbol_hash: SYMBOL_HASH_ETH_USDC.to_string(),
+            fee_asset_hash: TOKEN_HASH.to_string(),
+            trade_qty: "0".to_string(),
+            notional: "0".to_string(),
+            executed_price: "250000000".to_string(),
+            fee: "0".to_string(),
+            sum_unitary_fundings: "5000000000000005".to_string(),
+            trade_id: 15,
+            match_id: 1678975214714862538,
+            timestamp: (block_time * 1000) as u64,
+            side: PurchaseSide::Sell,
+            margin_mode: None,
+            margin_from_cross: None,
+        };
+        let block_number = 1000000;
+        analyzer_perp_trade(vec![new_trade], block_number, &mut context, None).await;
+        let alice_eth = context.get_user_perp_cache(&alice_eth_perp_key);
+        println!(
+            "after trade_id 15: alice_eth.holding: {:?}, alice_eth.cost_position: {}",
+            alice_eth.holding.to_string(),
+            alice_eth.cost_position.to_string(),
+        );
     }
 }

@@ -9,6 +9,7 @@ pub mod analyzer_gas_job;
 pub mod analyzer_job;
 pub mod calc;
 pub mod liquidation_analyzer;
+pub mod margin_transfer_analyzer;
 pub mod perp_analyzer;
 pub mod settlement_analyzer;
 pub mod transaction_analyzer;

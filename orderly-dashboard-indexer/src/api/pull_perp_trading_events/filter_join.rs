@@ -18,6 +18,7 @@ use crate::db::liquidation_transfer::{
     query_liquidation_transfers_with_time, DbLiquidationTransfer,
 };
 
+use crate::db::margin_transfer::{query_account_margin_transfers, query_margin_transfers};
 use crate::db::serial_batches::{
     query_serial_batches_by_time_and_key,
     query_serial_batches_joined_partitioned_trades_with_type_by_time,
@@ -129,6 +130,9 @@ pub async fn perp_trading_join_events(
             TradingEventType::ADL => {
                 trading_events = join_adls(from_block, to_block).await?;
             }
+            TradingEventType::MarginTransfer => {
+                trading_events = join_margin_transfers(from_block, to_block).await?;
+            }
         }
         trading_events.sort();
         if !trading_events.is_empty() {
@@ -154,7 +158,16 @@ pub async fn perp_trading_join_events(
     let liquidations =
         join_liquidations_with_time(from_block, to_block, from_time, to_time).await?;
     let adls = join_adls_with_time(from_block, to_block, from_time, to_time).await?;
-    let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
+    let margin_transfers = join_margin_transfers(from_block, to_block).await?;
+    let mut trading_events = [
+        balance_trans,
+        perp_trades,
+        settlements,
+        liquidations,
+        adls,
+        margin_transfers,
+    ]
+    .concat();
     trading_events.sort();
     if !trading_events.is_empty() {
         response.last_block_timestamp = trading_events[0].block_timestamp as i64;
@@ -276,6 +289,9 @@ pub async fn account_perp_trading_join_events(
                     join_account_adls(account_id.to_string(), from_time, to_time, None, None)
                         .await?;
             }
+            TradingEventType::MarginTransfer => {
+                trading_events = vec![];
+            }
         }
         trading_events.sort();
         response.events = trading_events;
@@ -328,6 +344,7 @@ pub async fn account_perp_trading_join_events(
     .await?
     .0;
     let adls = join_account_adls(account_id.to_string(), from_time, to_time, None, None).await?;
+    // todo: add margin transfer
     let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
     trading_events.sort();
     response.events = trading_events;
@@ -450,6 +467,7 @@ pub async fn account_perp_trading_join_events_v2(
                     join_account_adls(account_id.to_string(), from_time, to_time, None, None)
                         .await?;
             }
+            TradingEventType::MarginTransfer => trading_events = vec![],
         }
         trading_events.sort();
         response.events = trading_events;
@@ -558,6 +576,7 @@ pub async fn account_perp_trading_join_events_v2(
     } else {
         vec![]
     };
+    // todo: add margin_transfers
     let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
     trading_events.sort();
     response.events = trading_events;
@@ -1227,4 +1246,26 @@ pub async fn join_account_adls(
         .map(TradingEvent::from_adl_result)
         .collect::<Vec<_>>();
     Ok(adls_vec)
+}
+
+pub async fn join_margin_transfers(from_block: i64, to_block: i64) -> Result<Vec<TradingEvent>> {
+    let margin_trans = query_margin_transfers(from_block, to_block).await?;
+    let margin_trans_vec: Vec<TradingEvent> = margin_trans
+        .into_iter()
+        .map(TradingEvent::from_transfer_margin)
+        .collect::<Vec<_>>();
+    Ok(margin_trans_vec)
+}
+
+pub async fn join_account_margin_transfers(
+    account_id: String,
+    from_time: i64,
+    to_time: i64,
+) -> Result<Vec<TradingEvent>> {
+    let margin_trans = query_account_margin_transfers(account_id, from_time, to_time).await?;
+    let margin_trans_vec: Vec<TradingEvent> = margin_trans
+        .into_iter()
+        .map(TradingEvent::from_transfer_margin)
+        .collect::<Vec<_>>();
+    Ok(margin_trans_vec)
 }

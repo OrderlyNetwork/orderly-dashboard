@@ -180,10 +180,7 @@ mod tests {
     #[ignore]
     #[tokio::test]
     async fn test_fetch_block_receipts() {
-        let provider = Provider::<Http>::try_from(
-            "https://l2-orderly-l2-4460-sepolia-8tc3sd7dvy.t.conduit.xyz",
-        )
-        .unwrap();
+        let provider = Provider::<Http>::try_from("https://testnet-rpc.orderly.org").unwrap();
         let receipts = provider
             .get_block_receipts(BlockNumber::Number(4777281.into()))
             .await
