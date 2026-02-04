@@ -94,14 +94,3 @@ pub async fn find_collateral_info_by_hash(
         },
     }
 }
-
-#[cfg(test)]
-mod tests {
-    fn init_log() {
-        tracing_subscriber::fmt::Subscriber::builder()
-            .with_writer(std::io::stderr)
-            .with_thread_ids(true)
-            .with_thread_names(true)
-            .init();
-    }
-}
