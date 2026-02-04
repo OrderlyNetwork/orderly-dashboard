@@ -29,6 +29,7 @@ pub struct OrderlyPerpSummary {
 
     buy_amount: BigDecimal,
     sell_amount: BigDecimal,
+    iso_open_interest: Option<BigDecimal>,
 }
 
 impl OrderlyPerpSummary {
@@ -46,6 +47,7 @@ impl OrderlyPerpSummary {
             pulled_block_time: Default::default(),
             buy_amount: Default::default(),
             sell_amount: Default::default(),
+            iso_open_interest: Default::default(),
         }
     }
 }
@@ -125,6 +127,7 @@ pub async fn find_orderly_perp_summary(
                     pulled_block_time: Default::default(),
                     buy_amount: Default::default(),
                     sell_amount: Default::default(),
+                    iso_open_interest: Default::default(),
                 };
 
                 Ok(new_perp)

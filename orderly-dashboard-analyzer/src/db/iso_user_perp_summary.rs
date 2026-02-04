@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use std::time::Instant;
 
 use bigdecimal::{BigDecimal, RoundingMode};
@@ -10,12 +11,12 @@ use diesel_async::RunQueryDsl;
 use crate::analyzer::get_cost_position_decimal;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
-use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
-use crate::schema::user_perp_summary;
+use crate::db::{BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
+use crate::schema::iso_user_perp_summary;
 
 #[derive(Queryable, Insertable, Debug, Clone)]
-#[diesel(table_name = user_perp_summary)]
-pub struct UserPerpSummary {
+#[diesel(table_name = iso_user_perp_summary)]
+pub struct IsoUserPerpSummary {
     pub account_id: String,
     pub symbol: String,
 
@@ -33,6 +34,8 @@ pub struct UserPerpSummary {
 
     total_liquidation_amount: BigDecimal,
     total_liquidation_count: i64,
+    pub margin_token: String,
+    pub margin_qty: BigDecimal,
 
     pub pulled_block_height: i64,
     pub pulled_block_time: NaiveDateTime,
@@ -40,6 +43,7 @@ pub struct UserPerpSummary {
     pub sum_unitary_fundings: BigDecimal,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, QueryableByName, Clone)]
 pub struct AccountVolumeWithTime {
     #[diesel(sql_type = Text)]
@@ -50,9 +54,9 @@ pub struct AccountVolumeWithTime {
     pub max_update_time: NaiveDateTime,
 }
 
-impl UserPerpSummary {
-    pub fn new_empty_user_perp_summary(p_account_id: &str, symbol: &str) -> UserPerpSummary {
-        UserPerpSummary {
+impl IsoUserPerpSummary {
+    pub fn new_empty_iso_user_perp_summary(p_account_id: &str, symbol: &str) -> IsoUserPerpSummary {
+        IsoUserPerpSummary {
             account_id: p_account_id.to_string(),
             symbol: symbol.to_string(),
             holding: Default::default(),
@@ -65,6 +69,8 @@ impl UserPerpSummary {
             total_trading_count: 0,
             total_liquidation_amount: Default::default(),
             total_liquidation_count: 0,
+            margin_token: Default::default(),
+            margin_qty: Default::default(),
             pulled_block_height: 0,
             pulled_block_time: Default::default(),
             sum_unitary_fundings: BigDecimal::from(0),
@@ -225,7 +231,7 @@ impl UserPerpSummary {
         self.total_liquidation_count += 1;
     }
 
-    pub fn new_user_adl_v2(
+    pub fn new_user_adl_v3(
         &mut self,
         qty: BigDecimal,
         price: BigDecimal,
@@ -235,6 +241,8 @@ impl UserPerpSummary {
         open_cost_diff: BigDecimal,
         realized_pnl_diff: BigDecimal,
         need_cal_avg: bool,
+        margin_asset_hash: Option<String>,
+        margin_to_cross: Option<String>,
     ) {
         if block_num <= self.pulled_block_height {
             // already processed this block events
@@ -249,10 +257,31 @@ impl UserPerpSummary {
         if need_cal_avg {
             self.update_opening_cost(open_cost_diff);
         }
+
+        if let Some(margin_asset_hash) = margin_asset_hash {
+            self.margin_token = margin_asset_hash;
+            if let Some(margin_to_cross) = margin_to_cross {
+                self.margin_qty -= BigDecimal::from_str(&margin_to_cross).unwrap_or_default();
+            }
+        }
+    }
+
+    pub fn margin_deposit(&mut self, block_num: i64, asset_hash: String, amount: BigDecimal) {
+        tracing::info!(target:"margin_deposit", "block_num: {}, receiver margin transfer account_id: {},iso_symbol_hash:{},margin_asset_hash: {}, margin_from_cross:{}", block_num, self.account_id, self.symbol, asset_hash, amount.to_string());
+        if block_num <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+        if amount == BigDecimal::from(0) {
+            return;
+        }
+
+        self.margin_token = asset_hash;
+        self.margin_qty += amount;
     }
 }
 
-impl UserPerpSummary {
+impl IsoUserPerpSummary {
     pub fn new_trade(
         &mut self,
         fee: BigDecimal,
@@ -285,7 +314,7 @@ impl UserPerpSummary {
     }
 }
 
-impl UserPerpSummary {
+impl IsoUserPerpSummary {
     pub fn update_opening_cost(&mut self, open_cost_diff: BigDecimal) {
         if self.holding == BigDecimal::from(0) {
             self.opening_cost = BigDecimal::from(0);
@@ -295,37 +324,23 @@ impl UserPerpSummary {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Debug, Clone)]
-pub struct UserPerpSummaryKey {
-    pub account_id: String,
-    pub symbol: String,
-}
-
-impl UserPerpSummaryKey {
-    pub fn new_key(account_id: String, symbol: String) -> UserPerpSummaryKey {
-        UserPerpSummaryKey { account_id, symbol }
-    }
-}
-
-impl PrimaryKey for UserPerpSummaryKey {}
-
-pub async fn find_user_perp_summary(
+pub async fn find_iso_user_perp_summary(
     p_account_id: String,
     p_symbol: String,
-) -> Result<UserPerpSummary, DBException> {
-    use crate::schema::user_perp_summary::dsl::*;
+) -> Result<IsoUserPerpSummary, DBException> {
+    use crate::schema::iso_user_perp_summary::dsl::*;
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
-    let select_result = user_perp_summary
+    let select_result = iso_user_perp_summary
         .filter(account_id.eq(p_account_id.clone()))
         .filter(symbol.eq(p_symbol.clone()))
-        .first::<UserPerpSummary>(&mut conn)
+        .first::<IsoUserPerpSummary>(&mut conn)
         .await;
 
     match select_result {
         Ok(perp_data) => Ok(perp_data),
         Err(error) => match error {
             diesel::NotFound => {
-                let new_perp = UserPerpSummary {
+                let new_perp = IsoUserPerpSummary {
                     account_id: p_account_id.clone(),
                     symbol: p_symbol.clone(),
                     holding: Default::default(),
@@ -338,6 +353,8 @@ pub async fn find_user_perp_summary(
                     total_trading_count: 0,
                     total_liquidation_amount: Default::default(),
                     total_liquidation_count: 0,
+                    margin_token: Default::default(),
+                    margin_qty: Default::default(),
                     pulled_block_height: 0,
                     pulled_block_time: Default::default(),
                     sum_unitary_fundings: BigDecimal::from(0),
@@ -350,13 +367,13 @@ pub async fn find_user_perp_summary(
     }
 }
 
-pub async fn create_or_update_user_perp_summary(
-    p_user_perp_summary_vec: Vec<&UserPerpSummary>,
+pub async fn create_or_update_iso_user_perp_summary(
+    p_user_perp_summary_vec: Vec<&IsoUserPerpSummary>,
 ) -> anyhow::Result<usize> {
     if p_user_perp_summary_vec.is_empty() {
         return Ok(0);
     }
-    use crate::schema::user_perp_summary::dsl::*;
+    use crate::schema::iso_user_perp_summary::dsl::*;
     let length = p_user_perp_summary_vec.len();
     tracing::info!(target: DB_CONTEXT, "dbwrite create_or_update_user_perp_summary start length: {}", length);
 
@@ -368,18 +385,18 @@ pub async fn create_or_update_user_perp_summary(
     loop {
         let inst = Instant::now();
         if user_perp_summary_vec_ref.len() >= BATCH_UPSERT_LEN {
-            let values1: &[&UserPerpSummary];
+            let values1: &[&IsoUserPerpSummary];
             (values1, user_perp_summary_vec_ref) =
                 user_perp_summary_vec_ref.split_at(BATCH_UPSERT_LEN);
             #[allow(suspicious_double_ref_op)]
             let values1 = values1
                 .iter()
                 .map(|v| v.clone().clone())
-                .collect::<Vec<UserPerpSummary>>();
+                .collect::<Vec<IsoUserPerpSummary>>();
             let len = values1.len();
-            let update_result = diesel::insert_into(user_perp_summary)
+            let update_result = diesel::insert_into(iso_user_perp_summary)
                 .values(values1)
-                .on_conflict(on_constraint("user_perp_summary_uq"))
+                .on_conflict(on_constraint("iso_user_perp_summary_uq"))
                 .do_update()
                 .set((
                     holding.eq(excluded(holding)),
@@ -392,6 +409,8 @@ pub async fn create_or_update_user_perp_summary(
                     total_un_realized_pnl.eq(excluded(total_un_realized_pnl)),
                     total_liquidation_amount.eq(excluded(total_liquidation_amount)),
                     total_liquidation_count.eq(excluded(total_liquidation_count)),
+                    margin_token.eq(excluded(margin_token)),
+                    margin_qty.eq(excluded(margin_qty)),
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                     sum_unitary_fundings.eq(excluded(sum_unitary_fundings)),
@@ -420,10 +439,10 @@ pub async fn create_or_update_user_perp_summary(
             let values1 = user_perp_summary_vec_ref
                 .iter()
                 .map(|v| v.clone().clone())
-                .collect::<Vec<UserPerpSummary>>();
-            let update_result = diesel::insert_into(user_perp_summary)
+                .collect::<Vec<IsoUserPerpSummary>>();
+            let update_result = diesel::insert_into(iso_user_perp_summary)
                 .values(values1)
-                .on_conflict(on_constraint("user_perp_summary_uq"))
+                .on_conflict(on_constraint("iso_user_perp_summary_uq"))
                 .do_update()
                 .set((
                     holding.eq(excluded(holding)),
@@ -436,6 +455,8 @@ pub async fn create_or_update_user_perp_summary(
                     total_un_realized_pnl.eq(excluded(total_un_realized_pnl)),
                     total_liquidation_amount.eq(excluded(total_liquidation_amount)),
                     total_liquidation_count.eq(excluded(total_liquidation_count)),
+                    margin_token.eq(excluded(margin_token)),
+                    margin_qty.eq(excluded(margin_qty)),
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                     sum_unitary_fundings.eq(excluded(sum_unitary_fundings)),
@@ -469,20 +490,20 @@ pub async fn create_or_update_user_perp_summary(
 }
 
 #[allow(dead_code)]
-pub async fn legacy_create_or_update_user_perp_summary(
-    p_user_perp_summary_vec: Vec<&UserPerpSummary>,
+pub async fn legacy_create_or_update_iso_user_perp_summary(
+    p_user_perp_summary_vec: Vec<&IsoUserPerpSummary>,
 ) -> anyhow::Result<usize> {
     if p_user_perp_summary_vec.is_empty() {
         return Ok(0);
     }
-    use crate::schema::user_perp_summary::dsl::*;
+    use crate::schema::iso_user_perp_summary::dsl::*;
 
     let mut row_nums = 0;
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     for summary in p_user_perp_summary_vec {
-        let update_result = diesel::insert_into(user_perp_summary)
+        let update_result = diesel::insert_into(iso_user_perp_summary)
             .values(summary.clone())
-            .on_conflict(on_constraint("user_perp_summary_uq"))
+            .on_conflict(on_constraint("iso_user_perp_summary_uq"))
             .do_update()
             .set((
                 holding.eq(summary.holding.clone()),
@@ -514,15 +535,17 @@ pub async fn legacy_create_or_update_user_perp_summary(
     Ok(row_nums)
 }
 
-pub async fn get_user_ltd_trading_volume(
+#[allow(dead_code)]
+// get user ioslated margin life to date
+pub async fn get_user_ltd_iso_trading_volume(
     offset_account_id: Option<String>,
     limit: i64,
 ) -> anyhow::Result<Vec<AccountVolumeWithTime>> {
     #[allow(unused_imports)]
     use crate::{
         db::{hourly_user_perp::HourlyUserPerp, POOL},
-        schema::user_perp_summary,
-        schema::user_perp_summary::dsl::*,
+        schema::iso_user_perp_summary,
+        schema::iso_user_perp_summary::dsl::*,
     };
 
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
@@ -535,7 +558,7 @@ select
   sum(total_trading_volume) as volume,
   max(pulled_block_time) as max_update_time
 from
-  user_perp_summary
+  iso_user_perp_summary
 where
   account_id > $1
 group by
@@ -558,7 +581,7 @@ select
   sum(total_trading_volume) as volume,
   max(pulled_block_time) as max_update_time
 from
-  user_perp_summary
+  iso_user_perp_summary
 group by
   account_id
 order by
@@ -578,87 +601,20 @@ limit
 #[cfg(test)]
 mod tests {
     use crate::analyzer::get_unitary_prec;
-    use std::{str::FromStr, time::Instant};
+    use std::str::FromStr;
 
     use super::*;
     use chrono::Utc;
 
-    #[ignore]
-    #[actix_web::test]
-    async fn test_create_or_update_user_perp_summary() {
-        dotenv::dotenv().ok();
-        // init_log();
-        let mut data = vec![];
-        let update_time = NaiveDateTime::from_timestamp_opt(
-            Utc::now().timestamp(),
-            Utc::now().timestamp_subsec_nanos() as u32,
-        )
-        .unwrap();
-        // 26s
-        for i in 0..200_000 {
-            data.push(UserPerpSummary {
-                account_id: (i).to_string(),
-                symbol: "0xaaaaa".to_string(),
-                holding: (i * 10000).into(),
-                opening_cost: (i * 10000).into(),
-                cost_position: (i * 10000).into(),
-                total_trading_volume: (i * 10000).into(),
-                total_trading_count: (i * 10000).into(),
-                total_trading_fee: (i * 10000).into(),
-                total_realized_pnl: (i * 10000).into(),
-                total_un_realized_pnl: (i * 10000).into(),
-                total_liquidation_amount: (i * 10000).into(),
-                total_liquidation_count: (i * 10000).into(),
-                pulled_block_height: (i * 10000).into(),
-                pulled_block_time: update_time,
-                sum_unitary_fundings: (i * 10000).into(),
-            });
-        }
-        let val = Vec::from_iter(data.iter());
-        let inst1 = Instant::now();
-        create_or_update_user_perp_summary(val.clone())
-            .await
-            .unwrap();
-        let elapse1_ms = inst1.elapsed().as_millis();
-
-        println!(
-            "test_create_or_update_user_perp_summary elapse1_ms: {}",
-            elapse1_ms,
-        );
-
-        // let inst2 = Instant::now();
-        // legacy_create_or_update_user_perp_summary(val.clone())
-        //     .await
-        //     .unwrap();
-        // let elapse2_ms = inst2.elapsed().as_millis();
-
-        // tracing::info!(
-        //     "test_create_or_update_user_perp_summary elapse1_ms: {}, elapse2_ms: {}",
-        //     elapse1_ms,
-        //     elapse2_ms
-        // );
-    }
-
     #[test]
-    fn test_bigdecimal_scal() {
-        let v = BigDecimal::from_str("3.213").unwrap();
-        let v = v.with_scale(0);
-        assert_eq!("3", v.to_string());
-
-        let v = BigDecimal::from_str("3.813").unwrap();
-        let v = v.with_scale(0);
-        assert_eq!("3", v.to_string());
-    }
-
-    #[test]
-    fn test_charge_funding_fee1() {
+    fn test_charge_iso_funding_fee1() {
         let acc = "account1".to_string();
         let update_time = NaiveDateTime::from_timestamp_opt(
             Utc::now().timestamp(),
             Utc::now().timestamp_subsec_nanos() as u32,
         )
         .unwrap();
-        let mut user_perp1 = UserPerpSummary {
+        let mut user_perp1 = IsoUserPerpSummary {
             account_id: acc,
             symbol: "0xaaaaa".to_string(),
             holding: BigDecimal::from_str("0.01").unwrap(),
@@ -671,6 +627,8 @@ mod tests {
             total_un_realized_pnl: 0.into(),
             total_liquidation_amount: 0.into(),
             total_liquidation_count: 0.into(),
+            margin_token: Default::default(),
+            margin_qty: Default::default(),
             pulled_block_height: 0.into(),
             pulled_block_time: update_time,
             sum_unitary_fundings: BigDecimal::from_str("1000000000000000").unwrap()

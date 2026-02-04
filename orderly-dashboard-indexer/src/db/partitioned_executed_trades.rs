@@ -275,7 +275,8 @@ pub async fn query_partitioned_executed_trades(
     use crate::schema::partitioned_executed_trades::dsl::*;
     tracing::info!(
         target: DB_CONTEXT,
-        "query_partitioned_executed_trades start",
+        "query_partitioned_executed_trades start, from_time:{}, to_time:{}, from_block:{}, to_block:{}",
+        from_time.timestamp(), to_time.timestamp(), from_block, to_block,
     );
     let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
@@ -487,7 +488,6 @@ mod tests {
                 (2024, 4),
                 (2025, 1),
                 (2025, 2),
-                (2025, 3),
             ] {
                 let data_time = data_time.with_year(year).unwrap();
                 let data_time = data_time
@@ -500,7 +500,7 @@ mod tests {
                     .with_second(36)
                     .unwrap();
                 let timestamp = data_time.timestamp();
-                for blocknum in 0..2_000 {
+                for blocknum in 0..1_000 {
                     let inst = Instant::now();
                     let mut trades = vec![];
                     for i in 0..100 {

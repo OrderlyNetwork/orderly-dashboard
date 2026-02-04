@@ -1461,7 +1461,7 @@
     "name": "executeLiquidationV3",
     "inputs": [
       {
-        "name": "isoLiquidation",
+        "name": "liquidationV3",
         "type": "tuple",
         "internalType": "struct EventTypes.LiquidationV3",
         "components": [
@@ -2588,7 +2588,7 @@
         "internalType": "uint128"
       }
     ],
-    "stateMutability": "view"
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -2712,7 +2712,7 @@
         "internalType": "uint128"
       }
     ],
-    "stateMutability": "view"
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -4466,6 +4466,12 @@
         "type": "bytes32",
         "indexed": true,
         "internalType": "bytes32"
+      },
+      {
+        "name": "isInsuranceAccount",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
       },
       {
         "name": "symbolHash",
