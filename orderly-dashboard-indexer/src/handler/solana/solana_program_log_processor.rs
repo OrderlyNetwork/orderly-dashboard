@@ -368,57 +368,57 @@ pub(crate) async fn handle_sol_program_logs(log_data: SolanaProgramLogData) -> a
 
 #[cfg(test)]
 mod tests {
-    use std::env;
+    // use std::env;
 
-    use super::{
-        process_solana_logs, SolanaProgramLogData, SolanaProgramLogProcessor, SOL_LOG_PROCESSOR,
-    };
-    use crate::{
-        config::{get_common_cfg, init_config, CommonConfigs},
-        db::settings::SolSyncSignature,
-        init::init_log,
-    };
+    // use super::{
+    //     process_solana_logs, SolanaProgramLogData, SolanaProgramLogProcessor, SOL_LOG_PROCESSOR,
+    // };
+    // use crate::{
+    //     config::{get_common_cfg, init_config, CommonConfigs},
+    //     db::settings::SolSyncSignature,
+    //     init::init_log,
+    // };
 
-    #[ignore]
-    #[tokio::test]
-    async fn test_fetch_solana_transactions() {
-        let raw_common_config = std::fs::read_to_string("./config.example-dev.json")
-            .expect("missing_common_config_file");
-        let mut config: CommonConfigs =
-            serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
-        config.sol_chain_config.program_address =
-            "SysvarRent111111111111111111111111111111111".to_string();
-        config.sol_chain_config.start_sig = "5sPVvy4wVhsUxzu76crTnLAiBH618aNjy6k9YSHdPjtD8tvkouA59R7wZwENLc6112uQVt3bA5fmr5pruTbmh2r3".to_string();
+    // #[ignore]
+    // #[tokio::test]
+    // async fn test_fetch_solana_transactions() {
+    //     let raw_common_config = std::fs::read_to_string("./config.example-dev.json")
+    //         .expect("missing_common_config_file");
+    //     let mut config: CommonConfigs =
+    //         serde_json::from_str(&raw_common_config).expect("unable_to_deserialize_common_configs");
+    //     config.sol_chain_config.program_address =
+    //         "SysvarRent111111111111111111111111111111111".to_string();
+    //     config.sol_chain_config.start_sig = "5sPVvy4wVhsUxzu76crTnLAiBH618aNjy6k9YSHdPjtD8tvkouA59R7wZwENLc6112uQVt3bA5fmr5pruTbmh2r3".to_string();
 
-        init_config(config.clone());
-        env::set_var("RUST_LOG", "sol_sdk=error,sol_log_processor=debug");
-        init_log();
+    //     init_config(config.clone());
+    //     env::set_var("RUST_LOG", "sol_sdk=error,sol_log_processor=debug");
+    //     // init_log();
 
-        async fn get_starting_signature_config_only() -> anyhow::Result<String> {
-            Ok(get_common_cfg().sol_chain_config.start_sig.clone())
-        }
+    //     async fn get_starting_signature_config_only() -> anyhow::Result<String> {
+    //         Ok(get_common_cfg().sol_chain_config.start_sig.clone())
+    //     }
 
-        async fn test_handle_sol_program_logs(
-            log_data: SolanaProgramLogData,
-        ) -> anyhow::Result<()> {
-            tracing::debug!(target: SOL_LOG_PROCESSOR, "Handling transaction. Signature: {}, Program address: {}", log_data.tx_signature, log_data.program_address);
+    //     async fn test_handle_sol_program_logs(
+    //         log_data: SolanaProgramLogData,
+    //     ) -> anyhow::Result<()> {
+    //         println!("Handling transaction. Signature: {}, Program address: {}", log_data.tx_signature, log_data.program_address);
 
-            Ok(())
-        }
+    //         Ok(())
+    //     }
 
-        async fn skip_signature_updating(_info: SolSyncSignature) -> anyhow::Result<()> {
-            Ok(())
-        }
+    //     async fn skip_signature_updating(_info: SolSyncSignature) -> anyhow::Result<()> {
+    //         Ok(())
+    //     }
 
-        let sol_config = config.sol_chain_config.clone();
-        let solana_log_processor = SolanaProgramLogProcessor::new(
-            &sol_config,
-            sol_config.program_address.clone(),
-            get_starting_signature_config_only,
-            test_handle_sol_program_logs,
-            skip_signature_updating,
-        );
+    //     let sol_config = config.sol_chain_config.clone();
+    //     let solana_log_processor = SolanaProgramLogProcessor::new(
+    //         &sol_config,
+    //         sol_config.program_address.clone(),
+    //         get_starting_signature_config_only,
+    //         test_handle_sol_program_logs,
+    //         skip_signature_updating,
+    //     );
 
-        process_solana_logs(solana_log_processor).await;
-    }
+    //     process_solana_logs(solana_log_processor).await;
+    // }
 }

@@ -15,6 +15,7 @@ use crate::config::{get_common_cfg, COMMON_CONFIGS};
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC, VAULT_MANAGER_SC};
 use crate::db::balance_transfer::{create_balance_transfer_events, DbBalanceTransferEvent};
 use crate::db::fee_distribution::{create_fee_distributions, DbFeeDistribution};
+use crate::db::margin_transfer::{create_margin_transfers, DbMarginTransfer};
 use crate::db::rebalance_events::{
     create_rebalance, update_rebalance_burn_status, update_rebalance_mint,
     update_rebalance_mint_status, DBRebalanceEvent,
@@ -53,8 +54,8 @@ use crate::db::{
     },
 };
 use crate::utils::{
-    cal_broker_hash, convert_amount, format_hash, format_hash_160, to_hex_format, u256_to_i128,
-    bytes32_to_address,
+    bytes32_to_address, cal_broker_hash, convert_amount, format_hash, format_hash_160,
+    to_hex_format, u256_to_i128,
 };
 use anyhow::Result;
 use base58::ToBase58;
@@ -1008,6 +1009,7 @@ pub(crate) async fn handle_log(
                             margin_mode: None,
                             iso_margin_asset_hash: None,
                             margin_to_cross: None,
+                            is_insurance_account: None,
                         }])
                         .await?;
                     }
@@ -1037,6 +1039,7 @@ pub(crate) async fn handle_log(
                             margin_mode: None,
                             iso_margin_asset_hash: None,
                             margin_to_cross: None,
+                            is_insurance_account: None,
                         }])
                         .await?;
                     }
@@ -1070,6 +1073,7 @@ pub(crate) async fn handle_log(
                             margin_to_cross: Some(
                                 convert_amount(adl_result_event.iso_margin).unwrap_or_default(),
                             ),
+                            is_insurance_account: Some(adl_result_event.is_insurance_account),
                         }])
                         .await?;
                     }
@@ -1204,7 +1208,9 @@ pub(crate) async fn handle_log(
                                 0,
                             )
                             .unwrap(),
-                            broker_hash: Some(get_broker_hash(cefi_cli.clone(), &account_id).await?),
+                            broker_hash: Some(
+                                get_broker_hash(cefi_cli.clone(), &account_id).await?,
+                            ),
                             transaction_id: Some(format_hash(
                                 log.transaction_hash.unwrap_or_default(),
                             )),
@@ -1242,7 +1248,9 @@ pub(crate) async fn handle_log(
                                 0,
                             )
                             .unwrap_or_default(),
-                            broker_hash: Some(get_broker_hash(cefi_cli.clone(), &account_id).await?),
+                            broker_hash: Some(
+                                get_broker_hash(cefi_cli.clone(), &account_id).await?,
+                            ),
                             transaction_id: Some(format_hash(
                                 log.transaction_hash.unwrap_or_default(),
                             )),
@@ -1281,8 +1289,12 @@ pub(crate) async fn handle_log(
                                 0,
                             )
                             .unwrap_or_default(),
-                            broker_hash: Some(get_broker_hash(cefi_cli.clone(), &account_id).await?),
-                            transaction_id: Some(format_hash(log.transaction_hash.unwrap_or_default())),
+                            broker_hash: Some(
+                                get_broker_hash(cefi_cli.clone(), &account_id).await?,
+                            ),
+                            transaction_id: Some(format_hash(
+                                log.transaction_hash.unwrap_or_default(),
+                            )),
                             margin_mode: Some(trade.margin_mode as i16),
                             iso_margin_asset_hash: Some(to_hex_format(
                                 &trade.iso_margin_asset_hash,
@@ -1315,7 +1327,7 @@ pub(crate) async fn handle_log(
                                 &settlement_res_event.insurance_account_id,
                             ),
                             insurance_transfer_amount: convert_amount(
-                                settlement_res_event.settled_amount,
+                                settlement_res_event.insurance_transfer_amount as i128,
                             )?,
                             version: None,
                         }])
@@ -1350,7 +1362,7 @@ pub(crate) async fn handle_log(
                                 &settlement_res_event.insurance_account_id,
                             ),
                             insurance_transfer_amount: convert_amount(
-                                settlement_res_event.settled_amount,
+                                settlement_res_event.insurance_transfer_amount as i128,
                             )?,
                             version: Some(SettlementResultVersion::V3.value()),
                         }])
@@ -1572,6 +1584,22 @@ pub(crate) async fn handle_log(
                         )])
                         .await?;
                     }
+                    user_ledgerEvents::MarginTransferV3Filter(event) => {
+                        create_margin_transfers(vec![DbMarginTransfer {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            account_id: to_hex_format(&event.account_id),
+                            transfer_amount: convert_amount(event.transfer_amount as i128)?,
+                            transfer_asset_hash: to_hex_format(&event.transfer_asset_hash),
+                            iso_symbol_hash: to_hex_format(&event.iso_symbol_hash),
+                            timestamp: (block_t.unwrap_or_default() as i64).into(),
+                        }])
+                        .await?;
+                    }
                     _ => {}
                 }
             }
@@ -1629,28 +1657,16 @@ pub(crate) async fn handle_log(
 }
 
 async fn get_broker_hash(cefi_cli: Arc<CefiClient>, account_id: &str) -> Result<String> {
-        if let Some(broker_hash) =
-        get_account_broker_hash_cache(account_id)
-    {
+    if let Some(broker_hash) = get_account_broker_hash_cache(account_id) {
         return Ok(broker_hash);
     } else {
-        if let Some(user_info) =
-            get_user_info(account_id.to_string()).await?
-        {
-            set_account_broker_hash_cache(
-                &user_info.account_id,
-                user_info.broker_hash.clone(),
-            );
+        if let Some(user_info) = get_user_info(account_id.to_string()).await? {
+            set_account_broker_hash_cache(&user_info.account_id, user_info.broker_hash.clone());
             return Ok(user_info.broker_hash);
         } else {
-            let user_info = cefi_cli
-                .cefi_get_account_info_with_retry(&account_id)
-                .await;
+            let user_info = cefi_cli.cefi_get_account_info_with_retry(&account_id).await;
             let broker_hash = cal_broker_hash(&user_info.broker_id);
-            set_account_broker_hash_cache(
-                &account_id,
-                broker_hash.clone(),
-            );
+            set_account_broker_hash_cache(&account_id, broker_hash.clone());
             create_user_info(&UserInfo {
                 account_id: account_id.to_string(),
                 broker_id: user_info.broker_id.clone(),

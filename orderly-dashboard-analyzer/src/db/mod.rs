@@ -16,6 +16,7 @@ pub mod hourly_orderly_perp;
 pub mod hourly_orderly_token;
 pub mod hourly_user_perp;
 pub mod hourly_user_token;
+pub mod iso_user_perp_summary;
 pub mod market_info;
 pub mod orderly_perp_summary;
 pub mod orderly_token_summary;
@@ -27,7 +28,7 @@ pub mod user_volume_statistics;
 
 pub const DB_CONTEXT: &str = "DB_operation";
 // row * col <= 32767
-pub const BATCH_UPSERT_LEN: usize = 1000;
+pub const BATCH_UPSERT_LEN: usize = 800;
 pub(crate) const DB_CONN_ERR_MSG: &str = "Couldn't get db connection from the pool";
 
 type DbPool = Pool<AsyncPgConnection>;

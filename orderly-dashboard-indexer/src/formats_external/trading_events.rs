@@ -3,6 +3,7 @@ use crate::db::adl_result::DbAdlResult;
 use crate::db::executed_trades::DbExecutedTrades;
 use crate::db::liquidation_result::{DbLiquidationResult, LiquidationResultVersion};
 use crate::db::liquidation_transfer::DbLiquidationTransfer;
+use crate::db::margin_transfer::DbMarginTransfer;
 use crate::db::partitioned_executed_trades::DbPartitionedExecutedTrades;
 use crate::db::serial_batches::{DbSerialBatches, DbSerialBatchesView};
 use crate::db::settlement_execution::{DbSettlementExecution, DbSettlementExecutionView};
@@ -25,6 +26,7 @@ pub enum TradingEventType {
     SETTLEMENT,
     LIQUIDATION,
     ADL,
+    MarginTransfer,
 }
 
 impl fmt::Display for TradingEventType {
@@ -35,6 +37,7 @@ impl fmt::Display for TradingEventType {
             TradingEventType::SETTLEMENT => write!(f, "SETTLEMENT"),
             TradingEventType::LIQUIDATION => write!(f, "LIQUIDATION"),
             TradingEventType::ADL => write!(f, "ADL"),
+            TradingEventType::MarginTransfer => write!(f, "MARGINTRANSFER"),
         }
     }
 }
@@ -366,6 +369,7 @@ impl TradingEvent {
                 liquidated_asset_hash: liquidation_res.liquidated_asset_hash,
                 insurance_transfer_amount: liquidation_res.insurance_transfer_amount.to_string(),
                 liquidation_transfers,
+                is_insurance_account: liquidation_res.is_insurance_account.unwrap_or_default(),
             },
         }
     }
@@ -431,6 +435,24 @@ impl TradingEvent {
                 margin_to_cross: adl
                     .margin_to_cross
                     .map(|margin_to_cross| margin_to_cross.to_string()),
+                is_insurance_account: adl.is_insurance_account.unwrap_or_default(),
+            },
+        }
+    }
+
+    pub fn from_transfer_margin(margin_transfer: DbMarginTransfer) -> TradingEvent {
+        TradingEvent {
+            block_number: margin_transfer.block_number as u64,
+            transaction_index: margin_transfer.transaction_index as u32,
+            log_index: margin_transfer.log_index as u32,
+            transaction_id: margin_transfer.transaction_id,
+            block_timestamp: margin_transfer.block_time.to_u64().unwrap(),
+            data: TradingEventInnerData::MarginTransferV3 {
+                account_id: margin_transfer.account_id,
+                transfer_amount: margin_transfer.transfer_amount.to_string(),
+                transfer_asset_hash: margin_transfer.transfer_asset_hash,
+                iso_symbol_hash: margin_transfer.iso_symbol_hash,
+                timestamp: margin_transfer.timestamp,
             },
         }
     }
@@ -517,6 +539,7 @@ pub struct Trade {
     pub side: PurchaseSide,
     pub margin_mode: Option<MarginMode>,
     pub margin_from_cross: Option<String>,
+    pub iso_margin_asset_hash: Option<String>,
 }
 
 impl From<DbExecutedTrades> for Trade {
@@ -540,6 +563,7 @@ impl From<DbExecutedTrades> for Trade {
             },
             margin_mode: None,
             margin_from_cross: None,
+            iso_margin_asset_hash: None,
         }
     }
 }
@@ -571,6 +595,7 @@ impl From<DbPartitionedExecutedTrades> for Trade {
                     .unwrap_or_else(|_| MarginMode::Cross),
             ),
             margin_from_cross: Some(value.margin_from_cross.unwrap_or_default().to_string()),
+            iso_margin_asset_hash: value.iso_margin_asset_hash,
         }
     }
 }
@@ -757,14 +782,6 @@ pub enum TradingEventInnerData {
         insurance_transfer_amount: String,
         settlement_executions: Vec<SettlementExecution>,
     },
-    SettlementResultV3 {
-        account_id: String,
-        settled_amount: String,
-        settled_asset_hash: String,
-        insurance_account_id: String,
-        insurance_transfer_amount: String,
-        settlement_executions: Vec<SettlementExecutionV3>,
-    },
     LiquidationResult {
         liquidated_account_id: String,
         insurance_account_id: String,
@@ -787,11 +804,20 @@ pub enum TradingEventInnerData {
         insurance_transfer_amount: String,
         liquidation_transfers: Vec<LiquidationTransferV2>,
     },
+    SettlementResultV3 {
+        account_id: String,
+        settled_amount: String,
+        settled_asset_hash: String,
+        insurance_account_id: String,
+        insurance_transfer_amount: String,
+        settlement_executions: Vec<SettlementExecutionV3>,
+    },
     LiquidationResultV3 {
         account_id: String,
         liquidated_asset_hash: String,
         insurance_transfer_amount: String,
         liquidation_transfers: Vec<LiquidationTransferV3>,
+        is_insurance_account: bool,
     },
     AdlResultV2 {
         account_id: String,
@@ -811,6 +837,14 @@ pub enum TradingEventInnerData {
         margin_mode: Option<MarginMode>,
         margin_asset_hash: Option<String>,
         margin_to_cross: Option<String>,
+        is_insurance_account: bool,
+    },
+    MarginTransferV3 {
+        account_id: String,
+        transfer_amount: String,
+        transfer_asset_hash: String,
+        iso_symbol_hash: String,
+        timestamp: i64,
     },
 }
 
@@ -908,6 +942,9 @@ mod tests {
                         match_id: 1700628604744716970,
                         timestamp: 1700628604744,
                         side: PurchaseSide::Buy,
+                        margin_mode: None,
+                        margin_from_cross: None,
+                        iso_margin_asset_hash: None,
                     },
                     Trade {
                         account_id:
@@ -928,6 +965,9 @@ mod tests {
                         match_id: 1700628604744716970,
                         timestamp: 1700628604744,
                         side: PurchaseSide::Sell,
+                        margin_mode: None,
+                        margin_from_cross: None,
+                        iso_margin_asset_hash: None,
                     },
                 ],
             },
