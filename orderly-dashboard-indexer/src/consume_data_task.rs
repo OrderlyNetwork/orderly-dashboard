@@ -1,3 +1,4 @@
+use crate::cefi_client::CefiClient;
 use crate::config::{get_common_cfg, COMMON_CONFIGS};
 use crate::contract::consume_data_on_block;
 use crate::db::settings::{
@@ -11,6 +12,7 @@ use chrono::Utc;
 use futures::future::join_all;
 use std::cmp::{max, min};
 use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 pub const ORDERLY_DASHBOARD_INDEXER: &str = "orderly_dashboard_indexer";
 pub(crate) static ORDERLY_PROCESSED_BLOCK_HEIGHT: AtomicU64 = AtomicU64::new(0);
@@ -89,6 +91,8 @@ pub async fn consume_data_inner(
         start_height
     );
     let parallel_limit = get_common_cfg().sync_block_strategy.parallel_limit;
+    let cefi_url = unsafe { COMMON_CONFIGS.get_unchecked().be_api_base_url.clone() };
+    let cefi_client = std::sync::Arc::new(CefiClient::new(cefi_url));
     loop {
         if start_height >= target_block {
             match pull_target_block().await {
@@ -133,7 +137,7 @@ pub async fn consume_data_inner(
                 start_height, gap, last_processed, target_block
             );
         }
-        match parallel_consume_blocks(start_height, gap).await {
+        match parallel_consume_blocks(start_height, gap, cefi_client.clone()).await {
             Err(err) => {
                 tokio::time::sleep(Duration::from_secs(5)).await;
                 tracing::warn!(
@@ -180,10 +184,14 @@ pub async fn consume_data_inner(
 }
 
 // returning value is block timestamp
-pub async fn parallel_consume_blocks(start_height: u64, gap: u64) -> Result<i64> {
+pub async fn parallel_consume_blocks(
+    start_height: u64,
+    gap: u64,
+    cefi_cli: Arc<CefiClient>,
+) -> Result<i64> {
     let mut futs = Vec::with_capacity(gap as usize);
     (start_height..=(start_height + gap)).for_each(|block_height| {
-        futs.push(consume_data_on_block(block_height));
+        futs.push(consume_data_on_block(block_height, cefi_cli.clone()));
     });
     let res = raw_spawn_future(join_all(futs)).await?;
     let mut timestamp = 0;

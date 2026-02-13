@@ -1,16 +1,19 @@
 #![allow(non_local_definitions)]
 
+pub mod analyzer_db_schema;
 #[allow(dead_code)]
 pub mod api;
 pub mod consume_data_task;
 pub mod formats_external;
 pub mod schema;
 extern crate diesel;
+pub mod analyzer_db;
 pub mod constants;
 pub mod db;
 mod service_base;
 pub use service_base::runtime;
 pub use service_base::sdk;
+mod cefi_client;
 pub mod config;
 #[allow(dead_code)]
 pub mod contract;

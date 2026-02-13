@@ -1,6 +1,7 @@
 pub(crate) mod sol_events;
 mod tx_event_handler;
 
+use crate::cefi_client::CefiClient;
 use crate::config::COMMON_CONFIGS;
 use crate::contract::tx_event_handler::consume_logs_from_tx_receipts;
 use crate::eth_rpc::{get_block_logs, get_block_receipts, get_block_with_txs};
@@ -9,6 +10,7 @@ use ethers::types::Log;
 use once_cell::sync::OnceCell;
 use std::collections::BTreeMap;
 use std::str::FromStr;
+use std::sync::Arc;
 use tx_event_handler::consume_tx_and_logs;
 pub use tx_event_handler::{
     simple_recover_deposit_sol_logs,
@@ -51,7 +53,10 @@ pub(crate) fn init_addr_set() -> anyhow::Result<()> {
 
     Ok(())
 }
-pub(crate) async fn consume_data_on_block(block_height: u64) -> anyhow::Result<i64> {
+pub(crate) async fn consume_data_on_block(
+    block_height: u64,
+    cefi_cli: Arc<CefiClient>,
+) -> anyhow::Result<i64> {
     tracing::info!(
         target: HANDLE_LOG,
         "consume_data_on_block block_height: {}",
@@ -63,11 +68,11 @@ pub(crate) async fn consume_data_on_block(block_height: u64) -> anyhow::Result<i
     if consume_logs {
         let (block, tx_logs_vec) = query_and_filter_block_data_logs(block_height).await?;
         block_timestamp = block.timestamp.as_u64() as i64;
-        consume_tx_and_logs(block, &tx_logs_vec).await?;
+        consume_tx_and_logs(block, &tx_logs_vec, cefi_cli).await?;
     } else {
         let (block, tx_receipt_vec) = query_and_filter_block_data_info(block_height).await?;
         block_timestamp = block.timestamp.as_u64() as i64;
-        consume_logs_from_tx_receipts(block, &tx_receipt_vec).await?;
+        consume_logs_from_tx_receipts(block, &tx_receipt_vec, cefi_cli).await?;
     }
 
     Ok(block_timestamp)

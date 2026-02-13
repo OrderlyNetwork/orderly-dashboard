@@ -1,6 +1,7 @@
 use bigdecimal::{BigDecimal, FromPrimitive};
 use ethers::types::{H160, H256, I256, U256};
 use std::str::FromStr;
+use tiny_keccak::{Hasher, Keccak};
 
 #[macro_export]
 macro_rules! await_retry_or_error {
@@ -66,4 +67,17 @@ pub fn u256_to_i128(n: U256) -> i128 {
 
 pub fn hex_bytes(bytes: &[u8]) -> String {
     "0x".to_string() + &hex::encode(bytes)
+}
+
+pub fn cal_broker_hash(broker_id: &str) -> String {
+    cal_string_hash(broker_id)
+}
+
+pub fn cal_string_hash(broker_id: &str) -> String {
+    let mut hasher = Keccak::v256();
+    hasher.update(broker_id.as_bytes());
+    let mut output = [0u8; 32];
+    hasher.finalize(&mut output);
+    let hex_output: String = output.iter().map(|byte| format!("{:02x}", byte)).collect();
+    format!("0x{}", hex_output)
 }

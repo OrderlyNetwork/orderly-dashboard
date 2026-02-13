@@ -1,7 +1,10 @@
 #![allow(non_local_definitions)]
 
+mod analyzer_db;
+mod analyzer_db_schema;
 mod api;
 mod bindings;
+mod cefi_client;
 #[allow(dead_code)]
 mod client;
 pub(crate) mod config;

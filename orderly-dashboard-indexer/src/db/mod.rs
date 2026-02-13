@@ -23,7 +23,7 @@ use diesel_async::{
 use once_cell::sync::{Lazy, OnceCell};
 use std::env;
 use std::sync::atomic::{AtomicU32, Ordering};
-type DbPool = Pool<AsyncPgConnection>;
+pub type DbPool = Pool<AsyncPgConnection>;
 
 pub const DB_CONTEXT: &str = "db_context";
 pub(crate) const DB_CONN_ERR_MSG: &str = "Couldn't get db connection from the pool";

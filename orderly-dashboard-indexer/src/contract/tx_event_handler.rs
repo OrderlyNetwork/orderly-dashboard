@@ -1,3 +1,4 @@
+use crate::analyzer_db::user_info::{create_user_info, get_user_info, UserInfo};
 use crate::bindings::operator_manager;
 use crate::bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
 use crate::bindings::user_ledger::{
@@ -8,6 +9,7 @@ use crate::bindings::vault_manager::{
     self, vault_managerEvents, RebalanceBurnFilter, RebalanceBurnResultFilter, RebalanceMintFilter,
     RebalanceMintResultFilter,
 };
+use crate::cefi_client::CefiClient;
 use crate::config::{get_common_cfg, COMMON_CONFIGS};
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC, VAULT_MANAGER_SC};
 use crate::db::balance_transfer::{create_balance_transfer_events, DbBalanceTransferEvent};
@@ -22,9 +24,9 @@ use crate::db::swap_result_uploaded::{
 use crate::eth_rpc::PROVIDER;
 use std::collections::BTreeSet;
 use std::future::Future;
-use std::{collections::VecDeque, str::FromStr};
+use std::{collections::VecDeque, str::FromStr, sync::Arc};
 
-use crate::db::executed_trades::{create_executed_trades, DbExecutedTrades, TradeType};
+use crate::db::executed_trades::{DbExecutedTrades, TradeType};
 
 use crate::db::liquidation_transfer::{
     create_liquidation_transfers, DbLiquidationTransfer, LiquidationTransferVersion,
@@ -47,20 +49,43 @@ use crate::db::{
         DbTransactionStatus,
     },
 };
-use crate::utils::{convert_amount, format_hash, format_hash_160, to_hex_format, u256_to_i128};
+use crate::utils::{
+    cal_broker_hash, convert_amount, format_hash, format_hash_160, to_hex_format, u256_to_i128,
+};
 use anyhow::Result;
 use base58::ToBase58;
 use bigdecimal::{BigDecimal, FromPrimitive};
+use cached::{Cached, SizedCache};
+use chrono::NaiveDateTime;
 use ethers::abi::{ParamType, RawLog};
 use ethers::contract::EthEvent;
 use ethers::core::abi::{self, AbiDecode};
 use ethers::prelude::{Block, EthLogDecode, Log, Transaction, TransactionReceipt};
 use ethers::providers::Middleware;
 use ethers::types::{BlockNumber, Filter, H160, U64};
+use lazy_static::lazy_static;
+use parking_lot::Mutex;
+
+lazy_static! {
+    pub static ref ACCOUNT_BROKER_HASH_MAP: Mutex<SizedCache<String, String>> =
+        Mutex::new(SizedCache::with_size(10_000));
+}
+
+fn get_account_broker_hash_cache(account: &str) -> Option<String> {
+    let mut map = ACCOUNT_BROKER_HASH_MAP.lock();
+    map.cache_get(account).cloned()
+}
+
+fn set_account_broker_hash_cache(account: &str, broker_hash: String) {
+    ACCOUNT_BROKER_HASH_MAP
+        .lock()
+        .cache_set(account.to_string(), broker_hash);
+}
 
 pub(crate) async fn consume_logs_from_tx_receipts(
     block: Block<Transaction>,
     tx_receipts: &Vec<(Transaction, TransactionReceipt)>,
+    cefi_cli: Arc<CefiClient>,
 ) -> Result<()> {
     for tx_receipt in tx_receipts.iter() {
         let (tx, receipt) = &tx_receipt;
@@ -69,7 +94,7 @@ pub(crate) async fn consume_logs_from_tx_receipts(
         let mut settlement_result_log_index_queue: VecDeque<i32> = VecDeque::new();
         let mut liquidation_trasfers_cache: Vec<DbLiquidationTransfer> = Vec::new();
         let mut settlement_exectutions_cahce: Vec<DbSettlementExecution> = Vec::new();
-        let mut executed_trades_cache: Vec<DbExecutedTrades> = Vec::new();
+        // let mut executed_trades_cache: Vec<DbExecutedTrades> = Vec::new();
         let mut executed_partitioned_trades_cache: Vec<DbPartitionedExecutedTrades> = Vec::new();
         // 1 (success)
         if receipt.status.unwrap_or_default().as_u64() == 1 {
@@ -79,11 +104,11 @@ pub(crate) async fn consume_logs_from_tx_receipts(
                     &mut settlement_result_log_index_queue,
                     &mut liquidation_trasfers_cache,
                     &mut settlement_exectutions_cahce,
-                    &mut executed_trades_cache,
                     &mut executed_partitioned_trades_cache,
                     log.clone(),
                     Some(receipt),
                     Some(block.timestamp.as_u64()),
+                    cefi_cli.clone(),
                 )
                 .await
                 {
@@ -98,6 +123,7 @@ pub(crate) async fn consume_logs_from_tx_receipts(
                     &mut settlement_result_log_index_queue,
                     tx,
                     Some(block.timestamp.as_u64()),
+                    cefi_cli.clone(),
                 )
                 .await
                 {
@@ -109,10 +135,6 @@ pub(crate) async fn consume_logs_from_tx_receipts(
         // clean cache
         liquidation_result_log_index_queue.clear();
 
-        if !executed_trades_cache.is_empty() {
-            create_executed_trades(executed_trades_cache).await?;
-        }
-
         if !executed_partitioned_trades_cache.is_empty() {
             create_partitioned_executed_trades(executed_partitioned_trades_cache).await?;
         }
@@ -123,6 +145,7 @@ pub(crate) async fn consume_logs_from_tx_receipts(
 pub(crate) async fn consume_tx_and_logs(
     block: Block<Transaction>,
     tx_logs: &Vec<(Transaction, Vec<Log>)>,
+    cefi_cli: Arc<CefiClient>,
 ) -> Result<()> {
     for tx_receipt in tx_logs.iter() {
         let (tx, logs) = &tx_receipt;
@@ -131,7 +154,6 @@ pub(crate) async fn consume_tx_and_logs(
         let mut settlement_result_log_index_queue: VecDeque<i32> = VecDeque::new();
         let mut liquidation_trasfers_cache: Vec<DbLiquidationTransfer> = Vec::new();
         let mut settlement_exectutions_cahce: Vec<DbSettlementExecution> = Vec::new();
-        let mut executed_trades_cache: Vec<DbExecutedTrades> = Vec::new();
         let mut executed_partitioned_trades_cache: Vec<DbPartitionedExecutedTrades> = Vec::new();
         // 1 (success)
 
@@ -141,11 +163,11 @@ pub(crate) async fn consume_tx_and_logs(
                 &mut settlement_result_log_index_queue,
                 &mut liquidation_trasfers_cache,
                 &mut settlement_exectutions_cahce,
-                &mut executed_trades_cache,
                 &mut executed_partitioned_trades_cache,
                 log.clone(),
                 None,
                 Some(block.timestamp.as_u64()),
+                cefi_cli.clone(),
             )
             .await
             {
@@ -160,6 +182,7 @@ pub(crate) async fn consume_tx_and_logs(
                 &mut settlement_result_log_index_queue,
                 tx,
                 Some(block.timestamp.as_u64()),
+                cefi_cli.clone(),
             )
             .await
             {
@@ -169,10 +192,6 @@ pub(crate) async fn consume_tx_and_logs(
         // excute
         // clean cache
         liquidation_result_log_index_queue.clear();
-
-        if !executed_trades_cache.is_empty() {
-            create_executed_trades(executed_trades_cache).await?;
-        }
 
         if !executed_partitioned_trades_cache.is_empty() {
             create_partitioned_executed_trades(executed_partitioned_trades_cache).await?;
@@ -186,6 +205,7 @@ pub(crate) async fn handle_tx_params(
     settlement_result_log_index_queue: &mut VecDeque<i32>,
     tx: &Transaction,
     #[allow(unused_variables)] block_t: Option<u64>,
+    cefi_cli: Arc<CefiClient>,
 ) -> Result<()> {
     let addr_set = unsafe { ADDR_MAP.get_unchecked() };
     if addr_set.get(&tx.to.clone().unwrap_or_default()).is_none() {
@@ -224,11 +244,37 @@ pub(crate) async fn handle_tx_params(
                     block_time: block_t.unwrap_or_default() as i64,
                 })
                 .collect::<Vec<_>>();
-            let partitioned_trades = db_trades
-                .iter()
-                .map(|item| item.clone().into())
-                .collect::<Vec<DbPartitionedExecutedTrades>>();
-            create_executed_trades(db_trades).await?;
+            let mut partitioned_trades = Vec::with_capacity(db_trades.len());
+            for trade in db_trades {
+                let mut trade: DbPartitionedExecutedTrades = trade.clone().into();
+                if let Some(broker_hash) = get_account_broker_hash_cache(&trade.account_id) {
+                    trade.broker_hash = Some(broker_hash);
+                } else {
+                    if let Some(user_info) = get_user_info(trade.account_id.clone()).await? {
+                        set_account_broker_hash_cache(
+                            &user_info.account_id,
+                            user_info.broker_hash.clone(),
+                        );
+                        trade.broker_hash = Some(user_info.broker_hash);
+                    } else {
+                        let user_info = cefi_cli
+                            .cefi_get_account_info_with_retry(&trade.account_id)
+                            .await;
+                        let broker_hash = cal_broker_hash(&user_info.broker_id);
+                        set_account_broker_hash_cache(&trade.account_id, broker_hash.clone());
+                        trade.broker_hash = Some(broker_hash.clone());
+                        create_user_info(&UserInfo {
+                            account_id: trade.account_id.clone(),
+                            broker_id: user_info.broker_id.clone(),
+                            broker_hash: cal_broker_hash(&user_info.broker_id),
+                            address: user_info.address,
+                        })
+                        .await?;
+                    }
+                }
+                trade.transaction_id = Some(format_hash(tx.hash));
+                partitioned_trades.push(trade);
+            }
             create_partitioned_executed_trades(partitioned_trades).await?;
         }
         operator_managerCalls::EventUpload(event_upload) => {
@@ -485,11 +531,11 @@ pub(crate) async fn handle_log(
     settlement_result_log_index_queue: &mut VecDeque<i32>,
     liquidation_trasfers: &mut Vec<DbLiquidationTransfer>,
     settlement_exectutions: &mut Vec<DbSettlementExecution>,
-    executed_trades_cache: &mut Vec<DbExecutedTrades>,
     executed_partitioned_trades_cache: &mut Vec<DbPartitionedExecutedTrades>,
     log: Log,
     receipt: Option<&TransactionReceipt>,
     block_t: Option<u64>,
+    cefi_cli: Arc<CefiClient>,
 ) -> Result<()> {
     let addr_map = unsafe { ADDR_MAP.get_unchecked() };
     if let Some(sc_name) = addr_map.get(&log.address) {
@@ -1008,7 +1054,7 @@ pub(crate) async fn handle_log(
                         }
                     }
                     user_ledgerEvents::ProcessValidatedFutures1Filter(trade) => {
-                        let db_trade = DbExecutedTrades {
+                        let mut db_trade = DbPartitionedExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
@@ -1028,14 +1074,53 @@ pub(crate) async fn handle_log(
                             match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
                             timestamp: BigDecimal::from_u64(trade.timestamp).unwrap_or_default(),
                             side: trade.side,
-                            block_time: block_t.unwrap_or_default() as i64,
+                            block_time: chrono::NaiveDateTime::from_timestamp_opt(
+                                block_t.unwrap_or_default() as i64,
+                                0,
+                            )
+                            .unwrap(),
+                            broker_hash: None,
+                            transaction_id: Some(format_hash(
+                                log.transaction_hash.unwrap_or_default(),
+                            )),
                         };
-                        executed_trades_cache.push(db_trade.clone());
-                        executed_partitioned_trades_cache.push(db_trade.into());
+                        if let Some(broker_hash) =
+                            get_account_broker_hash_cache(&db_trade.account_id)
+                        {
+                            db_trade.broker_hash = Some(broker_hash);
+                        } else {
+                            if let Some(user_info) =
+                                get_user_info(db_trade.account_id.clone()).await?
+                            {
+                                set_account_broker_hash_cache(
+                                    &user_info.account_id,
+                                    user_info.broker_hash.clone(),
+                                );
+                                db_trade.broker_hash = Some(user_info.broker_hash);
+                            } else {
+                                let user_info = cefi_cli
+                                    .cefi_get_account_info_with_retry(&db_trade.account_id)
+                                    .await;
+                                let broker_hash = cal_broker_hash(&user_info.broker_id);
+                                set_account_broker_hash_cache(
+                                    &db_trade.account_id,
+                                    broker_hash.clone(),
+                                );
+                                db_trade.broker_hash = Some(broker_hash.clone());
+                                create_user_info(&UserInfo {
+                                    account_id: db_trade.account_id.clone(),
+                                    broker_id: user_info.broker_id.clone(),
+                                    broker_hash: cal_broker_hash(&user_info.broker_id),
+                                    address: user_info.address,
+                                })
+                                .await?;
+                            }
+                        }
+                        executed_partitioned_trades_cache.push(db_trade);
                     }
                     user_ledgerEvents::ProcessValidatedFutures2Filter(trade) => {
                         // todo: update to write in batches
-                        let db_trade = DbExecutedTrades {
+                        let mut db_trade = DbPartitionedExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
@@ -1055,9 +1140,48 @@ pub(crate) async fn handle_log(
                             match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
                             timestamp: BigDecimal::from_u64(trade.timestamp).unwrap_or_default(),
                             side: trade.side,
-                            block_time: block_t.unwrap_or_default() as i64,
+                            block_time: NaiveDateTime::from_timestamp_opt(
+                                block_t.unwrap_or_default() as i64,
+                                0,
+                            )
+                            .unwrap_or_default(),
+                            broker_hash: None,
+                            transaction_id: Some(format_hash(
+                                log.transaction_hash.unwrap_or_default(),
+                            )),
                         };
-                        executed_trades_cache.push(db_trade.clone());
+                        if let Some(broker_hash) =
+                            get_account_broker_hash_cache(&db_trade.account_id)
+                        {
+                            db_trade.broker_hash = Some(broker_hash);
+                        } else {
+                            if let Some(user_info) =
+                                get_user_info(db_trade.account_id.clone()).await?
+                            {
+                                set_account_broker_hash_cache(
+                                    &user_info.account_id,
+                                    user_info.broker_hash.clone(),
+                                );
+                                db_trade.broker_hash = Some(user_info.broker_hash);
+                            } else {
+                                let user_info = cefi_cli
+                                    .cefi_get_account_info_with_retry(&db_trade.account_id)
+                                    .await;
+                                let broker_hash = cal_broker_hash(&user_info.broker_id);
+                                set_account_broker_hash_cache(
+                                    &db_trade.account_id,
+                                    broker_hash.clone(),
+                                );
+                                db_trade.broker_hash = Some(broker_hash.clone());
+                                create_user_info(&UserInfo {
+                                    account_id: db_trade.account_id.clone(),
+                                    broker_id: user_info.broker_id.clone(),
+                                    broker_hash: cal_broker_hash(&user_info.broker_id),
+                                    address: user_info.address,
+                                })
+                                .await?;
+                            }
+                        }
                         executed_partitioned_trades_cache.push(db_trade.into());
                         // create_executed_trades(vec![db_trade]).await?;
                     }
@@ -1287,7 +1411,11 @@ pub(crate) async fn handle_log(
     Ok(())
 }
 
-pub async fn simple_recover_deposit_sol_logs(start_block: u64, end_block: u64) -> Result<()> {
+pub async fn simple_recover_deposit_sol_logs(
+    start_block: u64,
+    end_block: u64,
+    cefi_cli: Arc<CefiClient>,
+) -> Result<()> {
     if end_block < start_block {
         tracing::info!("end block less than start block");
         return Ok(());
@@ -1355,7 +1483,7 @@ pub async fn simple_recover_deposit_sol_logs(start_block: u64, end_block: u64) -
                 continue;
             }
             let (mut q1, mut q2) = (VecDeque::new(), VecDeque::new());
-            let (mut v1, mut v2, mut v3, mut v4) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+            let (mut v1, mut v2, mut v3) = (Vec::new(), Vec::new(), Vec::new());
             let block_number = log.block_number.unwrap_or_default().as_u64();
             if block_number != block_num_mp_time.0 {
                 block_num_mp_time.0 = block_number;
@@ -1391,10 +1519,10 @@ pub async fn simple_recover_deposit_sol_logs(start_block: u64, end_block: u64) -
                 &mut v1,
                 &mut v2,
                 &mut v3,
-                &mut v4,
                 log,
                 None,
                 Some(block_num_mp_time.1),
+                cefi_cli.clone(),
             )
             .await
             {
@@ -1429,11 +1557,14 @@ pub async fn simple_recover_sol_deposit_withdraw_approve_and_rebalance_logs(
     end_block: u64,
 ) -> Result<()> {
     let page_size = 20_000;
+    let cefi_url = unsafe { COMMON_CONFIGS.get_unchecked().be_api_base_url.clone() };
+    let cefi_client = std::sync::Arc::new(CefiClient::new(cefi_url));
     simple_recover_logs(
         start_block,
         end_block,
         page_size,
         get_contract_sol_deposit_withdraw_approve_and_rebalance_logs,
+        cefi_client,
     )
     .await?;
     Ok(())
@@ -1444,11 +1575,14 @@ pub async fn simple_recover_swap_result_uploded_logs(
     end_block: u64,
 ) -> Result<()> {
     let page_size = 1_000;
+    let cefi_url = unsafe { COMMON_CONFIGS.get_unchecked().be_api_base_url.clone() };
+    let cefi_client = std::sync::Arc::new(CefiClient::new(cefi_url));
     simple_recover_logs(
         start_block,
         end_block,
         page_size,
         get_contract_swap_uploaded_logs,
+        cefi_client,
     )
     .await?;
     Ok(())
@@ -1503,6 +1637,7 @@ pub async fn simple_recover_logs<
     end_block: u64,
     page_size: u64,
     get_sc_logs: K,
+    cefi_cli: Arc<CefiClient>,
 ) -> Result<()> {
     if end_block < start_block {
         tracing::info!("end block less than start block");
@@ -1570,7 +1705,7 @@ pub async fn simple_recover_logs<
                 continue;
             }
             let (mut q1, mut q2) = (VecDeque::new(), VecDeque::new());
-            let (mut v1, mut v2, mut v3, mut v4) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+            let (mut v1, mut v2, mut v3) = (Vec::new(), Vec::new(), Vec::new());
             let block_number = log.block_number.unwrap_or_default().as_u64();
             if block_number != block_num_mp_time.0 {
                 block_num_mp_time.0 = block_number;
@@ -1606,10 +1741,10 @@ pub async fn simple_recover_logs<
                 &mut v1,
                 &mut v2,
                 &mut v3,
-                &mut v4,
                 log,
                 None,
                 Some(block_num_mp_time.1),
+                cefi_cli.clone(),
             )
             .await
             {

@@ -61,6 +61,7 @@ borsh = { version = "1.5.1", features = ["derive"]}
 anchor-syn = { version = "0.30.1", features = ["hash"]}
 utoipa = { version = "5.3.1", features = ["actix_extras"] }
 cached = "0.56.0"
+tiny-keccak = "2.0"
 
 [features]
 frozen-abi = []

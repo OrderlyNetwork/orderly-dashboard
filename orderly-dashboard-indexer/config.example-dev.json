@@ -37,5 +37,6 @@
     "program_address": "EYJq9eU4GMRUriUJBgGoZ8YLQBXcWaciXuSsEXE7ieQS",
     "vault_usdc": "EEY5evBCYJ52wWrRarKdzjpEoybmW28sTwFeTLn1PXp4"
   },
-  "option_query_from_partitioning_executed_trades": true
+  "option_query_from_partitioning_executed_trades": true,
+  "be_api_base_url": "https://testnet-api.orderly.org"
 }

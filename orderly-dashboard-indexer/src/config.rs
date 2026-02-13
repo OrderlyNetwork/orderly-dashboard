@@ -120,6 +120,7 @@ pub struct CommonConfigs {
     pub db_query_limit: usize,
     #[serde(default = "default_option_query_from_partitioning_executed_trades")]
     pub option_query_from_partitioning_executed_trades: bool,
+    pub be_api_base_url: String,
 }
 
 impl Display for CommonConfigs {
@@ -127,9 +128,9 @@ impl Display for CommonConfigs {
         let subnet_cfg = &self.l2_config;
         write!(
             f,
-            "subnet config:[rpc_url:{}, pull_check_interval:{},ledger_address:{},operator_manager_address:{},user_ledger_abi_path:{},operator_manager_abi_path:{},market_manager_address:{},market_manager_abi_path:{},confirm_block_num:{:?},contract_deploy_height:{:?},contract_deploy_timestamp:{}];",
+            "subnet config:[rpc_url:{}, pull_check_interval:{},ledger_address:{},operator_manager_address:{},user_ledger_abi_path:{},operator_manager_abi_path:{},market_manager_address:{},market_manager_abi_path:{},confirm_block_num:{:?},contract_deploy_height:{:?},contract_deploy_timestamp:{},explorer_url: {}, upgrade_height: {}];",
             subnet_cfg.rpc_url, subnet_cfg.pull_check_interval,subnet_cfg.ledger_address, subnet_cfg.operator_manager_address,
-            subnet_cfg.user_ledger_abi_path, subnet_cfg.operator_manager_abi_path, subnet_cfg.market_manager_address, subnet_cfg.market_manager_abi_path, subnet_cfg.confirm_block_num, subnet_cfg.contract_deploy_height, subnet_cfg.contract_deploy_timestamp
+            subnet_cfg.user_ledger_abi_path, subnet_cfg.operator_manager_abi_path, subnet_cfg.market_manager_address, subnet_cfg.market_manager_abi_path, subnet_cfg.confirm_block_num, subnet_cfg.contract_deploy_height, subnet_cfg.contract_deploy_timestamp, subnet_cfg.explorer_url, subnet_cfg.upgrade_height,
         )?;
         let indexer_server = &self.indexer_server;
         write!(
@@ -154,6 +155,7 @@ impl Display for CommonConfigs {
             f,
             "db_query_limit: {}, option_query_from_partitioning_executed_trades: {}",
             self.db_query_limit, self.option_query_from_partitioning_executed_trades
-        )
+        )?;
+        write!(f, "be_api_base_url: {}", self.be_api_base_url,)
     }
 }

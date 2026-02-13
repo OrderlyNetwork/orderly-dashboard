@@ -35,5 +35,7 @@
     "start_sig": "4sEF84j4h4MLD2hEm2t97edyrzxb6cmWuphgx8pi77GhGM7zrcWVyNNgcatQmXZE25PsSzpcLpjUyDX6HWADR8tW",
     "program_address": "5zBjLor7vEraAt4zp2H82sy9MSqFoDnNa1Lx6EYKTYRZ",
     "vault_usdc": "BQrWyAQN4YVbopcYpMYqD5vNgucVY4iJNQB7SkJEVnBJ"
-  }
+  },
+  "option_query_from_partitioning_executed_trades": true,
+  "be_api_base_url": "https://testnet-api.orderly.org"
 }

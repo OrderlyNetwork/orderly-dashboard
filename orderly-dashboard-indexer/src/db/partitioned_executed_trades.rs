@@ -35,6 +35,8 @@ pub struct DbPartitionedExecutedTrades {
     pub timestamp: BigDecimal,
     pub side: bool,
     pub block_time: NaiveDateTime,
+    pub broker_hash: Option<String>,
+    pub transaction_id: Option<String>,
 }
 
 impl From<DbExecutedTrades> for DbPartitionedExecutedTrades {
@@ -57,6 +59,8 @@ impl From<DbExecutedTrades> for DbPartitionedExecutedTrades {
             timestamp: value.timestamp,
             side: value.side,
             block_time: NaiveDateTime::from_timestamp_opt(value.block_time, 0).unwrap_or_default(),
+            broker_hash: None,
+            transaction_id: None,
         }
     }
 }
