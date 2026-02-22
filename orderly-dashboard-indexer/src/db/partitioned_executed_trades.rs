@@ -348,6 +348,8 @@ mod tests {
                             timestamp: timestamp.into(),
                             side: true,
                             block_time: NaiveDateTime::from_timestamp_opt(timestamp, 0).unwrap(),
+                            broker_hash: None,
+                            transaction_id: None,
                         });
                     }
                     create_partitioned_executed_trades(trades).await.unwrap();
