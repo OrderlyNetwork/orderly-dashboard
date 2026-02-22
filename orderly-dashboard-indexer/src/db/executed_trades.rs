@@ -62,6 +62,7 @@ impl TryFrom<i16> for TradeType {
     }
 }
 
+#[allow(dead_code)]
 pub async fn create_executed_trades(trades: Vec<DbExecutedTrades>) -> Result<usize> {
     use crate::schema::executed_trades::dsl::*;
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);

@@ -112,9 +112,11 @@ pub(crate) async fn recovery_sol_events(
 pub(crate) async fn recover_sol_deposit_events(
     request: RecoveryBlockRequest,
 ) -> Result<IndexerQueryResponse<()>> {
+    let cefi_cli = std::sync::Arc::new(crate::cefi_client::CefiClient::new("".to_string()));
     crate::contract::simple_recover_deposit_sol_logs(
         request.start_block_height,
         request.end_block_height,
+        cefi_cli,
     )
     .await?;
     Ok(IndexerQueryResponse::empty_success())
