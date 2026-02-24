@@ -46,6 +46,8 @@ fn initialize_db_pool() -> DbPool {
         .build();
     if let Err(err) = &pool {
         tracing::error!("initialize_db_pool failed with err: {:?}", err);
+    } else {
+        tracing::info!("initialize_db_pool for anlyzer success");
     }
     pool.expect("pool connected normal")
 }
