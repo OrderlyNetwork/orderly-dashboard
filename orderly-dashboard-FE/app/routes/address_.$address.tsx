@@ -1,4 +1,4 @@
-import { CopyIcon } from '@radix-ui/react-icons';
+import { CopyIcon, DownloadIcon } from '@radix-ui/react-icons';
 import { Button, IconButton } from '@radix-ui/themes';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { json, useLoaderData, useSearchParams, useNavigate } from '@remix-run/react';
@@ -10,7 +10,14 @@ import { match } from 'ts-pattern';
 import { useRenderColumns } from './address';
 
 import { useAppState } from '~/App';
-import { Spinner, Positions, EventsTable, BrokerSelectionModal, PnLStats } from '~/components';
+import {
+  Spinner,
+  Positions,
+  EventsTable,
+  BrokerSelectionModal,
+  PnLStats,
+  TaxExportModal
+} from '~/components';
 import { ChainAddress, EventsParams, EventType } from '~/hooks';
 import { base64UrlSafeEncode, base64UrlSafeDecode } from '~/util';
 
@@ -50,6 +57,8 @@ export const Address: FC = () => {
   const [aggregateTrades, setAggregateTrades] = useState<boolean>(true);
 
   const [showBrokerModal, setShowBrokerModal] = useState(false);
+
+  const [showTaxExportModal, setShowTaxExportModal] = useState(false);
 
   const [symbolFilter, setSymbolFilter] = useState<string>('');
 
@@ -447,8 +456,8 @@ export const Address: FC = () => {
         <PnLStats address={address.address} brokerId={broker_id} accountId={accountId} />
       )}
 
-      {/* Tab Navigation */}
-      <div className="flex justify-center mb-8">
+      {/* Tab Navigation and Actions */}
+      <div className="flex justify-center mb-8 gap-4">
         <div className="flex gap-2">
           <button
             onClick={() => handleTabChange('events')}
@@ -463,6 +472,15 @@ export const Address: FC = () => {
             Positions
           </button>
         </div>
+        {accountId && (
+          <button
+            onClick={() => setShowTaxExportModal(true)}
+            className="btn btn-secondary flex items-center gap-2"
+          >
+            <DownloadIcon className="w-4 h-4" />
+            Tax Export
+          </button>
+        )}
       </div>
 
       {/* Tab Content */}
@@ -495,6 +513,15 @@ export const Address: FC = () => {
         onOpenChange={setShowBrokerModal}
         address={address.address}
       />
+
+      {/* Tax Export Modal */}
+      {accountId && (
+        <TaxExportModal
+          open={showTaxExportModal}
+          onOpenChange={setShowTaxExportModal}
+          accountId={accountId}
+        />
+      )}
     </div>
   );
 };

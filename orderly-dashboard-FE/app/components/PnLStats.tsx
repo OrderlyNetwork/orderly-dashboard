@@ -83,7 +83,6 @@ export const PnLStats: FC<PnLStatsProps> = ({ address, brokerId, accountId }) =>
     return ninetyDayData.rows.reduce((sum, row) => sum + row.realized_pnl, 0);
   }, [ninetyDayData]);
 
-  console.log(positionsData);
   const allTimePnL = useMemo(() => {
     if (!positionsData?.rows || positionsData.rows.length === 0) return null;
     return positionsData.rows.reduce((sum, row) => sum + parseFloat(row.total_realized_pnl), 0);

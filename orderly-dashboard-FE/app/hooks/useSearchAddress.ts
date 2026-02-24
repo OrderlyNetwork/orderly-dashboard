@@ -25,7 +25,6 @@ export type AddressData = {
   perp_volume?: number;
   realized_pnl?: number;
 };
-export type ChainNamespace = 'evm' | 'sol';
 
 export const useSearchAddress = (
   query: string | null
