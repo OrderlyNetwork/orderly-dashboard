@@ -31,7 +31,7 @@ pub fn get_database_credentials() -> String {
     if let Some(db_url) = INITED_DATABASE_URL.get() {
         return db_url.to_string();
     }
-    env::var("ANLYZER_DATABASE_URL").expect("ANLYZER_DATABASE_URL must be set in .env file")
+    env::var("ANALYZER_DATABASE_URL").expect("ANALYZER_DATABASE_URL must be set in .env file")
 }
 
 /// Initialize database connection pool based on `DATABASE_URL` environment variable.
@@ -46,6 +46,8 @@ fn initialize_db_pool() -> DbPool {
         .build();
     if let Err(err) = &pool {
         tracing::error!("initialize_db_pool failed with err: {:?}", err);
+    } else {
+        tracing::info!("initialize_db_pool for anlyzer success");
     }
     pool.expect("pool connected normal")
 }
