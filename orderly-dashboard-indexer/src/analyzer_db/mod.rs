@@ -43,7 +43,9 @@ fn initialize_db_pool() -> DbPool {
     let connection_manager = AsyncDieselConnectionManager::<AsyncPgConnection>::new(db_url);
     let pool = Pool::builder(connection_manager)
         .max_size(POOL_SIZE_CONFIG.load(Ordering::Relaxed) as usize)
-        .build()
-        .expect("pool connected normal");
-    pool
+        .build();
+    if let Err(err) = &pool {
+        tracing::error!("initialize_db_pool failed with err: {:?}", err);
+    }
+    pool.expect("pool connected normal")
 }
