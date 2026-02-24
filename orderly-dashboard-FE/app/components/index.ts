@@ -6,3 +6,4 @@ export * from './PnLStats';
 export * from './Positions';
 export * from './SearchInput';
 export * from './Spinner';
+export * from './TaxExportModal';
