@@ -322,6 +322,7 @@ function aggregateTradesForTax(
     const feeAssetName = getTokenName(first.trade.fee_asset_hash, tokens);
 
     if (group.length === 1) {
+      const qty = new FixedNumber(first.trade.trade_qty, 8);
       const price = new FixedNumber(first.trade.executed_price, 8);
       const notional = new FixedNumber(first.trade.notional, 6);
       const fee = new FixedNumber(first.trade.fee, 6);
@@ -331,7 +332,7 @@ function aggregateTradesForTax(
         timestamp: new Date(first.block_timestamp * 1000).toISOString(),
         symbol: symbolName || first.trade.symbol_hash,
         side: first.trade.side,
-        qty: first.trade.trade_qty, // Raw value, no formatting
+        qty: qty.format({ maximumFractionDigits: 2 }),
         price: price.format({ maximumFractionDigits: 2 }),
         notional: notional.format({ maximumFractionDigits: 2 }),
         fee: fee.format({ maximumFractionDigits: 2 }),
@@ -369,7 +370,7 @@ function aggregateTradesForTax(
         timestamp: new Date(first.block_timestamp * 1000).toISOString(),
         symbol: symbolName || first.trade.symbol_hash,
         side: first.trade.side,
-        qty: totalQty.toString(), // Raw value, no formatting
+        qty: totalQty.format({ maximumFractionDigits: 2 }),
         price: avgPrice.format({ maximumFractionDigits: 2 }),
         notional: totalNotional.format({ maximumFractionDigits: 2 }),
         fee: totalFee.format({ maximumFractionDigits: 2 }),
