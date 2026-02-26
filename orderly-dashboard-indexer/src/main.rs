@@ -36,7 +36,7 @@ use crate::handler::check_or_create_new_partition::{
 };
 use crate::{
     consume_data_task::{consume_data_task, ORDERLY_DASHBOARD_INDEXER},
-    db::settings::update_last_sol_syn_signature,
+    db::settings::{update_contract_deploy_timestamp, update_last_sol_syn_signature},
     handler::solana::solana_program_log_processor::{
         get_starting_signature, handle_sol_program_logs, SolanaProgramLogProcessor,
     },
@@ -68,6 +68,10 @@ fn main() -> Result<()> {
                     update_last_sol_syn_signature,
                 )
             ));
+        }
+        if let Err(err) = update_contract_deploy_timestamp(config.l2_config.contract_deploy_timestamp).await {
+            tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "update_contract_deploy_timestamp failed with err: {}, exit", err);
+            return;
         }
         if let Err(err) = check_or_create_executed_trades_partition().await {
             tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "check_or_create_executed_trades_partition failed with err: {}, exit", err);
