@@ -17,11 +17,13 @@ use orderly_dashboard_query_service::db::init_analyzer_db_url;
 use orderly_dashboard_query_service::events::events_api::{
     list_events, list_events_v2, list_sol_events,
 };
-use orderly_dashboard_query_service::network_info::{get_network_info, init_indexer_db_url};
+use orderly_dashboard_query_service::indexer_db::init_indexer_db_url;
+use orderly_dashboard_query_service::network_info::get_network_info;
 use orderly_dashboard_query_service::raw_query::analyzer_raw_query;
 use orderly_dashboard_query_service::service_base::runtime::spawn_future;
 use orderly_dashboard_query_service::status::get_status;
 use orderly_dashboard_query_service::swagger_docs::ApiDoc;
+use orderly_dashboard_query_service::trades::{get_trades_status, query_trades, update_settings_task};
 use orderly_dashboard_query_service::trading_metrics;
 use orderly_dashboard_query_service::trading_metrics::{
     average_opening_count, average_trading_fee, average_trading_volume, block_height,
@@ -124,6 +126,12 @@ async fn main() -> std::io::Result<()> {
     });
     crate::update_positions_task();
     crate::update_realized_pnl_task();
+    // Start settings update task
+    std::thread::spawn(|| {
+        spawn_future(async {
+            update_settings_task().await
+        });
+    });
     HttpServer::new(|| {
         let cors = Cors::default()
             .allow_any_origin()
@@ -158,6 +166,8 @@ async fn main() -> std::io::Result<()> {
             .service(analyzer_raw_query)
             .service(get_status)
             .service(list_sol_events)
+            .service(query_trades)
+            .service(get_trades_status)
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-docs/openapi.json", ApiDoc::openapi()),

@@ -4,11 +4,13 @@ pub mod db;
 pub mod error_code;
 pub mod events;
 pub mod format_extern;
+pub mod indexer_db;
 pub mod network_info;
 pub mod raw_query;
 pub mod service_base;
 pub mod status;
 pub mod swagger_docs;
+pub mod trades;
 pub mod trading_metrics;
 pub mod utils;
 

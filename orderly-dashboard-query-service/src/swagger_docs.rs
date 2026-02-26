@@ -16,6 +16,7 @@ use crate::{
         },
         QeuryServiceResponse,
     },
+    trades::trades_api::{QueryTradesRequest, QueryTradesResponse, TradesStatusResponse},
     trading_metrics::{
         DailyRequest, DepositWithdrawRankingRequest, PnlRankingRequest, VolumeRankingRequest,
     },
@@ -44,6 +45,8 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryExternResponse;
         crate::events::events_api::list_events_v2,
         crate::trading_metrics::volume_statistic::get_account_volume_statistic,
         crate::trading_metrics::volume_statistic::get_broker_volume_statistic,
+        crate::trades::trades_api::query_trades,
+        crate::trades::trades_api::get_trades_status,
     ),
     components(
         schemas(
@@ -67,6 +70,9 @@ use orderly_dashboard_indexer::formats_external::IndexerQueryExternResponse;
             QeuryServiceResponse<Vec<TokenAmountRanking>>,
             QeuryServiceResponse<AccountVolumeStatistic>,
             QeuryServiceResponse<BrokerVolumeStatistic>,
+            QueryTradesRequest,
+            QueryTradesResponse,
+            TradesStatusResponse,
         )
     ),
     tags((name = "Orderly DashboardBasicAPI", description = "Orderly Dashboard Basic API")),

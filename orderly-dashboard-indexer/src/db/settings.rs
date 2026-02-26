@@ -19,6 +19,7 @@ pub enum SettingsKey {
     SolSyncBlockTime = 5,
     ExecutedTradesPartition = 6,
     ExecutedTradesLegacySync = 7,
+    ContarctDeployTimestamp = 8,
 }
 
 #[derive(Insertable, Queryable, Debug)]
@@ -193,6 +194,11 @@ pub async fn get_executed_trades_legacy_sync() -> Result<SyncLegacyDataConfig> {
         Some(settings) => Ok(serde_json::from_str(&settings.value)?),
         None => Ok(SyncLegacyDataConfig::default()),
     }
+}
+
+pub async fn update_contract_deploy_timestamp(timestamp: i64) -> Result<()> {
+    update_setting(SettingsKey::ContarctDeployTimestamp, timestamp.to_string()).await?;
+    Ok(())
 }
 
 async fn get_setting(key: i32) -> Result<Option<DbSettings>> {
