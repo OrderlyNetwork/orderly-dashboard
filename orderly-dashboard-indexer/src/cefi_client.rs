@@ -8,6 +8,8 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tokio::time::timeout;
 
+use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
+
 pub struct CefiClient {
     inner_client: Client,
     server_addr: String,
@@ -80,6 +82,7 @@ impl CefiClient {
             "{}/v1/public/account?account_id={}",
             self.server_addr, account_id
         );
+        tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "cefi_get_account_info account_id: {}", account_id);
         let response = self.inner_client.get(uri).send().await;
         match response {
             Ok(res) => Ok(res.text().await?),

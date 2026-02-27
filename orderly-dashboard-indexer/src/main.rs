@@ -24,7 +24,11 @@ pub mod transform;
 pub mod utils;
 extern crate diesel;
 
+use crate::cefi_client::CefiClient;
 use crate::config::{CommonConfigs, Opts};
+use crate::db::settings::{
+    get_filled_partitioned_executed_trades_broker, set_filled_partitioned_executed_trades_broker,
+};
 use crate::init::init_handler;
 use crate::server::webserver;
 use anyhow::Result;
@@ -34,6 +38,7 @@ use dotenv::dotenv;
 use crate::handler::check_or_create_new_partition::{
     check_or_create_executed_trades_partition, migrate_executed_trades_data,
 };
+use crate::handler::fill_partitioned_executed_trades::run_fill_empty_broker_hash_and_txid;
 use crate::{
     consume_data_task::{consume_data_task, ORDERLY_DASHBOARD_INDEXER},
     db::settings::{update_contract_deploy_timestamp, update_last_sol_syn_signature},
@@ -81,6 +86,45 @@ fn main() -> Result<()> {
             tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "migrate_executed_trades_data failed with err: {}, exit", err);
             return;
         }
+        // OR-6513: fill empty broker_hash and transaction_id in partitioned_executed_trades (periodic)
+        let cefi_url = config.be_api_base_url.clone();
+        actix::spawn(async move {
+            if let Ok(filled) = get_filled_partitioned_executed_trades_broker().await {
+                if filled {
+                    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "filled_partitioned_executed_trades_broker is already set, not need to fill");
+                    return Ok::<(), anyhow::Error>(());
+                }
+            }
+            let cefi_client = std::sync::Arc::new(CefiClient::new(cefi_url));
+            if let Ok(n) = run_fill_empty_broker_hash_and_txid(cefi_client.clone()).await {
+                if n > 0 {
+                    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "fill_partitioned_executed_trades initial run updated {} rows", n);
+                } else {
+                    set_filled_partitioned_executed_trades_broker().await?;
+                    return Ok::<(), anyhow::Error>(());
+                }
+            }
+            let mut interval = tokio::time::interval(std::time::Duration::from_millis(500));
+            loop {
+                interval.tick().await;
+                match run_fill_empty_broker_hash_and_txid(cefi_client.clone()).await {
+                    Ok(updated) if updated > 0 => {
+                        tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "fill_partitioned_executed_trades updated {} rows", updated);
+                    }
+                    Ok(_) => {
+                        tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "fill_partitioned_executed_trades not need to update");
+                        set_filled_partitioned_executed_trades_broker().await?;
+                        break;
+                    },
+                    Err(e) => {
+                        tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "fill_partitioned_executed_trades err: {:?}", e);
+                    }
+                }
+            }
+
+            Ok::<(), anyhow::Error>(())
+        });
+
         let early_stop = opts.end_block.is_some() && opts.start_block.is_none() && opts.end_block.unwrap_or_default() < opts.start_block.unwrap_or_default();
         if early_stop {
             tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "end_block: {:?} < start_block: {:?} , not need to consume data", opts.end_block, opts.start_block);
