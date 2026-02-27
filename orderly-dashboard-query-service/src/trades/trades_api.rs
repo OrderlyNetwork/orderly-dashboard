@@ -202,8 +202,12 @@ pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Re
                     target: QUERY_TRADES_CONTEXT,
                     "Failed to count total trades: {}", err
                 );
-                // Don't fail the request if count fails, just leave total_trades as None
-                None
+                return Ok(HttpResponse::Ok().json(
+                    orderly_dashboard_indexer::formats_external::FailureResponse::new(
+                        1000,
+                        format!("Query trades count failed: {}", err),
+                    ),
+                ));
             }
         }
     } else {

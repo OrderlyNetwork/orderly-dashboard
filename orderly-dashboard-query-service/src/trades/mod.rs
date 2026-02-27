@@ -1,12 +1,16 @@
 pub mod trades_api;
 
-pub use trades_api::{get_trades_status, query_trades, QueryTradesRequest, QueryTradesResponse, TradesStatusResponse};
+pub use trades_api::{
+    get_trades_status, query_trades, QueryTradesRequest, QueryTradesResponse, TradesStatusResponse,
+};
 
 use anyhow::Result;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
-use orderly_dashboard_indexer::db::settings::{get_last_rpc_processed_timestamp, DbSettings, SettingsKey};
+use orderly_dashboard_indexer::db::settings::{
+    get_last_rpc_processed_timestamp, DbSettings, SettingsKey,
+};
 use orderly_dashboard_indexer::db::POOL;
 use orderly_dashboard_indexer::schema::settings::dsl::{id, settings};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -35,7 +39,10 @@ async fn get_contract_deploy_height() -> Result<Option<u64>> {
     match result {
         Ok(setting) => Ok(Some(setting.value.parse::<u64>()?)),
         Err(diesel::NotFound) => Ok(None),
-        Err(err) => Err(anyhow::anyhow!("Failed to get contract deploy height: {}", err)),
+        Err(err) => Err(anyhow::anyhow!(
+            "Failed to get contract deploy height: {}",
+            err
+        )),
     }
 }
 
@@ -52,7 +59,7 @@ pub async fn update_settings_task() -> Result<()> {
 
     // Fetch ContractDeployHeight with retry until successful
     let mut contract_deploy_height_retry_interval = tokio::time::interval(Duration::from_secs(10));
-    
+
     // Try to fetch ContractDeployHeight immediately first, then retry every 10 seconds if not found
     loop {
         match get_contract_deploy_height().await {
@@ -79,7 +86,7 @@ pub async fn update_settings_task() -> Result<()> {
                 );
             }
         }
-        
+
         // Wait 10 seconds before retrying
         contract_deploy_height_retry_interval.tick().await;
     }

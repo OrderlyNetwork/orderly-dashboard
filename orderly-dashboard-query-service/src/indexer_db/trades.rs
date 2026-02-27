@@ -1,3 +1,4 @@
+use crate::trades::trades_api::QUERY_TRADES_PAGE_SIZE;
 use anyhow::Result;
 use chrono::NaiveDateTime;
 use diesel::dsl::sql;
@@ -7,7 +8,6 @@ use diesel::QueryDsl;
 use diesel_async::RunQueryDsl;
 use orderly_dashboard_indexer::db::partitioned_executed_trades::DbPartitionedExecutedTrades;
 use orderly_dashboard_indexer::db::POOL;
-use crate::trades::trades_api::QUERY_TRADES_PAGE_SIZE;
 
 pub const DB_TRADES_CONTEXT: &str = "indexer_db_trades_context";
 
