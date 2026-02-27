@@ -20,6 +20,7 @@ pub enum SettingsKey {
     ExecutedTradesPartition = 6,
     ExecutedTradesLegacySync = 7,
     ContarctDeployTimestamp = 8,
+    FilledPartitionedExecutedTradesBroker = 9,
 }
 
 #[derive(Insertable, Queryable, Debug)]
@@ -199,6 +200,22 @@ pub async fn get_executed_trades_legacy_sync() -> Result<SyncLegacyDataConfig> {
 pub async fn update_contract_deploy_timestamp(timestamp: i64) -> Result<()> {
     update_setting(SettingsKey::ContarctDeployTimestamp, timestamp.to_string()).await?;
     Ok(())
+}
+
+pub async fn set_filled_partitioned_executed_trades_broker() -> Result<()> {
+    update_setting(
+        SettingsKey::FilledPartitionedExecutedTradesBroker,
+        "true".to_string(),
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn get_filled_partitioned_executed_trades_broker() -> Result<bool> {
+    match get_setting(SettingsKey::FilledPartitionedExecutedTradesBroker as i32).await? {
+        Some(settings) => Ok(settings.value == "true"),
+        None => Ok(false),
+    }
 }
 
 async fn get_setting(key: i32) -> Result<Option<DbSettings>> {

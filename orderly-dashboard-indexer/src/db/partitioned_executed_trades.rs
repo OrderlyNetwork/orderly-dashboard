@@ -7,6 +7,7 @@ use anyhow::Result;
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
 use diesel::dsl::sql;
+use diesel::sql_query;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
@@ -89,6 +90,114 @@ pub async fn create_partitioned_executed_trades(
         .execute(&mut conn)
         .await?;
     Ok(num_rows)
+}
+
+/// Query trades where broker_hash is null, for backfill.
+/// Ordered by (block_number, transaction_index, log_index), limit 500.
+pub async fn query_trades_with_empty_broker_hash_or_txid(
+) -> Result<Vec<DbPartitionedExecutedTrades>> {
+    use crate::schema::partitioned_executed_trades::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
+    let rows = partitioned_executed_trades
+        .filter(broker_hash.is_null())
+        .order_by((block_number, transaction_index, log_index))
+        .limit(500)
+        .load::<DbPartitionedExecutedTrades>(&mut conn)
+        .await?;
+    Ok(rows)
+}
+
+/// Update broker_hash and/or transaction_id for one row by primary key.
+#[allow(dead_code)]
+pub async fn update_partitioned_executed_trade_broker_hash_and_txid(
+    block_number_: i64,
+    transaction_index_: i32,
+    log_index_: i32,
+    block_time_: NaiveDateTime,
+    broker_hash_: Option<String>,
+    transaction_id_: Option<String>,
+) -> Result<()> {
+    use crate::schema::partitioned_executed_trades::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
+    let target = partitioned_executed_trades
+        .filter(block_number.eq(block_number_))
+        .filter(transaction_index.eq(transaction_index_))
+        .filter(log_index.eq(log_index_))
+        .filter(block_time.eq(block_time_));
+
+    diesel::update(target)
+        .set((
+            broker_hash.eq(broker_hash_),
+            transaction_id.eq(transaction_id_),
+        ))
+        .execute(&mut conn)
+        .await?;
+    Ok(())
+}
+
+/// One row to update in batch (pk + new broker_hash and transaction_id).
+#[derive(Debug, Clone)]
+pub struct PartitionedExecutedTradeUpdate {
+    pub block_number: i64,
+    pub transaction_index: i32,
+    pub log_index: i32,
+    pub block_time: NaiveDateTime,
+    pub broker_hash: Option<String>,
+    pub transaction_id: Option<String>,
+}
+
+fn escape_sql_text(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('\'', "''")
+}
+
+fn sql_value_text(opt: &Option<String>) -> String {
+    match opt {
+        None => "NULL::text".to_string(),
+        Some(s) => format!("'{}'::text", escape_sql_text(s)),
+    }
+}
+
+const BATCH_UPDATE_CHUNK_SIZE: usize = 100;
+
+/// Batch update broker_hash and transaction_id for multiple rows in one or few queries.
+pub async fn batch_update_partitioned_executed_trades(
+    updates: &[PartitionedExecutedTradeUpdate],
+) -> Result<usize> {
+    if updates.is_empty() {
+        return Ok(0);
+    }
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let mut total = 0usize;
+    for chunk in updates.chunks(BATCH_UPDATE_CHUNK_SIZE) {
+        let values: Vec<String> = chunk
+            .iter()
+            .map(|u| {
+                let bt = u.block_time.format("%Y-%m-%d %H:%M:%S").to_string();
+                format!(
+                    "({}, {}, {}, '{}'::timestamp, {}, {})",
+                    u.block_number,
+                    u.transaction_index,
+                    u.log_index,
+                    escape_sql_text(&bt),
+                    sql_value_text(&u.broker_hash),
+                    sql_value_text(&u.transaction_id),
+                )
+            })
+            .collect();
+        let values_clause = values.join(", ");
+        let sql = format!(
+            "UPDATE partitioned_executed_trades t SET broker_hash = v.broker_hash, transaction_id = v.transaction_id \
+             FROM (VALUES {}) AS v(block_number, transaction_index, log_index, block_time, broker_hash, transaction_id) \
+             WHERE t.block_number = v.block_number AND t.transaction_index = v.transaction_index \
+             AND t.log_index = v.log_index AND t.block_time = v.block_time",
+            values_clause
+        );
+        let n = sql_query(&sql).execute(&mut conn).await?;
+        total += n;
+    }
+    Ok(total)
 }
 
 #[allow(dead_code)]
