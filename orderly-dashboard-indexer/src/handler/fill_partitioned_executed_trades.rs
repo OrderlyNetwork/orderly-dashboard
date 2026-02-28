@@ -5,15 +5,16 @@ use crate::analyzer_db::user_info::{create_user_info, get_user_info, UserInfo};
 use crate::cefi_client::CefiClient;
 use crate::consume_data_task::ORDERLY_DASHBOARD_INDEXER;
 use crate::db::partitioned_executed_trades::{
-    batch_update_partitioned_executed_trades, query_trades_with_empty_broker_hash_or_txid,
+    batch_update_partitioned_executed_trades, query_trades_with_empty_broker_hash,
     PartitionedExecutedTradeUpdate,
 };
-use crate::db::serial_batches::{query_serial_batches_with_type, SerialBatchType};
+use crate::db::serial_batches::query_serial_batches_by_keys;
 use crate::utils::cal_broker_hash;
 use anyhow::Result;
 use cached::{Cached, SizedCache};
 use lazy_static::lazy_static;
 use parking_lot::Mutex;
+use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -29,16 +30,14 @@ lazy_static! {
 /// get transaction_id from serial_batches (event_type=2), broker_hash from analyzer_db user_info,
 /// then update partitioned_executed_trades.
 pub async fn run_fill_empty_broker_hash_and_txid(cefi_client: Arc<CefiClient>) -> Result<usize> {
-    let trades = query_trades_with_empty_broker_hash_or_txid().await?;
+    let trades = query_trades_with_empty_broker_hash().await?;
     if trades.is_empty() {
         return Ok(0);
     }
 
-    let from_block = trades.first().map(|t| t.block_number).unwrap_or(0);
-    let to_block = trades.last().map(|t| t.block_number).unwrap_or(0);
-
-    let serial_batches =
-        query_serial_batches_with_type(from_block, to_block, SerialBatchType::PerpTrade).await?;
+    // 按 (block_number, transaction_index) 去重，得到要查询的 batch keys
+    let batch_keys: BTreeSet<(i64, i32)> = trades.iter().map(|t| t.get_batch_key()).collect();
+    let serial_batches = query_serial_batches_by_keys(batch_keys).await?;
     let txid_map: HashMap<(i64, i32), String> = serial_batches
         .into_iter()
         .map(|b| (b.get_batch_key(), b.transaction_id))

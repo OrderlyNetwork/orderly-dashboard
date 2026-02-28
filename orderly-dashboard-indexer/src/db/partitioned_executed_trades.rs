@@ -94,17 +94,41 @@ pub async fn create_partitioned_executed_trades(
 
 /// Query trades where broker_hash is null, for backfill.
 /// Ordered by (block_number, transaction_index, log_index), limit 500.
-pub async fn query_trades_with_empty_broker_hash_or_txid(
-) -> Result<Vec<DbPartitionedExecutedTrades>> {
+pub async fn query_trades_with_empty_broker_hash() -> Result<Vec<DbPartitionedExecutedTrades>> {
     use crate::schema::partitioned_executed_trades::dsl::*;
+    let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
-    let rows = partitioned_executed_trades
+    let result = partitioned_executed_trades
         .filter(broker_hash.is_null())
-        .order_by((block_number, transaction_index, log_index))
-        .limit(500)
+        // .order_by((block_number, transaction_index, log_index))
+        .limit(200)
         .load::<DbPartitionedExecutedTrades>(&mut conn)
-        .await?;
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+
+    let rows = match result {
+        Ok(rows) => {
+            if dur_ms >= 100 {
+                tracing::warn!(
+                    target: ALERT_CONTEXT,
+                    "query_trades_with_empty_broker_hash slow query. length:{}, used time:{} ms",
+                    rows.len(),
+                    dur_ms
+                );
+            }
+            rows
+        }
+        Err(e) => {
+            tracing::warn!(
+                target: DB_CONTEXT,
+                "query_trades_with_empty_broker_hash fail. err:{:?}, used time:{} ms",
+                e,
+                dur_ms
+            );
+            return Err(e.into());
+        }
+    };
     Ok(rows)
 }
 

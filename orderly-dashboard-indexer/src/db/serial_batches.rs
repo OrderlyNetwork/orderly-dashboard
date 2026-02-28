@@ -338,6 +338,55 @@ pub async fn query_serial_batches_by_time_and_key(
     Ok(events)
 }
 
+/// Query serial_batches by (block_number, transaction_index) keys.
+pub async fn query_serial_batches_by_keys(
+    block_tx_keys: BTreeSet<(i64, i32)>,
+) -> Result<Vec<DbSerialBatchesView>> {
+    if block_tx_keys.is_empty() {
+        return Ok(vec![]);
+    }
+    use diesel::sql_query;
+    let start_time = Instant::now();
+    let conditions = block_tx_keys
+        .iter()
+        .map(|(block, tx)| format!("({}, {})", block, tx))
+        .collect::<Vec<_>>()
+        .join(",");
+    let query = format!(
+        "SELECT block_number, transaction_index, log_index, transaction_id, block_time, batch_id, event_type \
+         FROM serial_batches \
+         WHERE (block_number, transaction_index) IN ({})",
+        conditions
+    );
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let result = sql_query(&query)
+        .get_results::<DbSerialBatchesView>(&mut conn)
+        .await;
+    let dur_ms = (Instant::now() - start_time).as_millis();
+    let events = match result {
+        Ok(rows) => {
+            tracing::info!(
+                target: DB_CONTEXT,
+                "query_serial_batches_by_keys success. keys:{}, rows:{}, used time:{} ms",
+                block_tx_keys.len(),
+                rows.len(),
+                dur_ms
+            );
+            rows
+        }
+        Err(e) => {
+            tracing::warn!(
+                target: DB_CONTEXT,
+                "query_serial_batches_by_keys fail. err:{:?}, used time:{} ms",
+                e,
+                dur_ms
+            );
+            return Err(e.into());
+        }
+    };
+    Ok(events)
+}
+
 async fn query_serial_batches_by_time_and_key_page(
     from_time: i64,
     to_time: i64,
