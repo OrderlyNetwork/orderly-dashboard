@@ -102,7 +102,7 @@ pub async fn query_trades_with_empty_broker_hash() -> Result<Vec<DbPartitionedEx
     let result = partitioned_executed_trades
         .filter(broker_hash.is_null())
         // .order_by((block_number, transaction_index, log_index))
-        .limit(200)
+        .limit(400)
         .load::<DbPartitionedExecutedTrades>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();

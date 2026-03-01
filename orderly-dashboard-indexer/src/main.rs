@@ -104,7 +104,7 @@ fn main() -> Result<()> {
                     return Ok::<(), anyhow::Error>(());
                 }
             }
-            let mut interval = tokio::time::interval(std::time::Duration::from_millis(500));
+            let mut interval = tokio::time::interval(std::time::Duration::from_millis(100));
             loop {
                 interval.tick().await;
                 match run_fill_empty_broker_hash_and_txid(cefi_client.clone()).await {
