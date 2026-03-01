@@ -104,9 +104,9 @@ fn main() -> Result<()> {
                     return Ok::<(), anyhow::Error>(());
                 }
             }
-            let mut interval = tokio::time::interval(std::time::Duration::from_millis(100));
+            // let mut interval = tokio::time::interval(std::time::Duration::from_millis(100));
             loop {
-                interval.tick().await;
+                // interval.tick().await;
                 match run_fill_empty_broker_hash_and_txid(cefi_client.clone()).await {
                     Ok(updated) if updated > 0 => {
                         tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "fill_partitioned_executed_trades updated {} rows", updated);
@@ -120,6 +120,7 @@ fn main() -> Result<()> {
                         tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "fill_partitioned_executed_trades err: {:?}", e);
                     }
                 }
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
 
             Ok::<(), anyhow::Error>(())
