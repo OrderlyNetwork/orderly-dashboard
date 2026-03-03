@@ -40,6 +40,22 @@ pub struct DbPartitionedExecutedTrades {
     pub transaction_id: Option<String>,
 }
 
+#[derive(Insertable, Queryable, Debug, Clone)]
+#[diesel(table_name = partitioned_executed_trades)]
+pub struct KeyDbPartitionedExecutedTrades {
+    pub block_number: i64,
+    pub transaction_index: i32,
+    pub log_index: i32,
+    pub account_id: String,
+    pub block_time: NaiveDateTime,
+}
+
+impl KeyDbPartitionedExecutedTrades {
+    pub fn get_batch_key(&self) -> (i64, i32) {
+        (self.block_number, self.transaction_index)
+    }
+}
+
 impl From<DbExecutedTrades> for DbPartitionedExecutedTrades {
     fn from(value: DbExecutedTrades) -> Self {
         DbPartitionedExecutedTrades {
@@ -94,16 +110,23 @@ pub async fn create_partitioned_executed_trades(
 
 /// Query trades where broker_hash is null, for backfill.
 /// Ordered by (block_number, transaction_index, log_index), limit 500.
-pub async fn query_trades_with_empty_broker_hash() -> Result<Vec<DbPartitionedExecutedTrades>> {
+pub async fn query_trades_with_empty_broker_hash() -> Result<Vec<KeyDbPartitionedExecutedTrades>> {
     use crate::schema::partitioned_executed_trades::dsl::*;
     let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
 
     let result = partitioned_executed_trades
+        .select((
+            block_number,
+            transaction_index,
+            log_index,
+            account_id,
+            block_time,
+        ))
         .filter(broker_hash.is_null())
         // .order_by((block_number, transaction_index, log_index))
         .limit(400)
-        .load::<DbPartitionedExecutedTrades>(&mut conn)
+        .load::<KeyDbPartitionedExecutedTrades>(&mut conn)
         .await;
     let dur_ms = (Instant::now() - start_time).as_millis();
 
@@ -192,6 +215,7 @@ pub async fn batch_update_partitioned_executed_trades(
     if updates.is_empty() {
         return Ok(0);
     }
+    let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let mut total = 0usize;
     for chunk in updates.chunks(BATCH_UPDATE_CHUNK_SIZE) {
@@ -221,6 +245,17 @@ pub async fn batch_update_partitioned_executed_trades(
         let n = sql_query(&sql).execute(&mut conn).await?;
         total += n;
     }
+    let dur_ms = (Instant::now() - start_time).as_millis();
+    if dur_ms >= 100 {
+        tracing::warn!(
+            target: ALERT_CONTEXT,
+            "batch_update_partitioned_executed_trades slow query. updated_rows:{}, count:{}, used time:{} ms",
+            total,
+            updates.len(),
+            dur_ms
+        );
+    }
+
     Ok(total)
 }
 

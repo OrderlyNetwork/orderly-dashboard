@@ -43,11 +43,8 @@ pub async fn run_fill_empty_broker_hash_and_txid(cefi_client: Arc<CefiClient>) -
         .map(|b| (b.get_batch_key(), b.transaction_id))
         .collect();
 
-    let mut account_ids_to_fetch: Vec<String> = trades
-        .iter()
-        .filter(|t| t.broker_hash.is_none())
-        .map(|t| t.account_id.clone())
-        .collect();
+    let mut account_ids_to_fetch: Vec<String> =
+        trades.iter().map(|t| t.account_id.clone()).collect();
     account_ids_to_fetch.sort();
     account_ids_to_fetch.dedup();
     let mut account_broker_map_guard = FILL_ACCOUNT_BROKER_HASH_CACHE.lock();
@@ -82,15 +79,10 @@ pub async fn run_fill_empty_broker_hash_and_txid(cefi_client: Arc<CefiClient>) -
     let mut updates: Vec<PartitionedExecutedTradeUpdate> = Vec::new();
     for trade in &trades {
         let key = trade.get_batch_key();
-        let new_txid = trade
-            .transaction_id
-            .clone()
-            .or_else(|| txid_map.get(&key).cloned());
-        let new_broker_hash = trade.broker_hash.clone().or_else(|| {
-            account_broker_map_guard
-                .cache_get(&trade.account_id)
-                .cloned()
-        });
+        let new_txid = txid_map.get(&key).cloned();
+        let new_broker_hash = account_broker_map_guard
+            .cache_get(&trade.account_id)
+            .cloned();
 
         updates.push(PartitionedExecutedTradeUpdate {
             block_number: trade.block_number,
