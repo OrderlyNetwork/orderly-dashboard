@@ -37,12 +37,17 @@ impl CefiClient {
                         }
                     }
                     tracing::warn!(
-                        "cefi_get_account_info decode failed with response: {:?}",
-                        res
+                        "cefi_get_account_info decode failed with response: {:?} for account_id: {}",
+                        res,
+                        account_id
                     );
                 }
                 Err(err) => {
-                    tracing::warn!("cefi_get_account_info req failed with msg err: {}", err);
+                    tracing::warn!(
+                        "cefi_get_account_info req failed with msg err: {}, for account_id: {}",
+                        err,
+                        account_id
+                    );
                 }
             }
 
