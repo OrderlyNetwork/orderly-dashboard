@@ -9,6 +9,7 @@ pub mod analyzer_gas_job;
 pub mod analyzer_job;
 pub mod calc;
 pub mod liquidation_analyzer;
+pub mod margin_transfer_analyzer;
 pub mod perp_analyzer;
 pub mod settlement_analyzer;
 pub mod transaction_analyzer;
@@ -61,6 +62,7 @@ pub mod tests {
     use crate::analyzer::calc::USDC_CHAIN_ID;
     use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
     use crate::db::hourly_user_perp::HourlyUserPerpKey;
+    use crate::db::iso_user_perp_summary::IsoUserPerpSummary;
     use crate::db::user_perp_summary::UserPerpSummaryKey;
     use crate::db::user_token_summary::UserTokenSummaryKey;
     use bigdecimal::BigDecimal;
@@ -109,6 +111,24 @@ pub mod tests {
             sum_unitary_fundings: BigDecimal,
             opening_cost: BigDecimal,
         );
+        fn set_iso_user_perp_cache(
+            &mut self,
+            perp_key: &UserPerpSummaryKey,
+            position_qty: BigDecimal,
+            cost_position: BigDecimal,
+            sum_unitary_fundings: BigDecimal,
+            opening_cost: BigDecimal,
+        );
+        fn set_user_iso_margin_cache(
+            &mut self,
+            perp_key: &UserPerpSummaryKey,
+            margin_token: String,
+            margin_qty: BigDecimal,
+        );
+        fn get_iso_user_perp_cache(
+            &mut self,
+            perp_key: &UserPerpSummaryKey,
+        ) -> &mut IsoUserPerpSummary;
         fn set_user_token_cache(&mut self, token_key: &UserTokenSummaryKey);
         fn get_user_perp_cache(&mut self, perp_key: &UserPerpSummaryKey) -> &mut UserPerpSummary;
         fn get_user_token_cache(
@@ -144,6 +164,38 @@ pub mod tests {
             data.opening_cost = opening_cost.div(get_cost_position_prec());
             self.user_perp_cache.insert(perp_key.clone(), data);
         }
+        fn set_iso_user_perp_cache(
+            &mut self,
+            perp_key: &UserPerpSummaryKey,
+            position_qty: BigDecimal,
+            cost_position: BigDecimal,
+            sum_unitary_fundings: BigDecimal,
+            opening_cost: BigDecimal,
+        ) {
+            let mut data = IsoUserPerpSummary::new_empty_iso_user_perp_summary(
+                &perp_key.account_id,
+                &perp_key.symbol,
+            );
+            data.holding = position_qty.div(get_qty_prec());
+            data.cost_position = cost_position.clone().div(get_cost_position_prec());
+            data.sum_unitary_fundings = sum_unitary_fundings.div(get_unitary_prec());
+            data.opening_cost = opening_cost.div(get_cost_position_prec());
+            self.iso_user_perp_cache.insert(perp_key.clone(), data);
+        }
+        fn set_user_iso_margin_cache(
+            &mut self,
+            perp_key: &UserPerpSummaryKey,
+            margin_token: String,
+            margin_qty: BigDecimal,
+        ) {
+            let data = {
+                let data = self.get_iso_user_perp_cache(perp_key);
+                data.margin_token = margin_token;
+                data.margin_qty = margin_qty;
+                data.clone()
+            };
+            self.iso_user_perp_cache.insert(perp_key.clone(), data);
+        }
         fn set_user_token_cache(&mut self, _token_key: &UserTokenSummaryKey) {}
         fn get_user_perp_cache(&mut self, perp_key: &UserPerpSummaryKey) -> &mut UserPerpSummary {
             if !self.user_perp_cache.contains_key(&perp_key.clone()) {
@@ -154,6 +206,20 @@ pub mod tests {
                 self.user_perp_cache.insert(perp_key.clone(), saved_summary);
             }
             self.user_perp_cache.get_mut(&perp_key.clone()).unwrap()
+        }
+        fn get_iso_user_perp_cache(
+            &mut self,
+            perp_key: &UserPerpSummaryKey,
+        ) -> &mut IsoUserPerpSummary {
+            if !self.iso_user_perp_cache.contains_key(&perp_key.clone()) {
+                let saved_summary = IsoUserPerpSummary::new_empty_iso_user_perp_summary(
+                    &perp_key.account_id,
+                    &perp_key.symbol,
+                );
+                self.iso_user_perp_cache
+                    .insert(perp_key.clone(), saved_summary);
+            }
+            self.iso_user_perp_cache.get_mut(&perp_key.clone()).unwrap()
         }
 
         fn get_user_token_cache(

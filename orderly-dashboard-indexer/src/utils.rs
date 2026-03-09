@@ -1,3 +1,4 @@
+use base58::ToBase58;
 use bigdecimal::{BigDecimal, FromPrimitive};
 use ethers::types::{H160, H256, I256, U256};
 use std::str::FromStr;
@@ -80,4 +81,18 @@ pub fn cal_string_hash(broker_id: &str) -> String {
     hasher.finalize(&mut output);
     let hex_output: String = output.iter().map(|byte| format!("{:02x}", byte)).collect();
     format!("0x{}", hex_output)
+}
+
+// enum ChainType {
+//     EVM,
+//     SOL
+// }
+pub fn bytes32_to_address(chain_type: u8, bytes: [u8; 32]) -> String {
+    if chain_type == 0 {
+        // EVM - convert 20-byte address to hex string with 0x prefix
+        // Skip first 12 bytes (padding) and take the 20-byte address
+        format!("0x{}", hex::encode(&bytes[12..]))
+    } else {
+        bytes.to_base58()
+    }
 }

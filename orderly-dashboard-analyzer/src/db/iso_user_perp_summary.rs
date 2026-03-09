@@ -1,0 +1,656 @@
+use std::str::FromStr;
+use std::time::Instant;
+
+use bigdecimal::{BigDecimal, RoundingMode};
+use chrono::NaiveDateTime;
+use diesel::pg::upsert::{excluded, on_constraint};
+use diesel::prelude::*;
+use diesel::sql_types::*;
+use diesel_async::RunQueryDsl;
+
+use crate::analyzer::get_cost_position_decimal;
+use crate::db::user_token_summary::DBException;
+use crate::db::user_token_summary::DBException::QueryError;
+use crate::db::{BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
+use crate::schema::iso_user_perp_summary;
+
+#[derive(Queryable, Insertable, Debug, Clone)]
+#[diesel(table_name = iso_user_perp_summary)]
+pub struct IsoUserPerpSummary {
+    pub account_id: String,
+    pub symbol: String,
+
+    pub holding: BigDecimal,
+    pub opening_cost: BigDecimal,
+    pub cost_position: BigDecimal,
+
+    total_trading_volume: BigDecimal,
+    total_trading_count: i64,
+    total_trading_fee: BigDecimal,
+
+    pub total_realized_pnl: BigDecimal,
+    #[allow(dead_code)]
+    total_un_realized_pnl: BigDecimal,
+
+    total_liquidation_amount: BigDecimal,
+    total_liquidation_count: i64,
+    pub margin_token: String,
+    pub margin_qty: BigDecimal,
+
+    pub pulled_block_height: i64,
+    pub pulled_block_time: NaiveDateTime,
+
+    pub sum_unitary_fundings: BigDecimal,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, QueryableByName, Clone)]
+pub struct AccountVolumeWithTime {
+    #[diesel(sql_type = Text)]
+    pub account_id: String,
+    #[diesel(sql_type = Numeric)]
+    pub volume: BigDecimal,
+    #[diesel(sql_type = Timestamp)]
+    pub max_update_time: NaiveDateTime,
+}
+
+impl IsoUserPerpSummary {
+    pub fn new_empty_iso_user_perp_summary(p_account_id: &str, symbol: &str) -> IsoUserPerpSummary {
+        IsoUserPerpSummary {
+            account_id: p_account_id.to_string(),
+            symbol: symbol.to_string(),
+            holding: Default::default(),
+            opening_cost: Default::default(),
+            cost_position: Default::default(),
+            total_trading_volume: Default::default(),
+            total_trading_fee: Default::default(),
+            total_realized_pnl: Default::default(),
+            total_un_realized_pnl: Default::default(),
+            total_trading_count: 0,
+            total_liquidation_amount: Default::default(),
+            total_liquidation_count: 0,
+            margin_token: Default::default(),
+            margin_qty: Default::default(),
+            pulled_block_height: 0,
+            pulled_block_time: Default::default(),
+            sum_unitary_fundings: BigDecimal::from(0),
+        }
+    }
+
+    pub fn new_liquidation(
+        &mut self,
+        qty: BigDecimal,
+        price: BigDecimal,
+        block_num: i64,
+        cost_position_transfer: BigDecimal,
+        liquidation_fee: BigDecimal,
+        _sum_unitary_funding: BigDecimal,
+        open_cost_diff: BigDecimal,
+        realized_pnl_diff: BigDecimal,
+    ) {
+        if block_num <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+
+        self.holding -= qty.clone();
+        self.cost_position += liquidation_fee - cost_position_transfer;
+        self.total_liquidation_amount += qty.clone() * price.clone();
+        self.total_liquidation_count += 1;
+        self.total_realized_pnl += realized_pnl_diff;
+        self.update_opening_cost(open_cost_diff);
+    }
+
+    pub fn new_liquidation_v2(
+        &mut self,
+        qty: BigDecimal,
+        price: BigDecimal,
+        block_num: i64,
+        cost_position_transfer: BigDecimal,
+        fee: BigDecimal,
+        _sum_unitary_funding: BigDecimal,
+        open_cost_diff: BigDecimal,
+        realized_pnl_diff: BigDecimal,
+        need_cal_avg: bool,
+    ) {
+        if block_num <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+
+        self.holding += qty.clone();
+        self.cost_position += cost_position_transfer + fee;
+        self.total_liquidation_amount += qty.clone() * price.clone();
+        self.total_liquidation_count += 1;
+        self.total_realized_pnl += realized_pnl_diff;
+        if need_cal_avg {
+            self.update_opening_cost(open_cost_diff);
+        }
+    }
+
+    pub fn new_settlemnt(&mut self, settlement_amount: BigDecimal, pulled_block_height: i64) {
+        if pulled_block_height <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+        self.cost_position += settlement_amount;
+    }
+
+    pub fn new_liquidator(
+        &mut self,
+        holding_diff: BigDecimal,
+        cost_position_transfer: BigDecimal,
+        liquidator_fee: BigDecimal,
+        opening_cost_diff: BigDecimal,
+        pulled_block_height: i64,
+        realized_pnl_diff: BigDecimal,
+        need_cal_avg: bool,
+    ) {
+        if pulled_block_height <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+        self.holding += holding_diff;
+        self.cost_position += cost_position_transfer - liquidator_fee;
+        self.total_realized_pnl += realized_pnl_diff;
+        if need_cal_avg {
+            self.update_opening_cost(opening_cost_diff);
+        }
+    }
+
+    // claimSumUnitaryFunding = qty * (new_funding - old_funding).setScale(USDC_precision, RoundingMode.CEILING)
+    pub fn charge_funding_fee(
+        &mut self,
+        new_sum_unitary_fundings: BigDecimal,
+        pulled_block_height: i64,
+    ) {
+        if pulled_block_height <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+        if new_sum_unitary_fundings.clone() == self.sum_unitary_fundings.clone() {
+            return;
+        }
+
+        if self.holding == BigDecimal::from(0) {
+            self.sum_unitary_fundings = new_sum_unitary_fundings;
+            return;
+        }
+
+        let accrued_fee = (self.holding.clone()
+            * (new_sum_unitary_fundings.clone() - self.sum_unitary_fundings.clone()))
+        .with_scale_round(get_cost_position_decimal(), RoundingMode::Ceiling);
+        #[cfg(test)]
+        println!(
+            "self.cost_position: {}, accrued_fee after div: {}",
+            self.cost_position, accrued_fee
+        );
+        self.cost_position += accrued_fee;
+        self.sum_unitary_fundings = new_sum_unitary_fundings;
+    }
+
+    pub fn new_user_adl_v1(
+        &mut self,
+        qty: BigDecimal,
+        price: BigDecimal,
+        block_num: i64,
+        cost_position_transfer: BigDecimal,
+        _sum_unitary_funding: BigDecimal,
+        open_cost_diff: BigDecimal,
+        realized_pnl_diff: BigDecimal,
+    ) {
+        if block_num <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+
+        self.holding += qty.clone();
+        self.cost_position += cost_position_transfer;
+        self.total_liquidation_amount += qty.clone() * price.clone();
+        self.total_liquidation_count += 1;
+        self.total_realized_pnl += realized_pnl_diff;
+        self.update_opening_cost(open_cost_diff);
+    }
+
+    pub fn new_insurance_adl_v1(
+        &mut self,
+        qty: BigDecimal,
+        price: BigDecimal,
+        block_num: i64,
+        cost_position_transfer: BigDecimal,
+        _sum_unitary_funding: BigDecimal,
+    ) {
+        if block_num <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+
+        self.holding -= qty.clone();
+        self.cost_position -= cost_position_transfer;
+        self.total_liquidation_amount += qty.clone() * price.clone();
+        self.total_liquidation_count += 1;
+    }
+
+    pub fn new_user_adl_v3(
+        &mut self,
+        qty: BigDecimal,
+        price: BigDecimal,
+        block_num: i64,
+        cost_position_transfer: BigDecimal,
+        _sum_unitary_funding: BigDecimal,
+        open_cost_diff: BigDecimal,
+        realized_pnl_diff: BigDecimal,
+        need_cal_avg: bool,
+        margin_asset_hash: Option<String>,
+        margin_to_cross: Option<String>,
+    ) {
+        if block_num <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+
+        self.holding += qty.clone();
+        self.cost_position += cost_position_transfer;
+        self.total_liquidation_amount += qty.clone() * price.clone();
+        self.total_liquidation_count += 1;
+        self.total_realized_pnl += realized_pnl_diff;
+        if need_cal_avg {
+            self.update_opening_cost(open_cost_diff);
+        }
+
+        if let Some(margin_asset_hash) = margin_asset_hash {
+            self.margin_token = margin_asset_hash;
+            if let Some(margin_to_cross) = margin_to_cross {
+                self.margin_qty -= BigDecimal::from_str(&margin_to_cross).unwrap_or_default();
+            }
+        }
+    }
+
+    pub fn margin_deposit(&mut self, block_num: i64, asset_hash: String, amount: BigDecimal) {
+        tracing::info!(target:"margin_deposit", "block_num: {}, receiver margin transfer account_id: {},iso_symbol_hash:{},margin_asset_hash: {}, margin_from_cross:{}", block_num, self.account_id, self.symbol, asset_hash, amount.to_string());
+        if block_num <= self.pulled_block_height {
+            // already processed this block events
+            return;
+        }
+        if amount == BigDecimal::from(0) {
+            return;
+        }
+
+        self.margin_token = asset_hash;
+        self.margin_qty += amount;
+    }
+}
+
+impl IsoUserPerpSummary {
+    pub fn new_trade(
+        &mut self,
+        fee: BigDecimal,
+        amount: BigDecimal,
+        pulled_block_height: i64,
+        open_cost_diff: BigDecimal,
+        qty: BigDecimal,
+        realized_pnl_diff: BigDecimal,
+    ) -> (bool, bool) {
+        if pulled_block_height <= self.pulled_block_height {
+            tracing::warn!("deprecated trade for pulled_block_height: {}, self.pulled_block_height: {}, fee: {}", pulled_block_height, self.pulled_block_height, fee);
+            // already processed this block events
+            return (false, false);
+        }
+
+        let is_opening = self.holding.clone() == Default::default()
+            || (self.holding.clone().sign() != qty.clone().sign()
+                && qty.clone().abs() > self.holding.clone().abs());
+
+        let is_new_user = self.total_trading_count == 0;
+        self.total_trading_fee += fee.clone();
+        self.total_trading_volume += amount.clone().abs();
+        self.total_trading_count += 1;
+        self.holding += qty;
+        self.cost_position += amount + fee;
+        self.total_realized_pnl += realized_pnl_diff;
+        self.update_opening_cost(open_cost_diff);
+
+        (is_opening, is_new_user)
+    }
+}
+
+impl IsoUserPerpSummary {
+    pub fn update_opening_cost(&mut self, open_cost_diff: BigDecimal) {
+        if self.holding == BigDecimal::from(0) {
+            self.opening_cost = BigDecimal::from(0);
+        } else {
+            self.opening_cost += open_cost_diff;
+        }
+    }
+}
+
+pub async fn find_iso_user_perp_summary(
+    p_account_id: String,
+    p_symbol: String,
+) -> Result<IsoUserPerpSummary, DBException> {
+    use crate::schema::iso_user_perp_summary::dsl::*;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let select_result = iso_user_perp_summary
+        .filter(account_id.eq(p_account_id.clone()))
+        .filter(symbol.eq(p_symbol.clone()))
+        .first::<IsoUserPerpSummary>(&mut conn)
+        .await;
+
+    match select_result {
+        Ok(perp_data) => Ok(perp_data),
+        Err(error) => match error {
+            diesel::NotFound => {
+                let new_perp = IsoUserPerpSummary {
+                    account_id: p_account_id.clone(),
+                    symbol: p_symbol.clone(),
+                    holding: Default::default(),
+                    opening_cost: Default::default(),
+                    cost_position: Default::default(),
+                    total_trading_volume: Default::default(),
+                    total_trading_fee: Default::default(),
+                    total_realized_pnl: Default::default(),
+                    total_un_realized_pnl: Default::default(),
+                    total_trading_count: 0,
+                    total_liquidation_amount: Default::default(),
+                    total_liquidation_count: 0,
+                    margin_token: Default::default(),
+                    margin_qty: Default::default(),
+                    pulled_block_height: 0,
+                    pulled_block_time: Default::default(),
+                    sum_unitary_fundings: BigDecimal::from(0),
+                };
+
+                Ok(new_perp)
+            }
+            _ => Err(QueryError),
+        },
+    }
+}
+
+pub async fn create_or_update_iso_user_perp_summary(
+    p_user_perp_summary_vec: Vec<&IsoUserPerpSummary>,
+) -> anyhow::Result<usize> {
+    if p_user_perp_summary_vec.is_empty() {
+        return Ok(0);
+    }
+    use crate::schema::iso_user_perp_summary::dsl::*;
+    let length = p_user_perp_summary_vec.len();
+    tracing::info!(target: DB_CONTEXT, "dbwrite create_or_update_user_perp_summary start length: {}", length);
+
+    let mut row_nums = 0;
+    let mut user_perp_summary_vec_ref = p_user_perp_summary_vec.as_slice();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let len = user_perp_summary_vec_ref.len();
+    let inst = Instant::now();
+    loop {
+        let inst = Instant::now();
+        if user_perp_summary_vec_ref.len() >= BATCH_UPSERT_LEN {
+            let values1: &[&IsoUserPerpSummary];
+            (values1, user_perp_summary_vec_ref) =
+                user_perp_summary_vec_ref.split_at(BATCH_UPSERT_LEN);
+            #[allow(suspicious_double_ref_op)]
+            let values1 = values1
+                .iter()
+                .map(|v| v.clone().clone())
+                .collect::<Vec<IsoUserPerpSummary>>();
+            let len = values1.len();
+            let update_result = diesel::insert_into(iso_user_perp_summary)
+                .values(values1)
+                .on_conflict(on_constraint("iso_user_perp_summary_uq"))
+                .do_update()
+                .set((
+                    holding.eq(excluded(holding)),
+                    opening_cost.eq(excluded(opening_cost)),
+                    cost_position.eq(excluded(cost_position)),
+                    total_trading_volume.eq(excluded(total_trading_volume)),
+                    total_trading_fee.eq(excluded(total_trading_fee)),
+                    total_trading_count.eq(excluded(total_trading_count)),
+                    total_realized_pnl.eq(excluded(total_realized_pnl)),
+                    total_un_realized_pnl.eq(excluded(total_un_realized_pnl)),
+                    total_liquidation_amount.eq(excluded(total_liquidation_amount)),
+                    total_liquidation_count.eq(excluded(total_liquidation_count)),
+                    margin_token.eq(excluded(margin_token)),
+                    margin_qty.eq(excluded(margin_qty)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                    sum_unitary_fundings.eq(excluded(sum_unitary_fundings)),
+                ))
+                .execute(&mut conn)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!("update user_perp_summary failed: {}", err));
+                }
+            }
+            let elapse_ms = inst.elapsed().as_millis();
+            if elapse_ms > 50 {
+                tracing::info!(
+                    "create_or_update_user_perp_summary batch cost {} ms for {} records",
+                    elapse_ms,
+                    len
+                );
+            }
+        } else {
+            #[allow(suspicious_double_ref_op)]
+            let values1 = user_perp_summary_vec_ref
+                .iter()
+                .map(|v| v.clone().clone())
+                .collect::<Vec<IsoUserPerpSummary>>();
+            let update_result = diesel::insert_into(iso_user_perp_summary)
+                .values(values1)
+                .on_conflict(on_constraint("iso_user_perp_summary_uq"))
+                .do_update()
+                .set((
+                    holding.eq(excluded(holding)),
+                    opening_cost.eq(excluded(opening_cost)),
+                    cost_position.eq(excluded(cost_position)),
+                    total_trading_volume.eq(excluded(total_trading_volume)),
+                    total_trading_fee.eq(excluded(total_trading_fee)),
+                    total_trading_count.eq(excluded(total_trading_count)),
+                    total_realized_pnl.eq(excluded(total_realized_pnl)),
+                    total_un_realized_pnl.eq(excluded(total_un_realized_pnl)),
+                    total_liquidation_amount.eq(excluded(total_liquidation_amount)),
+                    total_liquidation_count.eq(excluded(total_liquidation_count)),
+                    margin_token.eq(excluded(margin_token)),
+                    margin_qty.eq(excluded(margin_qty)),
+                    pulled_block_height.eq(excluded(pulled_block_height)),
+                    pulled_block_time.eq(excluded(pulled_block_time)),
+                    sum_unitary_fundings.eq(excluded(sum_unitary_fundings)),
+                ))
+                .execute(&mut conn)
+                .await;
+
+            match update_result {
+                Ok(len) => {
+                    row_nums += len;
+                    break;
+                }
+                Err(err) => {
+                    return Err(anyhow::anyhow!("update user_perp_summary failed: {}", err));
+                }
+            }
+        }
+    }
+    let elapse_ms = inst.elapsed().as_millis();
+    if elapse_ms > 3_000 {
+        tracing::warn!(
+            "slow query, create_or_update_user_perp_summary, use {} ms for {} records",
+            elapse_ms,
+            len
+        );
+    } else {
+        tracing::info!(target: DB_CONTEXT, "dbwrite create_or_update_user_perp_summary end length: {}, time cost: {:?} ms", length, elapse_ms);
+    }
+
+    Ok(row_nums)
+}
+
+#[allow(dead_code)]
+pub async fn legacy_create_or_update_iso_user_perp_summary(
+    p_user_perp_summary_vec: Vec<&IsoUserPerpSummary>,
+) -> anyhow::Result<usize> {
+    if p_user_perp_summary_vec.is_empty() {
+        return Ok(0);
+    }
+    use crate::schema::iso_user_perp_summary::dsl::*;
+
+    let mut row_nums = 0;
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    for summary in p_user_perp_summary_vec {
+        let update_result = diesel::insert_into(iso_user_perp_summary)
+            .values(summary.clone())
+            .on_conflict(on_constraint("iso_user_perp_summary_uq"))
+            .do_update()
+            .set((
+                holding.eq(summary.holding.clone()),
+                opening_cost.eq(summary.opening_cost.clone()),
+                cost_position.eq(summary.cost_position.clone()),
+                total_trading_volume.eq(summary.total_trading_volume.clone()),
+                total_trading_fee.eq(summary.total_trading_fee.clone()),
+                total_trading_count.eq(summary.total_trading_count.clone()),
+                total_realized_pnl.eq(summary.total_realized_pnl.clone()),
+                total_un_realized_pnl.eq(summary.total_un_realized_pnl.clone()),
+                total_liquidation_amount.eq(summary.total_liquidation_amount.clone()),
+                total_liquidation_count.eq(summary.total_liquidation_count.clone()),
+                pulled_block_height.eq(summary.pulled_block_height.clone()),
+                pulled_block_time.eq(summary.pulled_block_time.clone()),
+                sum_unitary_fundings.eq(summary.sum_unitary_fundings.clone()),
+            ))
+            .execute(&mut conn)
+            .await;
+
+        match update_result {
+            Ok(_) => {
+                row_nums += 1;
+            }
+            Err(err) => {
+                return Err(anyhow::anyhow!("update user_perp_summary failed: {}", err));
+            }
+        }
+    }
+    Ok(row_nums)
+}
+
+#[allow(dead_code)]
+// get user ioslated margin life to date
+pub async fn get_user_ltd_iso_trading_volume(
+    offset_account_id: Option<String>,
+    limit: i64,
+) -> anyhow::Result<Vec<AccountVolumeWithTime>> {
+    #[allow(unused_imports)]
+    use crate::{
+        db::{hourly_user_perp::HourlyUserPerp, POOL},
+        schema::iso_user_perp_summary,
+        schema::iso_user_perp_summary::dsl::*,
+    };
+
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
+    let select_result = if let Some(offset_account_id) = offset_account_id {
+        diesel::sql_query(
+            "
+select
+  account_id,
+  sum(total_trading_volume) as volume,
+  max(pulled_block_time) as max_update_time
+from
+  iso_user_perp_summary
+where
+  account_id > $1
+group by
+  account_id
+order by
+  account_id
+limit
+  $2;
+        ",
+        )
+        .bind::<Text, _>(offset_account_id)
+        .bind::<BigInt, _>(limit)
+        .get_results::<AccountVolumeWithTime>(&mut conn)
+        .await?
+    } else {
+        diesel::sql_query(
+            "
+select
+  account_id,
+  sum(total_trading_volume) as volume,
+  max(pulled_block_time) as max_update_time
+from
+  iso_user_perp_summary
+group by
+  account_id
+order by
+  account_id
+limit
+  $1;
+        ",
+        )
+        .bind::<BigInt, _>(limit)
+        .get_results::<AccountVolumeWithTime>(&mut conn)
+        .await?
+    };
+
+    Ok(select_result)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::analyzer::get_unitary_prec;
+    use std::str::FromStr;
+
+    use super::*;
+    use chrono::Utc;
+
+    #[test]
+    fn test_charge_iso_funding_fee1() {
+        let acc = "account1".to_string();
+        let update_time = NaiveDateTime::from_timestamp_opt(
+            Utc::now().timestamp(),
+            Utc::now().timestamp_subsec_nanos() as u32,
+        )
+        .unwrap();
+        let mut user_perp1 = IsoUserPerpSummary {
+            account_id: acc,
+            symbol: "0xaaaaa".to_string(),
+            holding: BigDecimal::from_str("0.01").unwrap(),
+            opening_cost: 0.into(),
+            cost_position: 0.into(),
+            total_trading_volume: 0.into(),
+            total_trading_count: 0.into(),
+            total_trading_fee: 0.into(),
+            total_realized_pnl: 0.into(),
+            total_un_realized_pnl: 0.into(),
+            total_liquidation_amount: 0.into(),
+            total_liquidation_count: 0.into(),
+            margin_token: Default::default(),
+            margin_qty: Default::default(),
+            pulled_block_height: 0.into(),
+            pulled_block_time: update_time,
+            sum_unitary_fundings: BigDecimal::from_str("1000000000000000").unwrap()
+                / get_unitary_prec(),
+        };
+
+        user_perp1.charge_funding_fee(
+            BigDecimal::from_str("1100000000000000").unwrap() / get_unitary_prec(),
+            1,
+        );
+        println!(
+            "cost_position: {}, sum_unitary_fundings: {}",
+            user_perp1.cost_position.to_string(),
+            user_perp1.sum_unitary_fundings.to_string()
+        );
+        assert_eq!(
+            user_perp1.cost_position,
+            BigDecimal::from_str("0.001").unwrap()
+        );
+        assert_eq!(
+            user_perp1.sum_unitary_fundings,
+            BigDecimal::from_str("1.1").unwrap()
+        );
+    }
+}

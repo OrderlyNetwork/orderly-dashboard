@@ -36,12 +36,16 @@ pub struct DbLiquidationTransfer {
     pub liquidation_fee: BigDecimal,
     pub block_time: Option<BigDecimal>,
     pub version: Option<i16>,
+    pub margin_mode: Option<i16>,
+    pub iso_margin_asset_hash: Option<String>,
+    pub margin_to_cross: Option<BigDecimal>,
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum LiquidationTransferVersion {
     V1 = 1,
     V2 = 2,
+    V3 = 3,
 }
 
 impl LiquidationTransferVersion {
@@ -57,6 +61,7 @@ impl TryFrom<i16> for LiquidationTransferVersion {
         match value {
             0 | 1 => Ok(Self::V1),
             2 => Ok(Self::V2),
+            3 => Ok(Self::V3),
             _ => Err(anyhow::anyhow!(
                 "cannot convert integer:{} to LiquidationTransferVersion",
                 value
@@ -427,6 +432,9 @@ mod tests {
                 liquidation_fee: BigDecimal::from(1000),
                 block_time: Some(BigDecimal::from(1000)),
                 version: Some(1),
+                margin_mode: None,
+                iso_margin_asset_hash: None,
+                margin_to_cross: None,
             },
             DbLiquidationTransfer {
                 block_number: 1,
@@ -446,6 +454,9 @@ mod tests {
                 liquidation_fee: BigDecimal::from(1000),
                 block_time: Some(BigDecimal::from(1000)),
                 version: Some(1),
+                margin_mode: None,
+                iso_margin_asset_hash: None,
+                margin_to_cross: None,
             },
             DbLiquidationTransfer {
                 block_number: 1,
@@ -465,6 +476,9 @@ mod tests {
                 liquidation_fee: BigDecimal::from(1000),
                 block_time: Some(BigDecimal::from(1000)),
                 version: Some(1),
+                margin_mode: None,
+                iso_margin_asset_hash: None,
+                margin_to_cross: None,
             },
             DbLiquidationTransfer {
                 block_number: 1,
@@ -484,6 +498,9 @@ mod tests {
                 liquidation_fee: BigDecimal::from(1000),
                 block_time: Some(BigDecimal::from(1000)),
                 version: Some(1),
+                margin_mode: None,
+                iso_margin_asset_hash: None,
+                margin_to_cross: None,
             },
         ];
 

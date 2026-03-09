@@ -69,21 +69,13 @@ mod tests {
     use num_traits::FromPrimitive;
     use std::str::FromStr;
 
-    fn init_log() {
-        tracing_subscriber::fmt::Subscriber::builder()
-            .with_writer(std::io::stderr)
-            .with_thread_ids(true)
-            .with_thread_names(true)
-            .init();
-    }
     #[ignore]
     #[actix_web::test]
     async fn test_upsert_market_infos() {
         dotenv::dotenv().ok();
-        init_log();
         let base_url = "https://api.orderly.org";
         let data = list_market_infos(base_url).await.unwrap();
-        tracing::info!("market infos: {:?}", data);
+        println!("market infos: {:?}", data);
         let nsecs = data.timestamp.unwrap_or_default() % 1000 * 1_000_000;
         let update_time = NaiveDateTime::from_timestamp_opt(
             data.timestamp.unwrap_or_default() / 1000,

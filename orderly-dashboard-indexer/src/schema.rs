@@ -15,6 +15,10 @@ diesel::table! {
         adl_price -> Numeric,
         sum_unitary_fundings -> Numeric,
         version -> Nullable<Int2>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_to_cross -> Nullable<Numeric>,
+        is_insurance_account -> Nullable<Bool>,
     }
 }
 
@@ -78,6 +82,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -102,6 +109,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -126,6 +136,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -150,6 +163,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -174,6 +190,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -198,6 +217,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -222,6 +244,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -246,6 +271,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -270,6 +298,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -294,6 +325,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -318,6 +352,36 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
+    }
+}
+
+diesel::table! {
+    executed_trades_y2026q03 (block_number, transaction_index, log_index, block_time) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        log_index -> Int4,
+        typ -> Int2,
+        account_id -> Text,
+        symbol_hash -> Text,
+        fee_asset_hash -> Text,
+        trade_qty -> Numeric,
+        notional -> Numeric,
+        executed_price -> Numeric,
+        fee -> Numeric,
+        sum_unitary_fundings -> Numeric,
+        trade_id -> Numeric,
+        match_id -> Numeric,
+        timestamp -> Numeric,
+        side -> Bool,
+        block_time -> Timestamp,
+        broker_hash -> Nullable<Text>,
+        transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -348,6 +412,7 @@ diesel::table! {
         liquidated_asset_hash -> Text,
         insurance_transfer_amount -> Numeric,
         version -> Nullable<Int2>,
+        is_insurance_account -> Nullable<Bool>,
     }
 }
 
@@ -370,6 +435,24 @@ diesel::table! {
         liquidation_fee -> Numeric,
         block_time -> Nullable<Numeric>,
         version -> Nullable<Int2>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_to_cross -> Nullable<Numeric>,
+    }
+}
+
+diesel::table! {
+    margin_transfer (block_number, transaction_index, log_index) {
+        block_number -> Int8,
+        transaction_index -> Int4,
+        transaction_id -> Text,
+        log_index -> Int4,
+        block_time -> Numeric,
+        account_id -> Text,
+        transfer_amount -> Numeric,
+        transfer_asset_hash -> Text,
+        iso_symbol_hash -> Text,
+        timestamp -> Int8,
     }
 }
 
@@ -394,6 +477,9 @@ diesel::table! {
         block_time -> Timestamp,
         broker_hash -> Nullable<Text>,
         transaction_id -> Nullable<Text>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
+        margin_from_cross -> Nullable<Numeric>,
     }
 }
 
@@ -454,6 +540,9 @@ diesel::table! {
         mark_price -> Numeric,
         settled_amount -> Numeric,
         block_time -> Nullable<Numeric>,
+        version -> Nullable<Int2>,
+        margin_mode -> Nullable<Int2>,
+        iso_margin_asset_hash -> Nullable<Text>,
     }
 }
 
@@ -469,6 +558,7 @@ diesel::table! {
         settled_asset_hash -> Text,
         insurance_account_id -> Text,
         insurance_transfer_amount -> Numeric,
+        version -> Nullable<Int2>,
     }
 }
 
@@ -568,9 +658,11 @@ diesel::allow_tables_to_appear_in_same_query!(
     executed_trades_y2025q04,
     executed_trades_y2026q01,
     executed_trades_y2026q02,
+    executed_trades_y2026q03,
     fee_distribution,
     liquidation_result,
     liquidation_transfer,
+    margin_transfer,
     partitioned_executed_trades,
     rebalance_events,
     serial_batches,

@@ -109,6 +109,28 @@ diesel::table! {
 }
 
 diesel::table! {
+    iso_user_perp_summary (account_id, symbol) {
+        account_id -> Text,
+        symbol -> Text,
+        holding -> Numeric,
+        opening_cost -> Numeric,
+        cost_position -> Numeric,
+        total_trading_volume -> Numeric,
+        total_trading_count -> Int8,
+        total_trading_fee -> Numeric,
+        total_realized_pnl -> Numeric,
+        total_un_realized_pnl -> Numeric,
+        total_liquidation_amount -> Numeric,
+        total_liquidation_count -> Int8,
+        margin_token -> Text,
+        margin_qty -> Numeric,
+        pulled_block_height -> Int8,
+        pulled_block_time -> Timestamp,
+        sum_unitary_fundings -> Numeric,
+    }
+}
+
+diesel::table! {
     market_info (symbol_hash) {
         symbol -> Text,
         symbol_hash -> Text,
@@ -134,6 +156,7 @@ diesel::table! {
         pulled_block_time -> Timestamp,
         buy_amount -> Numeric,
         sell_amount -> Numeric,
+        iso_open_interest -> Nullable<Numeric>,
     }
 }
 
@@ -228,6 +251,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     hourly_orderly_token,
     hourly_user_perp,
     hourly_user_token,
+    iso_user_perp_summary,
     market_info,
     orderly_perp_summary,
     orderly_token_summary,

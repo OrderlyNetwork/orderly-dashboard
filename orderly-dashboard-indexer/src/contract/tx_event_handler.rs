@@ -2,8 +2,9 @@ use crate::analyzer_db::user_info::{create_user_info, get_user_info, UserInfo};
 use crate::bindings::operator_manager;
 use crate::bindings::operator_manager::{operator_managerCalls, operator_managerEvents};
 use crate::bindings::user_ledger::{
-    user_ledgerEvents, AccountDepositSolFilter, AccountWithdrawSolApproveFilter,
-    LiquidationTransfer, SettlementExecution, SwapResultUploadedFilter,
+    user_ledgerEvents, AccountDepositSolFilter, AccountWithdrawSolApprove1Filter,
+    AccountWithdrawSolApprove2Filter, LiquidationTransfer, SettlementExecution,
+    SwapResultUploadedFilter,
 };
 use crate::bindings::vault_manager::{
     self, vault_managerEvents, RebalanceBurnFilter, RebalanceBurnResultFilter, RebalanceMintFilter,
@@ -14,10 +15,13 @@ use crate::config::{get_common_cfg, COMMON_CONFIGS};
 use crate::contract::{ADDR_MAP, HANDLE_LOG, LEDGER_SC, OPERATOR_MANAGER_SC, VAULT_MANAGER_SC};
 use crate::db::balance_transfer::{create_balance_transfer_events, DbBalanceTransferEvent};
 use crate::db::fee_distribution::{create_fee_distributions, DbFeeDistribution};
+use crate::db::margin_transfer::{create_margin_transfers, DbMarginTransfer};
 use crate::db::rebalance_events::{
     create_rebalance, update_rebalance_burn_status, update_rebalance_mint,
     update_rebalance_mint_status, DBRebalanceEvent,
 };
+use crate::db::settlement_execution::SettlementExecutionVersion;
+use crate::db::settlement_result::SettlementResultVersion;
 use crate::db::swap_result_uploaded::{
     create_swap_result_uploaded_events, DbSwapResultUploadedEvent,
 };
@@ -50,7 +54,8 @@ use crate::db::{
     },
 };
 use crate::utils::{
-    cal_broker_hash, convert_amount, format_hash, format_hash_160, to_hex_format, u256_to_i128,
+    bytes32_to_address, cal_broker_hash, convert_amount, format_hash, format_hash_160,
+    to_hex_format, u256_to_i128,
 };
 use anyhow::Result;
 use base58::ToBase58;
@@ -353,6 +358,9 @@ pub(crate) async fn handle_tx_params(
                             mark_price: convert_amount(settlement_exec.mark_price as i128)?,
                             settled_amount: convert_amount(settlement_exec.settled_amount)?,
                             block_time: Some((block_t.unwrap_or_default() as i64).into()),
+                            version: None,
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
                         });
                     }
                 } else if event.biz_type == 4 {
@@ -508,6 +516,9 @@ pub(crate) async fn handle_tx_params(
                             liquidation_fee: convert_amount(liquidation_transfer.liquidation_fee)?,
                             block_time: Some((block_t.unwrap_or_default() as i64).into()),
                             version: Some(LiquidationTransferVersion::V1.value()),
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
+                            margin_to_cross: None,
                         });
                     }
                 }
@@ -697,6 +708,44 @@ pub(crate) async fn handle_log(
                         }])
                         .await?;
                     }
+                    operator_managerEvents::FuturesTradeUploadV3Filter(futures_upload) => {
+                        let fee_st = receipt
+                            .map(|r| r.cal_gas_used_and_wei_used())
+                            .unwrap_or_default();
+                        create_serial_batches(vec![DbSerialBatches {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default()).into(),
+                            batch_id: futures_upload.batch_id as i64,
+                            event_type: SerialBatchType::PerpTrade.value(),
+                            effective_gas_price: if let Some(receipt) = receipt {
+                                receipt.effective_gas_price.map(|amount| {
+                                    convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                                })
+                            } else {
+                                None
+                            },
+                            gas_used: if let Some(receipt) = receipt {
+                                receipt.gas_used.map(|amount| {
+                                    convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                                })
+                            } else {
+                                None
+                            },
+                            l1_fee: Some(convert_amount(fee_st.l1_fee as i128).unwrap_or_default()),
+                            l1_fee_scalar: Some(fee_st.l1_fee_scalar),
+                            l1_gas_price: Some(
+                                convert_amount(fee_st.l1_gas_price as i128).unwrap_or_default(),
+                            ),
+                            l1_gas_used: Some(
+                                convert_amount(fee_st.l1_gas_used as i128).unwrap_or_default(),
+                            ),
+                        }])
+                        .await?;
+                    }
                     _ => {}
                 }
             }
@@ -847,7 +896,7 @@ pub(crate) async fn handle_log(
                         }])
                         .await?;
                     }
-                    user_ledgerEvents::AccountWithdrawSolApproveFilter(withdraw_event) => {
+                    user_ledgerEvents::AccountWithdrawSolApprove1Filter(withdraw_event) => {
                         create_balance_transaction_executions(vec![DbTransactionEvent {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -858,6 +907,43 @@ pub(crate) async fn handle_log(
                             account_id: to_hex_format(&withdraw_event.account_id),
                             sender: Some(withdraw_event.sender.to_base58()),
                             receiver: withdraw_event.receiver.to_base58(),
+                            token_hash: to_hex_format(&withdraw_event.token_hash),
+                            broker_hash: to_hex_format(&withdraw_event.broker_hash),
+                            chain_id: convert_amount(withdraw_event.chain_id.as_u128() as i128)?,
+                            side: DbTransactionSide::SolWithdrawApprove.value(),
+                            amount: convert_amount(withdraw_event.token_amount as i128)?,
+                            fee: convert_amount(withdraw_event.fee as i128)?,
+                            status: DbTransactionStatus::Succeed.value(),
+                            withdraw_nonce: Some(withdraw_event.withdraw_nonce as i64),
+                            fail_reason: None,
+                            effective_gas_price: None,
+                            gas_used: None,
+                            l1_fee: None,
+                            l1_fee_scalar: None,
+                            l1_gas_price: None,
+                            l1_gas_used: None,
+                        }])
+                        .await?;
+                    }
+                    user_ledgerEvents::AccountWithdrawSolApprove2Filter(withdraw_event) => {
+                        let sender = bytes32_to_address(
+                            withdraw_event.sender_chain_type,
+                            withdraw_event.sender,
+                        );
+                        let receiver = bytes32_to_address(
+                            withdraw_event.sender_chain_type,
+                            withdraw_event.receiver,
+                        );
+                        create_balance_transaction_executions(vec![DbTransactionEvent {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            account_id: to_hex_format(&withdraw_event.account_id),
+                            sender: Some(sender),
+                            receiver,
                             token_hash: to_hex_format(&withdraw_event.token_hash),
                             broker_hash: to_hex_format(&withdraw_event.broker_hash),
                             chain_id: convert_amount(withdraw_event.chain_id.as_u128() as i128)?,
@@ -958,6 +1044,10 @@ pub(crate) async fn handle_log(
                                 adl_result_event.sum_unitary_fundings,
                             )?,
                             version: Some(AdlVersion::V1.value()),
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
+                            margin_to_cross: None,
+                            is_insurance_account: None,
                         }])
                         .await?;
                     }
@@ -984,6 +1074,44 @@ pub(crate) async fn handle_log(
                                 adl_result_event.sum_unitary_fundings,
                             )?,
                             version: Some(AdlVersion::V2.value()),
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
+                            margin_to_cross: None,
+                            is_insurance_account: None,
+                        }])
+                        .await?;
+                    }
+                    user_ledgerEvents::AdlResultV3Filter(adl_result_event) => {
+                        create_adl_results(vec![DbAdlResult {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            account_id: to_hex_format(&adl_result_event.account_id),
+                            // useless field in AdlResultV2
+                            insurance_account_id: "".to_string(),
+                            symbol_hash: to_hex_format(&adl_result_event.symbol_hash),
+                            position_qty_transfer: convert_amount(
+                                adl_result_event.position_qty_transfer,
+                            )?,
+                            cost_position_transfer: convert_amount(
+                                adl_result_event.cost_position_transfer,
+                            )?,
+                            adl_price: convert_amount(adl_result_event.adl_price as i128)?,
+                            sum_unitary_fundings: convert_amount(
+                                adl_result_event.sum_unitary_fundings,
+                            )?,
+                            version: Some(AdlVersion::V3.value()),
+                            margin_mode: Some(adl_result_event.margin_mode as i16),
+                            iso_margin_asset_hash: Some(to_hex_format(
+                                &adl_result_event.iso_margin_asset_hash,
+                            )),
+                            margin_to_cross: Some(
+                                convert_amount(adl_result_event.iso_margin).unwrap_or_default(),
+                            ),
+                            is_insurance_account: Some(adl_result_event.is_insurance_account),
                         }])
                         .await?;
                     }
@@ -1010,6 +1138,7 @@ pub(crate) async fn handle_log(
                                 liquidation_result_event.insurance_transfer_amount as i128,
                             )?,
                             version: Some(LiquidationResultVersion::V1.value()),
+                            is_insurance_account: None,
                         }])
                         .await?;
                         if !liquidation_trasfers.is_empty() {
@@ -1043,6 +1172,43 @@ pub(crate) async fn handle_log(
                                 liquidation_result_event.insurance_transfer_amount as i128,
                             )?,
                             version: Some(LiquidationResultVersion::V2.value()),
+                            is_insurance_account: None,
+                        }])
+                        .await?;
+                        if !liquidation_trasfers.is_empty() {
+                            liquidation_trasfers
+                                .iter_mut()
+                                .for_each(|v| v.liquidation_result_log_idx = log_index);
+                            create_liquidation_transfers(liquidation_trasfers.clone()).await?;
+                            liquidation_trasfers.clear();
+                        }
+                    }
+                    user_ledgerEvents::LiquidationResultV3Filter(liquidation_result_event) => {
+                        let log_index = log.log_index.unwrap_or_default().as_u64() as i32;
+                        liquidation_result_log_index_queue.push_back(log_index);
+                        create_liquidation_results(vec![DbLiquidationResult {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            // reuse for account_id
+                            liquidated_account_id: to_hex_format(
+                                &liquidation_result_event.account_id,
+                            ),
+                            // useless in LiquidationResultV2
+                            insurance_account_id: "".to_string(),
+                            liquidated_asset_hash: to_hex_format(
+                                &liquidation_result_event.liquidated_asset_hash,
+                            ),
+                            insurance_transfer_amount: convert_amount(
+                                liquidation_result_event.insurance_transfer_amount as i128,
+                            )?,
+                            version: Some(LiquidationResultVersion::V3.value()),
+                            is_insurance_account: Some(
+                                liquidation_result_event.is_insurance_account,
+                            ),
                         }])
                         .await?;
                         if !liquidation_trasfers.is_empty() {
@@ -1054,13 +1220,14 @@ pub(crate) async fn handle_log(
                         }
                     }
                     user_ledgerEvents::ProcessValidatedFutures1Filter(trade) => {
-                        let mut db_trade = DbPartitionedExecutedTrades {
+                        let account_id = to_hex_format(&trade.account_id);
+                        let db_trade = DbPartitionedExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
                             log_index: log.log_index.unwrap_or_default().as_u64() as i32,
                             typ: TradeType::PerpTrade.value(),
-                            account_id: to_hex_format(&trade.account_id),
+                            account_id: account_id.clone(),
                             symbol_hash: to_hex_format(&trade.symbol_hash),
                             fee_asset_hash: to_hex_format(&trade.fee_asset_hash),
                             trade_qty: convert_amount(trade.trade_qty).unwrap_or_default(),
@@ -1079,54 +1246,28 @@ pub(crate) async fn handle_log(
                                 0,
                             )
                             .unwrap(),
-                            broker_hash: None,
+                            broker_hash: Some(
+                                get_broker_hash(cefi_cli.clone(), &account_id).await?,
+                            ),
                             transaction_id: Some(format_hash(
                                 log.transaction_hash.unwrap_or_default(),
                             )),
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
+                            margin_from_cross: None,
                         };
-                        if let Some(broker_hash) =
-                            get_account_broker_hash_cache(&db_trade.account_id)
-                        {
-                            db_trade.broker_hash = Some(broker_hash);
-                        } else {
-                            if let Some(user_info) =
-                                get_user_info(db_trade.account_id.clone()).await?
-                            {
-                                set_account_broker_hash_cache(
-                                    &user_info.account_id,
-                                    user_info.broker_hash.clone(),
-                                );
-                                db_trade.broker_hash = Some(user_info.broker_hash);
-                            } else {
-                                let user_info = cefi_cli
-                                    .cefi_get_account_info_with_retry(&db_trade.account_id)
-                                    .await;
-                                let broker_hash = cal_broker_hash(&user_info.broker_id);
-                                set_account_broker_hash_cache(
-                                    &db_trade.account_id,
-                                    broker_hash.clone(),
-                                );
-                                db_trade.broker_hash = Some(broker_hash.clone());
-                                create_user_info(&UserInfo {
-                                    account_id: db_trade.account_id.clone(),
-                                    broker_id: user_info.broker_id.clone(),
-                                    broker_hash: cal_broker_hash(&user_info.broker_id),
-                                    address: user_info.address,
-                                })
-                                .await?;
-                            }
-                        }
                         executed_partitioned_trades_cache.push(db_trade);
                     }
                     user_ledgerEvents::ProcessValidatedFutures2Filter(trade) => {
                         // todo: update to write in batches
-                        let mut db_trade = DbPartitionedExecutedTrades {
+                        let account_id = to_hex_format(&trade.account_id);
+                        let db_trade = DbPartitionedExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
                                 as i32,
                             log_index: log.log_index.unwrap_or_default().as_u64() as i32,
                             typ: TradeType::PerpTrade.value(),
-                            account_id: to_hex_format(&trade.account_id),
+                            account_id: account_id.clone(),
                             symbol_hash: to_hex_format(&trade.symbol_hash),
                             fee_asset_hash: to_hex_format(&trade.fee_asset_hash),
                             trade_qty: convert_amount(trade.trade_qty).unwrap_or_default(),
@@ -1145,45 +1286,63 @@ pub(crate) async fn handle_log(
                                 0,
                             )
                             .unwrap_or_default(),
-                            broker_hash: None,
+                            broker_hash: Some(
+                                get_broker_hash(cefi_cli.clone(), &account_id).await?,
+                            ),
                             transaction_id: Some(format_hash(
                                 log.transaction_hash.unwrap_or_default(),
                             )),
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
+                            margin_from_cross: None,
                         };
-                        if let Some(broker_hash) =
-                            get_account_broker_hash_cache(&db_trade.account_id)
-                        {
-                            db_trade.broker_hash = Some(broker_hash);
-                        } else {
-                            if let Some(user_info) =
-                                get_user_info(db_trade.account_id.clone()).await?
-                            {
-                                set_account_broker_hash_cache(
-                                    &user_info.account_id,
-                                    user_info.broker_hash.clone(),
-                                );
-                                db_trade.broker_hash = Some(user_info.broker_hash);
-                            } else {
-                                let user_info = cefi_cli
-                                    .cefi_get_account_info_with_retry(&db_trade.account_id)
-                                    .await;
-                                let broker_hash = cal_broker_hash(&user_info.broker_id);
-                                set_account_broker_hash_cache(
-                                    &db_trade.account_id,
-                                    broker_hash.clone(),
-                                );
-                                db_trade.broker_hash = Some(broker_hash.clone());
-                                create_user_info(&UserInfo {
-                                    account_id: db_trade.account_id.clone(),
-                                    broker_id: user_info.broker_id.clone(),
-                                    broker_hash: cal_broker_hash(&user_info.broker_id),
-                                    address: user_info.address,
-                                })
-                                .await?;
-                            }
-                        }
                         executed_partitioned_trades_cache.push(db_trade.into());
                         // create_executed_trades(vec![db_trade]).await?;
+                    }
+                    user_ledgerEvents::ProcessValidatedFuturesV3Filter(trade) => {
+                        let account_id = to_hex_format(&trade.account_id);
+                        let db_trade = DbPartitionedExecutedTrades {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            typ: TradeType::PerpTrade.value(),
+                            account_id: account_id.clone(),
+                            symbol_hash: to_hex_format(&trade.symbol_hash),
+                            fee_asset_hash: to_hex_format(&trade.fee_asset_hash),
+                            trade_qty: convert_amount(trade.trade_qty).unwrap_or_default(),
+                            notional: convert_amount(trade.notional).unwrap_or_default(),
+                            executed_price: convert_amount(trade.executed_price as i128)
+                                .unwrap_or_default(),
+                            fee: convert_amount(trade.fee as i128).unwrap_or_default(),
+                            sum_unitary_fundings: convert_amount(trade.sum_unitary_fundings)
+                                .unwrap_or_default(),
+                            trade_id: BigDecimal::from_u64(trade.trade_id).unwrap_or_default(),
+                            match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
+                            timestamp: BigDecimal::from_u64(block_t.unwrap_or_default())
+                                .unwrap_or_default(),
+                            side: trade.side,
+                            block_time: NaiveDateTime::from_timestamp_opt(
+                                block_t.unwrap_or_default() as i64,
+                                0,
+                            )
+                            .unwrap_or_default(),
+                            broker_hash: Some(
+                                get_broker_hash(cefi_cli.clone(), &account_id).await?,
+                            ),
+                            transaction_id: Some(format_hash(
+                                log.transaction_hash.unwrap_or_default(),
+                            )),
+                            margin_mode: Some(trade.margin_mode as i16),
+                            iso_margin_asset_hash: Some(to_hex_format(
+                                &trade.iso_margin_asset_hash,
+                            )),
+                            margin_from_cross: Some(
+                                convert_amount(trade.iso_margin).unwrap_or_default(),
+                            ),
+                        };
+                        // executed_trades_cache.push(db_trade.clone());
+                        executed_partitioned_trades_cache.push(db_trade);
                     }
                     user_ledgerEvents::SettlementResultFilter(settlement_res_event) => {
                         // https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_getlogs
@@ -1206,8 +1365,44 @@ pub(crate) async fn handle_log(
                                 &settlement_res_event.insurance_account_id,
                             ),
                             insurance_transfer_amount: convert_amount(
-                                settlement_res_event.settled_amount,
+                                settlement_res_event.insurance_transfer_amount as i128,
                             )?,
+                            version: None,
+                        }])
+                        .await?;
+                        // attention please: update settlement_execution's settlement_result_log_idx
+                        if !settlement_exectutions.is_empty() {
+                            settlement_exectutions
+                                .iter_mut()
+                                .for_each(|v| v.settlement_result_log_idx = log_index);
+                            create_settlement_executions(settlement_exectutions.clone()).await?;
+                            settlement_exectutions.clear();
+                        }
+                    }
+                    user_ledgerEvents::SettlementResultV3Filter(settlement_res_event) => {
+                        // https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_getlogs
+                        // logIndex: QUANTITY - integer of the log index position in the block.
+                        let log_index = log.log_index.unwrap_or_default().as_u64() as i32;
+                        settlement_result_log_index_queue.push_back(log_index);
+                        create_settlement_results(vec![DbSettlementResult {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            account_id: to_hex_format(&settlement_res_event.account_id),
+                            settled_amount: convert_amount(settlement_res_event.settled_amount)?,
+                            settled_asset_hash: to_hex_format(
+                                &settlement_res_event.settled_asset_hash,
+                            ),
+                            insurance_account_id: to_hex_format(
+                                &settlement_res_event.insurance_account_id,
+                            ),
+                            insurance_transfer_amount: convert_amount(
+                                settlement_res_event.insurance_transfer_amount as i128,
+                            )?,
+                            version: Some(SettlementResultVersion::V3.value()),
                         }])
                         .await?;
                         // attention please: update settlement_execution's settlement_result_log_idx
@@ -1237,6 +1432,34 @@ pub(crate) async fn handle_log(
                             mark_price: convert_amount(settlement_exec.mark_price as i128)?,
                             settled_amount: convert_amount(settlement_exec.settled_amount)?,
                             block_time: Some((block_t.unwrap_or_default() as i64).into()),
+                            version: None,
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
+                        });
+                    }
+                    user_ledgerEvents::SettlementExecutionV3Filter(settlement_exec) => {
+                        settlement_exectutions.push(DbSettlementExecution {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            // here is an error
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            // will be update in handle settlement result flow
+                            settlement_result_log_idx: -1,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            symbol_hash: to_hex_format(&settlement_exec.symbol_hash),
+                            sum_unitary_fundings: convert_amount(
+                                settlement_exec.sum_unitary_fundings,
+                            )
+                            .unwrap_or_default(),
+                            mark_price: convert_amount(settlement_exec.mark_price as i128)?,
+                            settled_amount: convert_amount(settlement_exec.settled_amount)?,
+                            block_time: Some((block_t.unwrap_or_default() as i64).into()),
+                            version: Some(SettlementExecutionVersion::V3.value()),
+                            margin_mode: Some(settlement_exec.margin_mode as i16),
+                            iso_margin_asset_hash: Some(to_hex_format(
+                                &settlement_exec.iso_margin_asset_hash,
+                            )),
                         });
                     }
                     user_ledgerEvents::LiquidationTransferFilter(liquidation_transfer) => {
@@ -1271,6 +1494,9 @@ pub(crate) async fn handle_log(
                             liquidation_fee: convert_amount(liquidation_transfer.liquidation_fee)?,
                             block_time: Some((block_t.unwrap_or_default() as i64).into()),
                             version: Some(LiquidationTransferVersion::V1.value()),
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
+                            margin_to_cross: None,
                         });
                     }
                     user_ledgerEvents::LiquidationTransferV2Filter(liquidation_transfer) => {
@@ -1302,6 +1528,47 @@ pub(crate) async fn handle_log(
                             liquidation_fee: convert_amount(liquidation_transfer.fee)?,
                             block_time: Some((block_t.unwrap_or_default() as i64).into()),
                             version: Some(LiquidationTransferVersion::V2.value()),
+                            margin_mode: None,
+                            iso_margin_asset_hash: None,
+                            margin_to_cross: None,
+                        });
+                    }
+                    user_ledgerEvents::LiquidationTransferV3Filter(liquidation_transfer) => {
+                        liquidation_trasfers.push(DbLiquidationTransfer {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            // will be update in handle settlement result flow
+                            liquidation_result_log_idx: -1,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            // removed in LiquidationTransferV2
+                            liquidation_transfer_id: BigDecimal::from(0),
+                            // reused as accountId in LiquidationTransferV2
+                            liquidator_account_id: to_hex_format(&liquidation_transfer.account_id),
+                            symbol_hash: to_hex_format(&liquidation_transfer.symbol_hash),
+                            position_qty_transfer: convert_amount(
+                                liquidation_transfer.position_qty_transfer,
+                            )?,
+                            cost_position_transfer: convert_amount(
+                                liquidation_transfer.cost_position_transfer,
+                            )?,
+                            liquidator_fee: convert_amount(0)?,
+                            insurance_fee: convert_amount(0)?,
+                            mark_price: convert_amount(liquidation_transfer.mark_price as i128)?,
+                            sum_unitary_fundings: convert_amount(
+                                liquidation_transfer.sum_unitary_fundings,
+                            )?,
+                            liquidation_fee: convert_amount(liquidation_transfer.fee)?,
+                            block_time: Some((block_t.unwrap_or_default() as i64).into()),
+                            version: Some(LiquidationTransferVersion::V3.value()),
+                            margin_mode: Some(liquidation_transfer.margin_mode as i16),
+                            iso_margin_asset_hash: Some(to_hex_format(
+                                &liquidation_transfer.iso_margin_asset_hash,
+                            )),
+                            margin_to_cross: Some(convert_amount(
+                                liquidation_transfer.margin_to_cross,
+                            )?),
                         });
                     }
                     user_ledgerEvents::FeeDistributionFilter(event) => {
@@ -1353,6 +1620,22 @@ pub(crate) async fn handle_log(
                             convert_amount(event.chain_id.as_u128() as i128)?,
                             event.swap_status as i16,
                         )])
+                        .await?;
+                    }
+                    user_ledgerEvents::MarginTransferV3Filter(event) => {
+                        create_margin_transfers(vec![DbMarginTransfer {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            block_time: (block_t.unwrap_or_default() as i64).into(),
+                            account_id: to_hex_format(&event.account_id),
+                            transfer_amount: convert_amount(event.transfer_amount as i128)?,
+                            transfer_asset_hash: to_hex_format(&event.transfer_asset_hash),
+                            iso_symbol_hash: to_hex_format(&event.iso_symbol_hash),
+                            timestamp: (block_t.unwrap_or_default() as i64).into(),
+                        }])
                         .await?;
                     }
                     _ => {}
@@ -1409,6 +1692,29 @@ pub(crate) async fn handle_log(
         return Ok(());
     }
     Ok(())
+}
+
+async fn get_broker_hash(cefi_cli: Arc<CefiClient>, account_id: &str) -> Result<String> {
+    if let Some(broker_hash) = get_account_broker_hash_cache(account_id) {
+        return Ok(broker_hash);
+    } else {
+        if let Some(user_info) = get_user_info(account_id.to_string()).await? {
+            set_account_broker_hash_cache(&user_info.account_id, user_info.broker_hash.clone());
+            return Ok(user_info.broker_hash);
+        } else {
+            let user_info = cefi_cli.cefi_get_account_info_with_retry(&account_id).await;
+            let broker_hash = cal_broker_hash(&user_info.broker_id);
+            set_account_broker_hash_cache(&account_id, broker_hash.clone());
+            create_user_info(&UserInfo {
+                account_id: account_id.to_string(),
+                broker_id: user_info.broker_id.clone(),
+                broker_hash: cal_broker_hash(&user_info.broker_id),
+                address: user_info.address,
+            })
+            .await?;
+            return Ok(broker_hash);
+        }
+    }
 }
 
 pub async fn simple_recover_deposit_sol_logs(
@@ -1609,7 +1915,8 @@ pub async fn get_contract_sol_deposit_withdraw_approve_and_rebalance_logs(
     let subnet_config = &get_common_cfg().l2_config;
     let topics = vec![
         AccountDepositSolFilter::signature(),
-        AccountWithdrawSolApproveFilter::signature(),
+        AccountWithdrawSolApprove1Filter::signature(),
+        AccountWithdrawSolApprove2Filter::signature(),
         RebalanceBurnFilter::signature(),
         RebalanceBurnResultFilter::signature(),
         RebalanceMintFilter::signature(),

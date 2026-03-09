@@ -8,6 +8,17 @@ use diesel::{Insertable, Queryable};
 use diesel_async::RunQueryDsl;
 use std::time::Instant;
 
+#[derive(Debug, Clone, Copy)]
+pub enum SettlementResultVersion {
+    V3 = 3,
+}
+
+impl SettlementResultVersion {
+    pub fn value(self) -> i16 {
+        self as i16
+    }
+}
+
 #[derive(Insertable, Queryable, Debug)]
 #[diesel(table_name = settlement_result)]
 pub struct DbSettlementResult {
@@ -21,6 +32,7 @@ pub struct DbSettlementResult {
     pub settled_asset_hash: String,
     pub insurance_account_id: String,
     pub insurance_transfer_amount: BigDecimal,
+    pub version: Option<i16>,
 }
 
 impl DbSettlementResult {

@@ -4,6 +4,7 @@ pub mod executed_trades;
 pub mod fee_distribution;
 pub mod liquidation_result;
 pub mod liquidation_transfer;
+pub mod margin_transfer;
 pub mod partitioned_executed_trades;
 pub mod rebalance_events;
 pub mod serial_batches;
