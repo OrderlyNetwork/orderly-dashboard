@@ -71,20 +71,25 @@ use ethers::types::{BlockNumber, Filter, H160, U64};
 use lazy_static::lazy_static;
 use parking_lot::Mutex;
 
+#[derive(Debug, Clone)]
+pub struct CacheAccountInfo {
+    pub broker_hash: String,
+    pub address: String,
+}
+
 lazy_static! {
-    pub static ref ACCOUNT_BROKER_HASH_MAP: Mutex<SizedCache<String, String>> =
+    pub static ref ACCOUNT_INFO_MAP: Mutex<SizedCache<String, CacheAccountInfo>> =
         Mutex::new(SizedCache::with_size(10_000));
 }
 
-fn get_account_broker_hash_cache(account: &str) -> Option<String> {
-    let mut map = ACCOUNT_BROKER_HASH_MAP.lock();
+fn get_account_info_cache(account: &str) -> Option<CacheAccountInfo> {
+    let mut map = ACCOUNT_INFO_MAP.lock();
     map.cache_get(account).cloned()
 }
-
-fn set_account_broker_hash_cache(account: &str, broker_hash: String) {
-    ACCOUNT_BROKER_HASH_MAP
+fn set_account_info_cache(account: &str, cache_account_info: CacheAccountInfo) {
+    ACCOUNT_INFO_MAP
         .lock()
-        .cache_set(account.to_string(), broker_hash);
+        .cache_set(account.to_string(), cache_account_info);
 }
 
 pub(crate) async fn consume_logs_from_tx_receipts(
@@ -252,13 +257,17 @@ pub(crate) async fn handle_tx_params(
             let mut partitioned_trades = Vec::with_capacity(db_trades.len());
             for trade in db_trades {
                 let mut trade: DbPartitionedExecutedTrades = trade.clone().into();
-                if let Some(broker_hash) = get_account_broker_hash_cache(&trade.account_id) {
-                    trade.broker_hash = Some(broker_hash);
+                if let Some(account_info) = get_account_info_cache(&trade.account_id) {
+                    trade.broker_hash = Some(account_info.broker_hash);
+                    trade.address = Some(account_info.address);
                 } else {
                     if let Some(user_info) = get_user_info(trade.account_id.clone()).await? {
-                        set_account_broker_hash_cache(
+                        set_account_info_cache(
                             &user_info.account_id,
-                            user_info.broker_hash.clone(),
+                            CacheAccountInfo {
+                                broker_hash: user_info.broker_hash.clone(),
+                                address: user_info.address,
+                            },
                         );
                         trade.broker_hash = Some(user_info.broker_hash);
                     } else {
@@ -266,7 +275,13 @@ pub(crate) async fn handle_tx_params(
                             .cefi_get_account_info_with_retry(&trade.account_id)
                             .await;
                         let broker_hash = cal_broker_hash(&user_info.broker_id);
-                        set_account_broker_hash_cache(&trade.account_id, broker_hash.clone());
+                        set_account_info_cache(
+                            &trade.account_id,
+                            CacheAccountInfo {
+                                broker_hash: broker_hash.clone(),
+                                address: user_info.address.clone(),
+                            },
+                        );
                         trade.broker_hash = Some(broker_hash.clone());
                         create_user_info(&UserInfo {
                             account_id: trade.account_id.clone(),
@@ -1221,6 +1236,7 @@ pub(crate) async fn handle_log(
                     }
                     user_ledgerEvents::ProcessValidatedFutures1Filter(trade) => {
                         let account_id = to_hex_format(&trade.account_id);
+                        let account_info = get_account_info(cefi_cli.clone(), &account_id).await?;
                         let db_trade = DbPartitionedExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -1246,21 +1262,21 @@ pub(crate) async fn handle_log(
                                 0,
                             )
                             .unwrap(),
-                            broker_hash: Some(
-                                get_broker_hash(cefi_cli.clone(), &account_id).await?,
-                            ),
+                            broker_hash: Some(account_info.broker_hash),
                             transaction_id: Some(format_hash(
                                 log.transaction_hash.unwrap_or_default(),
                             )),
                             margin_mode: None,
                             iso_margin_asset_hash: None,
                             margin_from_cross: None,
+                            address: Some(account_info.address),
                         };
                         executed_partitioned_trades_cache.push(db_trade);
                     }
                     user_ledgerEvents::ProcessValidatedFutures2Filter(trade) => {
                         // todo: update to write in batches
                         let account_id = to_hex_format(&trade.account_id);
+                        let account_info = get_account_info(cefi_cli.clone(), &account_id).await?;
                         let db_trade = DbPartitionedExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -1286,21 +1302,21 @@ pub(crate) async fn handle_log(
                                 0,
                             )
                             .unwrap_or_default(),
-                            broker_hash: Some(
-                                get_broker_hash(cefi_cli.clone(), &account_id).await?,
-                            ),
+                            broker_hash: Some(account_info.broker_hash),
                             transaction_id: Some(format_hash(
                                 log.transaction_hash.unwrap_or_default(),
                             )),
                             margin_mode: None,
                             iso_margin_asset_hash: None,
                             margin_from_cross: None,
+                            address: Some(account_info.address),
                         };
                         executed_partitioned_trades_cache.push(db_trade.into());
                         // create_executed_trades(vec![db_trade]).await?;
                     }
                     user_ledgerEvents::ProcessValidatedFuturesV3Filter(trade) => {
                         let account_id = to_hex_format(&trade.account_id);
+                        let account_info = get_account_info(cefi_cli.clone(), &account_id).await?;
                         let db_trade = DbPartitionedExecutedTrades {
                             block_number: log.block_number.unwrap_or_default().as_u64() as i64,
                             transaction_index: log.transaction_index.unwrap_or_default().as_u64()
@@ -1327,9 +1343,7 @@ pub(crate) async fn handle_log(
                                 0,
                             )
                             .unwrap_or_default(),
-                            broker_hash: Some(
-                                get_broker_hash(cefi_cli.clone(), &account_id).await?,
-                            ),
+                            broker_hash: Some(account_info.broker_hash),
                             transaction_id: Some(format_hash(
                                 log.transaction_hash.unwrap_or_default(),
                             )),
@@ -1340,6 +1354,7 @@ pub(crate) async fn handle_log(
                             margin_from_cross: Some(
                                 convert_amount(trade.iso_margin).unwrap_or_default(),
                             ),
+                            address: Some(account_info.address),
                         };
                         // executed_trades_cache.push(db_trade.clone());
                         executed_partitioned_trades_cache.push(db_trade);
@@ -1694,17 +1709,25 @@ pub(crate) async fn handle_log(
     Ok(())
 }
 
-async fn get_broker_hash(cefi_cli: Arc<CefiClient>, account_id: &str) -> Result<String> {
-    if let Some(broker_hash) = get_account_broker_hash_cache(account_id) {
-        return Ok(broker_hash);
+async fn get_account_info(cefi_cli: Arc<CefiClient>, account_id: &str) -> Result<CacheAccountInfo> {
+    if let Some(cache_account_info) = get_account_info_cache(account_id) {
+        return Ok(cache_account_info);
     } else {
         if let Some(user_info) = get_user_info(account_id.to_string()).await? {
-            set_account_broker_hash_cache(&user_info.account_id, user_info.broker_hash.clone());
-            return Ok(user_info.broker_hash);
+            let cache_account_info = CacheAccountInfo {
+                broker_hash: user_info.broker_hash.clone(),
+                address: user_info.address,
+            };
+            set_account_info_cache(&user_info.account_id, cache_account_info.clone());
+            return Ok(cache_account_info);
         } else {
             let user_info = cefi_cli.cefi_get_account_info_with_retry(&account_id).await;
             let broker_hash = cal_broker_hash(&user_info.broker_id);
-            set_account_broker_hash_cache(&account_id, broker_hash.clone());
+            let cache_account_info = CacheAccountInfo {
+                broker_hash: broker_hash.clone(),
+                address: user_info.address.clone(),
+            };
+            set_account_info_cache(&account_id, cache_account_info.clone());
             create_user_info(&UserInfo {
                 account_id: account_id.to_string(),
                 broker_id: user_info.broker_id.clone(),
@@ -1712,7 +1735,7 @@ async fn get_broker_hash(cefi_cli: Arc<CefiClient>, account_id: &str) -> Result<
                 address: user_info.address,
             })
             .await?;
-            return Ok(broker_hash);
+            return Ok(cache_account_info);
         }
     }
 }
