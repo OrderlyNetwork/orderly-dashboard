@@ -41,6 +41,7 @@ pub struct DbPartitionedExecutedTrades {
     pub margin_mode: Option<i16>,
     pub iso_margin_asset_hash: Option<String>,
     pub margin_from_cross: Option<BigDecimal>,
+    pub address: Option<String>,
 }
 
 #[derive(Insertable, Queryable, Debug, Clone)]
@@ -84,6 +85,7 @@ impl From<DbExecutedTrades> for DbPartitionedExecutedTrades {
             margin_mode: None,
             iso_margin_asset_hash: None,
             margin_from_cross: None,
+            address: None,
         }
     }
 }
@@ -527,6 +529,7 @@ mod tests {
                             margin_mode: None,
                             iso_margin_asset_hash: None,
                             margin_from_cross: None,
+                            address: None,
                         });
                     }
                     create_partitioned_executed_trades(trades).await.unwrap();

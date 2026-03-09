@@ -85,6 +85,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -112,6 +113,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -139,6 +141,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -166,6 +169,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -193,6 +197,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -220,6 +225,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -247,6 +253,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -274,6 +281,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -301,6 +309,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -328,6 +337,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -355,6 +365,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -382,6 +393,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
@@ -480,6 +492,7 @@ diesel::table! {
         margin_mode -> Nullable<Int2>,
         iso_margin_asset_hash -> Nullable<Text>,
         margin_from_cross -> Nullable<Numeric>,
+        address -> Nullable<Text>,
     }
 }
 
