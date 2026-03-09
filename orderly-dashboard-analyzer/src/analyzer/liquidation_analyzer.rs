@@ -3,8 +3,9 @@ use std::ops::Neg;
 
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
+use orderly_dashboard_indexer::formats_external::trading_events::MarginMode;
 use orderly_dashboard_indexer::formats_external::trading_events::{
-    LiquidationTransfer, LiquidationTransferV2,
+    LiquidationTransfer, LiquidationTransferV2, LiquidationTransferV3,
 };
 
 use crate::analyzer::calc::pnl_calc::RealizedPnl;
@@ -37,6 +38,10 @@ pub struct Liquidation {
     pub block_num: i64,
     pub block_hour: NaiveDateTime,
     pub block_time: NaiveDateTime,
+
+    pub margin_mode: Option<MarginMode>,
+    pub margin_asset_hash: Option<String>,
+    pub margin_to_cross: Option<BigDecimal>,
 }
 
 impl Liquidation {
@@ -78,6 +83,9 @@ impl Liquidation {
             block_num,
             block_hour,
             block_time,
+            margin_mode: None,
+            margin_asset_hash: None,
+            margin_to_cross: None,
         }
     }
 
@@ -115,6 +123,51 @@ impl Liquidation {
             block_num,
             block_hour,
             block_time,
+            margin_mode: None,
+            margin_asset_hash: None,
+            margin_to_cross: None,
+        }
+    }
+
+    pub fn from_event_v3(
+        liquidated_account_id: String,
+        event: LiquidationTransferV3,
+        block_num: i64,
+        block_time: NaiveDateTime,
+        block_hour: NaiveDateTime,
+    ) -> Liquidation {
+        let liquidation_qty: BigDecimal = event.position_qty_transfer.parse().unwrap();
+        let cost_position_transfer: BigDecimal =
+            event.cost_position_transfer.clone().parse().unwrap();
+        let mark_price: BigDecimal = event.mark_price.parse().unwrap();
+        let sum_unitary_funding: BigDecimal = event.sum_unitary_fundings.parse().unwrap();
+        let liquidation_fee: BigDecimal = event.fee.parse().unwrap();
+
+        let fixed_qty = liquidation_qty.div(get_qty_prec());
+        let fixed_cost_p_transfer = cost_position_transfer.div(get_cost_position_prec());
+        let fixed_mark_price = mark_price.div(get_price_prec());
+        let fixed_sum_unitary_fundings = sum_unitary_funding.div(get_unitary_prec());
+        let fixed_liquidation_fee = liquidation_fee.div(get_cost_position_prec());
+
+        Liquidation {
+            liquidated_account_id,
+            liquidator_account_id: event.account_id,
+            symbol_hash: event.symbol_hash,
+            qty_transfer: fixed_qty,
+            cost_position_transfer: fixed_cost_p_transfer,
+            liquidation_fee: fixed_liquidation_fee,
+            liquidator_fee: 0.into(),
+            insurnace_fee: BigDecimal::from(0),
+            mark_price: fixed_mark_price,
+            sum_unitry_funding: fixed_sum_unitary_fundings,
+            block_num,
+            block_hour,
+            block_time,
+            margin_mode: event.margin_mode,
+            margin_asset_hash: event.margin_asset_hash,
+            margin_to_cross: event
+                .margin_to_cross
+                .map(|margin_to_cross| margin_to_cross.parse().unwrap_or_default()),
         }
     }
 }
@@ -155,6 +208,77 @@ pub async fn analyzer_liquidation_v2(
         );
 
         execute_for_liquidation_v2(&liquidation, context).await;
+        statistics_for_orderly(&liquidation, context).await;
+    }
+}
+
+pub async fn analyzer_liquidation_v3(
+    liquidated_account_id: String,
+    liquidated_asset_hash: String,
+    insurance_transfer_amount: String,
+    liquidation_transfers: Vec<LiquidationTransferV3>,
+    is_insurance_account: bool,
+    block_num: i64,
+    block_hour: NaiveDateTime,
+    block_time: NaiveDateTime,
+    context: &mut AnalyzeContext,
+) {
+    tracing::info!(target:LIQUIDATION_ANALYZER,"liquidation v3 receive liquidation account:{}",liquidated_account_id.clone());
+    let margin_mode = if liquidation_transfers.len() == 1
+        && liquidation_transfers[0].margin_mode == Some(MarginMode::Isolated)
+    {
+        MarginMode::Isolated
+    } else {
+        MarginMode::Cross
+    };
+    if margin_mode == MarginMode::Cross {
+        transfer_insurance_fund(
+            &insurance_transfer_amount,
+            context,
+            liquidated_account_id.clone(),
+            block_num,
+        )
+        .await;
+    } else {
+        let transfer_amount: BigDecimal = insurance_transfer_amount
+            .parse()
+            .unwrap_or(BigDecimal::from(0));
+        let symbol_hash = liquidation_transfers[0].symbol_hash.clone();
+        transfer_margin(
+            liquidated_account_id.clone(),
+            context,
+            transfer_amount,
+            symbol_hash,
+            liquidated_asset_hash.clone(),
+            block_num,
+        )
+        .await;
+    }
+
+    for liquidation_event in liquidation_transfers {
+        tracing::info!(target:LIQUIDATION_ANALYZER,"{:?}",liquidation_event.clone());
+        let liquidation_qty: BigDecimal = liquidation_event.position_qty_transfer.parse().unwrap();
+        if liquidation_qty.clone() == BigDecimal::from(0) {
+            tracing::info!(target:LIQUIDATION_ANALYZER,"liquidation_qty equals zero, skipped");
+            continue;
+        }
+
+        let liquidation = Liquidation::from_event_v3(
+            liquidated_account_id.clone(),
+            liquidation_event,
+            block_num,
+            block_time.clone(),
+            block_hour.clone(),
+        );
+
+        execute_for_liquidation_v3(
+            &liquidation,
+            is_insurance_account,
+            context,
+            margin_mode,
+            liquidated_asset_hash.clone(),
+        )
+        .await;
         statistics_for_orderly(&liquidation, context).await;
     }
 }
@@ -386,6 +510,141 @@ async fn execute_for_liquidation_v2(liquidation: &Liquidation, context: &mut Ana
     );
 }
 
+async fn execute_for_liquidation_v3(
+    liquidation: &Liquidation,
+    is_insurance_account: bool,
+    context: &mut AnalyzeContext,
+    margin_mode: MarginMode,
+    liquidated_asset_hash: String,
+) {
+    let key = UserPerpSummaryKey::new_key(
+        liquidation.liquidated_account_id.clone(),
+        liquidation.symbol_hash.clone(),
+    );
+
+    let pnl_diff = if margin_mode == MarginMode::Cross {
+        let user_perp = context.get_user_perp(&key.clone()).await;
+        user_perp.charge_funding_fee(
+            liquidation.sum_unitry_funding.clone(),
+            liquidation.block_num,
+        );
+        let user_perp_snap = user_perp.clone();
+        let quoted_diff = -liquidation.cost_position_transfer.clone()
+            - liquidation.liquidation_fee.clone()
+            - liquidation.insurnace_fee.clone();
+        #[cfg(test)]
+        println!(
+            "execute_for_liquidation_v2 key: {:?}, qty_transfer: {}, quoted_diff: {}, total_realized_pnl: {}, holding: {}, opening_cost: {}", 
+            key, liquidation.qty_transfer.to_string(), quoted_diff.to_string(), user_perp_snap.total_realized_pnl.to_string(), user_perp_snap.holding.to_string(),  user_perp_snap.opening_cost.to_string(),
+        );
+
+        let need_cal_avg = !is_insurance_account;
+        let (open_cost_diff, pnl_diff) = if need_cal_avg {
+            RealizedPnl::calc_realized_pnl(
+                liquidation.qty_transfer.clone(),
+                quoted_diff,
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            )
+        } else {
+            (BigDecimal::from(0), BigDecimal::from(0))
+        };
+        #[cfg(test)]
+        println!(
+            "execute_for_liquidation_v2 open_cost_diff: {:?}, pnl_diff: {}",
+            open_cost_diff.to_string(),
+            pnl_diff.to_string()
+        );
+
+        let user_perp = context.get_user_perp(&key.clone()).await;
+        user_perp.new_liquidation_v2(
+            liquidation.qty_transfer.clone(),
+            liquidation.mark_price.clone(),
+            liquidation.block_num,
+            liquidation.cost_position_transfer.clone(),
+            liquidation.liquidation_fee.clone(),
+            liquidation.sum_unitry_funding.clone(),
+            open_cost_diff.clone(),
+            pnl_diff.clone(),
+            need_cal_avg,
+        );
+        pnl_diff
+    } else if margin_mode == MarginMode::Isolated {
+        let user_perp = context.get_iso_user_perp(&key.clone()).await;
+        user_perp.charge_funding_fee(
+            liquidation.sum_unitry_funding.clone(),
+            liquidation.block_num,
+        );
+        let user_perp_snap = user_perp.clone();
+        let quoted_diff = -liquidation.cost_position_transfer.clone()
+            - liquidation.liquidation_fee.clone()
+            - liquidation.insurnace_fee.clone();
+        #[cfg(test)]
+        println!(
+            "execute_for_liquidation_v2 key: {:?}, qty_transfer: {}, quoted_diff: {}, total_realized_pnl: {}, holding: {}, opening_cost: {}", 
+            key, liquidation.qty_transfer.to_string(), quoted_diff.to_string(), user_perp_snap.total_realized_pnl.to_string(), user_perp_snap.holding.to_string(),  user_perp_snap.opening_cost.to_string(),
+        );
+
+        let need_cal_avg = !is_insurance_account;
+        let (open_cost_diff, pnl_diff) = if need_cal_avg {
+            RealizedPnl::calc_realized_pnl(
+                liquidation.qty_transfer.clone(),
+                quoted_diff,
+                user_perp_snap.holding.clone(),
+                user_perp_snap.opening_cost.clone(),
+            )
+        } else {
+            (BigDecimal::from(0), BigDecimal::from(0))
+        };
+        #[cfg(test)]
+        println!(
+            "execute_for_liquidation_v2 open_cost_diff: {:?}, pnl_diff: {}",
+            open_cost_diff.to_string(),
+            pnl_diff.to_string()
+        );
+
+        let user_perp = context.get_iso_user_perp(&key.clone()).await;
+        user_perp.new_liquidation_v2(
+            liquidation.qty_transfer.clone(),
+            liquidation.mark_price.clone(),
+            liquidation.block_num,
+            liquidation.cost_position_transfer.clone(),
+            liquidation.liquidation_fee.clone(),
+            liquidation.sum_unitry_funding.clone(),
+            open_cost_diff.clone(),
+            pnl_diff.clone(),
+            need_cal_avg,
+        );
+
+        if let Some(margin_to_cross) = &liquidation.margin_to_cross {
+            transfer_margin(
+                liquidation.liquidated_account_id.clone(),
+                context,
+                -margin_to_cross,
+                liquidation.symbol_hash.clone(),
+                liquidated_asset_hash,
+                liquidation.block_num,
+            )
+            .await;
+        }
+        pnl_diff
+    } else {
+        panic!("InvalidMarginMode");
+    };
+
+    let h_perp_key = HourlyUserPerpKey::new_key(
+        liquidation.liquidated_account_id.clone(),
+        liquidation.symbol_hash.clone(),
+        liquidation.block_hour.clone(),
+    );
+    let h_user_perp = context.get_hourly_user_perp(&h_perp_key).await;
+    h_user_perp.new_liquidation(
+        (liquidation.qty_transfer.clone()) * (liquidation.mark_price.clone()),
+        liquidation.block_num,
+        pnl_diff.clone(),
+    );
+}
+
 async fn transfer_insurance_fund(
     insurance_transfer_amount: &String,
     context: &mut AnalyzeContext,
@@ -426,6 +685,29 @@ async fn transfer_amount(
         return;
     }
     user_token.add_amount(amount.abs().neg(), p_block_height);
+}
+
+async fn transfer_margin(
+    account_id: String,
+    context: &mut AnalyzeContext,
+    amount: BigDecimal,
+    symbol_hash: String,
+    asset_hash: String,
+    p_block_height: i64,
+) {
+    if amount == BigDecimal::from(0) {
+        return;
+    }
+    let key = UserPerpSummaryKey {
+        account_id: account_id.clone(),
+        symbol: symbol_hash,
+    };
+
+    let user_iso_perp_summary = context.get_iso_user_perp(&key).await;
+    if p_block_height < user_iso_perp_summary.pulled_block_height {
+        return;
+    }
+    user_iso_perp_summary.margin_deposit(p_block_height, asset_hash, amount);
 }
 
 #[cfg(test)]
@@ -906,7 +1188,7 @@ mod tests {
                     "result data length: {:?}",
                     data.as_data().clone().unwrap().events.len()
                 );
-                let mut data = data.as_data().cloned().unwrap();
+                let data = data.as_data().cloned().unwrap();
                 // data.events.remove(2);
                 result_data = IndexerQueryResponse::Success(SuccessResponse::new(data))
             }
@@ -1072,7 +1354,7 @@ mod tests {
         println!("result2: {:?}", result);
         match &result {
             IndexerQueryResponse::Success(data) => {
-                let mut data = data.as_data().cloned().unwrap();
+                let data = data.as_data().cloned().unwrap();
                 // match data.events[0].data.clone() {
                 //     TradingEventInnerData::ProcessedTrades { batch_id, trades } => {
                 //         data.events = vec![data.events[0].clone()];
@@ -1186,7 +1468,7 @@ mod tests {
         println!("result3: {:?}", result);
         match &result {
             IndexerQueryResponse::Success(data) => {
-                let mut data = data.as_data().cloned().unwrap();
+                let data = data.as_data().cloned().unwrap();
                 // match data.events[0].data.clone() {
                 //     TradingEventInnerData::ProcessedTrades { batch_id, trades } => {
                 //         data.events = vec![data.events[0].clone()];

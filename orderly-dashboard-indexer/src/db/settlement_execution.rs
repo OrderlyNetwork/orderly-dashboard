@@ -12,6 +12,17 @@ use diesel_async::RunQueryDsl;
 use num_traits::ToPrimitive;
 use std::time::Instant;
 
+#[derive(Debug, Clone, Copy)]
+pub enum SettlementExecutionVersion {
+    V3 = 3,
+}
+
+impl SettlementExecutionVersion {
+    pub fn value(self) -> i16 {
+        self as i16
+    }
+}
+
 #[derive(Insertable, Queryable, Debug, Clone)]
 #[diesel(table_name = settlement_execution)]
 pub struct DbSettlementExecution {
@@ -25,6 +36,9 @@ pub struct DbSettlementExecution {
     pub mark_price: BigDecimal,
     pub settled_amount: BigDecimal,
     pub block_time: Option<BigDecimal>,
+    pub version: Option<i16>,
+    pub margin_mode: Option<i16>,
+    pub iso_margin_asset_hash: Option<String>,
 }
 
 impl DbSettlementExecution {

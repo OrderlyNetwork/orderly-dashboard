@@ -583,18 +583,11 @@ mod tests {
     use super::*;
     use chrono::Utc;
 
-    fn init_log() {
-        tracing_subscriber::fmt::Subscriber::builder()
-            .with_writer(std::io::stderr)
-            .with_thread_ids(true)
-            .with_thread_names(true)
-            .init();
-    }
     #[ignore]
     #[actix_web::test]
     async fn test_create_or_update_user_perp_summary() {
         dotenv::dotenv().ok();
-        init_log();
+        // init_log();
         let mut data = vec![];
         let update_time = NaiveDateTime::from_timestamp_opt(
             Utc::now().timestamp(),
@@ -628,7 +621,7 @@ mod tests {
             .unwrap();
         let elapse1_ms = inst1.elapsed().as_millis();
 
-        tracing::info!(
+        println!(
             "test_create_or_update_user_perp_summary elapse1_ms: {}",
             elapse1_ms,
         );

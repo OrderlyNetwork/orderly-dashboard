@@ -13,12 +13,15 @@ use crate::analyzer::adl_analyzer::analyzer_adl;
 use crate::analyzer::analyzer_context::AnalyzeContext;
 use crate::analyzer::analyzer_job::HTTPException::Timeout;
 use crate::analyzer::perp_analyzer::analyzer_perp_trade;
-use crate::analyzer::settlement_analyzer::analyzer_settlement;
+use crate::analyzer::settlement_analyzer::{analyzer_settlement, analyzer_settlement_v3};
 use crate::analyzer::transaction_analyzer::analyzer_transaction;
 use crate::db::block_summary::{create_or_update_block_summary, find_block_summary, TRADE_METRIC};
 
-use super::adl_analyzer::analyzer_adl_v2;
-use super::liquidation_analyzer::{analyzer_liquidation_v1, analyzer_liquidation_v2};
+use super::adl_analyzer::{analyzer_adl_v2, analyzer_adl_v3};
+use super::liquidation_analyzer::{
+    analyzer_liquidation_v1, analyzer_liquidation_v2, analyzer_liquidation_v3,
+};
+use super::margin_transfer_analyzer::analyzer_margin_transfer;
 
 const ANALYZER_CONTEXT: &str = "Analyzer-Job";
 const TWO_DAY_SEC: i64 = 86400;
@@ -231,6 +234,27 @@ pub async fn parse_and_analyzer(
                         )
                         .await
                     }
+                    TradingEventInnerData::SettlementResultV3 {
+                        account_id,
+                        settled_amount,
+                        settled_asset_hash,
+                        insurance_account_id,
+                        insurance_transfer_amount,
+                        settlement_executions,
+                    } => {
+                        analyzer_settlement_v3(
+                            account_id,
+                            settled_amount,
+                            settled_asset_hash,
+                            insurance_account_id,
+                            insurance_transfer_amount,
+                            settlement_executions,
+                            block_hour,
+                            block_num,
+                            context,
+                        )
+                        .await;
+                    }
                     TradingEventInnerData::LiquidationResult {
                         liquidated_account_id,
                         insurance_account_id,
@@ -292,6 +316,26 @@ pub async fn parse_and_analyzer(
                         )
                         .await
                     }
+                    TradingEventInnerData::LiquidationResultV3 {
+                        account_id,
+                        liquidated_asset_hash,
+                        insurance_transfer_amount,
+                        liquidation_transfers,
+                        is_insurance_account,
+                    } => {
+                        analyzer_liquidation_v3(
+                            account_id,
+                            liquidated_asset_hash,
+                            insurance_transfer_amount,
+                            liquidation_transfers,
+                            is_insurance_account,
+                            block_num,
+                            block_hour.clone(),
+                            block_time.clone(),
+                            context,
+                        )
+                        .await
+                    }
                     TradingEventInnerData::AdlResultV2 {
                         account_id,
                         symbol_hash,
@@ -308,6 +352,52 @@ pub async fn parse_and_analyzer(
                             adl_price,
                             sum_unitary_fundings,
                             block_hour,
+                            block_num,
+                            context,
+                        )
+                        .await;
+                    }
+                    TradingEventInnerData::AdlResultV3 {
+                        account_id,
+                        symbol_hash,
+                        position_qty_transfer,
+                        cost_position_transfer,
+                        adl_price,
+                        sum_unitary_fundings,
+                        margin_mode,
+                        margin_asset_hash,
+                        margin_to_cross,
+                        is_insurance_account,
+                    } => {
+                        analyzer_adl_v3(
+                            account_id,
+                            symbol_hash,
+                            position_qty_transfer,
+                            cost_position_transfer,
+                            adl_price,
+                            sum_unitary_fundings,
+                            block_hour,
+                            block_num,
+                            margin_mode,
+                            margin_asset_hash,
+                            margin_to_cross,
+                            is_insurance_account,
+                            context,
+                        )
+                        .await;
+                    }
+                    TradingEventInnerData::MarginTransferV3 {
+                        account_id,
+                        transfer_amount,
+                        transfer_asset_hash,
+                        iso_symbol_hash,
+                        timestamp: _timestamp,
+                    } => {
+                        analyzer_margin_transfer(
+                            account_id,
+                            iso_symbol_hash,
+                            transfer_asset_hash,
+                            transfer_amount,
                             block_num,
                             context,
                         )

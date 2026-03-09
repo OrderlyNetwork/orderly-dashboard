@@ -16,6 +16,9 @@ use crate::db::hourly_user_perp::{
 use crate::db::hourly_user_token::{
     create_or_update_hourly_user_token, find_hourly_user_token, HourlyUserToken, HourlyUserTokenKey,
 };
+use crate::db::iso_user_perp_summary::{
+    create_or_update_iso_user_perp_summary, find_iso_user_perp_summary, IsoUserPerpSummary,
+};
 use crate::db::orderly_perp_summary::{
     create_or_update_orderly_perp_summary, find_orderly_perp_summary, OrderlyPerpSummary,
 };
@@ -40,6 +43,7 @@ pub struct AnalyzeContext {
 
     pub orderly_perp_cache: HashMap<String, OrderlyPerpSummary>,
     pub user_perp_cache: HashMap<UserPerpSummaryKey, UserPerpSummary>,
+    pub iso_user_perp_cache: HashMap<UserPerpSummaryKey, IsoUserPerpSummary>,
 
     pub orderly_token_cache: HashMap<OrderlyTokenSummaryKey, OrderlyTokenSummary>,
     pub user_token_cache: HashMap<UserTokenSummaryKey, UserTokenSummary>,
@@ -57,6 +61,7 @@ impl AnalyzeContext {
             hourly_user_perp_cache: HashMap::new(),
             hourly_user_token_cache: HashMap::new(),
             orderly_perp_cache: HashMap::new(),
+            iso_user_perp_cache: HashMap::new(),
             user_perp_cache: HashMap::new(),
             orderly_token_cache: HashMap::new(),
             user_token_cache: HashMap::new(),
@@ -111,6 +116,17 @@ impl AnalyzeContext {
             v.pulled_block_time = pulled_block_time;
         });
         create_or_update_user_perp_summary(Vec::from_iter(self.user_perp_cache.values()))
+            .await
+            .unwrap();
+
+        self.iso_user_perp_cache.iter_mut().for_each(|(_k, v)| {
+            if pulled_block_height != 0 {
+                v.pulled_block_height = pulled_block_height;
+            }
+            v.pulled_block_time = pulled_block_time;
+        });
+
+        create_or_update_iso_user_perp_summary(Vec::from_iter(self.iso_user_perp_cache.values()))
             .await
             .unwrap();
 
@@ -307,6 +323,24 @@ impl AnalyzeContext {
             self.user_perp_cache.insert(perp_key.clone(), saved_summary);
         }
         self.user_perp_cache.get_mut(&perp_key.clone()).unwrap()
+    }
+
+    pub async fn get_iso_user_perp(
+        &mut self,
+        perp_key: &UserPerpSummaryKey,
+    ) -> &mut IsoUserPerpSummary {
+        if !self.iso_user_perp_cache.contains_key(&perp_key.clone()) {
+            let perp_key_clone = perp_key.clone();
+            let saved_summary = find_iso_user_perp_summary(
+                perp_key_clone.account_id.clone(),
+                perp_key_clone.symbol.clone(),
+            )
+            .await
+            .unwrap();
+            self.iso_user_perp_cache
+                .insert(perp_key.clone(), saved_summary);
+        }
+        self.iso_user_perp_cache.get_mut(&perp_key.clone()).unwrap()
     }
 
     pub async fn get_collecteral_info(
