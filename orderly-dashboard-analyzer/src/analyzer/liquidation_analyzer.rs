@@ -534,7 +534,7 @@ async fn execute_for_liquidation_v3(
             - liquidation.insurnace_fee.clone();
         #[cfg(test)]
         println!(
-            "execute_for_liquidation_v2 key: {:?}, qty_transfer: {}, quoted_diff: {}, total_realized_pnl: {}, holding: {}, opening_cost: {}", 
+            "execute_for_liquidation_v3 key: {:?}, qty_transfer: {}, quoted_diff: {}, total_realized_pnl: {}, holding: {}, opening_cost: {}", 
             key, liquidation.qty_transfer.to_string(), quoted_diff.to_string(), user_perp_snap.total_realized_pnl.to_string(), user_perp_snap.holding.to_string(),  user_perp_snap.opening_cost.to_string(),
         );
 
@@ -720,14 +720,19 @@ mod tests {
     use chrono::NaiveDateTime;
     use num_traits::FromPrimitive;
     use orderly_dashboard_indexer::formats_external::{
-        trading_events::TradingEventsResponse, IndexerQueryResponse, SuccessResponse,
+        trading_events::{MarginMode, TradingEventsResponse},
+        IndexerQueryResponse, SuccessResponse,
     };
     use std::str::FromStr;
 
     use super::{
-        analyzer_liquidation_v1, analyzer_liquidation_v2, AnalyzeContext, LiquidationTransfer,
-        LiquidationTransferV2, UserPerpSummaryKey, USDC_HASH,
+        analyzer_liquidation_v1, analyzer_liquidation_v2, analyzer_liquidation_v3, AnalyzeContext,
+        LiquidationTransfer, LiquidationTransferV2, LiquidationTransferV3, UserPerpSummaryKey,
+        USDC_HASH,
     };
+
+    const ALICE: &str = "0xa11ce";
+    const BOB: &str = "0xb0b";
 
     #[actix_web::test]
     async fn test_liquidation_v1() {
@@ -1547,5 +1552,171 @@ mod tests {
             user_perp.total_realized_pnl,
             BigDecimal::from_str("39.802804").unwrap()
         );
+    }
+
+    #[actix_web::test]
+    async fn test_liquidation_v3_iso_single_symbol() {
+        let mut context = AnalyzeContext::new_context();
+        let block_time = 1748416430;
+
+        let symbols = vec![
+            SYMBOL_HASH_BTC_USDC.to_string(),
+            SYMBOL_HASH_ETH_USDC.to_string(),
+        ];
+        let tokens = vec![TOKEN_HASH.to_string(), USDC_HASH.to_string()];
+        let account_symbols = vec![
+            (ALICE.to_string(), SYMBOL_HASH_BTC_USDC.to_string()),
+            (ALICE.to_string(), SYMBOL_HASH_ETH_USDC.to_string()),
+            (BOB.to_string(), SYMBOL_HASH_BTC_USDC.to_string()),
+            (BOB.to_string(), SYMBOL_HASH_ETH_USDC.to_string()),
+        ];
+        let account_tokens = vec![
+            (ALICE.to_string(), TOKEN_HASH.to_string()),
+            (ALICE.to_string(), USDC_HASH.to_string()),
+            (BOB.to_string(), TOKEN_HASH.to_string()),
+            (BOB.to_string(), USDC_HASH.to_string()),
+        ];
+
+        context.init_orderly_context(block_time, symbols, tokens, account_symbols, account_tokens);
+        let liquidated_account_id = ALICE.to_string();
+        let liquidated_btc_perp_key = UserPerpSummaryKey {
+            account_id: liquidated_account_id.clone(),
+            symbol: SYMBOL_HASH_BTC_USDC.to_string(),
+        };
+
+        context.set_iso_user_perp_cache(
+            &liquidated_btc_perp_key,
+            BigDecimal::from_i128(1_000_000_000).unwrap(),
+            BigDecimal::from_i128(100_000_000).unwrap(),
+            BigDecimal::from_i128(0).unwrap(),
+            BigDecimal::from_i128(100_000_000).unwrap(),
+        );
+
+        context.set_user_iso_margin_cache(
+            &liquidated_btc_perp_key,
+            TOKEN_HASH.to_string(),
+            BigDecimal::from_i128(500_000_000).unwrap(),
+        );
+
+        let block_hour = convert_block_hour(block_time);
+        let block_time = NaiveDateTime::from_timestamp_opt(block_time, 0).unwrap();
+
+        let liquidation = LiquidationTransferV3 {
+            account_id: liquidated_account_id.clone(),
+            symbol_hash: SYMBOL_HASH_BTC_USDC.to_string(),
+            position_qty_transfer: "-1000000000".to_string(),
+            cost_position_transfer: "-100000000".to_string(),
+            fee: "5000".to_string(),
+            mark_price: "28000000".to_string(),
+            sum_unitary_fundings: "0".to_string(),
+            margin_asset_hash: Some(TOKEN_HASH.to_string()),
+            margin_mode: Some(MarginMode::Isolated),
+            margin_to_cross: Some("200000000".to_string()),
+        };
+
+        analyzer_liquidation_v3(
+            liquidated_account_id,
+            SYMBOL_HASH_BTC_USDC.to_string(),
+            "30000".to_string(),
+            vec![liquidation],
+            false,
+            1187648,
+            block_hour,
+            block_time,
+            &mut context,
+        )
+        .await;
+
+        let user_perp = context.get_iso_user_perp(&liquidated_btc_perp_key).await;
+        println!(
+            "=======user_perp.holding: {:?}, cost_position: {:?}, margin_qty: {:?}",
+            user_perp.holding.to_string(),
+            user_perp.cost_position.to_string(),
+            user_perp.margin_qty.to_string()
+        );
+        assert_eq!(user_perp.holding.to_string(), "0");
+        assert_eq!(user_perp.cost_position.to_string(), "0.005");
+        assert_eq!(user_perp.margin_qty.to_string(), "300030000");
+    }
+
+    #[actix_web::test]
+    async fn test_liquidation_v3_iso_insurance_to_margin() {
+        let mut context = AnalyzeContext::new_context();
+        let block_time = 1748416430;
+
+        let symbols = vec![
+            SYMBOL_HASH_BTC_USDC.to_string(),
+            SYMBOL_HASH_ETH_USDC.to_string(),
+        ];
+        let tokens = vec![TOKEN_HASH.to_string(), USDC_HASH.to_string()];
+        let account_symbols = vec![
+            (ALICE.to_string(), SYMBOL_HASH_BTC_USDC.to_string()),
+            (ALICE.to_string(), SYMBOL_HASH_ETH_USDC.to_string()),
+            (BOB.to_string(), SYMBOL_HASH_BTC_USDC.to_string()),
+            (BOB.to_string(), SYMBOL_HASH_ETH_USDC.to_string()),
+        ];
+        let account_tokens = vec![
+            (ALICE.to_string(), TOKEN_HASH.to_string()),
+            (ALICE.to_string(), USDC_HASH.to_string()),
+            (BOB.to_string(), TOKEN_HASH.to_string()),
+            (BOB.to_string(), USDC_HASH.to_string()),
+        ];
+
+        context.init_orderly_context(block_time, symbols, tokens, account_symbols, account_tokens);
+        let liquidated_account_id = ALICE.to_string();
+        let liquidated_btc_perp_key = UserPerpSummaryKey {
+            account_id: liquidated_account_id.clone(),
+            symbol: SYMBOL_HASH_BTC_USDC.to_string(),
+        };
+
+        context.set_iso_user_perp_cache(
+            &liquidated_btc_perp_key,
+            BigDecimal::from_i128(500_000_000).unwrap(),
+            BigDecimal::from_i128(50_000_000).unwrap(),
+            BigDecimal::from_i128(0).unwrap(),
+            BigDecimal::from_i128(0).unwrap(),
+        );
+
+        context.set_user_iso_margin_cache(
+            &liquidated_btc_perp_key,
+            TOKEN_HASH.to_string(),
+            BigDecimal::from_i128(100_000_000).unwrap(),
+        );
+
+        let block_hour = convert_block_hour(block_time);
+        let block_time = NaiveDateTime::from_timestamp_opt(block_time, 0).unwrap();
+
+        let liquidation = LiquidationTransferV3 {
+            account_id: liquidated_account_id.clone(),
+            symbol_hash: SYMBOL_HASH_BTC_USDC.to_string(),
+            position_qty_transfer: "-250000000".to_string(),
+            cost_position_transfer: "-250000000".to_string(),
+            fee: "1000".to_string(),
+            mark_price: "28000000".to_string(),
+            sum_unitary_fundings: "0".to_string(),
+            margin_asset_hash: Some(TOKEN_HASH.to_string()),
+            margin_mode: Some(MarginMode::Isolated),
+            margin_to_cross: Some("0".to_string()),
+        };
+
+        analyzer_liquidation_v3(
+            liquidated_account_id,
+            SYMBOL_HASH_BTC_USDC.to_string(),
+            "20000".to_string(),
+            vec![liquidation],
+            false,
+            1187648,
+            block_hour,
+            block_time,
+            &mut context,
+        )
+        .await;
+
+        let user_perp = context.get_iso_user_perp(&liquidated_btc_perp_key).await;
+        println!(
+            "=======user_perp.margin_qty: {:?}",
+            user_perp.margin_qty.to_string()
+        );
+        assert_eq!(user_perp.margin_qty.to_string(), "100020000");
     }
 }
