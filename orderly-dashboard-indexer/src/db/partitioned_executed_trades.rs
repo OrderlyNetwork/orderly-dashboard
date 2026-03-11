@@ -163,6 +163,72 @@ pub async fn query_trades_with_empty_broker_hash() -> Result<Vec<KeyDbPartitione
     Ok(rows)
 }
 
+/// Query trades for filling address in a given time and block range.
+/// Returns all rows in the range (no limit); may be large (e.g. hundreds of thousands).
+/// Does not select address; finished is determined by target_block.
+pub async fn query_trades_for_fill_address(
+    from_time: NaiveDateTime,
+    to_time: NaiveDateTime,
+    from_block: i64,
+    to_block: i64,
+) -> Result<Vec<KeyDbPartitionedExecutedTrades>> {
+    use crate::schema::partitioned_executed_trades::dsl::*;
+    let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+
+    let result = partitioned_executed_trades
+        .select((
+            block_number,
+            transaction_index,
+            log_index,
+            account_id,
+            block_time,
+        ))
+        .filter(block_time.ge(from_time))
+        .filter(block_time.le(to_time))
+        .filter(block_number.ge(from_block))
+        .filter(block_number.le(to_block))
+        .order_by((block_number, transaction_index, log_index))
+        .load::<KeyDbPartitionedExecutedTrades>(&mut conn)
+        .await;
+
+    let dur_ms = (Instant::now() - start_time).as_millis();
+    let rows = match result {
+        Ok(rows) => {
+            if dur_ms >= 100 {
+                tracing::warn!(
+                    target: ALERT_CONTEXT,
+                    "query_trades_for_fill_address slow query. from_block:{}, to_block:{}, rows:{}, used time:{} ms, last record: {:?}",
+                    from_block,
+                    to_block,
+                    rows.len(),
+                    dur_ms,
+                    rows.last(),
+                );
+            } else {
+                tracing::info!(
+                    target: DB_CONTEXT,
+                    "query_trades_for_fill_address success. rows:{}, used time:{} ms, last record: {:?}",
+                    rows.len(),
+                    dur_ms,
+                    rows.last(),
+                );
+            }
+            rows
+        }
+        Err(e) => {
+            tracing::warn!(
+                target: DB_CONTEXT,
+                "query_trades_for_fill_address fail. err:{:?}, used time:{} ms",
+                e,
+                dur_ms
+            );
+            return Err(e.into());
+        }
+    };
+    Ok(rows)
+}
+
 /// Update broker_hash and/or transaction_id for one row by primary key.
 #[allow(dead_code)]
 pub async fn update_partitioned_executed_trade_broker_hash_and_txid(
@@ -201,6 +267,16 @@ pub struct PartitionedExecutedTradeUpdate {
     pub block_time: NaiveDateTime,
     pub broker_hash: Option<String>,
     pub transaction_id: Option<String>,
+}
+
+/// One row to update address in batch (pk + new address).
+#[derive(Debug, Clone)]
+pub struct PartitionedExecutedTradeAddressUpdate {
+    pub block_number: i64,
+    pub transaction_index: i32,
+    pub log_index: i32,
+    pub block_time: NaiveDateTime,
+    pub address: Option<String>,
 }
 
 fn escape_sql_text(s: &str) -> String {
@@ -264,6 +340,55 @@ pub async fn batch_update_partitioned_executed_trades(
         );
     }
 
+    Ok(total)
+}
+
+/// Batch update address for multiple rows in one or few queries.
+pub async fn batch_update_partitioned_executed_trades_address(
+    updates: &[PartitionedExecutedTradeAddressUpdate],
+) -> Result<usize> {
+    if updates.is_empty() {
+        return Ok(0);
+    }
+    let start_time = Instant::now();
+    let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+    let mut total = 0usize;
+    for chunk in updates.chunks(BATCH_UPDATE_CHUNK_SIZE) {
+        let values: Vec<String> = chunk
+            .iter()
+            .map(|u| {
+                let bt = u.block_time.format("%Y-%m-%d %H:%M:%S").to_string();
+                format!(
+                    "({}, {}, {}, '{}'::timestamp, {})",
+                    u.block_number,
+                    u.transaction_index,
+                    u.log_index,
+                    escape_sql_text(&bt),
+                    sql_value_text(&u.address),
+                )
+            })
+            .collect();
+        let values_clause = values.join(", ");
+        let sql = format!(
+            "UPDATE partitioned_executed_trades t SET address = v.address \
+             FROM (VALUES {}) AS v(block_number, transaction_index, log_index, block_time, address) \
+             WHERE t.block_number = v.block_number AND t.transaction_index = v.transaction_index \
+             AND t.log_index = v.log_index AND t.block_time = v.block_time",
+            values_clause
+        );
+        let n = sql_query(&sql).execute(&mut conn).await?;
+        total += n;
+    }
+    let dur_ms = (Instant::now() - start_time).as_millis();
+    if dur_ms >= 100 {
+        tracing::warn!(
+            target: ALERT_CONTEXT,
+            "batch_update_partitioned_executed_trades_address slow query. updated_rows:{}, count:{}, used time:{} ms",
+            total,
+            updates.len(),
+            dur_ms
+        );
+    }
     Ok(total)
 }
 
