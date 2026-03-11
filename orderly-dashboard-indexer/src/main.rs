@@ -174,9 +174,8 @@ fn main() -> Result<()> {
                     Ok(_) => {
                         tracing::info!(
                             target: ORDERLY_DASHBOARD_INDEXER,
-                            "fill_partitioned_executed_trades_address finished or not need to update"
+                            "fill_partitioned_executed_trades_address not need to update at this batch"
                         );
-                        break;
                     }
                     Err(e) => {
                         tracing::warn!(
@@ -188,7 +187,6 @@ fn main() -> Result<()> {
                 }
                 tokio::time::sleep(std::time::Duration::from_millis(200)).await;
             }
-            Ok::<(), anyhow::Error>(())
         });
 
         let early_stop = opts.end_block.is_some() && opts.start_block.is_none() && opts.end_block.unwrap_or_default() < opts.start_block.unwrap_or_default();
