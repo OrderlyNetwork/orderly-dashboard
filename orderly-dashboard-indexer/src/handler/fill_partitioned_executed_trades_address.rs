@@ -70,6 +70,7 @@ pub async fn run_fill_empty_address_in_partitioned_executed_trades() -> Result<u
     let trades = query_trades_for_fill_address(from_time, to_time, from_block, to_block).await?;
 
     if trades.is_empty() {
+        progress.current_block = to_block;
         update_fill_partitioned_executed_trades_address_progress(&progress).await?;
         return Ok(0);
     }
