@@ -353,7 +353,7 @@ pub async fn batch_update_partitioned_executed_trades_address(
     let start_time = Instant::now();
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
     let mut total = 0usize;
-    const BATCH_UPDATE_ADDRESS_CHUNK_SIZE: usize = 1000;
+    const BATCH_UPDATE_ADDRESS_CHUNK_SIZE: usize = 2000;
     for chunk in updates.chunks(BATCH_UPDATE_ADDRESS_CHUNK_SIZE) {
         let values: Vec<String> = chunk
             .iter()
@@ -380,7 +380,7 @@ pub async fn batch_update_partitioned_executed_trades_address(
         let n = sql_query(&sql).execute(&mut conn).await?;
         total += n;
         if chunk.len() == BATCH_UPDATE_ADDRESS_CHUNK_SIZE {
-            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            tokio::time::sleep(std::time::Duration::from_millis(25)).await;
         }
     }
     let dur_ms = (Instant::now() - start_time).as_millis();

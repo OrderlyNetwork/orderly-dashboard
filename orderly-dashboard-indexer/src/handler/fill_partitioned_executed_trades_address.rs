@@ -21,7 +21,7 @@ use parking_lot::Mutex;
 use std::collections::HashMap;
 
 const FILL_ACCOUNT_ADDRESS_CACHE_SIZE: usize = 20_000;
-const ADDRESS_FILL_BLOCK_SPAN: i64 = 1000;
+const ADDRESS_FILL_BLOCK_SPAN: i64 = 500;
 const ADDRESS_FILL_TIME_WINDOW_DAYS: i64 = 10;
 
 lazy_static! {
@@ -66,7 +66,7 @@ pub async fn run_fill_empty_address_in_partitioned_executed_trades() -> Result<u
         .unwrap_or(from_time);
 
     let from_block = progress.current_block.max(deploy_height);
-    let to_block = from_block + (ADDRESS_FILL_BLOCK_SPAN - 1);
+    let to_block = from_block + ADDRESS_FILL_BLOCK_SPAN;
 
     let trades = query_trades_for_fill_address(from_time, to_time, from_block, to_block).await?;
 
