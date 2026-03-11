@@ -21,6 +21,7 @@ pub enum SettingsKey {
     ExecutedTradesLegacySync = 7,
     ContarctDeployTimestamp = 8,
     FilledPartitionedExecutedTradesBroker = 9,
+    FilledPartitionedExecutedTradesAddress = 10,
 }
 
 #[derive(Insertable, Queryable, Debug)]
@@ -63,6 +64,16 @@ pub struct SyncLegacyDataConfig {
     pub finished: bool,
     pub finished_block: Option<u64>,
     pub current_block: Option<u64>,
+}
+
+/// Progress for filling empty address in partitioned_executed_trades.
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Default)]
+pub struct FillPartitionedExecutedTradesAddressProgress {
+    pub finished: bool,
+    pub current_timestamp: i64,
+    pub current_block: i64,
+    /// Target block to reach; when last trade's block_number >= target_block, backfill is done. Initialized from LastRpcProcessHeight.
+    pub target_block: i64,
 }
 
 impl Default for ExecutedTradesPartitionConfig {
@@ -215,6 +226,25 @@ pub async fn get_filled_partitioned_executed_trades_broker() -> Result<bool> {
     match get_setting(SettingsKey::FilledPartitionedExecutedTradesBroker as i32).await? {
         Some(settings) => Ok(settings.value == "true"),
         None => Ok(false),
+    }
+}
+
+pub async fn update_fill_partitioned_executed_trades_address_progress(
+    progress: &FillPartitionedExecutedTradesAddressProgress,
+) -> Result<()> {
+    update_setting(
+        SettingsKey::FilledPartitionedExecutedTradesAddress,
+        serde_json::to_string(progress)?,
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn get_fill_partitioned_executed_trades_address_progress(
+) -> Result<FillPartitionedExecutedTradesAddressProgress> {
+    match get_setting(SettingsKey::FilledPartitionedExecutedTradesAddress as i32).await? {
+        Some(settings) => Ok(serde_json::from_str(&settings.value)?),
+        None => Ok(FillPartitionedExecutedTradesAddressProgress::default()),
     }
 }
 

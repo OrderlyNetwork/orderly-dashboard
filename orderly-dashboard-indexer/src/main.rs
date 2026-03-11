@@ -39,9 +39,13 @@ use crate::handler::check_or_create_new_partition::{
     check_or_create_executed_trades_partition, migrate_executed_trades_data,
 };
 use crate::handler::fill_partitioned_executed_trades::run_fill_empty_broker_hash_and_txid;
+use crate::handler::fill_partitioned_executed_trades_address::run_fill_empty_address_in_partitioned_executed_trades;
 use crate::{
     consume_data_task::{consume_data_task, ORDERLY_DASHBOARD_INDEXER},
-    db::settings::{update_contract_deploy_timestamp, update_last_sol_syn_signature},
+    db::settings::{
+        get_fill_partitioned_executed_trades_address_progress, update_contract_deploy_timestamp,
+        update_last_sol_syn_signature,
+    },
     handler::solana::solana_program_log_processor::{
         get_starting_signature, handle_sol_program_logs, SolanaProgramLogProcessor,
     },
@@ -123,6 +127,67 @@ fn main() -> Result<()> {
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
 
+            Ok::<(), anyhow::Error>(())
+        });
+
+        // Fill empty address in partitioned_executed_trades (one-time backfill with progress in settings)
+        actix::spawn(async move {
+            match get_fill_partitioned_executed_trades_address_progress().await {
+                Ok(progress) if progress.finished => {
+                    tracing::info!(
+                        target: ORDERLY_DASHBOARD_INDEXER,
+                        "fill_partitioned_executed_trades_address already finished, skip"
+                    );
+                    return Ok::<(), anyhow::Error>(());
+                }
+                Ok(progress) => {
+                    tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "fill_partitioned_executed_trades_address progress: {:?}", progress);
+                }
+                Err(e) => {
+                    tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "get_fill_partitioned_executed_trades_address_progress err: {:?}", e);
+                }
+            }
+            let mut count: i32 = 0;
+            loop {
+                count += 1;
+                if count > 10 {
+                    count = 0;
+                    match get_fill_partitioned_executed_trades_address_progress().await {
+                        Ok(progress) if progress.finished => {
+                            tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "get_fill_partitioned_executed_trades_address_progress finished");
+                            return Ok::<(), anyhow::Error>(());
+                        }
+                        Ok(_) => {}
+                        Err(e) => {
+                            tracing::warn!(target: ORDERLY_DASHBOARD_INDEXER, "get_fill_partitioned_executed_trades_address_progress err: {:?}", e);
+                        }
+                    }
+                }
+                match run_fill_empty_address_in_partitioned_executed_trades().await {
+                    Ok(updated) if updated > 0 => {
+                        tracing::info!(
+                            target: ORDERLY_DASHBOARD_INDEXER,
+                            "fill_partitioned_executed_trades_address updated {} rows",
+                            updated
+                        );
+                    }
+                    Ok(_) => {
+                        tracing::info!(
+                            target: ORDERLY_DASHBOARD_INDEXER,
+                            "fill_partitioned_executed_trades_address finished or not need to update"
+                        );
+                        break;
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            target: ORDERLY_DASHBOARD_INDEXER,
+                            "fill_partitioned_executed_trades_address err: {:?}",
+                            e
+                        );
+                    }
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+            }
             Ok::<(), anyhow::Error>(())
         });
 
