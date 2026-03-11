@@ -12,6 +12,7 @@ use crate::db::settings::{
     get_fill_partitioned_executed_trades_address_progress, get_last_rpc_processed_height,
     update_fill_partitioned_executed_trades_address_progress,
 };
+use crate::eth_rpc::get_blockheader_by_number;
 use anyhow::Result;
 use cached::{Cached, SizedCache};
 use chrono::{Duration, NaiveDateTime};
@@ -71,6 +72,10 @@ pub async fn run_fill_empty_address_in_partitioned_executed_trades() -> Result<u
 
     if trades.is_empty() {
         progress.current_block = to_block;
+        progress.current_timestamp = get_blockheader_by_number(to_block as u64)
+            .await?
+            .timestamp
+            .as_u128() as i64;
         update_fill_partitioned_executed_trades_address_progress(&progress).await?;
         return Ok(0);
     }

@@ -379,6 +379,9 @@ pub async fn batch_update_partitioned_executed_trades_address(
         );
         let n = sql_query(&sql).execute(&mut conn).await?;
         total += n;
+        if chunk.len() == BATCH_UPDATE_ADDRESS_CHUNK_SIZE {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
     }
     let dur_ms = (Instant::now() - start_time).as_millis();
     if dur_ms >= 100 {
