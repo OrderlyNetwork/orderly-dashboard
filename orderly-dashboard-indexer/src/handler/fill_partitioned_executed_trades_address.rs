@@ -22,7 +22,7 @@ use std::collections::HashMap;
 
 const FILL_ACCOUNT_ADDRESS_CACHE_SIZE: usize = 20_000;
 const ADDRESS_FILL_BLOCK_SPAN: i64 = 500;
-const ADDRESS_FILL_TIME_WINDOW_DAYS: i64 = 10;
+const ADDRESS_FILL_TIME_WINDOW_DAYS: i64 = 1;
 
 lazy_static! {
     /// Cache for account_id -> address when filling partitioned_executed_trades.
