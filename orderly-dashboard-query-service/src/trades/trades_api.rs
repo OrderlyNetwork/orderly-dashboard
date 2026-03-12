@@ -1,8 +1,8 @@
-use crate::indexer_db::trades::{count_trades_from_db, query_trades_from_db};
+use crate::indexer_db::trades::query_trades_from_db;
 use crate::trades::{CONTRACT_DEPLOY_HEIGHT, LAST_RPC_PROCESS_TIMESTAMP};
 use actix_web::{get, post, web, HttpResponse};
 use chrono::NaiveDateTime;
-use orderly_dashboard_analyzer::sync_broker::cal_broker_hash;
+use orderly_dashboard_analyzer::sync_broker::{cal_broker_hash, cal_symbol_hash};
 use orderly_dashboard_indexer::db::partitioned_executed_trades::DbPartitionedExecutedTrades;
 use serde_derive::{Deserialize, Serialize};
 use std::sync::atomic::Ordering;
@@ -12,10 +12,10 @@ use utoipa::ToSchema;
 pub(crate) const QUERY_TRADES_CONTEXT: &str = "query_trades_context";
 
 /// Page size for query trades API (number of records per page)
-pub const QUERY_TRADES_PAGE_SIZE: u64 = 200;
+pub const QUERY_TRADES_PAGE_SIZE: u64 = 300;
 
 /// Maximum time range for query trades API (24 hours in seconds)
-pub const MAX_TIME_RANGE_SECONDS: i64 = 24 * 3600;
+pub const MAX_TIME_RANGE_SECONDS: i64 = 7 * 24 * 3600; // 7 days
 
 #[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 pub struct PaginationCursorRequest {
@@ -29,6 +29,8 @@ pub struct PaginationCursorRequest {
 pub struct QueryTradesRequest {
     pub broker_id: Option<String>,
     pub account_id: Option<String>,
+    pub address: Option<String>,
+    pub symbol: Option<String>,
     pub from_time: i64,
     pub to_time: i64,
     pub next_cursor: Option<PaginationCursorRequest>,
@@ -69,7 +71,6 @@ pub struct PaginationCursor {
 pub struct QueryTradesResponse {
     pub trades: Vec<TradeItem>,
     pub next_cursor: Option<PaginationCursor>,
-    pub total_trades: Option<i64>,
 }
 
 impl From<DbPartitionedExecutedTrades> for TradeItem {
@@ -124,25 +125,24 @@ impl From<DbPartitionedExecutedTrades> for TradeItem {
 #[post("/trades")]
 pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Result<HttpResponse> {
     let param = param.into_inner();
-    // Validate that either broker_id or account_id is provided, but not both
-    match (&param.broker_id, &param.account_id) {
-        (None, None) => {
-            return Ok(HttpResponse::Ok().json(
-                orderly_dashboard_indexer::formats_external::FailureResponse::new(
-                    1000,
-                    "Either broker_id or account_id must be provided".to_string(),
-                ),
-            ));
-        }
-        (Some(_), Some(_)) => {
-            return Ok(HttpResponse::Ok().json(
-                orderly_dashboard_indexer::formats_external::FailureResponse::new(
-                    1000,
-                    "broker_id and account_id cannot be provided at the same time. Please provide only one of them.".to_string(),
-                )
-            ));
-        }
-        _ => {}
+    // Validate that at most one of broker_id, account_id, address, symbol is provided (can also be all None)
+    let filter_count = [
+        param.broker_id.is_some(),
+        param.account_id.is_some(),
+        param.address.is_some(),
+        param.symbol.is_some(),
+    ]
+    .iter()
+    .filter(|&&v| v)
+    .count();
+
+    if filter_count > 1 {
+        return Ok(HttpResponse::Ok().json(
+            orderly_dashboard_indexer::formats_external::FailureResponse::new(
+                1000,
+                "Only one of broker_id, account_id, address or symbol can be provided at the same time. Please provide only one of them.".to_string(),
+            ),
+        ));
     }
 
     tracing::info!(
@@ -155,6 +155,9 @@ pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Re
 
     // Convert broker_id to broker_hash if provided
     let broker_hash = param.broker_id.as_ref().map(|id| cal_broker_hash(id));
+
+    // Convert symbol to symbol_hash if provided
+    let symbol_hash = param.symbol.as_ref().map(|s| cal_symbol_hash(s));
 
     // Convert timestamps to NaiveDateTime
     let from_time = NaiveDateTime::from_timestamp_opt(param.from_time, 0)
@@ -186,37 +189,11 @@ pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Re
         ));
     }
 
-    // Calculate total_trades only if this is the first page (no cursor provided)
-    let total_trades = if param.next_cursor.is_none() {
-        match count_trades_from_db(
-            broker_hash.clone(),
-            param.account_id.clone(),
-            from_time,
-            to_time,
-        )
-        .await
-        {
-            Ok(total) => Some(total),
-            Err(err) => {
-                tracing::warn!(
-                    target: QUERY_TRADES_CONTEXT,
-                    "Failed to count total trades: {}", err
-                );
-                return Ok(HttpResponse::Ok().json(
-                    orderly_dashboard_indexer::formats_external::FailureResponse::new(
-                        1000,
-                        format!("Query trades count failed: {}", err),
-                    ),
-                ));
-            }
-        }
-    } else {
-        None
-    };
-
     match query_trades_from_db(
         broker_hash,
         param.account_id.clone(),
+        param.address.clone(),
+        symbol_hash,
         from_time,
         to_time,
         param.next_cursor.as_ref().map(|c| c.block_number),
@@ -233,7 +210,6 @@ pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Re
             let mut response = QueryTradesResponse {
                 trades: trades.iter().map(|t| TradeItem::from(t.clone())).collect(),
                 next_cursor: None,
-                total_trades,
             };
 
             // If we got exactly QUERY_TRADES_PAGE_SIZE records, there might be more, so set next_cursor
