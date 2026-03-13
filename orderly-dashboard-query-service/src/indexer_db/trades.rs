@@ -23,16 +23,18 @@ pub const DB_TRADES_CONTEXT: &str = "indexer_db_trades_context";
 pub async fn query_trades_from_db(
     broker_hash_param: Option<String>,
     account_id_param: Option<String>,
+    address_param: Option<String>,
+    symbol_hash_param: Option<String>,
     from_time: NaiveDateTime,
     to_time: NaiveDateTime,
     offset_block_number: Option<i64>,
     offset_transaction_index: Option<i32>,
     offset_log_index: Option<i32>,
-    _offset_block_time: Option<NaiveDateTime>,
+    offset_block_time: Option<NaiveDateTime>,
 ) -> Result<Vec<DbPartitionedExecutedTrades>> {
     use orderly_dashboard_indexer::schema::partitioned_executed_trades::dsl::{
-        account_id, block_number, block_time, broker_hash, log_index, partitioned_executed_trades,
-        transaction_index,
+        account_id, address, block_number, block_time, broker_hash, log_index,
+        partitioned_executed_trades, symbol_hash, transaction_index,
     };
 
     let mut conn = POOL
@@ -43,29 +45,133 @@ pub async fn query_trades_from_db(
     let mut query = partitioned_executed_trades.into_boxed();
 
     // Apply filters
-    if let Some(broker) = broker_hash_param {
-        query = query.filter(broker_hash.eq(broker));
+    if let Some(ref broker) = broker_hash_param {
+        query = query.filter(broker_hash.eq(broker.as_str()));
     }
-    if let Some(account) = account_id_param {
-        query = query.filter(account_id.eq(account));
+    if let Some(ref account) = account_id_param {
+        query = query.filter(account_id.eq(account.as_str()));
+    }
+    if let Some(ref addr) = address_param {
+        query = query.filter(address.eq(addr.as_str()));
+    }
+    if let Some(ref sym_hash) = symbol_hash_param {
+        query = query.filter(symbol_hash.eq(sym_hash.as_str()));
     }
     // Time range is required
     query = query.filter(block_time.ge(from_time));
     query = query.filter(block_time.le(to_time));
 
-    // Apply pagination cursor
-    if let Some(offset_block) = offset_block_number {
-        let tuple_condition = sql::<Bool>(&format!(
-            "(block_number, transaction_index, log_index) > ({}, {}, {})",
-            offset_block,
-            offset_transaction_index.unwrap_or_default(),
-            offset_log_index.unwrap_or_default()
-        ));
+    // Apply pagination cursor using keyset pagination.
+    // If an optional filter field exists (broker_hash / account_id / address / symbol_hash),
+    // put that field at the first position in the tuple, followed by
+    // (block_time, block_number, transaction_index, log_index).
+    if let Some(cursor_block_time) = offset_block_time {
+        // build tuple and value depending on which filter is used
+        let (tuple_cols, tuple_values) = if let Some(ref broker) = broker_hash_param {
+            let escaped = broker.replace('\'', "''");
+            (
+                "broker_hash, block_time, block_number, transaction_index, log_index",
+                format!(
+                    "'{}', '{}', {}, {}, {}",
+                    escaped,
+                    cursor_block_time,
+                    offset_block_number.unwrap_or_default(),
+                    offset_transaction_index.unwrap_or_default(),
+                    offset_log_index.unwrap_or_default()
+                ),
+            )
+        } else if let Some(ref account) = account_id_param {
+            let escaped = account.replace('\'', "''");
+            (
+                "account_id, block_time, block_number, transaction_index, log_index",
+                format!(
+                    "'{}', '{}', {}, {}, {}",
+                    escaped,
+                    cursor_block_time,
+                    offset_block_number.unwrap_or_default(),
+                    offset_transaction_index.unwrap_or_default(),
+                    offset_log_index.unwrap_or_default()
+                ),
+            )
+        } else if let Some(ref addr) = address_param {
+            let escaped = addr.replace('\'', "''");
+            (
+                "address, block_time, block_number, transaction_index, log_index",
+                format!(
+                    "'{}', '{}', {}, {}, {}",
+                    escaped,
+                    cursor_block_time,
+                    offset_block_number.unwrap_or_default(),
+                    offset_transaction_index.unwrap_or_default(),
+                    offset_log_index.unwrap_or_default()
+                ),
+            )
+        } else if let Some(ref sym_hash) = symbol_hash_param {
+            let escaped = sym_hash.replace('\'', "''");
+            (
+                "symbol_hash, block_time, block_number, transaction_index, log_index",
+                format!(
+                    "'{}', '{}', {}, {}, {}",
+                    escaped,
+                    cursor_block_time,
+                    offset_block_number.unwrap_or_default(),
+                    offset_transaction_index.unwrap_or_default(),
+                    offset_log_index.unwrap_or_default()
+                ),
+            )
+        } else {
+            (
+                "block_time, block_number, transaction_index, log_index",
+                format!(
+                    "'{}', {}, {}, {}",
+                    cursor_block_time,
+                    offset_block_number.unwrap_or_default(),
+                    offset_transaction_index.unwrap_or_default(),
+                    offset_log_index.unwrap_or_default()
+                ),
+            )
+        };
+
+        let tuple_condition = sql::<Bool>(&format!("({}) > ({})", tuple_cols, tuple_values));
         query = query.filter(tuple_condition);
     }
 
-    // Order by (block_number, transaction_index, log_index)
-    query = query.order_by((block_number, transaction_index, log_index));
+    // Order by: if optional filter field exists, put it at first position in ORDER BY.
+    if broker_hash_param.is_some() {
+        query = query.order_by((
+            broker_hash,
+            block_time,
+            block_number,
+            transaction_index,
+            log_index,
+        ));
+    } else if account_id_param.is_some() {
+        query = query.order_by((
+            account_id,
+            block_time,
+            block_number,
+            transaction_index,
+            log_index,
+        ));
+    } else if address_param.is_some() {
+        query = query.order_by((
+            address,
+            block_time,
+            block_number,
+            transaction_index,
+            log_index,
+        ));
+    } else if symbol_hash_param.is_some() {
+        query = query.order_by((
+            symbol_hash,
+            block_time,
+            block_number,
+            transaction_index,
+            log_index,
+        ));
+    } else {
+        query = query.order_by((block_time, block_number, transaction_index, log_index));
+    }
 
     // Limit to QUERY_TRADES_PAGE_SIZE records
     query = query.limit(QUERY_TRADES_PAGE_SIZE as i64);
@@ -76,49 +182,5 @@ pub async fn query_trades_from_db(
         Ok(trades) => Ok(trades),
         Err(diesel::NotFound) => Ok(vec![]),
         Err(err) => Err(anyhow::anyhow!("Database query failed: {}", err)),
-    }
-}
-
-/// Count total trades from partitioned_executed_trades table
-///
-/// This function counts the total number of trades in the indexer database filtered by:
-/// - broker_hash (optional)
-/// - account_id (optional)
-/// - time range (required)
-///
-/// This is used to get the total count for pagination purposes.
-pub async fn count_trades_from_db(
-    broker_hash_param: Option<String>,
-    account_id_param: Option<String>,
-    from_time: NaiveDateTime,
-    to_time: NaiveDateTime,
-) -> Result<i64> {
-    use orderly_dashboard_indexer::schema::partitioned_executed_trades::dsl::{
-        account_id, block_time, broker_hash, partitioned_executed_trades,
-    };
-
-    let mut conn = POOL
-        .get()
-        .await
-        .expect("Couldn't get db connection from the pool");
-
-    let mut query = partitioned_executed_trades.into_boxed();
-
-    // Apply filters
-    if let Some(broker) = broker_hash_param {
-        query = query.filter(broker_hash.eq(broker));
-    }
-    if let Some(account) = account_id_param {
-        query = query.filter(account_id.eq(account));
-    }
-    // Time range is required
-    query = query.filter(block_time.ge(from_time));
-    query = query.filter(block_time.le(to_time));
-
-    let result = query.count().get_result::<i64>(&mut conn).await;
-
-    match result {
-        Ok(count) => Ok(count),
-        Err(err) => Err(anyhow::anyhow!("Database count query failed: {}", err)),
     }
 }

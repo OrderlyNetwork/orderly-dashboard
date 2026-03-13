@@ -1,9 +1,10 @@
-use crate::indexer_db::trades::{count_trades_from_db, query_trades_from_db};
+use crate::indexer_db::trades::query_trades_from_db;
 use crate::trades::{CONTRACT_DEPLOY_HEIGHT, LAST_RPC_PROCESS_TIMESTAMP};
 use actix_web::{get, post, web, HttpResponse};
 use chrono::NaiveDateTime;
-use orderly_dashboard_analyzer::sync_broker::cal_broker_hash;
+use orderly_dashboard_analyzer::sync_broker::{cal_broker_hash, cal_symbol_hash};
 use orderly_dashboard_indexer::db::partitioned_executed_trades::DbPartitionedExecutedTrades;
+use orderly_dashboard_indexer::formats_external::trading_events::{MarginMode, PurchaseSide};
 use serde_derive::{Deserialize, Serialize};
 use std::sync::atomic::Ordering;
 use std::time::Instant;
@@ -12,10 +13,10 @@ use utoipa::ToSchema;
 pub(crate) const QUERY_TRADES_CONTEXT: &str = "query_trades_context";
 
 /// Page size for query trades API (number of records per page)
-pub const QUERY_TRADES_PAGE_SIZE: u64 = 200;
+pub const QUERY_TRADES_PAGE_SIZE: u64 = 300;
 
-/// Maximum time range for query trades API (24 hours in seconds)
-pub const MAX_TIME_RANGE_SECONDS: i64 = 24 * 3600;
+/// Maximum time range for query trades API (in seconds). Currently set to 7 days.
+pub const MAX_TIME_RANGE_SECONDS: i64 = 7 * 24 * 3600; // 7 days
 
 #[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 pub struct PaginationCursorRequest {
@@ -25,16 +26,18 @@ pub struct PaginationCursorRequest {
     pub block_time: i64,
 }
 
-#[derive(Debug, Clone, Deserialize, ToSchema)]
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 pub struct QueryTradesRequest {
     pub broker_id: Option<String>,
     pub account_id: Option<String>,
+    pub address: Option<String>,
+    pub symbol: Option<String>,
     pub from_time: i64,
     pub to_time: i64,
     pub next_cursor: Option<PaginationCursorRequest>,
 }
 
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 pub struct TradeItem {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -51,13 +54,17 @@ pub struct TradeItem {
     pub trade_id: String,
     pub match_id: String,
     pub timestamp: String,
-    pub side: bool,
+    pub side: PurchaseSide,
     pub block_time: i64,
     pub broker_hash: Option<String>,
     pub transaction_id: Option<String>,
+    pub margin_mode: Option<MarginMode>,
+    pub iso_margin_asset_hash: Option<String>,
+    pub margin_from_cross: Option<String>,
+    pub address: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 pub struct PaginationCursor {
     pub block_number: i64,
     pub transaction_index: i32,
@@ -65,11 +72,10 @@ pub struct PaginationCursor {
     pub block_time: i64,
 }
 
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 pub struct QueryTradesResponse {
     pub trades: Vec<TradeItem>,
     pub next_cursor: Option<PaginationCursor>,
-    pub total_trades: Option<i64>,
 }
 
 impl From<DbPartitionedExecutedTrades> for TradeItem {
@@ -90,59 +96,63 @@ impl From<DbPartitionedExecutedTrades> for TradeItem {
             trade_id: trade.trade_id.to_string(),
             match_id: trade.match_id.to_string(),
             timestamp: trade.timestamp.to_string(),
-            side: trade.side,
+            side: if trade.side {
+                PurchaseSide::Sell
+            } else {
+                PurchaseSide::Buy
+            },
             block_time: trade.block_time.timestamp(),
             broker_hash: trade.broker_hash,
             transaction_id: trade.transaction_id,
+            margin_mode: trade.margin_mode.and_then(|v| MarginMode::try_from(v).ok()),
+            iso_margin_asset_hash: trade.iso_margin_asset_hash,
+            margin_from_cross: trade.margin_from_cross.as_ref().map(|v| v.to_string()),
+            address: trade.address,
         }
     }
 }
 
-/// Query trades from partitioned_executed_trades table
+/// Query trades from partitioned_executed_trades table.
 ///
-/// This API allows querying trades filtered by broker_id or account_id (must provide exactly one) with required time range.
-/// Results are sorted by (block_number, transaction_index, log_index) and paginated with 200 records per page.
+/// This API allows querying trades filtered by at most one of `broker_id`, `account_id`, `address` or `symbol` (all optional) with a required time range.
+/// All of these filter fields are optional: you may provide **no filter at all** (to query all trades in the time range) or provide **exactly one** of them.
+/// Results are sorted by (block_number, transaction_index, log_index) and paginated with `QUERY_TRADES_PAGE_SIZE` records per page (see `/trades_status` API for the current value).
 ///
-/// Time Range: The time range between `from_time` and `to_time` must not exceed 24 hours (86400 seconds).
+/// Time Range: The time range between `from_time` and `to_time` must not exceed `MAX_TIME_RANGE_SECONDS` (see `/trades_status` API for the current value).
 ///
 /// Pagination: If next_cursor is returned, use it in the next request to get the next page.
-///
-/// total_trades: This field is only returned when `next_cursor` is not provided in the request (i.e., the first page query).
-/// It represents the total number of trades matching the filter criteria (broker_id/account_id and time range).
-/// When querying subsequent pages using `next_cursor`, this field will be `null` to avoid unnecessary count queries.
 #[utoipa::path(
     responses(
-        (status = 200, description = "Query trades response. `total_trades` is only returned when `next_cursor` is not provided in the request (first page query).", body = QueryTradesResponse),
+        (status = 200, description = "Query trades response.", body = QueryTradesResponse),
         (status = 1000, description = "Invalid Request")
     ),
     request_body(
         content = QueryTradesRequest,
         content_type = "application/json",
-        description = "Query trades request. Must provide either broker_id or account_id (but not both)."
+        description = "Query trades request. All filter fields (broker_id, account_id, address, symbol) are optional: you may provide none of them, or provide exactly one of them (at most one may be set)."
     ),
 )]
 #[post("/trades")]
 pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Result<HttpResponse> {
     let param = param.into_inner();
-    // Validate that either broker_id or account_id is provided, but not both
-    match (&param.broker_id, &param.account_id) {
-        (None, None) => {
-            return Ok(HttpResponse::Ok().json(
-                orderly_dashboard_indexer::formats_external::FailureResponse::new(
-                    1000,
-                    "Either broker_id or account_id must be provided".to_string(),
-                ),
-            ));
-        }
-        (Some(_), Some(_)) => {
-            return Ok(HttpResponse::Ok().json(
-                orderly_dashboard_indexer::formats_external::FailureResponse::new(
-                    1000,
-                    "broker_id and account_id cannot be provided at the same time. Please provide only one of them.".to_string(),
-                )
-            ));
-        }
-        _ => {}
+    // Validate that at most one of broker_id, account_id, address, symbol is provided (can also be all None)
+    let filter_count = [
+        param.broker_id.is_some(),
+        param.account_id.is_some(),
+        param.address.is_some(),
+        param.symbol.is_some(),
+    ]
+    .iter()
+    .filter(|&&v| v)
+    .count();
+
+    if filter_count > 1 {
+        return Ok(HttpResponse::Ok().json(
+            orderly_dashboard_indexer::formats_external::FailureResponse::new(
+                1000,
+                "Only one of broker_id, account_id, address or symbol can be provided at the same time. Please provide only one of them.".to_string(),
+            ),
+        ));
     }
 
     tracing::info!(
@@ -156,20 +166,23 @@ pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Re
     // Convert broker_id to broker_hash if provided
     let broker_hash = param.broker_id.as_ref().map(|id| cal_broker_hash(id));
 
+    // Convert symbol to symbol_hash if provided
+    let symbol_hash = param.symbol.as_ref().map(|s| cal_symbol_hash(s));
+
     // Convert timestamps to NaiveDateTime
     let from_time = NaiveDateTime::from_timestamp_opt(param.from_time, 0)
         .ok_or_else(|| actix_web::error::ErrorBadRequest("Invalid from_time timestamp"))?;
     let to_time = NaiveDateTime::from_timestamp_opt(param.to_time, 0)
         .ok_or_else(|| actix_web::error::ErrorBadRequest("Invalid to_time timestamp"))?;
 
-    // Validate time range: maximum 24 hours (24 * 3600 seconds)
+    // Validate time range: maximum MAX_TIME_RANGE_SECONDS
     let time_range_seconds = (to_time - from_time).num_seconds();
     if time_range_seconds > MAX_TIME_RANGE_SECONDS {
         return Ok(HttpResponse::Ok().json(
             orderly_dashboard_indexer::formats_external::FailureResponse::new(
                 1000,
                 format!(
-                    "Time range exceeds maximum allowed duration of {} seconds (24 hours). Please reduce the time range.",
+                    "Time range exceeds maximum allowed duration of {} seconds (7 days). Please reduce the time range.",
                     MAX_TIME_RANGE_SECONDS
                 ),
             ),
@@ -186,37 +199,11 @@ pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Re
         ));
     }
 
-    // Calculate total_trades only if this is the first page (no cursor provided)
-    let total_trades = if param.next_cursor.is_none() {
-        match count_trades_from_db(
-            broker_hash.clone(),
-            param.account_id.clone(),
-            from_time,
-            to_time,
-        )
-        .await
-        {
-            Ok(total) => Some(total),
-            Err(err) => {
-                tracing::warn!(
-                    target: QUERY_TRADES_CONTEXT,
-                    "Failed to count total trades: {}", err
-                );
-                return Ok(HttpResponse::Ok().json(
-                    orderly_dashboard_indexer::formats_external::FailureResponse::new(
-                        1000,
-                        format!("Query trades count failed: {}", err),
-                    ),
-                ));
-            }
-        }
-    } else {
-        None
-    };
-
     match query_trades_from_db(
         broker_hash,
         param.account_id.clone(),
+        param.address.clone(),
+        symbol_hash,
         from_time,
         to_time,
         param.next_cursor.as_ref().map(|c| c.block_number),
@@ -233,7 +220,6 @@ pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Re
             let mut response = QueryTradesResponse {
                 trades: trades.iter().map(|t| TradeItem::from(t.clone())).collect(),
                 next_cursor: None,
-                total_trades,
             };
 
             // If we got exactly QUERY_TRADES_PAGE_SIZE records, there might be more, so set next_cursor
@@ -274,7 +260,7 @@ pub async fn query_trades(param: web::Json<QueryTradesRequest>) -> actix_web::Re
     }
 }
 
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 pub struct TradesStatusResponse {
     pub engine_start_time: u64,
     pub last_rpc_process_timestamp: u64,
