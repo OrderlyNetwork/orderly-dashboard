@@ -166,13 +166,19 @@ pub async fn list_events(
     return Ok(HttpResponse::Ok().json(resp));
 }
 
-/// Get user token/trading events informations with pagelization
+/// Get user token/trading events informations with pagelization.
+///
+/// **Note:** The returned `Settlement`, `Liquidation`, and `Adl` event types may have different schema versions (e.g. v1, v2, v3). Callers should check the version/format of each event and handle multiple versions accordingly.
+///
+/// **Note:** `Trade` (PERPTRADE) has added fields such as `margin_mode`; callers should be aware of these fields and handle them when parsing the response.
 #[utoipa::path(
     responses(
         (status = 200, description = "Get Account events response on orderly, it will return account's `trading events` and `***_event_next_cursor`, if `***_event_next_cursor` is not null, you need to to take this data as a param of next page's request. 
         \n`trading_event_next_cursor` is filled when `PERPTRADE` were requested(`event_type` is null or `event_type` is `PERPTRADE` on request_body) and next page exist. 
         \n `settlement_event_next_cursor` were requested(`event_type` is null or `event_type` is `SETTLEMENT` on request_body) and next page exist. 
-        \n `liquidation_event_next_cursor` were requested(`event_type` is null or `event_type` is `LIQUIDATION` on request_body) and next page exist.", 
+        \n `liquidation_event_next_cursor` were requested(`event_type` is null or `event_type` is `LIQUIDATION` on request_body) and next page exist.
+        \n\n**Note:** The returned `Settlement`, `Liquidation`, and `Adl` event types may have different schema versions (e.g. v1, v2). Callers should check the version/format of each event and handle multiple versions accordingly.
+        \n\n**Note:** `Trade` (PERPTRADE) has added fields such as `margin_mode`; callers should be aware of these fields and handle them when parsing the response.", 
             body = IndexerQueryExternResponse<AccountTradingEventsResponse>
         ),
         (status = 1000, description = "Invalid Request")

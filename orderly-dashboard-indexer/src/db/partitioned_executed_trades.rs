@@ -596,6 +596,184 @@ pub async fn query_account_partitioned_executed_trades(
     Ok(events)
 }
 
+/// Generate mock data: deterministically produce one row from global row_index.
+/// Used to insert ~112M rows into partitioned_executed_trades, with each partition >10M and 2M extra on 2024-07-22.
+#[cfg(test)]
+fn mock_trade_for_index(
+    row_index: u64,
+    brokers: &[&str],
+    addresses: &[&str],
+    account_ids: &[String],
+) -> DbPartitionedExecutedTrades {
+    use bigdecimal::FromPrimitive;
+    const TX_PER_BLOCK: u64 = 11; // transaction_index 0..=10
+    const LOG_PER_TX: u64 = 1001; // log_index 0..=1000
+    const SLOT: u64 = TX_PER_BLOCK * LOG_PER_TX; // 11011
+
+    let block_number = (1 + (row_index / SLOT) % 3_831_371) as i64;
+    let transaction_index = ((row_index / LOG_PER_TX) % TX_PER_BLOCK) as i32;
+    let log_index = (row_index % LOG_PER_TX) as i32;
+
+    let broker_i = (row_index % 10) as usize;
+    let addr_i = (row_index / 10) % 20;
+    let account_i = (broker_i * 10 + (addr_i as usize % 10)) % 100;
+
+    let broker_hash = brokers
+        .get(broker_i)
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("broker_{}", broker_i));
+    let address = addresses
+        .get(addr_i as usize)
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("addr_{}", addr_i));
+    let account_id = account_ids
+        .get(account_i)
+        .cloned()
+        .unwrap_or_else(|| format!("account_{}", account_i));
+
+    let (block_time, partition_index) = mock_block_time_for_row_index(row_index);
+
+    let _ = partition_index;
+    let ts_secs = block_time.timestamp();
+    let ts_ms = ts_secs.saturating_mul(1000);
+
+    DbPartitionedExecutedTrades {
+        block_number,
+        transaction_index,
+        log_index,
+        typ: 0,
+        account_id,
+        symbol_hash: "0xa".to_string(),
+        fee_asset_hash: "0xb".to_string(),
+        trade_qty: BigDecimal::from(1u32),
+        notional: BigDecimal::from(1u32),
+        executed_price: BigDecimal::from(1u32),
+        fee: BigDecimal::from(0u32),
+        sum_unitary_fundings: BigDecimal::from(0u32),
+        trade_id: BigDecimal::from(1u32),
+        match_id: BigDecimal::from(1u32),
+        timestamp: BigDecimal::from_i64(ts_ms).unwrap_or_default(),
+        side: true,
+        block_time,
+        broker_hash: Some(broker_hash),
+        transaction_id: None,
+        margin_mode: None,
+        iso_margin_asset_hash: None,
+        margin_from_cross: None,
+        address: Some(address),
+    }
+}
+
+/// Determine partition and block_time from row_index (deterministic).
+/// Partitions 0..=10 map to before_y2024 through y2026q01; first 2M rows in partition 3 fall on 2024-07-22.
+#[cfg(test)]
+fn mock_block_time_for_row_index(row_index: u64) -> (NaiveDateTime, usize) {
+    const ROWS_PER_PARTITION_BASE: u64 = 10_200_000;
+    const EXTRA_20240722: u64 = 2_000_000;
+    const PARTITION_3_EXTRA_START: u64 = 30_600_000;
+    const PARTITION_3_EXTRA_END: u64 = 32_600_000;
+
+    let partition_bounds: [(NaiveDateTime, NaiveDateTime); 11] = [
+        (
+            NaiveDateTime::parse_from_str("2023-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2024-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2024-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2024-04-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2024-04-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2024-07-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2024-07-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2024-10-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2024-10-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2025-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2025-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2025-04-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2025-04-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2025-07-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2025-07-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2025-10-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2025-10-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2026-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2026-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2026-04-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+        (
+            NaiveDateTime::parse_from_str("2026-01-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+            NaiveDateTime::parse_from_str("2026-04-01 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap(),
+        ),
+    ];
+
+    const TOTAL_MOCK_ROWS: u64 = 114_200_000;
+    let cumulative: [u64; 12] = [
+        0,
+        ROWS_PER_PARTITION_BASE,
+        ROWS_PER_PARTITION_BASE * 2,
+        ROWS_PER_PARTITION_BASE * 3,
+        ROWS_PER_PARTITION_BASE * 3 + EXTRA_20240722,
+        ROWS_PER_PARTITION_BASE * 4 + EXTRA_20240722,
+        ROWS_PER_PARTITION_BASE * 5 + EXTRA_20240722,
+        ROWS_PER_PARTITION_BASE * 6 + EXTRA_20240722,
+        ROWS_PER_PARTITION_BASE * 7 + EXTRA_20240722,
+        ROWS_PER_PARTITION_BASE * 8 + EXTRA_20240722,
+        ROWS_PER_PARTITION_BASE * 9 + EXTRA_20240722,
+        TOTAL_MOCK_ROWS,
+    ];
+
+    let partition_index = cumulative
+        .windows(2)
+        .position(|w| row_index >= w[0] && row_index < w[1])
+        .unwrap_or(10);
+
+    let (start, end) = partition_bounds[partition_index];
+    let partition_start_row = cumulative[partition_index];
+    let partition_end_row = cumulative[partition_index + 1];
+    let partition_len = partition_end_row - partition_start_row;
+
+    let block_time = if partition_index == 3
+        && row_index >= PARTITION_3_EXTRA_START
+        && row_index < PARTITION_3_EXTRA_END
+    {
+        let day_start =
+            NaiveDateTime::parse_from_str("2024-07-22 00:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+        let day_end =
+            NaiveDateTime::parse_from_str("2024-07-22 23:59:59", "%Y-%m-%d %H:%M:%S").unwrap();
+        let offset = row_index - PARTITION_3_EXTRA_START;
+        let total_secs = (day_end - day_start).num_seconds().max(1) as u64;
+        let secs = (offset * total_secs / EXTRA_20240722) as i64;
+        day_start + chrono::Duration::seconds(secs)
+    } else if partition_index == 3 && row_index >= PARTITION_3_EXTRA_END {
+        let offset_in_partition = row_index - PARTITION_3_EXTRA_END;
+        let sub_len = partition_end_row - PARTITION_3_EXTRA_END;
+        let range_secs = (end - start).num_seconds().max(1);
+        let secs = (offset_in_partition as i64 * range_secs) / sub_len as i64;
+        start + chrono::Duration::seconds(secs)
+    } else {
+        let offset_in_partition = row_index - partition_start_row;
+        let range_secs = (end - start).num_seconds().max(1);
+        let secs = (offset_in_partition as i64 * range_secs) / partition_len as i64;
+        start + chrono::Duration::seconds(secs)
+    };
+
+    (block_time, partition_index)
+}
+
 #[cfg(test)]
 mod tests {
     use chrono::{Datelike, Timelike};
@@ -603,6 +781,53 @@ mod tests {
     use crate::init::init_log;
 
     use super::*;
+
+    /// Insert ~112M deterministic mock rows into partitioned_executed_trades.
+    /// Partitions executed_trades_before_y2024 through executed_trades_y2026q01 each have >10M rows;
+    /// 2M extra on 2024-07-22. No inserts into y2026q02 or y2026q03.
+    #[ignore]
+    #[test]
+    fn test_insert_mock_partitioned_executed_trades_100m() {
+        dotenv::dotenv().ok();
+        init_log();
+
+        let brokers: Vec<String> = (0..10).map(|i| format!("broker_{}", i)).collect();
+        let broker_refs: Vec<&str> = brokers.iter().map(|s| s.as_str()).collect();
+
+        let addresses: Vec<String> = (0..20).map(|i| format!("addr_{}", i)).collect();
+        let address_refs: Vec<&str> = addresses.iter().map(|s| s.as_str()).collect();
+
+        let account_ids: Vec<String> = (0..100).map(|i| format!("account_{}", i)).collect();
+
+        const TOTAL_ROWS: u64 = 114_200_000;
+        const BATCH_SIZE: usize = 1_000;
+
+        let system = actix::System::new();
+        system.block_on(async move {
+            let mut inserted = 0u64;
+            for start in (0..TOTAL_ROWS).step_by(BATCH_SIZE) {
+                let end = (start + BATCH_SIZE as u64).min(TOTAL_ROWS);
+                let mut batch = Vec::with_capacity(BATCH_SIZE);
+                for row_index in start..end {
+                    batch.push(mock_trade_for_index(
+                        row_index,
+                        &broker_refs,
+                        &address_refs,
+                        &account_ids,
+                    ));
+                }
+                let n = create_partitioned_executed_trades(batch)
+                    .await
+                    .expect("insert batch");
+                inserted += n as u64;
+                if inserted % 1_000_000 == 0 || start + BATCH_SIZE as u64 >= TOTAL_ROWS {
+                    tracing::info!("mock insert progress: {} / {}", inserted, TOTAL_ROWS);
+                }
+            }
+            tracing::info!("mock insert done: total {}", inserted);
+        });
+    }
+
     #[ignore]
     #[test]
     fn test_insert_partitioning_trades() {
