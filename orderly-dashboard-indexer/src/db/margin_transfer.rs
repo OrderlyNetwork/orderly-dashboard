@@ -22,7 +22,6 @@ pub struct DbMarginTransfer {
     pub transfer_amount: BigDecimal,
     pub transfer_asset_hash: String,
     pub iso_symbol_hash: String,
-    pub timestamp: i64,
 }
 
 pub async fn create_margin_transfers(adls: Vec<DbMarginTransfer>) -> Result<usize> {

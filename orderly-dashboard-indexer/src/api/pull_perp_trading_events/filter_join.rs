@@ -467,7 +467,14 @@ pub async fn account_perp_trading_join_events_v2(
                     join_account_adls(account_id.to_string(), from_time, to_time, None, None)
                         .await?;
             }
-            TradingEventType::MarginTransfer => trading_events = vec![],
+            TradingEventType::MarginTransfer => {
+                trading_events = join_account_margin_transfers(
+                    account_id.to_string(),
+                    from_time,
+                    to_time,
+                )
+                .await?;
+            },
         }
         trading_events.sort();
         response.events = trading_events;
@@ -576,8 +583,15 @@ pub async fn account_perp_trading_join_events_v2(
     } else {
         vec![]
     };
-    // todo: add margin_transfers
-    let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls].concat();
+    let margin_transfers = if offset_block_number.is_none()
+        && settlement_offset_block_number.is_none()
+        && liquidation_offset_block_number.is_none()
+    {
+        join_account_margin_transfers(account_id.to_string(), from_time, to_time).await?
+    } else {
+        vec![]
+    };
+    let mut trading_events = [balance_trans, perp_trades, settlements, liquidations, adls, margin_transfers].concat();
     trading_events.sort();
     response.events = trading_events;
     Ok(response)
@@ -1257,7 +1271,6 @@ pub async fn join_margin_transfers(from_block: i64, to_block: i64) -> Result<Vec
     Ok(margin_trans_vec)
 }
 
-#[allow(dead_code)]
 pub async fn join_account_margin_transfers(
     account_id: String,
     from_time: i64,

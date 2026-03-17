@@ -4,7 +4,7 @@ use crate::schema::settlement_execution;
 use anyhow::Result;
 use bigdecimal::BigDecimal;
 use diesel::prelude::*;
-use diesel::sql_types::{BigInt, Integer, Nullable, Numeric, Text};
+use diesel::sql_types::{BigInt, Int2, Integer, Nullable, Numeric, Text};
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::{Insertable, Queryable};
@@ -82,6 +82,12 @@ pub struct DbSettlementExecutionView {
     pub settled_amount: BigDecimal,
     #[diesel(sql_type = Nullable<Numeric>)]
     pub block_time: Option<BigDecimal>,
+    #[diesel(sql_type = Nullable<Int2>)]
+    pub version: Option<i16>,
+    #[diesel(sql_type = Nullable<Int2>)]
+    pub margin_mode: Option<i16>,
+    #[diesel(sql_type = Nullable<Text>)]
+    pub iso_margin_asset_hash: Option<String>,
 }
 
 impl DbSettlementExecutionView {
@@ -250,7 +256,10 @@ pub async fn query_account_settlement_executions(
                     executions.sum_unitary_fundings as sum_unitary_fundings,
                     executions.mark_price as mark_price,
                     executions.settled_amount as settled_amount,
-                    executions.block_time as block_time
+                    executions.block_time as block_time,
+                    executions.version as version,
+                    executions.margin_mode as margin_mode,
+                    executions.iso_margin_asset_hash as iso_margin_asset_hash
                   from
                     settlement_result result
                     left join settlement_execution executions on result.block_number = executions.block_number
@@ -291,7 +300,10 @@ pub async fn query_account_settlement_executions(
                     executions.sum_unitary_fundings as sum_unitary_fundings,
                     executions.mark_price as mark_price,
                     executions.settled_amount as settled_amount,
-                    executions.block_time as block_time
+                    executions.block_time as block_time,
+                    executions.version as version,
+                    executions.margin_mode as margin_mode,
+                    executions.iso_margin_asset_hash as iso_margin_asset_hash
                   from
                     settlement_result result
                     left join settlement_execution executions on result.block_number = executions.block_number
