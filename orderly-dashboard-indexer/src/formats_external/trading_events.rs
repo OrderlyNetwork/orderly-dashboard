@@ -6,6 +6,7 @@ use crate::db::liquidation_transfer::DbLiquidationTransfer;
 use crate::db::margin_transfer::DbMarginTransfer;
 use crate::db::partitioned_executed_trades::DbPartitionedExecutedTrades;
 use crate::db::serial_batches::{DbSerialBatches, DbSerialBatchesView};
+use crate::db::settlement_execution::SettlementExecutionVersion;
 use crate::db::settlement_execution::{DbSettlementExecution, DbSettlementExecutionView};
 use crate::db::settlement_result::DbSettlementResult;
 use crate::db::settlement_result::SettlementResultVersion;
@@ -276,28 +277,54 @@ impl TradingEvent {
         executions: Vec<DbSettlementExecutionView>,
     ) -> TradingEvent {
         let settlement_res = executions.first().cloned().unwrap();
-        let settlement_executions = executions
-            .into_iter()
-            .map(SettlementExecution::from)
-            .collect::<Vec<_>>();
-        TradingEvent {
-            block_number: settlement_res.block_number as u64,
-            transaction_index: settlement_res.transaction_index as u32,
-            log_index: settlement_res.log_index as u32,
-            transaction_id: settlement_res.transaction_id,
-            block_timestamp: settlement_res
-                .block_time
-                .unwrap_or_default()
-                .to_u64()
-                .unwrap(),
-            data: TradingEventInnerData::SettlementResult {
-                account_id,
-                settled_amount: settlement_res.result_settled_amount.to_string(),
-                settled_asset_hash: settlement_res.settled_asset_hash,
-                insurance_account_id: settlement_res.insurance_account_id,
-                insurance_transfer_amount: settlement_res.insurance_transfer_amount.to_string(),
-                settlement_executions,
-            },
+        if settlement_res.version.unwrap_or_default() == SettlementExecutionVersion::V3.value() {
+            let settlement_executions = executions
+                .into_iter()
+                .map(SettlementExecutionV3::from)
+                .collect::<Vec<_>>();
+            TradingEvent {
+                block_number: settlement_res.block_number as u64,
+                transaction_index: settlement_res.transaction_index as u32,
+                log_index: settlement_res.log_index as u32,
+                transaction_id: settlement_res.transaction_id,
+                block_timestamp: settlement_res
+                    .block_time
+                    .unwrap_or_default()
+                    .to_u64()
+                    .unwrap(),
+                data: TradingEventInnerData::SettlementResultV3 {
+                    account_id,
+                    settled_amount: settlement_res.result_settled_amount.to_string(),
+                    settled_asset_hash: settlement_res.settled_asset_hash,
+                    insurance_account_id: settlement_res.insurance_account_id,
+                    insurance_transfer_amount: settlement_res.insurance_transfer_amount.to_string(),
+                    settlement_executions,
+                },
+            }
+        } else {
+            let settlement_executions = executions
+                .into_iter()
+                .map(SettlementExecution::from)
+                .collect::<Vec<_>>();
+            TradingEvent {
+                block_number: settlement_res.block_number as u64,
+                transaction_index: settlement_res.transaction_index as u32,
+                log_index: settlement_res.log_index as u32,
+                transaction_id: settlement_res.transaction_id,
+                block_timestamp: settlement_res
+                    .block_time
+                    .unwrap_or_default()
+                    .to_u64()
+                    .unwrap(),
+                data: TradingEventInnerData::SettlementResult {
+                    account_id,
+                    settled_amount: settlement_res.result_settled_amount.to_string(),
+                    settled_asset_hash: settlement_res.settled_asset_hash,
+                    insurance_account_id: settlement_res.insurance_account_id,
+                    insurance_transfer_amount: settlement_res.insurance_transfer_amount.to_string(),
+                    settlement_executions,
+                },
+            }
         }
     }
 
@@ -446,13 +473,13 @@ impl TradingEvent {
             transaction_index: margin_transfer.transaction_index as u32,
             log_index: margin_transfer.log_index as u32,
             transaction_id: margin_transfer.transaction_id,
-            block_timestamp: margin_transfer.block_time.to_u64().unwrap(),
+            block_timestamp: margin_transfer.block_time.to_u64().unwrap_or_default(),
             data: TradingEventInnerData::MarginTransferV3 {
                 account_id: margin_transfer.account_id,
                 transfer_amount: margin_transfer.transfer_amount.to_string(),
                 transfer_asset_hash: margin_transfer.transfer_asset_hash,
                 iso_symbol_hash: margin_transfer.iso_symbol_hash,
-                timestamp: margin_transfer.timestamp,
+                timestamp: margin_transfer.block_time.to_i64().unwrap_or_default(),
             },
         }
     }
@@ -653,6 +680,23 @@ impl From<DbSettlementExecutionView> for SettlementExecution {
             mark_price: value.mark_price.to_string(),
             sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
             settled_amount: value.settled_amount.to_string(),
+        }
+    }
+}
+
+impl From<DbSettlementExecutionView> for SettlementExecutionV3 {
+    fn from(value: DbSettlementExecutionView) -> Self {
+        SettlementExecutionV3 {
+            symbol_hash: value.symbol_hash,
+            mark_price: value.mark_price.to_string(),
+            sum_unitary_fundings: value.sum_unitary_fundings.to_string(),
+            settled_amount: value.settled_amount.to_string(),
+            margin_mode: if let Some(mode) = value.margin_mode {
+                mode.try_into().unwrap_or_else(|_| MarginMode::Cross)
+            } else {
+                MarginMode::Cross
+            },
+            iso_margin_asset_hash: value.iso_margin_asset_hash.unwrap_or_default(),
         }
     }
 }

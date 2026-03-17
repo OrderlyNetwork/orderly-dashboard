@@ -1649,7 +1649,6 @@ pub(crate) async fn handle_log(
                             transfer_amount: convert_amount(event.transfer_amount as i128)?,
                             transfer_asset_hash: to_hex_format(&event.transfer_asset_hash),
                             iso_symbol_hash: to_hex_format(&event.iso_symbol_hash),
-                            timestamp: (block_t.unwrap_or_default() as i64).into(),
                         }])
                         .await?;
                     }
