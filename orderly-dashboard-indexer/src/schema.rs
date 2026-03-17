@@ -464,7 +464,6 @@ diesel::table! {
         transfer_amount -> Numeric,
         transfer_asset_hash -> Text,
         iso_symbol_hash -> Text,
-        timestamp -> Int8,
     }
 }
 
