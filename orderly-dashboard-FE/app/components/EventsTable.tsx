@@ -23,7 +23,7 @@ import dayjs from 'dayjs';
 import { FC, useState, useEffect, useMemo, useCallback } from 'react';
 
 import { Spinner } from '~/components';
-import { EventTableData, EventType, useSymbols, getSymbolName } from '~/hooks';
+import { EventTableData, UIEventType, useSymbols, getSymbolName } from '~/hooks';
 
 interface EventsTableProps {
   events: EventTableData[] | undefined;
@@ -33,8 +33,8 @@ interface EventsTableProps {
   hasMore: boolean;
   tradesCount: number;
   loadMore: () => void;
-  eventType: EventType | 'ALL';
-  setEventType: (type: EventType | 'ALL') => void;
+  eventType: UIEventType;
+  setEventType: (type: UIEventType) => void;
   dateRange: [string | null, string | null];
   setDateRange: (range: [string | null, string | null]) => void;
   aggregateTrades?: boolean;
@@ -44,7 +44,7 @@ interface EventsTableProps {
   setSymbolFilter?: (value: string) => void;
 }
 
-const getDefaultVisibility = (aggregateTrades?: boolean, eventType?: EventType | 'ALL') => {
+const getDefaultVisibility = (aggregateTrades?: boolean, eventType?: UIEventType) => {
   const baseVisibility = {
     block_number: false,
     'data_Transaction.account_id': false,
@@ -77,9 +77,29 @@ const getDefaultVisibility = (aggregateTrades?: boolean, eventType?: EventType |
     liquidationv2_cost_position_transfer: false,
     liquidationv2_account_id: false,
     liquidationv2_sum_unitary_fundings: false,
-    'data_AdlResult.account_id': false,
-    'data_AdlResult.insurance_account_id': false,
-    'data_AdlResult.sum_unitary_fundings': false
+    data_SettlementResultV3_account_id: false,
+    data_SettlementResultV3_insurance_transfer_amount: false,
+    data_SettlementResultV3_insurance_account_id: false,
+    settlementv3_sum_unitary_fundings: false,
+    settlementv3_settled_amount: false,
+    settlementv3_iso_margin_asset_hash: false,
+    data_LiquidationResultV3_account_id: false,
+    data_LiquidationResultV3_insurance_transfer_amount: false,
+    liquidationv3_cost_position_transfer: false,
+    liquidationv3_account_id: false,
+    liquidationv3_sum_unitary_fundings: false,
+    liquidationv3_margin_asset_hash: false,
+    liquidationv3_margin_to_cross: false,
+    data_LiquidationResultV3_is_insurance_account: false,
+    data_AdlResult_insurance_account_id: false,
+    data_AdlResultV3_account_id: false,
+    data_AdlResultV3_cost_position_transfer: false,
+    data_AdlResultV3_sum_unitary_fundings: false,
+    data_AdlResultV3_margin_asset_hash: false,
+    data_AdlResultV3_margin_to_cross: false,
+    data_AdlResultV3_is_insurance_account: false,
+    data_MarginTransferV3_account_id: false,
+    data_MarginTransferV3_timestamp: false
   };
 
   if (aggregateTrades && eventType === 'PERPTRADE') {
@@ -352,10 +372,10 @@ export const EventsTable: FC<EventsTableProps> = ({
                 id="event-type"
                 value={eventType}
                 onChange={(e) => {
-                  setEventType(e.target.value as EventType);
+                  setEventType(e.target.value as UIEventType);
                   const newVisibility = getDefaultVisibility(
                     aggregateTrades,
-                    e.target.value as EventType
+                    e.target.value as UIEventType
                   );
                   table.setColumnVisibility(newVisibility);
                 }}
@@ -364,11 +384,15 @@ export const EventsTable: FC<EventsTableProps> = ({
                 <option value="ALL">All Events</option>
                 <option value="TRANSACTION">Transactions</option>
                 <option value="PERPTRADE">Trades</option>
-                <option value="SETTLEMENT">Pnl Settlements</option>
-                <option value="LIQUIDATIONV2">Liquidations</option>
-                <option value="LIQUIDATION">Liquidations (old)</option>
-                <option value="ADLV2">ADL</option>
-                <option value="ADL">ADL (old)</option>
+                <option value="SETTLEMENTV3">Pnl Settlements (v3)</option>
+                <option value="SETTLEMENT">Pnl Settlements (v1)</option>
+                <option value="LIQUIDATIONV3">Liquidations (v3)</option>
+                <option value="LIQUIDATIONV2">Liquidations (v2)</option>
+                <option value="LIQUIDATION">Liquidations (v1)</option>
+                <option value="ADLV3">ADL (v3)</option>
+                <option value="ADLV2">ADL (v2)</option>
+                <option value="ADL">ADL (v1)</option>
+                <option value="MARGINTRANSFER">Margin Transfers</option>
               </select>
             </div>
             {eventType === 'PERPTRADE' && (

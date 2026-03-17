@@ -101,6 +101,27 @@ export namespace types {
         "mark_price": string;
         "sum_unitary_fundings": string;
     };
+    export type MarginMode = ("CROSS" | "ISOLATED");
+    export type SettlementExecutionV3 = {
+        "symbol_hash": string;
+        "mark_price": string;
+        "sum_unitary_fundings": string;
+        "settled_amount": string;
+        "margin_mode": types.MarginMode;
+        "iso_margin_asset_hash": string;
+    };
+    export type LiquidationTransferV3 = {
+        "account_id": string;
+        "symbol_hash": string;
+        "position_qty_transfer": string;
+        "cost_position_transfer": string;
+        "fee": string;
+        "mark_price": string;
+        "sum_unitary_fundings": string;
+        "margin_mode": (types.MarginMode | null);
+        "margin_asset_hash": (string | null);
+        "margin_to_cross": (string | null);
+    };
     export type TradingEventInnerData = ({
         "Transaction": {
             "account_id": string;
@@ -163,6 +184,44 @@ export namespace types {
             "cost_position_transfer": string;
             "adl_price": string;
             "sum_unitary_fundings": string;
+        };
+    } | {
+        "SettlementResultV3": {
+            "account_id": string;
+            "settled_amount": string;
+            "settled_asset_hash": string;
+            "insurance_account_id": string;
+            "insurance_transfer_amount": string;
+            "settlement_executions": (types.SettlementExecutionV3)[];
+        };
+    } | {
+        "LiquidationResultV3": {
+            "account_id": string;
+            "liquidated_asset_hash": string;
+            "insurance_transfer_amount": string;
+            "liquidation_transfers": (types.LiquidationTransferV3)[];
+            "is_insurance_account": boolean;
+        };
+    } | {
+        "AdlResultV3": {
+            "account_id": string;
+            "symbol_hash": string;
+            "position_qty_transfer": string;
+            "cost_position_transfer": string;
+            "adl_price": string;
+            "sum_unitary_fundings": string;
+            "margin_mode": (types.MarginMode | null);
+            "margin_asset_hash": (string | null);
+            "margin_to_cross": (string | null);
+            "is_insurance_account": boolean;
+        };
+    } | {
+        "MarginTransferV3": {
+            "account_id": string;
+            "transfer_amount": string;
+            "transfer_asset_hash": string;
+            "iso_symbol_hash": string;
+            "timestamp": types.I64;
         };
     });
     export type U32 = number;

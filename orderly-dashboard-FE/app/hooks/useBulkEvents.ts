@@ -287,6 +287,15 @@ function flattenEvents(events: types.TradingEvent[]): EventTableData[] {
           } as EventTableData);
         }
       })
+      .with({ LiquidationResultV3: P.select() }, (data) => {
+        for (const liquidationv3 of data.liquidation_transfers) {
+          flattened.push({
+            ...event,
+            type: 'liquidationv3',
+            liquidationv3
+          } as EventTableData);
+        }
+      })
       .otherwise(() => {
         // Ignore other event types
       });
@@ -421,6 +430,24 @@ function aggregateLiquidationsForTax(
         event_type: 'LIQUIDATION',
         timestamp: new Date(event.block_timestamp * 1000).toISOString(),
         symbol: symbolName || event.liquidationv2.symbol_hash,
+        position_qty: qty.format({ maximumFractionDigits: 2 }),
+        mark_price: price.format({ maximumFractionDigits: 2 }),
+        notional: notional.format({ maximumFractionDigits: 2 }),
+        fee: fee.format({ maximumFractionDigits: 2 }),
+        transaction_id: event.transaction_id
+      });
+    } else if (event.type === 'liquidationv3') {
+      const symbolName = getSymbolName(event.liquidationv3.symbol_hash, symbols);
+
+      const qty = new FixedNumber(event.liquidationv3.position_qty_transfer, 8);
+      const price = new FixedNumber(event.liquidationv3.mark_price, 8);
+      const notional = new FixedNumber(event.liquidationv3.cost_position_transfer, 8);
+      const fee = new FixedNumber(event.liquidationv3.fee, 6);
+
+      liquidations.push({
+        event_type: 'LIQUIDATION',
+        timestamp: new Date(event.block_timestamp * 1000).toISOString(),
+        symbol: symbolName || event.liquidationv3.symbol_hash,
         position_qty: qty.format({ maximumFractionDigits: 2 }),
         mark_price: price.format({ maximumFractionDigits: 2 }),
         notional: notional.format({ maximumFractionDigits: 2 }),

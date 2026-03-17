@@ -11,7 +11,7 @@ import { TransactionLink } from './TransactionLink';
 
 import {
   EventTableData,
-  EventType,
+  UIEventType,
   EventsParams,
   getSymbolName,
   getTokenName,
@@ -22,8 +22,8 @@ import {
 
 export function useRenderColumns(
   query: EventsParams | null,
-  eventType: EventType | 'ALL',
-  setEventType: Dispatch<SetStateAction<EventType | 'ALL'>>,
+  eventType: UIEventType,
+  setEventType: Dispatch<SetStateAction<UIEventType>>,
   aggregateTrades: boolean = false,
   onSymbolFilter?: (symbolHash: string) => void
 ) {
@@ -36,115 +36,143 @@ export function useRenderColumns(
   const symbols = useSymbols();
 
   const processedEvents = useMemo(() => {
-    if (!aggregateTrades || !events || eventType !== 'PERPTRADE') {
-      return events;
-    }
+    let result = events;
 
-    const aggregatedEvents: EventTableData[] = [];
-    const tradeGroups = new Map<string, EventTableData[]>();
+    if (aggregateTrades && events && eventType === 'PERPTRADE') {
+      const aggregatedEvents: EventTableData[] = [];
+      const tradeGroups = new Map<string, EventTableData[]>();
 
-    events.forEach((event) => {
-      if (event.type === 'trade') {
-        const key = `${event.transaction_id}_${event.block_number}_${event.transaction_index}_${event.trade.symbol_hash}_${event.trade.side}`;
-        if (!tradeGroups.has(key)) {
-          tradeGroups.set(key, []);
+      events.forEach((event) => {
+        if (event.type === 'trade') {
+          const key = `${event.transaction_id}_${event.block_number}_${event.transaction_index}_${event.trade.symbol_hash}_${event.trade.side}`;
+          if (!tradeGroups.has(key)) {
+            tradeGroups.set(key, []);
+          }
+          tradeGroups.get(key)!.push(event);
+        } else {
+          aggregatedEvents.push(event);
         }
-        tradeGroups.get(key)!.push(event);
-      } else {
-        aggregatedEvents.push(event);
-      }
-    });
+      });
 
-    tradeGroups.forEach((group) => {
-      if (group.length === 1) {
-        aggregatedEvents.push(group[0]);
-        return;
-      }
+      tradeGroups.forEach((group) => {
+        if (group.length === 1) {
+          aggregatedEvents.push(group[0]);
+          return;
+        }
 
-      const firstTrade = group[0];
-      if (firstTrade.type !== 'trade') return;
-      const aggregatedTrade: EventTableData = {
-        ...firstTrade,
-        trade: {
-          ...firstTrade.trade,
-          trade_qty: group.reduce((sum, event) => {
-            if (event.type !== 'trade') return sum;
-            try {
-              const currentQty = new FixedNumber(event.trade.trade_qty, 8);
-              const sumQty = new FixedNumber(sum, 8);
-              return sumQty.add(currentQty).valueOf().toString();
-            } catch (error) {
-              return sum;
-            }
-          }, '0'),
-          notional: group.reduce((sum, event) => {
-            if (event.type !== 'trade') return sum;
-            try {
-              const currentNotional = new FixedNumber(event.trade.notional, 6);
-              const sumNotional = new FixedNumber(sum, 6);
-              return sumNotional.add(currentNotional).valueOf().toString();
-            } catch (error) {
-              return sum;
-            }
-          }, '0'),
-          fee: group.reduce((sum, event) => {
-            if (event.type !== 'trade') return sum;
-            try {
-              const currentFee = new FixedNumber(event.trade.fee, 6);
-              const sumFee = new FixedNumber(sum, 6);
-              return sumFee.add(currentFee).valueOf().toString();
-            } catch (error) {
-              return sum;
-            }
-          }, '0'),
-          sum_unitary_fundings: group.reduce((sum, event) => {
-            if (event.type !== 'trade') return sum;
-            try {
-              const currentFunding = new FixedNumber(event.trade.sum_unitary_fundings, 8);
-              const sumFunding = new FixedNumber(sum, 8);
-              return sumFunding.add(currentFunding).valueOf().toString();
-            } catch (error) {
-              return sum;
-            }
-          }, '0'),
-          executed_price: (() => {
-            let totalQty = new FixedNumber('0', 8);
-            let weightedPrice = new FixedNumber('0', 8);
-
-            group.forEach((event) => {
-              if (event.type !== 'trade') return;
+        const firstTrade = group[0];
+        if (firstTrade.type !== 'trade') return;
+        const aggregatedTrade: EventTableData = {
+          ...firstTrade,
+          trade: {
+            ...firstTrade.trade,
+            trade_qty: group.reduce((sum, event) => {
+              if (event.type !== 'trade') return sum;
               try {
-                const qty = new FixedNumber(event.trade.trade_qty, 8);
-                const price = new FixedNumber(event.trade.executed_price, 8);
-                const contribution = price.mul(qty);
-
-                totalQty = totalQty.add(qty);
-                weightedPrice = weightedPrice.add(contribution);
+                const currentQty = new FixedNumber(event.trade.trade_qty, 8);
+                const sumQty = new FixedNumber(sum, 8);
+                return sumQty.add(currentQty).valueOf().toString();
               } catch (error) {
-                console.warn('Error processing trade for aggregation:', error);
+                return sum;
               }
-            });
+            }, '0'),
+            notional: group.reduce((sum, event) => {
+              if (event.type !== 'trade') return sum;
+              try {
+                const currentNotional = new FixedNumber(event.trade.notional, 6);
+                const sumNotional = new FixedNumber(sum, 6);
+                return sumNotional.add(currentNotional).valueOf().toString();
+              } catch (error) {
+                return sum;
+              }
+            }, '0'),
+            fee: group.reduce((sum, event) => {
+              if (event.type !== 'trade') return sum;
+              try {
+                const currentFee = new FixedNumber(event.trade.fee, 6);
+                const sumFee = new FixedNumber(sum, 6);
+                return sumFee.add(currentFee).valueOf().toString();
+              } catch (error) {
+                return sum;
+              }
+            }, '0'),
+            sum_unitary_fundings: group.reduce((sum, event) => {
+              if (event.type !== 'trade') return sum;
+              try {
+                const currentFunding = new FixedNumber(event.trade.sum_unitary_fundings, 8);
+                const sumFunding = new FixedNumber(sum, 8);
+                return sumFunding.add(currentFunding).valueOf().toString();
+              } catch (error) {
+                return sum;
+              }
+            }, '0'),
+            executed_price: (() => {
+              let totalQty = new FixedNumber('0', 8);
+              let weightedPrice = new FixedNumber('0', 8);
 
-            try {
-              if (totalQty.valueOf() <= 0n) {
+              group.forEach((event) => {
+                if (event.type !== 'trade') return;
+                try {
+                  const qty = new FixedNumber(event.trade.trade_qty, 8);
+                  const price = new FixedNumber(event.trade.executed_price, 8);
+                  const contribution = price.mul(qty);
+
+                  totalQty = totalQty.add(qty);
+                  weightedPrice = weightedPrice.add(contribution);
+                } catch (error) {
+                  console.warn('Error processing trade for aggregation:', error);
+                }
+              });
+
+              try {
+                if (totalQty.valueOf() <= 0n) {
+                  return firstTrade.trade.executed_price;
+                }
+
+                const result = weightedPrice.div(totalQty);
+                return result.valueOf().toString();
+              } catch (error) {
+                console.error('Error calculating weighted average:', error);
                 return firstTrade.trade.executed_price;
               }
+            })(),
+            match_id: firstTrade.trade.match_id,
+            trade_id: firstTrade.trade.trade_id
+          }
+        };
 
-              const result = weightedPrice.div(totalQty);
-              return result.valueOf().toString();
-            } catch (error) {
-              console.error('Error calculating weighted average:', error);
-              return firstTrade.trade.executed_price;
-            }
-          })(),
-          match_id: firstTrade.trade.match_id,
-          trade_id: firstTrade.trade.trade_id
+        aggregatedEvents.push(aggregatedTrade);
+      });
+      result = aggregatedEvents;
+    }
+
+    if (result) {
+      result = result.filter((event) => {
+        switch (eventType) {
+          case 'LIQUIDATION':
+            return event.type === 'liquidation';
+          case 'LIQUIDATIONV2':
+            return event.type === 'liquidationv2';
+          case 'LIQUIDATIONV3':
+            return event.type === 'liquidationv3';
+          case 'ADL':
+            return event.type === 'adl';
+          case 'ADLV2':
+            return event.type === 'adlv2';
+          case 'ADLV3':
+            return event.type === 'adlv3';
+          case 'SETTLEMENT':
+            return event.type === 'settlement';
+          case 'SETTLEMENTV3':
+            return event.type === 'settlementv3';
+          case 'ALL':
+          default:
+            return true;
         }
-      };
+      });
+    }
 
-      aggregatedEvents.push(aggregatedTrade);
-    });
-    return aggregatedEvents;
+    return result;
   }, [events, aggregateTrades, eventType]);
 
   const columns = useMemo<GroupColumnDef<EventTableData, unknown>[]>(() => {
@@ -195,33 +223,57 @@ export function useRenderColumns(
                   {
                     LiquidationResult: P.any
                   },
-                  () => ['Liquidation', 'LIQUIDATION']
+                  () => ['Liquidation (v1)', 'LIQUIDATION']
                 )
                 .with(
                   {
                     LiquidationResultV2: P.any
                   },
-                  () => ['LiquidationV2', 'LIQUIDATIONV2']
+                  () => ['Liquidation (v2)', 'LIQUIDATIONV2']
                 )
                 .with(
                   {
                     SettlementResult: P.any
                   },
-                  () => ['Pnl Settlement', 'SETTLEMENT']
+                  () => ['Pnl Settlement (v1)', 'SETTLEMENT']
                 )
                 .with(
                   {
                     AdlResult: P.any
                   },
-                  () => ['Adl', 'ADL']
+                  () => ['ADL (v1)', 'ADL']
                 )
                 .with(
                   {
                     AdlResultV2: P.any
                   },
-                  () => ['AdlV2', 'ADLV2']
+                  () => ['ADL (v2)', 'ADLV2']
                 )
-                .exhaustive() as [string | undefined, EventType | 'ALL'];
+                .with(
+                  {
+                    SettlementResultV3: P.any
+                  },
+                  () => ['Pnl Settlement (v3)', 'SETTLEMENTV3']
+                )
+                .with(
+                  {
+                    LiquidationResultV3: P.any
+                  },
+                  () => ['Liquidation (v3)', 'LIQUIDATIONV3']
+                )
+                .with(
+                  {
+                    AdlResultV3: P.any
+                  },
+                  () => ['ADL (v3)', 'ADLV3']
+                )
+                .with(
+                  {
+                    MarginTransferV3: P.any
+                  },
+                  () => ['Margin Transfer', 'MARGINTRANSFER']
+                )
+                .exhaustive() as [string | undefined, UIEventType];
               return (
                 <Button
                   className="p-1 h-auto bg-[--accent-5] hover:bg-[--accent-4]"
@@ -872,6 +924,359 @@ export function useRenderColumns(
                     maximumFractionDigits: 2
                   });
                 }
+              })
+            ]
+          })
+        );
+      })
+      .with('SETTLEMENTV3', () => {
+        columns.push(
+          columnHelper.group({
+            id: 'settlementv3',
+            header: 'PnL Settlement V3',
+            columns: [
+              columnHelper.accessor('settlementv3.symbol_hash', {
+                header: 'Symbol',
+                enableSorting: false,
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
+              }),
+              columnHelper.accessor('data.SettlementResultV3.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('data.SettlementResultV3.settled_amount', {
+                header: 'Settled Amount',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.SettlementResultV3.insurance_transfer_amount', {
+                header: 'Insurance Transfer Amount',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.SettlementResultV3.insurance_account_id', {
+                header: 'Insurance Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('data.SettlementResultV3.settled_asset_hash', {
+                header: 'Settled Asset',
+                enableSorting: false,
+                cell: (info) => getTokenName(info.getValue(), tokens)
+              }),
+              columnHelper.accessor('settlementv3.mark_price', {
+                header: 'Mark Price',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('settlementv3.settled_amount', {
+                header: 'Execution Settled Amount',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('settlementv3.sum_unitary_fundings', {
+                header: 'Sum Uni. Funding',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('settlementv3.margin_mode', {
+                header: 'Margin Mode',
+                enableSorting: false,
+                cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('settlementv3.iso_margin_asset_hash', {
+                header: 'ISO Margin Asset',
+                enableSorting: false,
+                cell: (info) => getTokenName(info.getValue(), tokens)
+              })
+            ]
+          })
+        );
+      })
+      .with('LIQUIDATIONV3', () => {
+        columns.push(
+          columnHelper.group({
+            id: 'liquidationv3',
+            header: 'Liquidation V3',
+            columns: [
+              columnHelper.accessor('data.LiquidationResultV3.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('liquidationv3.symbol_hash', {
+                header: 'Symbol',
+                enableSorting: false,
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
+              }),
+              columnHelper.accessor('liquidationv3.mark_price', {
+                header: 'Mark Price',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('liquidationv3.fee', {
+                header: 'Fee',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.LiquidationResultV3.insurance_transfer_amount', {
+                header: 'Insurance Transfer Amount',
+                enableSorting: false,
+                cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('liquidationv3.cost_position_transfer', {
+                header: 'Cost Position Transfer',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('liquidationv3.position_qty_transfer', {
+                header: 'Position Qty Transfer',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('liquidationv3.account_id', {
+                header: 'Liquidated Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('liquidationv3.sum_unitary_fundings', {
+                header: 'Sum Uni. Funding',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('liquidationv3.margin_mode', {
+                header: 'Margin Mode',
+                enableSorting: false,
+                cell: (info) => info.getValue() ?? '-'
+              }),
+              columnHelper.accessor('liquidationv3.margin_asset_hash', {
+                header: 'Margin Asset',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '-';
+                  return getTokenName(value, tokens);
+                }
+              }),
+              columnHelper.accessor('liquidationv3.margin_to_cross', {
+                header: 'Margin To Cross',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '-';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.LiquidationResultV3.is_insurance_account', {
+                header: 'Is Insurance Account',
+                enableSorting: false,
+                cell: (info) => (info.getValue() ? 'Yes' : 'No')
+              })
+            ]
+          })
+        );
+      })
+      .with('ADLV3', () => {
+        columns.push(
+          columnHelper.group({
+            id: 'adlv3',
+            header: 'Adl V3',
+            columns: [
+              columnHelper.accessor('data.AdlResultV3.symbol_hash', {
+                header: 'Symbol',
+                enableSorting: false,
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
+              }),
+              columnHelper.accessor('data.AdlResultV3.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('data.AdlResultV3.adl_price', {
+                header: 'Adl Price',
+                enableSorting: false,
+                cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('data.AdlResultV3.cost_position_transfer', {
+                header: 'Cost Position Transfer',
+                enableSorting: false,
+                cell: (info) => info.getValue()
+              }),
+              columnHelper.accessor('data.AdlResultV3.position_qty_transfer', {
+                header: 'Position Qty Transfer',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.AdlResultV3.sum_unitary_fundings', {
+                header: 'Sum Uni. Funding',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 8).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.AdlResultV3.margin_mode', {
+                header: 'Margin Mode',
+                enableSorting: false,
+                cell: (info) => info.getValue() ?? '-'
+              }),
+              columnHelper.accessor('data.AdlResultV3.margin_asset_hash', {
+                header: 'Margin Asset',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '-';
+                  return getTokenName(value, tokens);
+                }
+              }),
+              columnHelper.accessor('data.AdlResultV3.margin_to_cross', {
+                header: 'Margin To Cross',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '-';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.AdlResultV3.is_insurance_account', {
+                header: 'Is Insurance Account',
+                enableSorting: false,
+                cell: (info) => (info.getValue() ? 'Yes' : 'No')
+              })
+            ]
+          })
+        );
+      })
+      .with('MARGINTRANSFER', () => {
+        columns.push(
+          columnHelper.group({
+            id: 'margintransfer',
+            header: 'Margin Transfer',
+            columns: [
+              columnHelper.accessor('data.MarginTransferV3.account_id', {
+                header: 'Account ID',
+                enableSorting: false,
+                cell: (info) => <Shortened value={info.getValue()} />
+              }),
+              columnHelper.accessor('data.MarginTransferV3.transfer_amount', {
+                header: 'Transfer Amount',
+                enableSorting: false,
+                cell: (info) => {
+                  const value = info.getValue();
+                  if (value == null) return '';
+                  return new FixedNumber(value, 6).format({
+                    maximumFractionDigits: 2
+                  });
+                }
+              }),
+              columnHelper.accessor('data.MarginTransferV3.transfer_asset_hash', {
+                header: 'Transfer Asset',
+                enableSorting: false,
+                cell: (info) => getTokenName(info.getValue(), tokens)
+              }),
+              columnHelper.accessor('data.MarginTransferV3.iso_symbol_hash', {
+                header: 'ISO Symbol',
+                enableSorting: false,
+                cell: (info) => {
+                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const parts = symbol.split('_');
+                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  return <span className="font-mono text-sm">{baseToken}</span>;
+                }
+              }),
+              columnHelper.accessor('data.MarginTransferV3.timestamp', {
+                header: 'Event Timestamp',
+                enableSorting: false,
+                cell: (info) => <Timestamp timestamp={info.getValue()} />
               })
             ]
           })
