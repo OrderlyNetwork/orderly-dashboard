@@ -108,7 +108,7 @@ pub async fn analyzer_settlement_v3(
     pulled_block_height: i64,
     context: &mut AnalyzeContext,
 ) {
-    tracing::info!(target:SETTLEMENT_ANALYZER,"pulled_block_height: {}, receive settlement,account:{},settlement:{:?}",pulled_block_height, account_id.clone(),settlement_executions);
+    tracing::info!(target:SETTLEMENT_ANALYZER,"pulled_block_height: {}, receive settlementV3, account:{}, settlement:{:?}",pulled_block_height, account_id.clone(),settlement_executions);
     if FUTURES_FEE_COLLECTORS.contains(&account_id.as_str()) {
         return;
     }
