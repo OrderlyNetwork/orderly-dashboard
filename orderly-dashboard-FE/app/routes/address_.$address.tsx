@@ -18,7 +18,7 @@ import {
   PnLStats,
   TaxExportModal
 } from '~/components';
-import { ChainAddress, EventsParams, EventType } from '~/hooks';
+import { ChainAddress, EventsParams, UIEventType, toBackendEventType } from '~/hooks';
 import { base64UrlSafeEncode, base64UrlSafeDecode } from '~/util';
 
 export function loader({ params }: LoaderFunctionArgs) {
@@ -43,7 +43,7 @@ export const Address: FC = () => {
     }
   }, [searchParams]);
 
-  const [eventType, setEventType] = useState<EventType | 'ALL'>('ALL');
+  const [eventType, setEventType] = useState<UIEventType>('ALL');
 
   const [dateRange, setDateRange] = useState<[string | null, string | null]>([
     dayjs(new Date()).subtract(30, 'days').format('YYYY-MM-DD'),
@@ -271,11 +271,7 @@ export const Address: FC = () => {
       broker_id != null && selectedAccount != null
         ? ({
             account_id: selectedAccount.account_id,
-            event_type: match(eventType)
-              .with('ALL', () => undefined)
-              .with('LIQUIDATIONV2', () => 'LIQUIDATION')
-              .with('ADLV2', () => 'ADL')
-              .otherwise((value) => value) as EventType,
+            event_type: toBackendEventType(eventType) ?? undefined,
             from_time: validDateRange[0] ? dayjs(validDateRange[0]) : null,
             to_time: validDateRange[1] ? dayjs(validDateRange[1]).endOf('day') : null
           } satisfies EventsParams)

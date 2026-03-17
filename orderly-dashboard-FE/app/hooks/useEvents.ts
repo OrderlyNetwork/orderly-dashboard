@@ -11,9 +11,46 @@ export type EventType =
   | 'PERPTRADE'
   | 'SETTLEMENT'
   | 'LIQUIDATION'
-  | 'LIQUIDATIONV2'
   | 'ADL'
-  | 'ADLV2';
+  | 'MARGINTRANSFER';
+
+export type UIEventType =
+  | 'ALL'
+  | EventType
+  | 'LIQUIDATIONV2'
+  | 'LIQUIDATIONV3'
+  | 'ADLV2'
+  | 'ADLV3'
+  | 'SETTLEMENTV3';
+
+export function toBackendEventType(uiEventType: UIEventType): EventType | null {
+  switch (uiEventType) {
+    case 'ALL':
+      return null;
+    case 'LIQUIDATIONV2':
+    case 'LIQUIDATIONV3':
+      return 'LIQUIDATION';
+    case 'ADLV2':
+    case 'ADLV3':
+      return 'ADL';
+    case 'SETTLEMENTV3':
+      return 'SETTLEMENT';
+    default:
+      return uiEventType;
+  }
+}
+
+export function getEventVersion(data: types.TradingEventInnerData): string {
+  if ('LiquidationResultV3' in data) return 'v3';
+  if ('LiquidationResultV2' in data) return 'v2';
+  if ('LiquidationResult' in data) return 'v1';
+  if ('AdlResultV3' in data) return 'v3';
+  if ('AdlResultV2' in data) return 'v2';
+  if ('AdlResult' in data) return 'v1';
+  if ('SettlementResultV3' in data) return 'v3';
+  if ('SettlementResult' in data) return 'v1';
+  return '';
+}
 
 export type EventTableData = types.TradingEvent &
   (
@@ -29,6 +66,10 @@ export type EventTableData = types.TradingEvent &
         settlement: types.SettlementExecution;
       }
     | {
+        type: 'settlementv3';
+        settlementv3: types.SettlementExecutionV3;
+      }
+    | {
         type: 'liquidation';
         liquidation: types.LiquidationTransfer;
       }
@@ -37,10 +78,20 @@ export type EventTableData = types.TradingEvent &
         liquidationv2: types.LiquidationTransferV2;
       }
     | {
+        type: 'liquidationv3';
+        liquidationv3: types.LiquidationTransferV3;
+      }
+    | {
         type: 'adl';
       }
     | {
         type: 'adlv2';
+      }
+    | {
+        type: 'adlv3';
+      }
+    | {
+        type: 'margintransfer';
       }
   );
 
@@ -315,6 +366,42 @@ function handleFetchEventsV2(val: {
         },
         () => {
           flattenedEvents.push({ ...event, type: 'adlv2' });
+        }
+      )
+      .with(
+        {
+          SettlementResultV3: P.select()
+        },
+        (data) => {
+          for (const settlementv3 of data.settlement_executions) {
+            flattenedEvents.push({ ...event, type: 'settlementv3', settlementv3 });
+          }
+        }
+      )
+      .with(
+        {
+          LiquidationResultV3: P.select()
+        },
+        (data) => {
+          for (const liquidationv3 of data.liquidation_transfers) {
+            flattenedEvents.push({ ...event, type: 'liquidationv3', liquidationv3 });
+          }
+        }
+      )
+      .with(
+        {
+          AdlResultV3: P.select()
+        },
+        () => {
+          flattenedEvents.push({ ...event, type: 'adlv3' });
+        }
+      )
+      .with(
+        {
+          MarginTransferV3: P.select()
+        },
+        () => {
+          flattenedEvents.push({ ...event, type: 'margintransfer' });
         }
       )
       .exhaustive();
