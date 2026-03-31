@@ -45,7 +45,7 @@ use utoipa::ToSchema;
 
 pub use volume_statistic::{get_account_volume_statistic, get_broker_volume_statistic};
 
-const TRADING_METRICS: &str = "trading_metrics_context";
+pub const TRADING_METRICS: &str = "trading_metrics_context";
 
 lazy_static! {
     pub static ref TOP_POSITIONS: RwLock<Vec<UserSumaryRankingData>> =
@@ -135,6 +135,7 @@ async fn update_realized_pnl_desc() -> anyhow::Result<()> {
         match query_user_perp_max_symbol_realized_pnl(0, 1000, None, None, "DESC".to_string()).await
         {
             Ok(user_perp_realized_pnl) => {
+                tracing::info!(target: TRADING_METRICS, "user_perp_realized_pnl.len(): {:?}", user_perp_realized_pnl.len());
                 let user_perp_realized_pnl = user_perp_realized_pnl
                     .into_iter()
                     .map(Into::into)
@@ -1037,7 +1038,7 @@ pub async fn get_realized_pnl_rank(
     _req: HttpRequest,
     mut param: web::Query<RealizedPnlRankingRequest>,
 ) -> HttpResponse {
-    tracing::debug!(target: TRADING_METRICS, "/ranking/realized_pnl, params: {:?}", param.0);
+    tracing::info!(target: TRADING_METRICS, "/ranking/realized_pnl, params: {:?}", param.0);
     if param.limit > 200 {
         return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number over limit 200");
     }

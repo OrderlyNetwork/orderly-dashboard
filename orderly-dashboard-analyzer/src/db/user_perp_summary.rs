@@ -578,10 +578,163 @@ limit
 #[cfg(test)]
 mod tests {
     use crate::analyzer::get_unitary_prec;
+    use crate::db::market_info::{create_or_update_market_infos, DBMarketInfo};
+    use crate::db::user_info::UserInfo;
+    use crate::schema::market_info::dsl::{market_info, symbol as market_symbol};
+    use crate::schema::user_info::dsl::{account_id as user_account_id, user_info};
+    use crate::schema::user_perp_summary::dsl::{account_id as ups_account_id, user_perp_summary};
+    use crate::sync_broker::{cal_broker_hash, cal_symbol_hash};
+    use diesel::dsl::count_star;
+    use diesel_async::RunQueryDsl;
     use std::{str::FromStr, time::Instant};
 
     use super::*;
     use chrono::Utc;
+
+    /// Row counts match the tech-design insert-test-data doc for each table.
+    /// Requirement 1: `user_perp_summary.symbol` = `market_info.symbol_hash` (keccak of the human-readable `symbol`), and `account_id` aligns with `user_info`, for JOINs in that doc.
+    const TEST_MARKET_INFO_ROWS: usize = 207;
+    const TEST_USER_INFO_ROWS: usize = 489_577;
+    const TEST_USER_PERP_SUMMARY_ROWS: usize = 664_657;
+    const TEST_BROKER_ID: &str = "test_broker";
+    const TEST_ACCOUNT_PREFIX: &str = "ups_test_acc_";
+    const TEST_SYMBOL_PREFIX: &str = "PERP_TEST_";
+
+    fn test_account_id(idx: usize) -> String {
+        format!("{TEST_ACCOUNT_PREFIX}{idx:09}")
+    }
+
+    /// Human-readable `market_info.symbol`, same as the first argument to `DBMarketInfo::new`.
+    fn test_market_symbol_name(idx: usize) -> String {
+        format!("{TEST_SYMBOL_PREFIX}{idx:03}")
+    }
+
+    /// Same as `market_info.symbol_hash`; must be stored in `user_perp_summary.symbol` so `u.symbol = m.symbol_hash` holds.
+    fn test_symbol_hash_for_index(idx: usize) -> String {
+        cal_symbol_hash(&test_market_symbol_name(idx))
+    }
+
+    /// Inserts correlated benchmark test data into the analyzer DB at the documented scale (slow; set `DATABASE_URL`).
+    /// Run: `cargo test insert_analyzer_benchmark_test_data -- --ignored --nocapture`
+    #[ignore]
+    #[actix_web::test]
+    async fn insert_analyzer_benchmark_test_data() {
+        dotenv::dotenv().ok();
+        let update_time = NaiveDateTime::from_timestamp_opt(
+            Utc::now().timestamp(),
+            Utc::now().timestamp_subsec_nanos() as u32,
+        )
+        .unwrap();
+        let broker_hash = cal_broker_hash(TEST_BROKER_ID);
+        let zero = BigDecimal::from(0);
+
+        let t0 = Instant::now();
+        let market_rows: Vec<DBMarketInfo> = (0..TEST_MARKET_INFO_ROWS)
+            .map(|i| {
+                DBMarketInfo::new(
+                    test_market_symbol_name(i),
+                    zero.clone(),
+                    zero.clone(),
+                    zero.clone(),
+                    zero.clone(),
+                    update_time,
+                )
+            })
+            .collect();
+        create_or_update_market_infos(market_rows)
+            .await
+            .expect("market_info insert");
+        println!(
+            "insert_analyzer_benchmark_test_data: market_info {} rows, {} ms",
+            TEST_MARKET_INFO_ROWS,
+            t0.elapsed().as_millis()
+        );
+
+        let t1 = Instant::now();
+        let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+        let mut offset = 0usize;
+        while offset < TEST_USER_INFO_ROWS {
+            let end = (offset + BATCH_UPSERT_LEN).min(TEST_USER_INFO_ROWS);
+            let batch: Vec<UserInfo> = (offset..end)
+                .map(|idx| UserInfo {
+                    account_id: test_account_id(idx),
+                    broker_id: TEST_BROKER_ID.to_string(),
+                    broker_hash: broker_hash.clone(),
+                    address: format!("0x{:040x}", idx),
+                })
+                .collect();
+            diesel::insert_into(user_info)
+                .values(batch)
+                .on_conflict(diesel::pg::upsert::on_constraint("pr_account_id"))
+                .do_nothing()
+                .execute(&mut conn)
+                .await
+                .expect("user_info batch insert");
+            offset = end;
+        }
+        drop(conn);
+        println!(
+            "insert_analyzer_benchmark_test_data: user_info {} rows, {} ms",
+            TEST_USER_INFO_ROWS,
+            t1.elapsed().as_millis()
+        );
+
+        let t2 = Instant::now();
+        let mut batch: Vec<UserPerpSummary> = Vec::with_capacity(BATCH_UPSERT_LEN);
+        for i in 0..TEST_USER_PERP_SUMMARY_ROWS {
+            let account_idx = i % TEST_USER_INFO_ROWS;
+            let symbol_idx = (i / TEST_USER_INFO_ROWS) % TEST_MARKET_INFO_ROWS;
+            let mut row = UserPerpSummary::new_empty_user_perp_summary(
+                &test_account_id(account_idx),
+                &test_symbol_hash_for_index(symbol_idx),
+            );
+            row.pulled_block_time = update_time;
+            batch.push(row);
+            if batch.len() == BATCH_UPSERT_LEN {
+                let refs: Vec<&UserPerpSummary> = batch.iter().collect();
+                create_or_update_user_perp_summary(refs)
+                    .await
+                    .expect("user_perp_summary batch");
+                batch.clear();
+            }
+        }
+        if !batch.is_empty() {
+            let refs: Vec<&UserPerpSummary> = batch.iter().collect();
+            create_or_update_user_perp_summary(refs)
+                .await
+                .expect("user_perp_summary tail batch");
+        }
+        println!(
+            "insert_analyzer_benchmark_test_data: user_perp_summary {} rows, {} ms",
+            TEST_USER_PERP_SUMMARY_ROWS,
+            t2.elapsed().as_millis()
+        );
+
+        let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
+        let sym_pat = format!("{TEST_SYMBOL_PREFIX}%");
+        let acc_pat = format!("{TEST_ACCOUNT_PREFIX}%");
+        let n_market: i64 = market_info
+            .filter(market_symbol.like(sym_pat.as_str()))
+            .select(count_star())
+            .first(&mut conn)
+            .await
+            .expect("count market_info");
+        let n_user: i64 = user_info
+            .filter(user_account_id.like(acc_pat.as_str()))
+            .select(count_star())
+            .first(&mut conn)
+            .await
+            .expect("count user_info");
+        let n_ups: i64 = user_perp_summary
+            .filter(ups_account_id.like(acc_pat.as_str()))
+            .select(count_star())
+            .first(&mut conn)
+            .await
+            .expect("count user_perp_summary");
+        assert_eq!(n_market, TEST_MARKET_INFO_ROWS as i64);
+        assert_eq!(n_user, TEST_USER_INFO_ROWS as i64);
+        assert_eq!(n_ups, TEST_USER_PERP_SUMMARY_ROWS as i64);
+    }
 
     #[ignore]
     #[actix_web::test]
