@@ -762,14 +762,25 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
         m.mark_price,
         ABS(u.holding * m.index_price) AS holding_value,
         u.opening_cost
-    FROM user_perp_summary u
+    FROM (
+        SELECT
+            account_id,
+            symbol,
+            holding,
+            total_realized_pnl,
+            opening_cost
+        FROM user_perp_summary
+        ORDER BY total_realized_pnl {}
+        OFFSET $1
+        LIMIT $2
+    ) u
     JOIN market_info m ON u.symbol = m.symbol_hash
     JOIN user_info us ON u.account_id = us.account_id
     ORDER BY total_realized_pnl {}
     OFFSET $1
     LIMIT $2;
             ",
-            order_by
+            order_by, order_by
         ))
         .bind::<Integer, _>(offset)
         .bind::<Integer, _>(limit);
@@ -780,8 +791,9 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
             .get_results::<UserSymbolSummaryRank>(&mut conn)
             .await?;
         tracing::info!(
-            "query_user_perp_max_symbol_realized_pnl end, elapse_ms: {}",
-            inst.elapsed().as_millis()
+            "query_user_perp_max_symbol_realized_pnl end, elapse_ms: {}, len: {}",
+            inst.elapsed().as_millis(),
+            select_result.len(),
         );
 
         select_result
@@ -801,7 +813,19 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
         m.mark_price,
         ABS(u.holding * m.index_price) AS holding_value,
         u.opening_cost
-    FROM user_perp_summary u
+    FROM (
+        SELECT
+            account_id,
+            symbol,
+            holding,
+            total_realized_pnl,
+            opening_cost
+        FROM user_perp_summary
+        WHERE symbol = $1
+        ORDER BY total_realized_pnl {}
+        OFFSET $2
+        LIMIT $3
+    ) u
     JOIN market_info m ON u.symbol = m.symbol_hash
     JOIN user_info us ON u.account_id = us.account_id
     WHERE u.symbol = $1
@@ -809,7 +833,7 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
     OFFSET $2
     LIMIT $3;
             ",
-            order_by
+            order_by, order_by
         ))
         .bind::<Text, _>(symbol_hash.clone())
         .bind::<Integer, _>(offset)
@@ -848,15 +872,27 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
         m.mark_price,
         ABS(u.holding * m.index_price) AS holding_value,
         u.opening_cost
-    FROM user_perp_summary u
+    FROM (
+        SELECT
+            account_id,
+            symbol,
+            holding,
+            total_realized_pnl,
+            opening_cost
+        FROM user_perp_summary
+        WHERE account_id = $1
+        ORDER BY total_realized_pnl {}
+        OFFSET $2
+        LIMIT $3
+    ) u
     JOIN market_info m ON u.symbol = m.symbol_hash
     JOIN user_info us ON u.account_id = us.account_id
     WHERE u.account_id = $1
-    ORDER BY total_realized_pnl ${}
+    ORDER BY total_realized_pnl {}
     OFFSET $2
     LIMIT $3;
             ",
-            order_by
+            order_by, order_by
         ))
         .bind::<Text, _>(account_id.clone())
         .bind::<Integer, _>(offset)
@@ -895,7 +931,19 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
         m.mark_price,
         ABS(u.holding * m.index_price) AS holding_value,
         u.opening_cost
-    FROM user_perp_summary u
+    FROM (
+        SELECT
+            account_id,
+            symbol,
+            holding,
+            total_realized_pnl,
+            opening_cost
+        FROM user_perp_summary
+        WHERE account_id = $1 AND symbol = $2
+        ORDER BY total_realized_pnl {}
+        OFFSET $3
+        LIMIT $4
+    ) u
     JOIN market_info m ON u.symbol = m.symbol_hash
     JOIN user_info us ON u.account_id = us.account_id
     WHERE u.account_id = $1 AND u.symbol = $2
@@ -903,7 +951,7 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
     OFFSET $3
     LIMIT $4;
             ",
-            order_by
+            order_by, order_by
         ))
         .bind::<Text, _>(account_id.clone())
         .bind::<Text, _>(symbol_hash.clone())
@@ -924,4 +972,41 @@ pub async fn query_user_perp_max_symbol_realized_pnl(
     };
 
     Ok(select_result)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{query_user_perp_max_symbol_holding, query_user_perp_max_symbol_realized_pnl};
+    use crate::db::init_analyzer_db_url;
+    use std::time::Instant;
+
+    #[ignore]
+    #[tokio::test]
+    async fn test_query_user_perp_max_symbol_realized_pnl() {
+        dotenv::dotenv().ok();
+        init_analyzer_db_url();
+        let inst = Instant::now();
+        let _rows = query_user_perp_max_symbol_realized_pnl(0, 1000, None, None, "ASC".to_string())
+            .await
+            .expect("query_user_perp_max_symbol_realized_pnl");
+        eprintln!(
+            "test_query_user_perp_max_symbol_realized_pnl elapsed_ms: {}",
+            inst.elapsed().as_millis()
+        );
+    }
+
+    #[ignore]
+    #[tokio::test]
+    async fn test_query_user_perp_max_symbol_holding() {
+        dotenv::dotenv().ok();
+        init_analyzer_db_url();
+        let inst = Instant::now();
+        let _rows = query_user_perp_max_symbol_holding(0, 1000, None, None, None)
+            .await
+            .expect("query_user_perp_max_symbol_holding");
+        eprintln!(
+            "test_query_user_perp_max_symbol_holding elapsed_ms: {}",
+            inst.elapsed().as_millis()
+        );
+    }
 }
