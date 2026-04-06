@@ -43,10 +43,10 @@ export default function Index() {
       <div className="text-center space-y-8">
         <div className="space-y-6">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-            Orderly Network Dashboard
+            Orderly Dashboard
           </h1>
           <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Advanced analytics and insights for decentralized trading on the Orderly Network
+            Advanced analytics and insights for decentralized trading on Orderly
           </p>
         </div>
 
