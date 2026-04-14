@@ -286,8 +286,8 @@ pub async fn query_user_perp_max_symbol_holding(
                 "
     SELECT
       u.account_id,
-      us.address,
-      us.broker_id,
+      u.address,
+      u.broker_id,
       u.symbol as symbol_hash,
       u.holding,
       u.total_realized_pnl,
@@ -299,8 +299,7 @@ pub async fn query_user_perp_max_symbol_holding(
     FROM
       user_perp_summary u
       JOIN market_info m ON u.symbol = m.symbol_hash
-      JOIN user_info us ON u.account_id = us.account_id
-    WHERE u.symbol = $1 AND us.broker_id = $2
+    WHERE u.symbol = $1 AND u.broker_id = $2
     ORDER BY holding_value DESC
     OFFSET $3
     LIMIT $4;
@@ -327,8 +326,8 @@ pub async fn query_user_perp_max_symbol_holding(
                 "
     SELECT
       u.account_id,
-      us.address,
-      us.broker_id,
+      u.address,
+      u.broker_id,
       u.symbol as symbol_hash,
       u.holding,
       u.total_realized_pnl,
@@ -340,8 +339,7 @@ pub async fn query_user_perp_max_symbol_holding(
     FROM
       user_perp_summary u
       JOIN market_info m ON u.symbol = m.symbol_hash
-      JOIN user_info us ON u.account_id = us.account_id
-    WHERE us.broker_id = $1
+    WHERE u.broker_id = $1
     ORDER BY holding_value DESC
     OFFSET $2
     LIMIT $3;
@@ -372,8 +370,8 @@ pub async fn query_user_perp_max_symbol_holding(
             "
 SELECT
   u.account_id,
-  us.address,
-  us.broker_id,
+  u.address,
+  u.broker_id,
   u.symbol as symbol_hash,
   u.holding,
   u.total_realized_pnl,
@@ -385,7 +383,6 @@ SELECT
 FROM
   user_perp_summary u
   JOIN market_info m ON u.symbol = m.symbol_hash
-  JOIN user_info us ON u.account_id = us.account_id
 ORDER BY holding_value DESC
 OFFSET $1
 LIMIT $2;
@@ -411,8 +408,8 @@ LIMIT $2;
             "
     SELECT
         u.account_id,
-        us.address,
-        us.broker_id,
+        u.address,
+        u.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
@@ -423,7 +420,6 @@ LIMIT $2;
         u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    JOIN user_info us ON u.account_id = us.account_id
     WHERE u.symbol = $1
     ORDER BY holding_value DESC
     OFFSET $2
@@ -457,8 +453,8 @@ LIMIT $2;
             "
     SELECT
         u.account_id,
-        us.address,
-        us.broker_id,
+        u.address,
+        u.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
@@ -469,7 +465,6 @@ LIMIT $2;
         u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    JOIN user_info us ON u.account_id = us.account_id
     WHERE u.account_id = $1
     ORDER BY holding_value DESC
     OFFSET $2
@@ -503,8 +498,8 @@ LIMIT $2;
             "
     SELECT
         u.account_id,
-        us.address,
-        us.broker_id,
+        u.address,
+        u.broker_id,
         u.symbol as symbol_hash,
         u.holding,
         u.total_realized_pnl,
@@ -515,7 +510,6 @@ LIMIT $2;
         u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    JOIN user_info us ON u.account_id = us.account_id
     WHERE u.account_id = $1 AND u.symbol = $2
     ORDER BY holding_value DESC
     OFFSET $3
