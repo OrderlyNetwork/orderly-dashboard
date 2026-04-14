@@ -11,6 +11,7 @@ use crate::analyzer::calc::pnl_calc::RealizedPnl;
 use crate::analyzer::{get_cost_position_prec, get_qty_prec, get_unitary_prec};
 use crate::db::hourly_orderly_perp::HourlyOrderlyPerpKey;
 use crate::db::hourly_user_perp::HourlyUserPerpKey;
+use crate::db::user_info::get_user_info;
 use crate::db::user_perp_summary::UserPerpSummaryKey;
 
 const PERP_ANALYZER: &str = "perp-trade-analyzer";
@@ -80,7 +81,26 @@ pub async fn analyzer_perp_trade(
             || perp_trade.margin_mode == Some(MarginMode::Cross)
         {
             //user_summary
-            let user_perp_snap = context.get_user_perp(&user_perp_summary_key.clone()).await;
+            let user_perp_snap = context.get_user_perp(&user_perp_summary_key).await;
+            if user_perp_snap.broker_hash.is_empty() {
+                match get_user_info(perp_trade.account_id.clone()).await {
+                    Ok(Some(user_info)) => {
+                        user_perp_snap.broker_hash = user_info.broker_hash;
+                        user_perp_snap.address = user_info.address;
+                    }
+                    Ok(None) => {}
+                    Err(err) => {
+                        tracing::warn!(
+                            target: PERP_ANALYZER,
+                            "failed to query user_info for account_id {}, err: {}",
+                            perp_trade.account_id,
+                            err
+                        );
+                    }
+                }
+            }
+
+            let user_perp_snap = context.get_user_perp(&user_perp_summary_key).await;
 
             let suf: BigDecimal = perp_trade.sum_unitary_fundings.parse().unwrap();
 

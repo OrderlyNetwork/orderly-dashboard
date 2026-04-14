@@ -208,6 +208,8 @@ diesel::table! {
         pulled_block_height -> Int8,
         pulled_block_time -> Timestamp,
         sum_unitary_fundings -> Numeric,
+        broker_hash -> Text,
+        address -> Text,
     }
 }
 
