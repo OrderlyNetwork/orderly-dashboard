@@ -40,38 +40,80 @@ export default function Index() {
   return (
     <div className="space-y-12 animate-fade-in">
       {/* Hero Section */}
-      <div className="text-center space-y-8">
+      <div className="text-center">
         <div className="space-y-6">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '60px',
+              fontWeight: 800,
+              lineHeight: 1.05,
+              color: '#fff',
+              letterSpacing: '-0.01em',
+              marginTop: '30px'
+            }}
+          >
             Orderly Dashboard
           </h1>
-          <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.7)',
+              maxWidth: '900px',
+              margin: '0 auto',
+              lineHeight: 1.5,
+              letterSpacing: '-0.02em'
+            }}
+          >
             Advanced analytics and insights for decentralized trading on Orderly
           </p>
         </div>
 
-        <div className="card max-w-2xl mx-auto p-8 space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-white">Explore Trading Data</h3>
-            <p className="text-gray-300 leading-relaxed">
+        {/* Search card */}
+        <div
+          style={{
+            maxWidth: '640px',
+            margin: '36px auto 0',
+            background: 'rgba(20, 21, 26, 0.7)',
+            border: '1px solid rgba(156, 117, 255, 0.15)',
+            borderRadius: '16px',
+            padding: '36px',
+            backdropFilter: 'blur(20px)'
+          }}
+        >
+          <div className="space-y-4 mb-6">
+            <h3
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                color: '#fff',
+                margin: 0
+              }}
+            >
+              Explore Trading Data
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 }}>
               Search for wallet addresses or account IDs to view detailed trading information
-              including executed trades, deposits & withdrawals, liquidations, and performance
+              including executed trades, deposits &amp; withdrawals, liquidations, and performance
               metrics.
             </p>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-center space-x-4 text-sm text-gray-400">
+            <div className="flex items-center justify-center space-x-6 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-success rounded-full"></div>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-success)' }}></div>
                 <span>EVM Addresses</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-info rounded-full"></div>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-purple-accent)' }}></div>
                 <span>Solana Addresses</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-warning rounded-full"></div>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-warning)' }}></div>
                 <span>Account IDs</span>
               </div>
             </div>
@@ -84,19 +126,41 @@ export default function Index() {
       </div>
 
       {/* Leaderboard Section */}
-      <div className="mt-16">
+      <div
+        className="mt-16 mx-auto"
+        style={{ maxWidth: 1200, paddingLeft: 24, paddingRight: 24 }}
+      >
         {/* Tab Navigation */}
         <div className="flex justify-center mb-8">
-          <div className="flex gap-2">
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              background: 'rgba(20, 21, 26, 0.7)',
+              border: '1px solid rgba(156, 117, 255, 0.15)',
+              borderRadius: '16px',
+              padding: '6px'
+            }}
+          >
             <button
               onClick={() => handleTabChange('trading')}
-              className={`btn ${activeTab === 'trading' ? 'btn-primary' : 'btn-secondary'}`}
+              className="btn"
+              style={
+                activeTab === 'trading'
+                  ? { background: 'var(--color-purple)', color: '#fff', borderRadius: '12px' }
+                  : { background: 'transparent', color: 'rgba(255,255,255,0.6)', borderRadius: '12px' }
+              }
             >
               Trading Leaderboard
             </button>
             <button
               onClick={() => handleTabChange('positions')}
-              className={`btn ${activeTab === 'positions' ? 'btn-primary' : 'btn-secondary'}`}
+              className="btn"
+              style={
+                activeTab === 'positions'
+                  ? { background: 'var(--color-purple)', color: '#fff', borderRadius: '12px' }
+                  : { background: 'transparent', color: 'rgba(255,255,255,0.6)', borderRadius: '12px' }
+              }
             >
               Positions Leaderboard
             </button>

@@ -1,4 +1,3 @@
-import { DatePicker } from '@mantine/dates';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -526,238 +525,261 @@ export const Leaderboard: FC = () => {
         </p>
       </div>
 
-      {/* Filters Section */}
-      <div className="card space-y-6 max-w-2xl mxa min-w-[min-content]">
-        {/* Date Range */}
-        <div className="space-y-2">
-          <label htmlFor="date-range" className="text-sm font-medium text-white">
-            Date Range
-          </label>
-          <DatePicker
-            id="date-range"
-            type="range"
-            value={dateRange}
-            maxLevel="year"
-            allowSingleDateInRange={true}
-            maxDate={
-              dateRange[0] && dateRange[1]
-                ? dayjs().format('YYYY-MM-DD')
-                : dateRange[0]
-                  ? (() => {
-                      const today = dayjs();
-                      const maxRangeDate = dayjs(dateRange[0]).add(89, 'day');
-                      return today.isBefore(maxRangeDate)
-                        ? today.format('YYYY-MM-DD')
-                        : maxRangeDate.format('YYYY-MM-DD');
-                    })()
-                  : dayjs().format('YYYY-MM-DD')
-            }
-            onChange={handleDateChange}
-            highlightToday={true}
-          />
-        </div>
+      <div className="card w-full space-y-6">
+        {/* Filters Section */}
+        <div className="space-y-6 w-full">
+          {/* Date Range */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-white">Date Range</label>
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { label: '7D', days: 7 },
+                { label: '30D', days: 30 },
+                { label: '90D', days: 90 }
+              ].map(({ label, days }) => {
+                const presetStart = dayjs().subtract(days - 1, 'days').format('YYYY-MM-DD');
+                const presetEnd = dayjs().format('YYYY-MM-DD');
+                const isActive = dateRange[0] === presetStart && dateRange[1] === presetEnd;
+                return (
+                  <button
+                    key={label}
+                    className="btn"
+                    style={{
+                      padding: '4px 14px',
+                      fontSize: '0.8rem',
+                      background: isActive ? 'var(--color-purple)' : 'rgba(255,255,255,0.07)',
+                      color: isActive ? '#fff' : 'rgba(255,255,255,0.6)',
+                      border: isActive ? 'none' : '1px solid rgba(255,255,255,0.12)'
+                    }}
+                    onClick={() => handleDateChange([presetStart, presetEnd])}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="date"
+                value={dateRange[0] || ''}
+                max={dateRange[1] || dayjs().format('YYYY-MM-DD')}
+                onChange={(e) => handleDateChange([e.target.value || null, dateRange[1]])}
+                className="flex-1"
+              />
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>→</span>
+              <input
+                type="date"
+                value={dateRange[1] || ''}
+                min={dateRange[0] || undefined}
+                max={dayjs().format('YYYY-MM-DD')}
+                onChange={(e) => handleDateChange([dateRange[0], e.target.value || null])}
+                className="flex-1"
+              />
+            </div>
+          </div>
 
-        {/* Aggregate By */}
-        <div className="space-y-2">
-          <label htmlFor="aggregate-by" className="text-sm font-medium text-white">
-            Aggregate By
-          </label>
-          <select
-            id="aggregate-by"
-            value={queryParams.aggregateBy || ''}
-            onChange={(e) => {
-              const value = e.target.value;
-              handleAggregateByChange(
-                value as 'address' | 'address_per_builder' | 'date' | 'account' | ''
-              );
-            }}
-            className="w-full"
-          >
-            <option value="">No aggregation</option>
-            <option value="address">Address (Sum across all builders)</option>
-            <option value="address_per_builder">
-              Address per builder (Sum separately for each builder)
-            </option>
-            <option value="date">Date</option>
-            <option value="account">Account</option>
-          </select>
-        </div>
-
-        {/* Additional Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Aggregate By */}
           <div className="space-y-2">
-            <label htmlFor="broker-id" className="text-sm font-medium text-white">
-              Broker ID
+            <label htmlFor="aggregate-by" className="text-sm font-medium text-white">
+              Aggregate By
             </label>
             <select
-              id="broker-id"
-              value={queryParams.broker_id || ''}
-              onChange={(e) => handleInputChange('broker_id', e.target.value)}
-              className="w-full"
-            >
-              <option value="">All brokers</option>
-              {brokers?.map((broker) => (
-                <option key={broker.broker_id} value={broker.broker_id}>
-                  {broker.broker_name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="address-input" className="text-sm font-medium text-white">
-              Address
-            </label>
-            <input
-              id="address-input"
-              type="text"
-              placeholder="Enter EVM or Solana address"
-              value={addressInput}
+              id="aggregate-by"
+              value={queryParams.aggregateBy || ''}
               onChange={(e) => {
-                handleAddressChange(e.target.value);
+                const value = e.target.value;
+                handleAggregateByChange(
+                  value as 'address' | 'address_per_builder' | 'date' | 'account' | ''
+                );
               }}
               className="w-full"
-            />
+            >
+              <option value="">No aggregation</option>
+              <option value="address">Address (Sum across all builders)</option>
+              <option value="address_per_builder">
+                Address per builder (Sum separately for each builder)
+              </option>
+              <option value="date">Date</option>
+              <option value="account">Account</option>
+            </select>
+          </div>
+
+          {/* Additional Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="broker-id" className="text-sm font-medium text-white">
+                Broker ID
+              </label>
+              <select
+                id="broker-id"
+                value={queryParams.broker_id || ''}
+                onChange={(e) => handleInputChange('broker_id', e.target.value)}
+                className="w-full"
+              >
+                <option value="">All brokers</option>
+                {brokers?.map((broker) => (
+                  <option key={broker.broker_id} value={broker.broker_id}>
+                    {broker.broker_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="address-input" className="text-sm font-medium text-white">
+                Address
+              </label>
+              <input
+                id="address-input"
+                type="text"
+                placeholder="Enter EVM or Solana address"
+                value={addressInput}
+                onChange={(e) => {
+                  handleAddressChange(e.target.value);
+                }}
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Table Section */}
-      <div className="card">
-        {!displayData ? (
-          <div className="flex justify-center py-12 w-full">
-            <Spinner size="2.5rem" />
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {/* Column Filters */}
-            <div className="flex justify-start pb-0! p-3 sm:p-4">
-              <Popover.Root>
-                <Popover.Trigger className="w-auto">
-                  <Button variant="soft" className="btn btn-secondary">
-                    <MixerHorizontalIcon width="16" height="16" />
-                    Column Filters
-                  </Button>
-                </Popover.Trigger>
-                <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw] card">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => {
-                          table.resetColumnVisibility();
-                        }}
-                        className="btn btn-primary"
-                      >
-                        Reset to default
-                      </Button>
+        {/* Table Section */}
+        <div className="w-full">
+          {!displayData ? (
+            <div className="flex justify-center py-12 w-full">
+              <Spinner size="2.5rem" />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {/* Column Filters */}
+              <div className="flex justify-start pb-0! p-3 sm:p-4">
+                <Popover.Root>
+                  <Popover.Trigger className="w-auto">
+                    <Button variant="soft" className="btn btn-secondary">
+                      <MixerHorizontalIcon width="16" height="16" />
+                      Column Filters
+                    </Button>
+                  </Popover.Trigger>
+                  <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw] card">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => {
+                            table.resetColumnVisibility();
+                          }}
+                          className="btn btn-primary"
+                        >
+                          Reset to default
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={table.getIsAllColumnsVisible()}
+                          onChange={table.getToggleAllColumnsVisibilityHandler()}
+                          className="rounded"
+                        />
+                        <label htmlFor="toggle-all" className="text-sm text-white">
+                          Toggle All
+                        </label>
+                      </div>
+                      <hr className="w-full border-border-primary" />
+                      {table.getAllLeafColumns().map((column) => {
+                        return (
+                          <div key={column.id} className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={column.getIsVisible()}
+                              onChange={column.getToggleVisibilityHandler()}
+                              className="rounded"
+                            />
+                            <label className="text-sm text-white">
+                              {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                flexRender(column.columnDef.header, undefined as any)
+                              }{' '}
+                              ({column.id})
+                            </label>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={table.getIsAllColumnsVisible()}
-                        onChange={table.getToggleAllColumnsVisibilityHandler()}
-                        className="rounded"
-                      />
-                      <label htmlFor="toggle-all" className="text-sm text-white">
-                        Toggle All
-                      </label>
-                    </div>
-                    <hr className="w-full border-border-primary" />
-                    {table.getAllLeafColumns().map((column) => {
-                      return (
-                        <div key={column.id} className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={column.getIsVisible()}
-                            onChange={column.getToggleVisibilityHandler()}
-                            className="rounded"
-                          />
-                          <label className="text-sm text-white">
-                            {
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              flexRender(column.columnDef.header, undefined as any)
-                            }{' '}
-                            ({column.id})
-                          </label>
-                        </div>
-                      );
-                    })}
+                  </Popover.Content>
+                </Popover.Root>
+              </div>
+
+              {renderPagination()}
+
+              <div className="w-full overflow-x-auto relative">
+                {isLoading && (
+                  <div className="absolute inset-0 bg-bg-overlay flex items-center justify-center z-10 rounded-xl">
+                    <Spinner size="2rem" />
                   </div>
-                </Popover.Content>
-              </Popover.Root>
-            </div>
-
-            {renderPagination()}
-
-            <div className="w-full overflow-x-auto relative">
-              {isLoading && (
-                <div className="absolute inset-0 bg-bg-overlay flex items-center justify-center z-10 rounded-xl">
-                  <Spinner size="2rem" />
-                </div>
-              )}
-              <Table.Root className="w-full">
-                <Table.Header>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <Table.Row key={headerGroup.id} className="border-b border-border-primary">
-                      {headerGroup.headers.map((header) => (
-                        <Table.ColumnHeaderCell
-                          key={header.id}
-                          colSpan={header.colSpan}
-                          className="py-2 px-2 sm:py-4 sm:px-4"
-                        >
-                          {header.isPlaceholder ? null : (
-                            <div
-                              className={
-                                header.column.getCanSort()
-                                  ? 'cursor-pointer select-none hover:text-primary-light transition-colors duration-150 text-sm font-medium'
-                                  : 'text-sm font-medium'
-                              }
-                              onClick={header.column.getToggleSortingHandler()}
-                              onKeyDown={(ev) => {
-                                if (ev.key === 'Enter') {
-                                  header.column.getToggleSortingHandler();
+                )}
+                <Table.Root className="w-full">
+                  <Table.Header>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <Table.Row key={headerGroup.id} className="border-b border-border-primary">
+                        {headerGroup.headers.map((header) => (
+                          <Table.ColumnHeaderCell
+                            key={header.id}
+                            colSpan={header.colSpan}
+                            className="py-2 px-2 sm:py-4 sm:px-4"
+                          >
+                            {header.isPlaceholder ? null : (
+                              <div
+                                className={
+                                  header.column.getCanSort()
+                                    ? 'cursor-pointer select-none hover:text-primary-light transition-colors duration-150 text-sm font-medium'
+                                    : 'text-sm font-medium'
                                 }
-                              }}
-                              role="button"
-                              tabIndex={0}
-                            >
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              {{
-                                asc: ' 🔼',
-                                desc: ' 🔽'
-                              }[header.column.getIsSorted() as string] ?? null}
-                            </div>
-                          )}
-                        </Table.ColumnHeaderCell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Header>
+                                onClick={header.column.getToggleSortingHandler()}
+                                onKeyDown={(ev) => {
+                                  if (ev.key === 'Enter') {
+                                    header.column.getToggleSortingHandler();
+                                  }
+                                }}
+                                role="button"
+                                tabIndex={0}
+                              >
+                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                {{
+                                  asc: ' 🔼',
+                                  desc: ' 🔽'
+                                }[header.column.getIsSorted() as string] ?? null}
+                              </div>
+                            )}
+                          </Table.ColumnHeaderCell>
+                        ))}
+                      </Table.Row>
+                    ))}
+                  </Table.Header>
 
-                <Table.Body>
-                  {table.getRowModel().rows.map((row, index) => (
-                    <Table.Row
-                      key={row.id}
-                      className={`border-b border-border-primary hover:bg-bg-tertiary transition-colors duration-150 ${
-                        index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
-                      }`}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <Table.Cell
-                          key={cell.id}
-                          className="align-middle text-sm py-2 px-2 sm:py-3 sm:px-4"
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
+                  <Table.Body>
+                    {table.getRowModel().rows.map((row, index) => (
+                      <Table.Row
+                        key={row.id}
+                        className={`border-b border-border-primary hover:bg-bg-tertiary transition-colors duration-150 ${
+                          index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
+                        }`}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <Table.Cell
+                            key={cell.id}
+                            className="align-middle text-sm py-2 px-2 sm:py-3 sm:px-4"
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </Table.Cell>
+                        ))}
+                      </Table.Row>
+                    ))}
+                  </Table.Body>
+                </Table.Root>
+              </div>
+
+              {renderPagination()}
             </div>
-
-            {renderPagination()}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

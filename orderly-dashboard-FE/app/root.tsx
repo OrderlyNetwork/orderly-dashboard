@@ -23,11 +23,11 @@ import '@mantine/dates/styles.css';
 dayjs.extend(localizedFormat);
 
 export const links: LinksFunction = () => [
-  { rel: 'stylesheet', href: globalCss },
   {
     rel: 'stylesheet',
     href: radixTheme
   },
+  { rel: 'stylesheet', href: globalCss },
   { rel: 'stylesheet', href: uno },
   { rel: 'icon', href: favicon, type: 'image/svg+xml' }
 ];

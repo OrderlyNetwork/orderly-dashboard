@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { FC, useMemo } from 'react';
+import { CSSProperties, FC, useMemo } from 'react';
 
 import { useLeaderboard } from '~/hooks/useLeaderboard';
 import { usePositions } from '~/hooks/usePositions';
@@ -90,22 +90,36 @@ export const PnLStats: FC<PnLStatsProps> = ({ address, brokerId, accountId }) =>
 
   const isLoading = isLoading7d || isLoading30d || isLoading90d || isLoadingPositions;
 
+  const statItemStyle: CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '43px 20px',
+    borderRight: '1px solid rgba(255,255,255,0.15)'
+  };
+
+  const statItemLastStyle: CSSProperties = {
+    ...statItemStyle,
+    borderRight: 'none'
+  };
+
   if (isLoading) {
     return (
-      <div className="card p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">PnL Statistics</h3>
-        <p className="text-sm text-gray-400 mb-4">Updated hourly</p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
+      <div className="stats-bar" style={{ display: 'flex' }}>
+        {[1, 2, 3, 4].map((i, idx) => (
+          <div key={i} style={idx === 3 ? statItemLastStyle : statItemStyle}>
             <div
-              key={i}
-              className="p-4 bg-bg-primary rounded-lg border border-border-primary animate-pulse"
-            >
-              <div className="h-4 bg-gray-600 rounded mb-2"></div>
-              <div className="h-6 bg-gray-700 rounded"></div>
-            </div>
-          ))}
-        </div>
+              className="animate-pulse"
+              style={{ height: 20, width: 80, background: 'rgba(255,255,255,0.15)', borderRadius: 6 }}
+            />
+            <div
+              className="animate-pulse"
+              style={{ height: 32, width: 120, background: 'rgba(255,255,255,0.1)', borderRadius: 6 }}
+            />
+          </div>
+        ))}
       </div>
     );
   }
@@ -115,35 +129,50 @@ export const PnLStats: FC<PnLStatsProps> = ({ address, brokerId, accountId }) =>
   const ninetyDayDisplay = formatPnL(ninetyDayPnL ?? undefined);
   const allTimeDisplay = formatPnL(allTimePnL ?? undefined);
 
+  const stats = [
+    { label: '7 Day PnL', display: sevenDayDisplay },
+    { label: '30 Day PnL', display: thirtyDayDisplay },
+    { label: '90 Day PnL', display: ninetyDayDisplay },
+    { label: 'All Time PnL', display: allTimeDisplay }
+  ];
+
   return (
-    <div className="card p-4 sm:p-6">
-      <h3 className="text-lg font-semibold text-white mb-4">PnL Statistics</h3>
-      <p className="text-sm text-gray-400 mb-4">Updated hourly • All stats exclude fees</p>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-bg-primary rounded-lg border border-border-primary">
-          <div className="text-sm text-gray-400 mb-1">7 Day PnL</div>
-          <div className={`text-xl font-bold ${sevenDayDisplay.color}`}>{sevenDayDisplay.text}</div>
-        </div>
-
-        <div className="p-4 bg-bg-primary rounded-lg border border-border-primary">
-          <div className="text-sm text-gray-400 mb-1">30 Day PnL</div>
-          <div className={`text-xl font-bold ${thirtyDayDisplay.color}`}>
-            {thirtyDayDisplay.text}
+    <div
+      className="stats-bar"
+      style={{ display: 'flex', flexWrap: 'wrap' }}
+    >
+      {stats.map(({ label, display }, idx) => (
+        <div key={label} style={idx === stats.length - 1 ? statItemLastStyle : statItemStyle}>
+          <div
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '1rem',
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.8)',
+              letterSpacing: '-0.02em',
+              textAlign: 'center'
+            }}
+          >
+            {label}
+          </div>
+          <div
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '1.75rem',
+              fontWeight: 700,
+              color: display.color === 'text-success'
+                ? 'var(--color-success-light)'
+                : display.color === 'text-error'
+                  ? 'var(--color-error-light)'
+                  : 'rgba(255,255,255,0.7)',
+              textTransform: 'capitalize',
+              textAlign: 'center'
+            }}
+          >
+            {display.text}
           </div>
         </div>
-
-        <div className="p-4 bg-bg-primary rounded-lg border border-border-primary">
-          <div className="text-sm text-gray-400 mb-1">90 Day PnL</div>
-          <div className={`text-xl font-bold ${ninetyDayDisplay.color}`}>
-            {ninetyDayDisplay.text}
-          </div>
-        </div>
-
-        <div className="p-4 bg-bg-primary rounded-lg border border-border-primary">
-          <div className="text-sm text-gray-400 mb-1">All Time PnL</div>
-          <div className={`text-xl font-bold ${allTimeDisplay.color}`}>{allTimeDisplay.text}</div>
-        </div>
-      </div>
+      ))}
     </div>
   );
 };
