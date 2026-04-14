@@ -795,7 +795,6 @@ mod tests {
             data.push(UserPerpSummary {
                 account_id: (i).to_string(),
                 symbol: "0xaaaaa".to_string(),
-                broker_hash: String::new(),
                 holding: (i * 10000).into(),
                 opening_cost: (i * 10000).into(),
                 cost_position: (i * 10000).into(),
@@ -860,7 +859,6 @@ mod tests {
         let mut user_perp1 = UserPerpSummary {
             account_id: acc,
             symbol: "0xaaaaa".to_string(),
-            broker_hash: String::new(),
             holding: BigDecimal::from_str("0.01").unwrap(),
             opening_cost: 0.into(),
             cost_position: 0.into(),
