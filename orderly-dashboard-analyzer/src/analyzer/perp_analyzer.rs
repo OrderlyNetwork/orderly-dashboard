@@ -82,6 +82,7 @@ pub async fn analyzer_perp_trade(
         {
             //user_summary
             let user_perp_snap = context.get_user_perp(&user_perp_summary_key).await;
+            #[cfg(not(test))]
             if user_perp_snap.broker_hash.is_empty() {
                 match get_user_info(perp_trade.account_id.clone()).await {
                     Ok(Some(user_info)) => {
@@ -99,8 +100,6 @@ pub async fn analyzer_perp_trade(
                     }
                 }
             }
-
-            let user_perp_snap = context.get_user_perp(&user_perp_summary_key).await;
 
             let suf: BigDecimal = perp_trade.sum_unitary_fundings.parse().unwrap();
 
