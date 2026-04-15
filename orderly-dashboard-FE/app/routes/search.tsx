@@ -57,7 +57,7 @@ export const Search: FC = () => {
       {/* Header Section */}
       <div className="text-center space-y-4">
         <div className="card max-w-2xl mx-auto p-6">
-          <h2 className="text-2xl font-bold text-white mb-2 break-all">{address}</h2>
+          <h2 className="text-2xl font-bold mb-2 break-all" style={{ color: '#D4B2FF' }}>{address}</h2>
           <div className="flex items-center justify-center gap-2 text-sm text-gray-300">
             <div
               className={`w-2 h-2 rounded-full ${

@@ -415,7 +415,7 @@ export function TabletFooter() {
   return (
     <div style={{ width: "100%", paddingTop: 60 }}>
       {/* Purple card */}
-      <div style={{ background: "#6700ce", borderRadius: 24, overflow: "hidden", margin: "0 32px" }}>
+      <div style={{ background: "#6700ce", borderRadius: 24, overflow: "hidden", margin: "0 40px" }}>
         {/* ORDER logo + price + Buy ORDER pill */}
         <div style={{ padding: "28px 28px 0", display: "inline-block" }}>
           <FooterLeftPanel />
@@ -459,7 +459,7 @@ export function TabletFooter() {
       </div>
 
       {/* Copyright row */}
-      <FooterCopyrightRow px={32} />
+      <FooterCopyrightRow px={40} />
     </div>
   );
 }

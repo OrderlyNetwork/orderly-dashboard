@@ -45,8 +45,8 @@ export const BrokerSelectionModal: FC<BrokerSelectionModalProps> = ({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content className="card max-w-4xl w-full sm:w-[95vw] max-h-[90vh] mx-0 sm:mx-auto flex flex-col">
-        <Dialog.Title className="text-lg sm:text-xl font-semibold text-white mb-4 break-all flex-shrink-0">
-          Select Broker for {address}
+        <Dialog.Title className="text-lg sm:text-xl font-semibold mb-4 break-all flex-shrink-0" style={{ color: '#D4B2FF' }}>
+          Select Broker for <span style={{ color: '#D4B2FF' }}>{address}</span>
         </Dialog.Title>
 
         {loading ? (

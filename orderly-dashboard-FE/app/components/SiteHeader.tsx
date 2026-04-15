@@ -483,24 +483,23 @@ export function MobileNavDrawer({
   const toggle = (key: string) =>
     setOpenSection((prev) => (prev === key ? null : key));
 
+  const isTablet = deviceLayout === "tablet";
+
   const fontSectionStyle: React.CSSProperties = {
-    fontFamily: "'atyp-bl-variable', 'atyp-bl', sans-serif",
-    fontVariationSettings: "'opsz' 72, 'wght' 600",
-    fontFeatureSettings: "'ss02', 'ss03', 'ss05', 'ss06'",
+    fontFamily: "'Atyp BL', sans-serif",
+    fontWeight: isTablet ? 700 : 600,
+    fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1",
     fontSize: "17px",
     letterSpacing: "0.17px",
     color: "white",
   };
   const fontItemStyle: React.CSSProperties = {
-    fontFamily: "'atyp-bl-variable', 'atyp-bl', sans-serif",
-    fontVariationSettings: "'wght' 400",
-    fontFeatureSettings: "'ss02', 'ss03', 'ss05', 'ss06'",
+    fontFamily: "'Atyp BL', sans-serif",
+    fontWeight: 500,
+    fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1",
     fontSize: "15px",
   };
   const rowDivider = "1px solid rgba(255,255,255,0.07)";
-
-  // suppress unused-var warning — deviceLayout is kept for potential future use
-  void deviceLayout;
 
   return (
     <motion.div

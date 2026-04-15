@@ -72,6 +72,7 @@ export default function Index() {
         </div>
 
         {/* Search card */}
+        <div className="mx-auto" style={{ maxWidth: 1200, paddingLeft: 24, paddingRight: 24 }}>
         <div
           style={{
             maxWidth: '820px',
@@ -106,22 +107,23 @@ export default function Index() {
             <div className="flex items-center justify-center space-x-6 text-sm" style={{ color: '#fff' }}>
               <div className="flex items-center space-x-2">
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-success)' }}></div>
-                <span>EVM Addresses</span>
+                <span className="font-bold">EVM Addresses</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-purple-accent)' }}></div>
-                <span>Solana Addresses</span>
+                <span className="font-bold">Solana Addresses</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-warning)' }}></div>
-                <span>Account IDs</span>
+                <span className="font-bold">Account IDs</span>
               </div>
             </div>
 
-            <div className="hidden sm:flex justify-center w-full">
+            <div className="flex justify-center w-full">
               <SearchInput />
             </div>
           </div>
+        </div>
         </div>
       </div>
 

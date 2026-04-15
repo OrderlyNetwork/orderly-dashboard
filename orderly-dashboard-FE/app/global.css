@@ -131,6 +131,7 @@
 }
 
 html {
+  min-width: 375px;
   font-family: var(--font-family);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -141,6 +142,7 @@ html {
 body {
   background: #000000;
   min-height: 100vh;
+  min-width: 375px;
   color: var(--color-white);
   font-family: var(--font-family);
   font-size: var(--font-size-base);
@@ -153,6 +155,18 @@ body {
   --heading-font-family: 'Atyp BL', -apple-system, BlinkMacSystemFont, sans-serif;
   --code-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-family: var(--font-family);
+}
+
+/* Address / hash strings — Atyp BL with tabular (monospace) figures */
+.font-address {
+  font-family: 'Atyp BL Text', 'Atyp BL', sans-serif;
+  font-feature-settings: 'tnum' 1, 'case' 1, 'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1;
+  color: #D4B2FF;
+}
+
+a.font-address:hover {
+  color: #E0C8FF;
+  text-decoration: underline;
 }
 
 /* Typography */
@@ -222,6 +236,8 @@ input::-webkit-inner-spin-button {
 }
 
 select {
+  -webkit-appearance: none;
+  appearance: none;
   background: var(--color-bg-secondary);
   color: var(--color-white);
   border: 1px solid var(--color-border-primary);

@@ -246,7 +246,7 @@ export const Positions: FC<PositionsProps> = ({
                         }
                       })()
                 }
-                className="font-mono text-sm text-blue-400 hover:text-blue-300 hover:underline"
+                className="font-address text-sm"
               >
                 {formatAddress(row.original.address)}
               </Link>
@@ -268,7 +268,7 @@ export const Positions: FC<PositionsProps> = ({
               )}
             </div>
           ) : (
-            <span className="font-mono text-sm">-</span>
+            <span className="font-address text-sm">-</span>
           ),
         enableSorting: false
       },
@@ -280,7 +280,7 @@ export const Positions: FC<PositionsProps> = ({
             <div className="flex items-center gap-1">
               <Link
                 to={`/address/${row.original.account_id}`}
-                className="font-mono text-sm text-blue-400 hover:text-blue-300 hover:underline"
+                className="font-address text-sm"
               >
                 {formatAddress(row.original.account_id)}
               </Link>
@@ -302,7 +302,7 @@ export const Positions: FC<PositionsProps> = ({
               )}
             </div>
           ) : (
-            <span className="font-mono text-sm">-</span>
+            <span className="font-address text-sm">-</span>
           ),
         enableSorting: false
       },
@@ -487,7 +487,7 @@ export const Positions: FC<PositionsProps> = ({
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm">
+      <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 text-sm">
         <span className="flex items-center gap-2 text-gray-300">
           <span>Page</span>
           <strong className="text-white">{currentPage}</strong>
@@ -860,7 +860,7 @@ export const Positions: FC<PositionsProps> = ({
                         </div>
                         <div className="space-y-2">
                           <span className="text-xs sm:text-sm text-gray-400">Account ID</span>
-                          <div className="font-mono text-xs sm:text-sm bg-bg-primary p-2 rounded border border-border-primary break-all">
+                          <div className="font-address text-xs sm:text-sm bg-bg-primary p-2 rounded border border-border-primary break-all">
                             {data.account_id.substring(0, 7)}...{data.account_id.substr(-7)}
                           </div>
                         </div>

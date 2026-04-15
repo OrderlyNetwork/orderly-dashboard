@@ -252,7 +252,7 @@ export const EventsTable: FC<EventsTableProps> = ({
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm">
+      <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 text-sm">
         <span className="flex items-center gap-2 text-gray-300">
           <span>Page</span>
           <strong className="text-white">
