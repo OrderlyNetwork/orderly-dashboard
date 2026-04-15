@@ -83,10 +83,10 @@ pub async fn analyzer_perp_trade(
             //user_summary
             let user_perp_snap = context.get_user_perp(&user_perp_summary_key).await;
             #[cfg(not(test))]
-            if user_perp_snap.broker_hash.is_empty() {
+            if user_perp_snap.broker_id.is_empty() {
                 match get_user_info(perp_trade.account_id.clone()).await {
                     Ok(Some(user_info)) => {
-                        user_perp_snap.broker_hash = user_info.broker_hash;
+                        user_perp_snap.broker_id = user_info.broker_id;
                         user_perp_snap.address = user_info.address;
                     }
                     Ok(None) => {}

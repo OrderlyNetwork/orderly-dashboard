@@ -8,7 +8,6 @@ use diesel::sql_types::*;
 use diesel_async::RunQueryDsl;
 
 use crate::analyzer::get_cost_position_decimal;
-use crate::db::user_info::get_user_infos;
 use crate::db::user_token_summary::DBException;
 use crate::db::user_token_summary::DBException::QueryError;
 use crate::db::{PrimaryKey, BATCH_UPSERT_LEN, DB_CONN_ERR_MSG, DB_CONTEXT, POOL};
@@ -39,8 +38,8 @@ pub struct UserPerpSummary {
     pub pulled_block_time: NaiveDateTime,
 
     pub sum_unitary_fundings: BigDecimal,
-    pub broker_hash: String,
     pub address: String,
+    pub broker_id: String,
 }
 
 #[derive(Debug, QueryableByName, Clone)]
@@ -71,7 +70,7 @@ impl UserPerpSummary {
             pulled_block_height: 0,
             pulled_block_time: Default::default(),
             sum_unitary_fundings: BigDecimal::from(0),
-            broker_hash: String::new(),
+            broker_id: String::new(),
             address: String::new(),
         }
     }
@@ -346,7 +345,7 @@ pub async fn find_user_perp_summary(
                     pulled_block_height: 0,
                     pulled_block_time: Default::default(),
                     sum_unitary_fundings: BigDecimal::from(0),
-                    broker_hash: String::new(),
+                    broker_id: String::new(),
                     address: String::new(),
                 };
 
@@ -379,18 +378,16 @@ pub async fn create_or_update_user_perp_summary(
             (values1, user_perp_summary_vec_ref) =
                 user_perp_summary_vec_ref.split_at(BATCH_UPSERT_LEN);
             #[allow(suspicious_double_ref_op)]
-            let mut values1 = values1
+            let values1 = values1
                 .iter()
                 .map(|v| v.clone().clone())
                 .collect::<Vec<UserPerpSummary>>();
-            fill_empty_broker_hash(&mut values1).await?;
             let len = values1.len();
             let update_result = diesel::insert_into(user_perp_summary)
                 .values(values1)
                 .on_conflict(on_constraint("user_perp_summary_uq"))
                 .do_update()
                 .set((
-                    broker_hash.eq(excluded(broker_hash)),
                     holding.eq(excluded(holding)),
                     opening_cost.eq(excluded(opening_cost)),
                     cost_position.eq(excluded(cost_position)),
@@ -404,8 +401,8 @@ pub async fn create_or_update_user_perp_summary(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                     sum_unitary_fundings.eq(excluded(sum_unitary_fundings)),
-                    broker_hash.eq(excluded(broker_hash)),
                     address.eq(excluded(address)),
+                    broker_id.eq(excluded(broker_id)),
                 ))
                 .execute(&mut conn)
                 .await;
@@ -428,17 +425,15 @@ pub async fn create_or_update_user_perp_summary(
             }
         } else {
             #[allow(suspicious_double_ref_op)]
-            let mut values1 = user_perp_summary_vec_ref
+            let values1 = user_perp_summary_vec_ref
                 .iter()
                 .map(|v| v.clone().clone())
                 .collect::<Vec<UserPerpSummary>>();
-            fill_empty_broker_hash(&mut values1).await?;
             let update_result = diesel::insert_into(user_perp_summary)
                 .values(values1)
                 .on_conflict(on_constraint("user_perp_summary_uq"))
                 .do_update()
                 .set((
-                    broker_hash.eq(excluded(broker_hash)),
                     holding.eq(excluded(holding)),
                     opening_cost.eq(excluded(opening_cost)),
                     cost_position.eq(excluded(cost_position)),
@@ -452,8 +447,8 @@ pub async fn create_or_update_user_perp_summary(
                     pulled_block_height.eq(excluded(pulled_block_height)),
                     pulled_block_time.eq(excluded(pulled_block_time)),
                     sum_unitary_fundings.eq(excluded(sum_unitary_fundings)),
-                    broker_hash.eq(excluded(broker_hash)),
                     address.eq(excluded(address)),
+                    broker_id.eq(excluded(broker_id)),
                 ))
                 .execute(&mut conn)
                 .await;
@@ -500,7 +495,6 @@ pub async fn legacy_create_or_update_user_perp_summary(
             .on_conflict(on_constraint("user_perp_summary_uq"))
             .do_update()
             .set((
-                broker_hash.eq(summary.broker_hash.clone()),
                 holding.eq(summary.holding.clone()),
                 opening_cost.eq(summary.opening_cost.clone()),
                 cost_position.eq(summary.cost_position.clone()),
@@ -514,6 +508,8 @@ pub async fn legacy_create_or_update_user_perp_summary(
                 pulled_block_height.eq(summary.pulled_block_height.clone()),
                 pulled_block_time.eq(summary.pulled_block_time.clone()),
                 sum_unitary_fundings.eq(summary.sum_unitary_fundings.clone()),
+                address.eq(summary.address.clone()),
+                broker_id.eq(summary.broker_id.clone()),
             ))
             .execute(&mut conn)
             .await;
@@ -528,33 +524,6 @@ pub async fn legacy_create_or_update_user_perp_summary(
         }
     }
     Ok(row_nums)
-}
-
-async fn fill_empty_broker_hash(records: &mut [UserPerpSummary]) -> anyhow::Result<()> {
-    let account_ids: Vec<String> = records
-        .iter()
-        .filter(|record| record.broker_hash.is_empty())
-        .map(|record| record.account_id.clone())
-        .collect();
-    if account_ids.is_empty() {
-        return Ok(());
-    }
-
-    let user_infos = get_user_infos(account_ids).await?;
-    let broker_hash_by_account = user_infos
-        .into_iter()
-        .map(|item| (item.account_id, item.broker_hash))
-        .collect::<std::collections::HashMap<String, String>>();
-
-    records.iter_mut().for_each(|record| {
-        if record.broker_hash.is_empty() {
-            if let Some(hash) = broker_hash_by_account.get(&record.account_id) {
-                record.broker_hash = hash.clone();
-            }
-        }
-    });
-
-    Ok(())
 }
 
 pub async fn get_user_ltd_trading_volume(
@@ -808,7 +777,7 @@ mod tests {
                 pulled_block_height: (i * 10000).into(),
                 pulled_block_time: update_time,
                 sum_unitary_fundings: (i * 10000).into(),
-                broker_hash: String::new(),
+                broker_id: String::new(),
                 address: String::new(),
             });
         }
@@ -873,7 +842,7 @@ mod tests {
             pulled_block_time: update_time,
             sum_unitary_fundings: BigDecimal::from_str("1000000000000000").unwrap()
                 / get_unitary_prec(),
-            broker_hash: String::new(),
+            broker_id: String::new(),
             address: String::new(),
         };
 
