@@ -435,3 +435,368 @@ export function MorphingHeader() {
     </motion.header>
   );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MOBILE & TABLET HEADER COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Orderly "O" brandmark icon paths (mobile/tablet size) ───────────────────
+const MOBILE_SVG = {
+  p1: "M15.9636 0L16.0396 5.58804e-09C20.0512 0.00932117 23.7159 1.49318 26.5194 3.93768C26.718 4.1109 26.5922 4.42878 26.3285 4.42878L5.67468 4.42878C5.41099 4.42878 5.28518 4.11089 5.48382 3.93768C8.28724 1.49318 11.952 0.00932057 15.9636 0Z",
+  p2: "M9.77563 20.3313C9.66116 20.1683 9.47684 20.0658 9.27745 20.0658L1.00164 20.0658C0.761894 20.0658 0.587094 20.2929 0.655125 20.5225C2.61452 27.1357 8.74286 31.9608 15.9995 31.9608C23.2562 31.9608 29.3845 27.1357 31.3439 20.5225C31.4119 20.2929 31.2371 20.0658 30.9974 20.0658L22.7217 20.0658C22.5223 20.0658 22.338 20.1683 22.2235 20.3313C20.8496 22.2881 18.5742 23.5673 15.9996 23.5673C13.425 23.5673 11.1496 22.2881 9.77563 20.3313Z",
+  p3: "M22.025 11.3585C22.1713 11.5485 22.3941 11.6676 22.634 11.6676L30.9283 11.6676C31.1703 11.6676 31.3455 11.4369 31.2733 11.2062C30.6465 9.20351 29.6357 7.37017 28.3271 5.79223C28.2182 5.66088 28.0555 5.58673 27.8847 5.58673L4.11396 5.58673C3.9432 5.58673 3.7805 5.66088 3.67157 5.79223C2.36294 7.37017 1.35218 9.20351 0.725397 11.2062C0.653199 11.4369 0.828416 11.6676 1.07041 11.6676L9.36469 11.6676C9.60466 11.6676 9.82746 11.5485 9.97374 11.3585C11.3625 9.55468 13.545 8.39215 15.9994 8.39215C18.4537 8.39215 20.6362 9.55468 22.025 11.3585Z",
+  p4: "M23.3401 18.9102C23.1835 18.9102 23.077 18.7507 23.1311 18.6038C23.4322 17.787 23.5966 16.9041 23.5966 15.9829C23.5966 14.9786 23.4012 14.0199 23.0464 13.1425C22.9866 12.9946 23.0931 12.8292 23.2529 12.8292L31.3888 12.8292C31.563 12.8292 31.7135 12.952 31.7444 13.1232C31.9123 14.0511 31.9999 15.0069 31.9999 15.9831C31.9999 16.8782 31.9263 17.756 31.7846 18.611C31.7559 18.7847 31.6043 18.9102 31.4281 18.9102L23.3401 18.9102ZM8.86879 18.6038C8.92291 18.7507 8.81645 18.9101 8.6598 18.9101L0.571867 18.9101C0.395646 18.9101 0.244056 18.7847 0.215292 18.611C0.0736729 17.756 0 16.8782 0 15.9831C0 15.0069 0.0876398 14.0511 0.25549 13.1232C0.286465 12.952 0.436926 12.8292 0.611149 12.8292L8.74704 12.8292C8.90679 12.8292 9.01338 12.9946 8.95355 13.1425C8.59872 14.0199 8.40336 14.9786 8.40336 15.9829C8.40336 16.9041 8.56774 17.787 8.86879 18.6038Z",
+} as const;
+
+function OrderlyOIcon({ size = 32 }: { size?: number }) {
+  return (
+    <svg
+      style={{ display: "block", width: size, height: size }}
+      fill="none"
+      preserveAspectRatio="none"
+      viewBox="0 0 31.9999 31.9608"
+    >
+      <path clipRule="evenodd" d={MOBILE_SVG.p1} fill="white" fillRule="evenodd" />
+      <path clipRule="evenodd" d={MOBILE_SVG.p2} fill="white" fillRule="evenodd" />
+      <path clipRule="evenodd" d={MOBILE_SVG.p3} fill="white" fillRule="evenodd" />
+      <path clipRule="evenodd" d={MOBILE_SVG.p4} fill="white" fillRule="evenodd" />
+    </svg>
+  );
+}
+
+// ─── MobileNavDrawer ──────────────────────────────────────────────────────────
+export function MobileNavDrawer({
+  onClose,
+  deviceLayout = "mobile",
+}: {
+  onClose: () => void;
+  deviceLayout?: "mobile" | "tablet";
+}) {
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  const NAV_SECTIONS = [
+    { key: "Builders",  items: HEADER_NAV.Builders },
+    { key: "Ecosystem", items: HEADER_NAV.Ecosystem },
+    { key: "Traders",   items: HEADER_NAV.Traders },
+  ];
+
+  const toggle = (key: string) =>
+    setOpenSection((prev) => (prev === key ? null : key));
+
+  const fontSectionStyle: React.CSSProperties = {
+    fontFamily: "'atyp-bl-variable', 'atyp-bl', sans-serif",
+    fontVariationSettings: "'opsz' 72, 'wght' 600",
+    fontFeatureSettings: "'ss02', 'ss03', 'ss05', 'ss06'",
+    fontSize: "17px",
+    letterSpacing: "0.17px",
+    color: "white",
+  };
+  const fontItemStyle: React.CSSProperties = {
+    fontFamily: "'atyp-bl-variable', 'atyp-bl', sans-serif",
+    fontVariationSettings: "'wght' 400",
+    fontFeatureSettings: "'ss02', 'ss03', 'ss05', 'ss06'",
+    fontSize: "15px",
+  };
+  const rowDivider = "1px solid rgba(255,255,255,0.07)";
+
+  // suppress unused-var warning — deviceLayout is kept for potential future use
+  void deviceLayout;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.2, ease: [0.22, 0.61, 0.36, 1] }}
+      className="fixed inset-0 z-[9999] flex flex-col"
+      style={{ backgroundColor: "#0d0d12" }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* ── Top bar: Orderly O icon + close button ── */}
+      <div
+        className="flex items-center justify-between px-[20px] py-[18px]"
+        style={{ borderBottom: rowDivider }}
+      >
+        <a href="/" onClick={onClose} style={{ display: "block" }}>
+          <OrderlyOIcon size={28} />
+        </a>
+        <button
+          onClick={onClose}
+          className="text-[#9c9fae] hover:text-white transition-colors bg-transparent border-0 cursor-pointer rounded-full p-[10px] -mr-[6px]"
+          aria-label="Close navigation"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M6 6l12 12M18 6L6 18"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* ── Scrollable nav body ── */}
+      <nav className="flex-1 overflow-y-auto">
+        {NAV_SECTIONS.map(({ key, items }) => (
+          <div key={key} style={{ borderBottom: rowDivider }}>
+            <button
+              onClick={() => toggle(key)}
+              className="w-full flex items-center justify-between py-[18px] px-[24px] bg-transparent border-0 cursor-pointer"
+              aria-expanded={openSection === key}
+            >
+              <span style={fontSectionStyle}>{key}</span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                style={{
+                  transition: "transform 0.2s ease",
+                  transform: openSection === key ? "rotate(180deg)" : "rotate(0deg)",
+                  flexShrink: 0,
+                }}
+              >
+                <path
+                  d="M4 6l4 4 4-4"
+                  stroke="#9c9fae"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {openSection === key && (
+                <motion.div
+                  key={key + "-items"}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.18, ease: [0.22, 0.61, 0.36, 1] }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <div className="flex flex-col px-[16px] pb-[14px] gap-[2px]">
+                    {items.map((item) => {
+                      const opensNewTab = item.external === true || item.target === "_blank";
+                      const itemBaseStyle: React.CSSProperties = {
+                        color: "rgba(255,255,255,0.65)",
+                        ...fontItemStyle,
+                        minHeight: 48,
+                      };
+
+                      return (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          target={opensNewTab ? "_blank" : undefined}
+                          rel={opensNewTab ? "noopener noreferrer" : undefined}
+                          onClick={onClose}
+                          className="flex items-center justify-between no-underline rounded-[10px] px-[14px] py-[14px]"
+                          style={itemBaseStyle}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLAnchorElement).style.background = "rgba(103,0,206,0.15)";
+                            (e.currentTarget as HTMLAnchorElement).style.color = "#9c75ff";
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+                            (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.65)";
+                          }}
+                        >
+                          <span>{item.label}</span>
+                          {opensNewTab && (
+                            <svg
+                              width="11"
+                              height="11"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                              style={{ opacity: 0.3, flexShrink: 0 }}
+                            >
+                              <path
+                                d="M2.5 9.5l7-7M4 2.5h5.5V8"
+                                stroke="currentColor"
+                                strokeWidth="1.4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </a>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+
+        {/* Docs */}
+        <div style={{ borderBottom: rowDivider }}>
+          <a
+            href={DOCS_LINK.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            className="flex items-center justify-between no-underline py-[18px] px-[24px]"
+            style={{ ...fontSectionStyle, minHeight: 56 }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "0.7"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "1"; }}
+          >
+            {DOCS_LINK.label}
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.35, flexShrink: 0 }}>
+              <path d="M2.5 9.5l7-7M4 2.5h5.5V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </a>
+        </div>
+
+        {/* Campaigns */}
+        <div style={{ borderBottom: rowDivider }}>
+          <a
+            href={CAMPAIGNS_LINK.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            className="flex items-center justify-between gap-[12px] no-underline py-[18px] px-[24px]"
+            style={{ ...fontSectionStyle, minHeight: 56 }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "0.7"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.opacity = "1"; }}
+          >
+            <span className="flex min-w-0 flex-1 items-center gap-[10px]">
+              <CampaignIcon className="shrink-0" />
+              <span>{CAMPAIGNS_LINK.label}</span>
+            </span>
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.35, flexShrink: 0 }}>
+              <path d="M2.5 9.5l7-7M4 2.5h5.5V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </a>
+        </div>
+      </nav>
+
+      {/* ── Bottom CTA ── */}
+      <div
+        className="px-[20px] pb-[40px] pt-[16px] flex flex-col gap-[10px]"
+        style={{ borderTop: rowDivider }}
+      >
+        <a
+          href={HEADER_CTA.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClose}
+          className="flex items-center justify-center rounded-[46px] py-[16px] no-underline"
+          style={{ background: "white", minHeight: 52 }}
+        >
+          <span
+            className="font-bold"
+            style={{
+              color: "#3f0086",
+              fontFamily: "'atyp-bl-variable', 'atyp-bl', sans-serif",
+              fontVariationSettings: "'wght' 700",
+              fontFeatureSettings: "'ss02','ss03','ss05','ss06'",
+              fontSize: "16px",
+              letterSpacing: "0.16px",
+            }}
+          >
+            {HEADER_CTA.label}
+          </span>
+        </a>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── MobileFixedNav ───────────────────────────────────────────────────────────
+export function MobileFixedNav({
+  onMenuClick,
+  bannerHeight = 0,
+}: {
+  onMenuClick: () => void;
+  bannerHeight?: number;
+}) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: bannerHeight,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "20px 24px",
+        background: "#000",
+        height: 72,
+      }}
+    >
+      <a href="/" style={{ display: "block", width: 32, height: 32, position: "relative" }}>
+        <OrderlyOIcon size={32} />
+      </a>
+      <button
+        onClick={onMenuClick}
+        style={{ background: "transparent", border: 0, cursor: "pointer", padding: "4px" }}
+        aria-label="Open navigation"
+      >
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect x="4" y="9"  width="24" height="2.5" rx="1.25" fill="white" />
+          <rect x="4" y="15" width="24" height="2.5" rx="1.25" fill="white" />
+          <rect x="4" y="21" width="24" height="2.5" rx="1.25" fill="white" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+// ─── TabletNav ────────────────────────────────────────────────────────────────
+export function TabletNav({
+  onMenuClick,
+  bannerOffset = 0,
+}: {
+  onMenuClick: () => void;
+  bannerOffset?: number;
+}) {
+  return (
+    <div
+      className="sticky z-[100] flex items-center justify-between h-[68px] px-10 gap-4 w-full"
+      style={{
+        top: bannerOffset,
+        background: "black",
+      }}
+    >
+      <div style={{ transform: "scale(0.8)", transformOrigin: "left center" }}>
+        <HeaderLogo />
+      </div>
+      <div className="flex items-center gap-3">
+        <a
+          href={HEADER_CTA.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="content-stretch flex h-[40px] items-center justify-center px-[20px] py-[12px] relative rounded-[46px] shrink-0 no-underline hover:opacity-90 transition-opacity"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg, rgb(255, 255, 255) 0%, rgb(255, 255, 255) 100%), linear-gradient(-89.1975deg, rgb(72, 189, 255) 0%, rgb(120, 108, 255) 47.763%, rgb(189, 0, 255) 99.638%)",
+          }}
+        >
+          <p
+            className="font-['Atyp_BL:Bold',sans-serif] font-bold leading-none not-italic relative shrink-0 text-[#3f0086] text-[16px] tracking-[0.16px]"
+            style={{ fontFeatureSettings: "'ss03', 'ss02', 'ss05'" }}
+          >
+            {HEADER_CTA.label}
+          </p>
+        </a>
+        <button
+          onClick={onMenuClick}
+          className="flex items-center justify-center bg-transparent border-0 cursor-pointer p-1"
+          aria-label="Open navigation"
+        >
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden>
+            <rect y="3"  width="22" height="2" rx="1" fill="white" />
+            <rect y="10" width="22" height="2" rx="1" fill="white" />
+            <rect y="17" width="22" height="2" rx="1" fill="white" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}

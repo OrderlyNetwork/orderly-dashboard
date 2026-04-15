@@ -74,10 +74,10 @@ export default function Index() {
         {/* Search card */}
         <div
           style={{
-            maxWidth: '640px',
+            maxWidth: '820px',
             margin: '36px auto 0',
-            background: 'rgba(20, 21, 26, 0.7)',
-            border: '1px solid rgba(156, 117, 255, 0.15)',
+            background: '#6700CE',
+            border: 'none',
             borderRadius: '16px',
             padding: '36px',
             backdropFilter: 'blur(20px)'
@@ -95,7 +95,7 @@ export default function Index() {
             >
               Explore Trading Data
             </h3>
-            <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0 }}>
+            <p style={{ color: '#fff', lineHeight: 1.6, margin: 0 }}>
               Search for wallet addresses or account IDs to view detailed trading information
               including executed trades, deposits &amp; withdrawals, liquidations, and performance
               metrics.
@@ -103,7 +103,7 @@ export default function Index() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-center space-x-6 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <div className="flex items-center justify-center space-x-6 text-sm" style={{ color: '#fff' }}>
               <div className="flex items-center space-x-2">
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-success)' }}></div>
                 <span>EVM Addresses</span>

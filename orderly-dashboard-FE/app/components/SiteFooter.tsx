@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { FOOTER_NAV, ORDER_BUY_URL, type FooterNavLink } from "~/shared/orderly";
+import { FOOTER_NAV, ORDER_BUY_URL, SOCIAL_LINKS, type FooterNavLink } from "~/shared/orderly";
 
 // ─── Inlined SVG paths ────────────────────────────────────────────────────────
 const SVG = {
@@ -155,8 +155,7 @@ function BuyOrderButton({ onClick }: { onClick?: () => void }) {
       onClick={onClick}
     >
       <div
-        className="flex flex-col justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-black tracking-[0.14px] whitespace-nowrap"
-        style={{ fontFamily: "'atyp-bl-variable', 'Atyp BL', sans-serif", fontWeight: 600, fontFeatureSettings: "'ss03', 'ss02', 'ss05', 'ss06'" }}
+        className="flex flex-col justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-black tracking-[0.14px] whitespace-nowrap" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 600 }}
       >
         <p className="leading-[0.753]">Buy ORDER</p>
       </div>
@@ -202,8 +201,7 @@ function OrderPriceDisplay({ onBuyOrder }: { onBuyOrder?: () => void }) {
     <div className="flex items-center gap-[16px] relative shrink-0">
       {price && (
         <div
-          className="flex flex-col h-[38px] justify-center not-italic relative text-[24px] text-white tracking-[0.24px]"
-          style={{ fontFamily: "'atyp-bl-variable', 'Atyp BL', sans-serif", fontWeight: 600, transform: "translateZ(0)" }}
+          className="flex flex-col h-[38px] justify-center not-italic relative text-[24px] text-white tracking-[0.24px]" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 600, transform: "translateZ(0)" }}
         >
           <p className="leading-[0.753] whitespace-pre-wrap">{price}</p>
         </div>
@@ -259,8 +257,7 @@ function FooterLinkItem({ label, href, external, target }: FooterNavLink) {
     >
       <div className="content-stretch flex items-start relative shrink-0">
         <p
-          className="capitalize leading-[0.753] not-italic relative shrink-0 text-[#9c75ff] text-[14px] tracking-[0.14px]"
-          style={{ fontFamily: "'atyp-bl-variable', 'Atyp BL', sans-serif", fontWeight: 500, fontFeatureSettings: "'ss03', 'ss02', 'ss05', 'ss06'" }}
+          className="capitalize leading-[0.753] not-italic relative shrink-0 text-[#9c75ff] text-[14px] tracking-[0.14px]" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 500 }}
         >
           {label}
         </p>
@@ -273,8 +270,7 @@ function FooterColumn({ title, links }: { title: string; links: FooterNavLink[] 
   return (
     <div className="content-stretch flex flex-col gap-[24px] items-start relative shrink-0">
       <p
-        className="capitalize leading-[0.753] not-italic relative shrink-0 text-[14px] text-white tracking-[0.14px]"
-        style={{ fontFamily: "'atyp-bl-variable', 'Atyp BL', sans-serif", fontWeight: 700, fontFeatureSettings: "'ss03', 'ss02', 'ss05', 'ss06'" }}
+        className="capitalize leading-[0.753] not-italic relative shrink-0 text-[14px] text-white tracking-[0.14px]" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 700 }}
       >
         {title}
       </p>
@@ -297,8 +293,7 @@ function AllSystemsOperational() {
         </svg>
       </div>
       <p
-        className="leading-[0.753] not-italic relative shrink-0 text-[14px] text-white tracking-[0.14px]"
-        style={{ fontFamily: "'atyp-bl-variable', 'Atyp BL', sans-serif", fontWeight: 600, fontFeatureSettings: "'ss03', 'ss02', 'ss05', 'ss06'" }}
+        className="leading-[0.753] not-italic relative shrink-0 text-[14px] text-white tracking-[0.14px]" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 600 }}
       >
         All systems operational.
       </p>
@@ -332,7 +327,7 @@ function SocialIcons() {
         </div>
       </a>
       <a href="https://www.youtube.com/@Orderly.Network" target="_blank" rel="noopener noreferrer"
-        className="relative shrink-0 size-[20px] block hover:opacity-80 transition-opacity">
+        className="relative shrink-0 size-[24px] block hover:opacity-80 transition-opacity">
         <svg viewBox="0 0 24 24" fill="white" className="block size-full">
           <path d="M23.5 6.2a3.02 3.02 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3.02 3.02 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3.02 3.02 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3.02 3.02 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/>
         </svg>
@@ -347,17 +342,263 @@ function SocialIcons() {
   );
 }
 
+// ─── FooterSocialRow ─────────────────────────────────────────────────────────
+function FooterSocialRow({ gap = 16 }: { gap?: number }) {
+  const ARIA = ["Discord", "Telegram", "YouTube", "LinkedIn", "X (Twitter)"];
+  const ICONS = [
+    <svg key="discord" width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.081.118 18.1.138 18.11a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" /></svg>,
+    <svg key="telegram" width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" /></svg>,
+    <svg key="youtube" width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z" /></svg>,
+    <svg key="linkedin" width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>,
+    <svg key="twitter" width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.213 5.567L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>,
+  ];
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap }}>
+      {SOCIAL_LINKS.map((href, i) => (
+        <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+          className="hover:opacity-70 transition-opacity flex items-center justify-center"
+          aria-label={ARIA[i]}>
+          {ICONS[i]}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// ─── Shared copyright row ─────────────────────────────────────────────────────
+function FooterCopyrightRow({ px = 28 }: { px?: number }) {
+  const base: React.CSSProperties = {
+    fontSize: 12,
+    color: "white",
+    letterSpacing: "0.12px",
+    textDecoration: "none",
+    margin: 0,
+  };
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: `16px ${px}px`, flexWrap: "wrap", gap: 8 }}>
+      <p className="" style={{ ...base, "fontFamily": "\'Atyp BL Text\', \'Atyp BL\', sans-serif", "fontWeight": 600 }}>© 2026 Orderly Network</p>
+      <div style={{ display: "flex", gap: 20 }}>
+        <a href="https://orderly.network/docs/introduction/terms-of-service" className="" style={{ ...base, opacity: 0.8, "fontFamily": "\'Atyp BL Text\', \'Atyp BL\', sans-serif", "fontWeight": 400 }} target="_blank" rel="noopener noreferrer" >Terms of Service</a>
+        <a href="https://orderly.network/docs/introduction/privacy-policy"   className="" style={{ ...base, opacity: 0.8, "fontFamily": "\'Atyp BL Text\', \'Atyp BL\', sans-serif", "fontWeight": 400 }} target="_blank" rel="noopener noreferrer" >Privacy Policy</a>
+      </div>
+    </div>
+  );
+}
+
+// ─── TabletFooter ─────────────────────────────────────────────────────────────
+/**
+ * Tablet footer (600–1023px).
+ * Purple card with 2×2 nav grid + status/social bar + copyright row.
+ */
+export function TabletFooter() {
+  const NAV_SECTIONS = [
+    { heading: "Builders",  links: FOOTER_NAV.Builders },
+    { heading: "Ecosystem", links: FOOTER_NAV.Ecosystem },
+    { heading: "Traders",   links: FOOTER_NAV.Traders },
+    { heading: "About",     links: FOOTER_NAV.About },
+  ] as const;
+
+  const fontHeading: React.CSSProperties = {
+    fontSize: 13,
+    color: "white",
+    letterSpacing: "0.13px",
+    margin: 0,
+  };
+  const fontLink: React.CSSProperties = {
+    fontSize: 13,
+    color: "#9c75ff",
+    letterSpacing: "0.13px",
+    textDecoration: "none",
+    display: "block",
+  };
+
+  return (
+    <div style={{ width: "100%", paddingTop: 60 }}>
+      {/* Purple card */}
+      <div style={{ background: "#6700ce", borderRadius: 24, overflow: "hidden", margin: "0 32px" }}>
+        {/* ORDER logo + price + Buy ORDER pill */}
+        <div style={{ padding: "28px 28px 0", display: "inline-block" }}>
+          <FooterLeftPanel />
+        </div>
+
+        {/* Nav columns — 2×2 grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "28px", padding: 28 }}>
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.heading} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <p className="" style={{ ...fontHeading, "fontFamily": "\'Atyp BL Text\', \'Atyp BL\', sans-serif", "fontWeight": 700 }}>{section.heading}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {section.links.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target={link.external || link.target === "_blank" ? "_blank" : undefined}
+                    rel={link.external || link.target === "_blank" ? "noopener noreferrer" : undefined}
+                    className="hover:opacity-80 transition-opacity" style={{ ...fontLink, "fontFamily": "\'Atyp BL Text\', \'Atyp BL\', sans-serif", "fontWeight": 500 }}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, margin: "0 28px", background: "rgba(255,255,255,0.15)" }} />
+
+        {/* Bottom bar: status pill + social icons */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 28px", flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(156,117,255,0.2)", borderRadius: 63, padding: "8px 12px" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#24AD8F", flexShrink: 0 }} />
+            <p className="" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 600, fontSize: 12, color: "white", letterSpacing: "0.12px", margin: 0 }}>
+              All systems operational.
+            </p>
+          </div>
+          <FooterSocialRow />
+        </div>
+      </div>
+
+      {/* Copyright row */}
+      <FooterCopyrightRow px={32} />
+    </div>
+  );
+}
+
+// ─── MobileFooter ─────────────────────────────────────────────────────────────
+function FooterSheet({ sectionKey, onClose }: { sectionKey: string; onClose: () => void }) {
+  const items = FOOTER_NAV[sectionKey as keyof typeof FOOTER_NAV] ?? [];
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-end"
+      style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ duration: 0.25, ease: [0.22, 0.61, 0.36, 1] }}
+        className="w-full rounded-t-[24px] p-[32px] flex flex-col gap-[20px]"
+        style={{ background: "#0d0d12" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <p className="" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 700, color: "white", fontSize: 16, letterSpacing: "0.16px", textTransform: "capitalize", margin: 0 }}>
+            {sectionKey}
+          </p>
+          <button onClick={onClose} className="text-[#9c9fae] hover:text-white bg-transparent border-0 cursor-pointer p-0 transition-colors" aria-label="Close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <nav style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {items.map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              target={item.external || item.target === "_blank" ? "_blank" : undefined}
+              rel={item.external || item.target === "_blank" ? "noopener noreferrer" : undefined}
+              onClick={onClose}
+              className="hover:opacity-80 transition-opacity" style={{ color: "rgba(255,255,255,0.8)", fontSize: 15, textDecoration: "none", "fontFamily": "\'Atyp BL Text\', \'Atyp BL\', sans-serif", "fontWeight": 500 }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </motion.div>
+    </div>
+  );
+}
+
+/**
+ * Mobile footer (< 600px).
+ * Purple card with tappable nav section rows that open a slide-up sheet overlay.
+ */
+export function MobileFooter() {
+  const [footerSheet, setFooterSheet] = useState<string | null>(null);
+  const NAV_SECTIONS = Object.keys(FOOTER_NAV);
+
+  return (
+    <>
+      <div style={{ width: "100%", paddingTop: 60 }}>
+        {/* Purple card */}
+        <div style={{ background: "#6700ce", borderRadius: 24, overflow: "hidden", margin: "0 16px" }}>
+          {/* ORDER logo + price + Buy ORDER pill */}
+          <div style={{ padding: "20px 20px 0", display: "inline-block" }}>
+            <FooterLeftPanel />
+          </div>
+
+          {/* Nav section rows — tap to open slide-up sheet */}
+          <div style={{ padding: "4px 20px" }}>
+            {NAV_SECTIONS.map((section, i) => (
+              <button
+                key={section}
+                onClick={() => setFooterSheet(section)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: "16px 0",
+                  background: "transparent",
+                  border: "none",
+                  borderBottom: i < NAV_SECTIONS.length - 1 ? "1px solid rgba(255,255,255,0.1)" : "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <span className="" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 600, color: "white", fontSize: 15, letterSpacing: "0.15px" }}>
+                  {section}
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, margin: "0 20px", background: "rgba(255,255,255,0.15)" }} />
+
+          {/* Bottom bar: status pill + social icons */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(156,117,255,0.2)", borderRadius: 63, padding: "8px 12px" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#24AD8F", flexShrink: 0 }} />
+              <p className="" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 600, fontSize: 12, color: "white", letterSpacing: "0.12px", margin: 0 }}>
+                All systems operational.
+              </p>
+            </div>
+            <FooterSocialRow gap={12} />
+          </div>
+        </div>
+
+        {/* Copyright row */}
+        <FooterCopyrightRow px={16} />
+      </div>
+
+      {/* Footer nav sheet overlay — rendered via portal */}
+      <AnimatePresence>
+        {footerSheet && createPortal(
+          <FooterSheet sectionKey={footerSheet} onClose={() => setFooterSheet(null)} />,
+          document.body
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 // ─── SiteFooter ───────────────────────────────────────────────────────────────
 export function SiteFooter() {
   return (
     <footer style={{ background: "transparent", paddingTop: 60 }}>
-      <div style={{ maxWidth: 1302, margin: "0 auto", padding: "0 24px 24px" }}>
+      <div style={{ width: "100%", paddingBottom: 24 }}>
         <div style={{ background: "#6700ce", borderRadius: 30, overflow: "hidden" }}>
           {/* Top row */}
-          <div style={{ display: "flex", alignItems: "flex-start", padding: "60px 60px 60px", gap: 40 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", padding: "60px 40px 40px", gap: 40 }}>
             <FooterLeftPanel />
-            <div className="content-stretch flex flex-[1_0_0] flex-col items-end min-h-px min-w-px mr-[-9px] relative">
-              <div className="content-stretch flex gap-[92px] items-start justify-end relative shrink-0 w-full">
+            <div className="content-stretch flex flex-1 flex-col items-end min-h-px min-w-px relative">
+              <div className="content-stretch flex gap-[48px] items-start justify-end relative w-full">
                 <FooterColumn title="Builders"  links={FOOTER_NAV.Builders} />
                 <FooterColumn title="Ecosystem" links={FOOTER_NAV.Ecosystem} />
                 <FooterColumn title="Traders"   links={FOOTER_NAV.Traders} />
@@ -383,7 +624,7 @@ export function SiteFooter() {
 
         {/* Copyright */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
-          <p style={{ fontFamily: "'atyp-bl-variable','atyp-bl',sans-serif", fontVariationSettings: "'wght' 600", fontSize: 12, color: "white", letterSpacing: "0.12px", margin: 0 }}>
+          <p className="" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 600, fontSize: 12, color: "white", letterSpacing: "0.12px", margin: 0 }}>
             © 2026 Orderly Network
           </p>
           <div style={{ display: "flex", gap: 24 }}>
@@ -391,7 +632,7 @@ export function SiteFooter() {
               href="https://orderly.network/docs/introduction/terms-of-service"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ fontFamily: "'atyp-bl-variable','atyp-bl',sans-serif", fontSize: 12, color: "white", letterSpacing: "0.12px", textDecoration: "none", opacity: 0.8 }}
+              className="" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 400, fontSize: 12, color: "white", letterSpacing: "0.12px", textDecoration: "none", opacity: 0.8 }}
             >
               Terms of Service
             </a>
@@ -399,7 +640,7 @@ export function SiteFooter() {
               href="https://orderly.network/docs/introduction/privacy-policy"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ fontFamily: "'atyp-bl-variable','atyp-bl',sans-serif", fontSize: 12, color: "white", letterSpacing: "0.12px", textDecoration: "none", opacity: 0.8 }}
+              className="" style={{ "fontFamily": "'Atyp BL Text', 'Atyp BL', sans-serif", "fontWeight": 400, fontSize: 12, color: "white", letterSpacing: "0.12px", textDecoration: "none", opacity: 0.8 }}
             >
               Privacy Policy
             </a>

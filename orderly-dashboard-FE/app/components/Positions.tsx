@@ -640,13 +640,9 @@ export const Positions: FC<PositionsProps> = ({
             <div className="flex justify-center py-12 w-full">
               <Spinner size="2.5rem" />
             </div>
-          ) : filteredData.rows.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <p>No positions found for the selected criteria.</p>
-            </div>
           ) : (
             <div className="space-y-2">
-              {/* Closed Positions Filter */}
+              {/* Closed Positions Filter - always visible when closed positions exist */}
               {hasClosedPositions && (
                 <div className="flex justify-start pb-0! p-3 sm:p-4">
                   <div className="flex items-center gap-2">
@@ -664,6 +660,15 @@ export const Positions: FC<PositionsProps> = ({
                 </div>
               )}
 
+              {filteredData.rows.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No {!showClosedPositions && hasClosedPositions ? 'open ' : ''}positions found for the selected criteria.</p>
+                  {!showClosedPositions && hasClosedPositions && (
+                    <p className="text-sm mt-1">Enable "Show closed positions" above to view all positions.</p>
+                  )}
+                </div>
+              ) : (
+              <>
               {/* Column Filters */}
               <div className="flex justify-start pb-0! p-3 sm:p-4">
                 <Popover.Root>
@@ -791,6 +796,8 @@ export const Positions: FC<PositionsProps> = ({
               </div>
 
               {renderPagination()}
+            </>
+            )}
             </div>
           )}
         </div>
