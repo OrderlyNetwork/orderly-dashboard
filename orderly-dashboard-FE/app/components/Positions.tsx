@@ -668,7 +668,7 @@ export const Positions: FC<PositionsProps> = ({
                   </p>
                   {!showClosedPositions && hasClosedPositions && (
                     <p className="text-sm mt-1">
-                      Enable "Show closed positions" above to view all positions.
+                      Enable &ldquo;Show closed positions&rdquo; above to view all positions.
                     </p>
                   )}
                 </div>

@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-import { FOOTER_NAV, ORDER_BUY_URL, SOCIAL_LINKS, type FooterNavLink } from '~/shared/orderly';
+import { FOOTER_NAV, SOCIAL_LINKS, type FooterNavLink } from '~/shared/orderly';
 
 // ─── Inlined SVG paths ────────────────────────────────────────────────────────
 const SVG = {
@@ -164,7 +164,9 @@ function getCachedPrice(): string | null {
     if (!raw) return null;
     const { value, ts } = JSON.parse(raw);
     if (Date.now() - ts < ORDER_PRICE_MAX_AGE) return value;
-  } catch {}
+  } catch {
+    return null;
+  }
   return null;
 }
 
@@ -178,7 +180,8 @@ function formatUsd(usd: number): string {
 
 function BuyOrderButton({ onClick }: { onClick?: () => void }) {
   return (
-    <div
+    <button
+      type="button"
       className="bg-white col-1 content-stretch flex gap-[6px] items-center ml-0 mt-0 p-[12px] relative rounded-[63px] row-1 cursor-pointer hover:opacity-80 transition-opacity"
       style={{ willChange: 'opacity' }}
       onClick={onClick}
@@ -211,7 +214,7 @@ function BuyOrderButton({ onClick }: { onClick?: () => void }) {
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -528,7 +531,7 @@ function FooterCopyrightRow({ px = 28 }: { px?: number }) {
         className=""
         style={{
           ...base,
-          fontFamily: "\'Atyp BL Text\', \'Atyp BL\', sans-serif",
+          fontFamily: "'Atyp BL Text', 'Atyp BL', sans-serif",
           fontWeight: 600
         }}
       >
@@ -541,7 +544,7 @@ function FooterCopyrightRow({ px = 28 }: { px?: number }) {
           style={{
             ...base,
             opacity: 0.8,
-            fontFamily: "\'Atyp BL Text\', \'Atyp BL\', sans-serif",
+            fontFamily: "'Atyp BL Text', 'Atyp BL', sans-serif",
             fontWeight: 400
           }}
           target="_blank"
@@ -555,7 +558,7 @@ function FooterCopyrightRow({ px = 28 }: { px?: number }) {
           style={{
             ...base,
             opacity: 0.8,
-            fontFamily: "\'Atyp BL Text\', \'Atyp BL\', sans-serif",
+            fontFamily: "'Atyp BL Text', 'Atyp BL', sans-serif",
             fontWeight: 400
           }}
           target="_blank"
@@ -617,7 +620,7 @@ export function TabletFooter() {
                 className=""
                 style={{
                   ...fontHeading,
-                  fontFamily: "\'Atyp BL Text\', \'Atyp BL\', sans-serif",
+                  fontFamily: "'Atyp BL Text', 'Atyp BL', sans-serif",
                   fontWeight: 700
                 }}
               >
@@ -635,7 +638,7 @@ export function TabletFooter() {
                     className="hover:opacity-80 transition-opacity"
                     style={{
                       ...fontLink,
-                      fontFamily: "\'Atyp BL Text\', \'Atyp BL\', sans-serif",
+                      fontFamily: "'Atyp BL Text', 'Atyp BL', sans-serif",
                       fontWeight: 500
                     }}
                   >
@@ -709,9 +712,11 @@ function FooterSheet({ sectionKey, onClose }: { sectionKey: string; onClose: () 
   const items = FOOTER_NAV[sectionKey as keyof typeof FOOTER_NAV] ?? [];
   return (
     <div
+      role="presentation"
       className="fixed inset-0 z-[9999] flex items-end"
       style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
       onClick={onClose}
+      onKeyDown={onClose}
     >
       <motion.div
         initial={{ y: '100%' }}
@@ -765,7 +770,7 @@ function FooterSheet({ sectionKey, onClose }: { sectionKey: string; onClose: () 
                 color: 'rgba(255,255,255,0.8)',
                 fontSize: 15,
                 textDecoration: 'none',
-                fontFamily: "\'Atyp BL Text\', \'Atyp BL\', sans-serif",
+                fontFamily: "'Atyp BL Text', 'Atyp BL', sans-serif",
                 fontWeight: 500
               }}
             >

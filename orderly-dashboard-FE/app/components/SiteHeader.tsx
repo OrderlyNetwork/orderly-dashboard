@@ -91,17 +91,6 @@ export function HeaderLogo() {
   );
 }
 
-function HeaderLogoContainer() {
-  return (
-    <div
-      className="content-stretch flex flex-col h-[50px] items-start justify-center relative shrink-0"
-      data-name="Header Logo Container"
-    >
-      <HeaderLogo />
-    </div>
-  );
-}
-
 // ─── Chevron ─────────────────────────────────────────────────────────────────
 function ChevronIcon({ open }: { open: boolean }) {
   return (
