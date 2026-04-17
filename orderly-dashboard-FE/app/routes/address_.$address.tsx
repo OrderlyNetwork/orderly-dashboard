@@ -301,7 +301,9 @@ export const Address: FC = () => {
         <div className="text-xl font-semibold text-gray-300">Account Not Found</div>
         <div className="text-gray-500 max-w-md">
           No accounts found for address{' '}
-          <code className="bg-gray-800 px-2 py-1 rounded text-sm" style={{ color: '#D4B2FF' }}>{address.address}</code>
+          <code className="bg-gray-800 px-2 py-1 rounded text-sm" style={{ color: '#D4B2FF' }}>
+            {address.address}
+          </code>
           {broker_id && (
             <>
               {' '}
@@ -332,7 +334,9 @@ export const Address: FC = () => {
           <div className="flex items-center gap-3 p-3 bg-bg-secondary rounded-lg border border-border-primary">
             <div className="flex-1 min-w-0">
               <div className="text-sm text-gray-400 mb-1">Address</div>
-              <div className="font-mono break-all" style={{ color: '#D4B2FF' }}>{address.address}</div>
+              <div className="font-mono break-all" style={{ color: '#D4B2FF' }}>
+                {address.address}
+              </div>
             </div>
             <IconButton
               size="2"

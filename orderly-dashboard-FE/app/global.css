@@ -1,43 +1,151 @@
 /* Atyp BL Display — headings / display text */
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-Thin.otf') format('opentype'); font-weight: 100; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-Light.otf') format('opentype'); font-weight: 300; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-Regular.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-Medium.otf') format('opentype'); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-Semibold.otf') format('opentype'); font-weight: 600; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-Bold.otf') format('opentype'); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-ThinItalic.otf') format('opentype'); font-weight: 100; font-style: italic; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-LightItalic.otf') format('opentype'); font-weight: 300; font-style: italic; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-Italic.otf') format('opentype'); font-weight: 400; font-style: italic; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-MediumItalic.otf') format('opentype'); font-weight: 500; font-style: italic; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-SemiboldItalic.otf') format('opentype'); font-weight: 600; font-style: italic; font-display: swap; }
-@font-face { font-family: 'Atyp BL'; src: url('/fonts/AtypBLDisplay-BoldItalic.otf') format('opentype'); font-weight: 700; font-style: italic; font-display: swap; }
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-Thin.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-ThinItalic.otf') format('opentype');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-LightItalic.otf') format('opentype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-Italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-MediumItalic.otf') format('opentype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-SemiboldItalic.otf') format('opentype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL';
+  src: url('/fonts/AtypBLDisplay-BoldItalic.otf') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
 
 /* Atyp BL Text — UI / body text */
-@font-face { font-family: 'Atyp BL Text'; src: url('/fonts/AtypBLText-Thin.otf') format('opentype'); font-weight: 100; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL Text'; src: url('/fonts/AtypBLText-Light.otf') format('opentype'); font-weight: 300; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL Text'; src: url('/fonts/AtypBLText-Regular.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL Text'; src: url('/fonts/AtypBLText-Medium.otf') format('opentype'); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL Text'; src: url('/fonts/AtypBLText-Semibold.otf') format('opentype'); font-weight: 600; font-style: normal; font-display: swap; }
-@font-face { font-family: 'Atyp BL Text'; src: url('/fonts/AtypBLText-Bold.otf') format('opentype'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face {
+  font-family: 'Atyp BL Text';
+  src: url('/fonts/AtypBLText-Thin.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL Text';
+  src: url('/fonts/AtypBLText-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL Text';
+  src: url('/fonts/AtypBLText-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL Text';
+  src: url('/fonts/AtypBLText-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL Text';
+  src: url('/fonts/AtypBLText-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atyp BL Text';
+  src: url('/fonts/AtypBLText-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   /* ── Orderly Brand Colors ── */
-  --color-purple:       #6700CE;   /* primary purple */
-  --color-purple-deep:  #3F0086;   /* deep purple */
-  --color-purple-bright:#7800F0;   /* input bg */
-  --color-purple-accent:#9C75FF;   /* links / accent */
-  --color-surface:      #1E2026;   /* logo container fills */
+  --color-purple: #6700ce; /* primary purple */
+  --color-purple-deep: #3f0086; /* deep purple */
+  --color-purple-bright: #7800f0; /* input bg */
+  --color-purple-accent: #9c75ff; /* links / accent */
+  --color-surface: #1e2026; /* logo container fills */
   --color-card-overlay: rgba(20, 21, 26, 0.7);
 
   /* Primary alias */
-  --color-primary:      #6700CE;
-  --color-primary-light:#9C75FF;
-  --color-primary-dark: #3F0086;
+  --color-primary: #6700ce;
+  --color-primary-light: #9c75ff;
+  --color-primary-dark: #3f0086;
 
   /* Neutral */
-  --color-white:   #ffffff;
-  --color-black:   #000000;
-  --color-gray-50:  #f9fafb;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
   --color-gray-200: #e5e7eb;
   --color-gray-300: #d1d5db;
@@ -45,83 +153,83 @@
   --color-gray-500: #6b7280;
   --color-gray-600: #4b5563;
   --color-gray-700: #374151;
-  --color-gray-800: #1E2026;
+  --color-gray-800: #1e2026;
   --color-gray-900: #0a0a0a;
 
   /* Status Colors */
-  --color-success:       #10b981;
+  --color-success: #10b981;
   --color-success-light: #34d399;
-  --color-success-dark:  #047857;
-  --color-error:         #ef4444;
-  --color-error-light:   #f87171;
-  --color-error-dark:    #dc2626;
-  --color-warning:       #f59e0b;
+  --color-success-dark: #047857;
+  --color-error: #ef4444;
+  --color-error-light: #f87171;
+  --color-error-dark: #dc2626;
+  --color-warning: #f59e0b;
   --color-warning-light: #fbbf24;
-  --color-warning-dark:  #d97706;
-  --color-info:          #3b82f6;
-  --color-info-light:    #60a5fa;
-  --color-info-dark:     #2563eb;
+  --color-warning-dark: #d97706;
+  --color-info: #3b82f6;
+  --color-info-light: #60a5fa;
+  --color-info-dark: #2563eb;
 
   /* Backgrounds */
-  --color-bg-primary:   rgba(14, 14, 14, 0.95);
+  --color-bg-primary: rgba(14, 14, 14, 0.95);
   --color-bg-secondary: rgba(30, 32, 38, 0.85);
-  --color-bg-tertiary:  rgba(40, 42, 50, 0.7);
-  --color-bg-overlay:   rgba(0, 0, 0, 0.6);
+  --color-bg-tertiary: rgba(40, 42, 50, 0.7);
+  --color-bg-overlay: rgba(0, 0, 0, 0.6);
 
   /* Borders */
-  --color-border-primary:   rgba(156, 117, 255, 0.15);
+  --color-border-primary: rgba(156, 117, 255, 0.15);
   --color-border-secondary: rgba(156, 117, 255, 0.08);
-  --color-border-focus:     rgba(103, 0, 206, 0.6);
+  --color-border-focus: rgba(103, 0, 206, 0.6);
 
   /* Shadows */
-  --shadow-sm:  0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.5);
-  --shadow-xl:  0 20px 40px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.6);
   --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.7);
   --shadow-purple: 0 8px 32px rgba(103, 0, 206, 0.25);
 
   /* Typography */
   --font-display: 'Atyp BL', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-family:  'Atyp BL Text', 'Atyp BL', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-size-xs:   0.75rem;
-  --font-size-sm:   0.875rem;
+  --font-family: 'Atyp BL Text', 'Atyp BL', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
-  --font-size-lg:   1.125rem;
-  --font-size-xl:   1.25rem;
-  --font-size-2xl:  1.5rem;
-  --font-size-3xl:  1.875rem;
-  --font-size-4xl:  2.25rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
 
   /* Spacing */
-  --spacing-1:  0.25rem;
-  --spacing-2:  0.5rem;
-  --spacing-3:  0.75rem;
-  --spacing-4:  1rem;
-  --spacing-5:  1.25rem;
-  --spacing-6:  1.5rem;
-  --spacing-8:  2rem;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
   --spacing-10: 2.5rem;
   --spacing-12: 3rem;
   --spacing-16: 4rem;
 
   /* Border Radius — matching Orderly design tokens */
-  --radius-xs:   4px;
-  --radius-sm:   6px;
-  --radius-md:   10px;    /* input ends */
-  --radius-lg:   14px;    /* buttons */
-  --radius-xl:   16px;    /* cards, sections, footer */
-  --radius-2xl:  22px;    /* feature badges */
-  --radius-pill: 30px;    /* nav CTA */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px; /* input ends */
+  --radius-lg: 14px; /* buttons */
+  --radius-xl: 16px; /* cards, sections, footer */
+  --radius-2xl: 22px; /* feature badges */
+  --radius-pill: 30px; /* nav CTA */
 
   /* Transitions */
-  --transition-fast:   150ms ease-in-out;
+  --transition-fast: 150ms ease-in-out;
   --transition-normal: 250ms ease-in-out;
-  --transition-slow:   350ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
 
   /* Gradients */
-  --gradient-nav-cta: linear-gradient(-89.2deg, #48BDFF 0%, #786CFF 47.8%, #BD00FF 99.6%);
-  --gradient-feature-tag: linear-gradient(to top, rgba(156,117,255,0.6), rgba(156,117,255,0));
+  --gradient-nav-cta: linear-gradient(-89.2deg, #48bdff 0%, #786cff 47.8%, #bd00ff 99.6%);
+  --gradient-feature-tag: linear-gradient(to top, rgba(156, 117, 255, 0.6), rgba(156, 117, 255, 0));
 }
 
 * {
@@ -136,7 +244,11 @@ html {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1;
+  font-feature-settings:
+    'ss02' 1,
+    'ss03' 1,
+    'ss05' 1,
+    'ss06' 1;
 }
 
 body {
@@ -160,23 +272,38 @@ body {
 /* Address / hash strings — Atyp BL with tabular (monospace) figures */
 .font-address {
   font-family: 'Atyp BL Text', 'Atyp BL', sans-serif;
-  font-feature-settings: 'tnum' 1, 'case' 1, 'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1;
-  color: #D4B2FF;
+  font-feature-settings:
+    'tnum' 1,
+    'case' 1,
+    'ss02' 1,
+    'ss03' 1,
+    'ss05' 1,
+    'ss06' 1;
+  color: #d4b2ff;
 }
 
 a.font-address:hover {
-  color: #E0C8FF;
+  color: #e0c8ff;
   text-decoration: underline;
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
   font-weight: 700;
   line-height: 1.1;
   margin-bottom: var(--spacing-4);
   color: var(--color-white);
-  font-feature-settings: 'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1;
+  font-feature-settings:
+    'ss02' 1,
+    'ss03' 1,
+    'ss05' 1,
+    'ss06' 1;
 }
 
 h1 {
@@ -206,7 +333,9 @@ a:hover {
 }
 
 /* Form Elements */
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
   background: var(--color-bg-secondary);
@@ -277,9 +406,14 @@ select option {
   font-size: var(--font-size-sm);
   font-weight: 700;
   letter-spacing: 0.16px;
-  font-feature-settings: 'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1, 'liga' 0;
+  font-feature-settings:
+    'ss02' 1,
+    'ss03' 1,
+    'ss05' 1,
+    'ss06' 1,
+    'liga' 0;
   border: none;
-  border-radius: var(--radius-lg);  /* 24px */
+  border-radius: var(--radius-lg); /* 24px */
   cursor: pointer;
   transition: all var(--transition-fast);
   text-decoration: none;
@@ -315,7 +449,7 @@ select option {
 .btn-nav-cta {
   background: var(--color-white);
   color: var(--color-purple-deep);
-  border-radius: var(--radius-pill);  /* 46px */
+  border-radius: var(--radius-pill); /* 46px */
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--font-size-sm);
@@ -354,7 +488,7 @@ select option {
 .card {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-xl);  /* 30px */
+  border-radius: var(--radius-xl); /* 30px */
   padding: var(--spacing-8);
   backdrop-filter: blur(20px);
   box-shadow: var(--shadow-lg);
@@ -437,7 +571,8 @@ select option {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -485,38 +620,41 @@ select option {
     word-break: break-all;
     overflow-wrap: break-word;
   }
-  
+
   /* Improve touch targets */
-  button, [role="button"] {
+  button,
+  [role='button'] {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* Better table scrolling on mobile */
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
   }
-  
+
   /* Prevent zoom on input focus */
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     font-size: 16px !important;
   }
-  
+
   /* Better spacing for mobile */
   .gap-3 {
     gap: 0.75rem;
   }
-  
+
   .gap-4 {
     gap: 1rem;
   }
-  
+
   /* Improve card interactions */
   [data-radix-themes-tabs-trigger] {
     min-height: 44px;
     padding: 0.5rem 1rem;
   }
-  
+
   /* Better popover positioning */
   [data-radix-popper-content-wrapper] {
     max-width: calc(100vw - 2rem) !important;
@@ -528,8 +666,9 @@ select option {
   table {
     font-size: var(--font-size-sm);
   }
-  
-  th, td {
+
+  th,
+  td {
     padding: var(--spacing-2) var(--spacing-1);
   }
 }

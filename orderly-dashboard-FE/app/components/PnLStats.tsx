@@ -112,11 +112,21 @@ export const PnLStats: FC<PnLStatsProps> = ({ address, brokerId, accountId }) =>
           <div key={i} style={idx === 3 ? statItemLastStyle : statItemStyle}>
             <div
               className="animate-pulse"
-              style={{ height: 20, width: 80, background: 'rgba(255,255,255,0.15)', borderRadius: 6 }}
+              style={{
+                height: 20,
+                width: 80,
+                background: 'rgba(255,255,255,0.15)',
+                borderRadius: 6
+              }}
             />
             <div
               className="animate-pulse"
-              style={{ height: 32, width: 120, background: 'rgba(255,255,255,0.1)', borderRadius: 6 }}
+              style={{
+                height: 32,
+                width: 120,
+                background: 'rgba(255,255,255,0.1)',
+                borderRadius: 6
+              }}
             />
           </div>
         ))}
@@ -137,10 +147,7 @@ export const PnLStats: FC<PnLStatsProps> = ({ address, brokerId, accountId }) =>
   ];
 
   return (
-    <div
-      className="stats-bar"
-      style={{ display: 'flex', flexWrap: 'wrap' }}
-    >
+    <div className="stats-bar" style={{ display: 'flex', flexWrap: 'wrap' }}>
       {stats.map(({ label, display }, idx) => (
         <div key={label} style={idx === stats.length - 1 ? statItemLastStyle : statItemStyle}>
           <div
@@ -160,11 +167,12 @@ export const PnLStats: FC<PnLStatsProps> = ({ address, brokerId, accountId }) =>
               fontFamily: 'var(--font-display)',
               fontSize: '1.75rem',
               fontWeight: 700,
-              color: display.color === 'text-success'
-                ? 'var(--color-success-light)'
-                : display.color === 'text-error'
-                  ? 'var(--color-error-light)'
-                  : 'rgba(255,255,255,0.7)',
+              color:
+                display.color === 'text-success'
+                  ? 'var(--color-success-light)'
+                  : display.color === 'text-error'
+                    ? 'var(--color-error-light)'
+                    : 'rgba(255,255,255,0.7)',
               textTransform: 'capitalize',
               textAlign: 'center'
             }}

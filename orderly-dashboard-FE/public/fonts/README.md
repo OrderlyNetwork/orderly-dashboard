@@ -6,13 +6,13 @@ Place your ATYP font files in this directory.
 
 The poster template looks for these font weights:
 
-| File (example)               | Weight | Usage              |
-|------------------------------|--------|--------------------|
-| `ATYP-Light.ttf`             | 300    | Timestamp          |
-| `ATYP-Regular.ttf`           | 400    | Column headers     |
-| `ATYP-Medium.ttf`            | 500    | X Account names    |
-| `ATYP-Bold.ttf`              | 700    | Title, Points      |
-| `ATYP-ExtraBold.ttf`         | 800    | Rank numbers       |
+| File (example)       | Weight | Usage           |
+| -------------------- | ------ | --------------- |
+| `ATYP-Light.ttf`     | 300    | Timestamp       |
+| `ATYP-Regular.ttf`   | 400    | Column headers  |
+| `ATYP-Medium.ttf`    | 500    | X Account names |
+| `ATYP-Bold.ttf`      | 700    | Title, Points   |
+| `ATYP-ExtraBold.ttf` | 800    | Rank numbers    |
 
 `.otf` files are also supported — update the `src` paths in `poster_template.html` if your filenames differ.
 

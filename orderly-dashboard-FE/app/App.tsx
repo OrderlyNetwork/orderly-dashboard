@@ -1,9 +1,14 @@
 import { Outlet } from '@remix-run/react';
-import { FC, createContext, useContext, useState, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
+import { FC, createContext, useContext, useState, useEffect } from 'react';
 
-import { MorphingHeader, MobileFixedNav, MobileNavDrawer, TabletNav } from '~/components/SiteHeader';
 import { SiteFooter, TabletFooter, MobileFooter } from '~/components/SiteFooter';
+import {
+  MorphingHeader,
+  MobileFixedNav,
+  MobileNavDrawer,
+  TabletNav
+} from '~/components/SiteHeader';
 
 export type AppContextType = {
   queryServiceUrl: string;
@@ -47,19 +52,35 @@ export const App: FC = () => {
   return (
     <>
       {/* ── Mobile fixed top bar (< 600 px) ── */}
-      {layout === 'mobile' && (
-        <MobileFixedNav onMenuClick={() => setNavOpen(true)} />
-      )}
+      {layout === 'mobile' && <MobileFixedNav onMenuClick={() => setNavOpen(true)} />}
 
       {/* ── Tablet sticky top bar (600 – 1023 px) ── */}
-      {layout === 'tablet' && (
-        <TabletNav onMenuClick={() => setNavOpen(true)} />
-      )}
+      {layout === 'tablet' && <TabletNav onMenuClick={() => setNavOpen(true)} />}
 
       {/* ── Desktop floating pill (≥ 1024 px) ── */}
       {layout === 'desktop' && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ pointerEvents: 'auto', width: '100%', display: 'flex', justifyContent: 'center', paddingLeft: 16, paddingRight: 16 }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 50,
+            display: 'flex',
+            justifyContent: 'center',
+            pointerEvents: 'none'
+          }}
+        >
+          <div
+            style={{
+              pointerEvents: 'auto',
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              paddingLeft: 16,
+              paddingRight: 16
+            }}
+          >
             <MorphingHeader />
           </div>
         </div>
@@ -84,11 +105,14 @@ export const App: FC = () => {
         <Outlet />
       </div>
 
-      {layout === 'mobile'  && <MobileFooter />}
-      {layout === 'tablet'  && <TabletFooter />}
+      {layout === 'mobile' && <MobileFooter />}
+      {layout === 'tablet' && <TabletFooter />}
       {layout === 'desktop' && (
         <div className="w-full max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-8 xl:px-32">
-          <div className="mx-auto w-full" style={{ maxWidth: 1200, paddingLeft: 24, paddingRight: 24 }}>
+          <div
+            className="mx-auto w-full"
+            style={{ maxWidth: 1200, paddingLeft: 24, paddingRight: 24 }}
+          >
             <SiteFooter />
           </div>
         </div>

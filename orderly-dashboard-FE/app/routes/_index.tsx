@@ -73,65 +73,86 @@ export default function Index() {
 
         {/* Search card */}
         <div className="mx-auto" style={{ maxWidth: 1200, paddingLeft: 24, paddingRight: 24 }}>
-        <div
-          style={{
-            maxWidth: '820px',
-            margin: '36px auto 0',
-            background: '#6700CE',
-            border: 'none',
-            borderRadius: '16px',
-            padding: '36px',
-            backdropFilter: 'blur(20px)'
-          }}
-        >
-          <div className="space-y-4 mb-6">
-            <h3
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '1.25rem',
-                fontWeight: 700,
-                color: '#fff',
-                margin: 0
-              }}
-            >
-              Explore Trading Data
-            </h3>
-            <p style={{ color: '#fff', lineHeight: 1.6, margin: 0 }}>
-              Search for wallet addresses or account IDs to view detailed trading information
-              including executed trades, deposits &amp; withdrawals, liquidations, and performance
-              metrics.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-center space-x-6 text-sm" style={{ color: '#fff' }}>
-              <div className="flex items-center space-x-2">
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-success)' }}></div>
-                <span className="font-bold">EVM Addresses</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-purple-accent)' }}></div>
-                <span className="font-bold">Solana Addresses</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-warning)' }}></div>
-                <span className="font-bold">Account IDs</span>
-              </div>
+          <div
+            style={{
+              maxWidth: '820px',
+              margin: '36px auto 0',
+              background: '#6700CE',
+              border: 'none',
+              borderRadius: '16px',
+              padding: '36px',
+              backdropFilter: 'blur(20px)'
+            }}
+          >
+            <div className="space-y-4 mb-6">
+              <h3
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: '#fff',
+                  margin: 0
+                }}
+              >
+                Explore Trading Data
+              </h3>
+              <p style={{ color: '#fff', lineHeight: 1.6, margin: 0 }}>
+                Search for wallet addresses or account IDs to view detailed trading information
+                including executed trades, deposits &amp; withdrawals, liquidations, and performance
+                metrics.
+              </p>
             </div>
 
-            <div className="flex justify-center w-full">
-              <SearchInput />
+            <div className="space-y-4">
+              <div
+                className="flex items-center justify-center space-x-6 text-sm"
+                style={{ color: '#fff' }}
+              >
+                <div className="flex items-center space-x-2">
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: 'var(--color-success)'
+                    }}
+                  ></div>
+                  <span className="font-bold">EVM Addresses</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: 'var(--color-purple-accent)'
+                    }}
+                  ></div>
+                  <span className="font-bold">Solana Addresses</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: 'var(--color-warning)'
+                    }}
+                  ></div>
+                  <span className="font-bold">Account IDs</span>
+                </div>
+              </div>
+
+              <div className="flex justify-center w-full">
+                <SearchInput />
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
 
       {/* Leaderboard Section */}
-      <div
-        className="mt-16 mx-auto"
-        style={{ maxWidth: 1200, paddingLeft: 24, paddingRight: 24 }}
-      >
+      <div className="mt-16 mx-auto" style={{ maxWidth: 1200, paddingLeft: 24, paddingRight: 24 }}>
         {/* Tab Navigation */}
         <div className="flex justify-center mb-8">
           <div
@@ -150,7 +171,11 @@ export default function Index() {
               style={
                 activeTab === 'trading'
                   ? { background: 'var(--color-purple)', color: '#fff', borderRadius: '12px' }
-                  : { background: 'transparent', color: 'rgba(255,255,255,0.6)', borderRadius: '12px' }
+                  : {
+                      background: 'transparent',
+                      color: 'rgba(255,255,255,0.6)',
+                      borderRadius: '12px'
+                    }
               }
             >
               Trading Leaderboard
@@ -161,7 +186,11 @@ export default function Index() {
               style={
                 activeTab === 'positions'
                   ? { background: 'var(--color-purple)', color: '#fff', borderRadius: '12px' }
-                  : { background: 'transparent', color: 'rgba(255,255,255,0.6)', borderRadius: '12px' }
+                  : {
+                      background: 'transparent',
+                      color: 'rgba(255,255,255,0.6)',
+                      borderRadius: '12px'
+                    }
               }
             >
               Positions Leaderboard

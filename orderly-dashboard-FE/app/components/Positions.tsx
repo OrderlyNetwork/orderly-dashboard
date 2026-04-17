@@ -278,10 +278,7 @@ export const Positions: FC<PositionsProps> = ({
         cell: ({ row }) =>
           row.original.account_id ? (
             <div className="flex items-center gap-1">
-              <Link
-                to={`/address/${row.original.account_id}`}
-                className="font-address text-sm"
-              >
+              <Link to={`/address/${row.original.account_id}`} className="font-address text-sm">
                 {formatAddress(row.original.account_id)}
               </Link>
               {!hideQuickActions && (
@@ -653,7 +650,10 @@ export const Positions: FC<PositionsProps> = ({
                       onChange={(e) => setShowClosedPositions(e.target.checked)}
                       className="rounded"
                     />
-                    <label htmlFor="show-closed-positions" className="text-sm font-medium text-white">
+                    <label
+                      htmlFor="show-closed-positions"
+                      className="text-sm font-medium text-white"
+                    >
                       Show closed positions
                     </label>
                   </div>
@@ -662,142 +662,157 @@ export const Positions: FC<PositionsProps> = ({
 
               {filteredData.rows.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
-                  <p>No {!showClosedPositions && hasClosedPositions ? 'open ' : ''}positions found for the selected criteria.</p>
+                  <p>
+                    No {!showClosedPositions && hasClosedPositions ? 'open ' : ''}positions found
+                    for the selected criteria.
+                  </p>
                   {!showClosedPositions && hasClosedPositions && (
-                    <p className="text-sm mt-1">Enable "Show closed positions" above to view all positions.</p>
+                    <p className="text-sm mt-1">
+                      Enable "Show closed positions" above to view all positions.
+                    </p>
                   )}
                 </div>
               ) : (
-              <>
-              {/* Column Filters */}
-              <div className="flex justify-start pb-0! p-3 sm:p-4">
-                <Popover.Root>
-                  <Popover.Trigger className="w-auto">
-                    <Button variant="soft" className="btn btn-secondary">
-                      <MixerHorizontalIcon width="16" height="16" />
-                      Column Filters
-                    </Button>
-                  </Popover.Trigger>
-                  <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw] card">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => {
-                            table.resetColumnVisibility();
-                          }}
-                          className="btn btn-primary"
-                        >
-                          Reset to default
+                <>
+                  {/* Column Filters */}
+                  <div className="flex justify-start pb-0! p-3 sm:p-4">
+                    <Popover.Root>
+                      <Popover.Trigger className="w-auto">
+                        <Button variant="soft" className="btn btn-secondary">
+                          <MixerHorizontalIcon width="16" height="16" />
+                          Column Filters
                         </Button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={table.getIsAllColumnsVisible()}
-                          onChange={table.getToggleAllColumnsVisibilityHandler()}
-                          className="rounded"
-                        />
-                        <label htmlFor="toggle-all" className="text-sm text-white">
-                          Toggle All
-                        </label>
-                      </div>
-                      <hr className="w-full border-border-primary" />
-                      {table.getAllLeafColumns().map((column) => {
-                        return (
-                          <div key={column.id} className="flex items-center gap-2">
+                      </Popover.Trigger>
+                      <Popover.Content
+                        width="20rem"
+                        maxHeight="26rem"
+                        className="max-w-[90vw] card"
+                      >
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => {
+                                table.resetColumnVisibility();
+                              }}
+                              className="btn btn-primary"
+                            >
+                              Reset to default
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
-                              checked={column.getIsVisible()}
-                              onChange={column.getToggleVisibilityHandler()}
+                              checked={table.getIsAllColumnsVisible()}
+                              onChange={table.getToggleAllColumnsVisibilityHandler()}
                               className="rounded"
                             />
-                            <label className="text-sm text-white">
-                              {
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                flexRender(column.columnDef.header, undefined as any)
-                              }{' '}
-                              ({column.id})
+                            <label htmlFor="toggle-all" className="text-sm text-white">
+                              Toggle All
                             </label>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </Popover.Content>
-                </Popover.Root>
-              </div>
-
-              {renderPagination()}
-
-              <div className="w-full overflow-x-auto relative">
-                {isLoading && (
-                  <div className="absolute inset-0 bg-bg-overlay flex items-center justify-center z-10 rounded-xl">
-                    <Spinner size="2rem" />
-                  </div>
-                )}
-                <Table.Root className="w-full">
-                  <Table.Header>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <Table.Row key={headerGroup.id} className="border-b border-border-primary">
-                        {headerGroup.headers.map((header) => (
-                          <Table.ColumnHeaderCell
-                            key={header.id}
-                            colSpan={header.colSpan}
-                            className="py-2 px-2 sm:py-4 sm:px-4"
-                          >
-                            {header.isPlaceholder ? null : (
-                              <div
-                                className={
-                                  header.column.getCanSort()
-                                    ? 'cursor-pointer select-none hover:text-primary-light transition-colors duration-150 text-sm font-medium'
-                                    : 'text-sm font-medium'
-                                }
-                                onClick={header.column.getToggleSortingHandler()}
-                                onKeyDown={(ev) => {
-                                  if (ev.key === 'Enter') {
-                                    header.column.getToggleSortingHandler();
-                                  }
-                                }}
-                                role="button"
-                                tabIndex={0}
-                              >
-                                {flexRender(header.column.columnDef.header, header.getContext())}
-                                {{
-                                  asc: ' 🔼',
-                                  desc: ' 🔽'
-                                }[header.column.getIsSorted() as string] ?? null}
+                          <hr className="w-full border-border-primary" />
+                          {table.getAllLeafColumns().map((column) => {
+                            return (
+                              <div key={column.id} className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={column.getIsVisible()}
+                                  onChange={column.getToggleVisibilityHandler()}
+                                  className="rounded"
+                                />
+                                <label className="text-sm text-white">
+                                  {
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    flexRender(column.columnDef.header, undefined as any)
+                                  }{' '}
+                                  ({column.id})
+                                </label>
                               </div>
-                            )}
-                          </Table.ColumnHeaderCell>
-                        ))}
-                      </Table.Row>
-                    ))}
-                  </Table.Header>
+                            );
+                          })}
+                        </div>
+                      </Popover.Content>
+                    </Popover.Root>
+                  </div>
 
-                  <Table.Body>
-                    {table.getRowModel().rows.map((row, index) => (
-                      <Table.Row
-                        key={row.id}
-                        className={`border-b border-border-primary hover:bg-bg-tertiary transition-colors duration-150 ${
-                          index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
-                        }`}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <Table.Cell
-                            key={cell.id}
-                            className="align-middle text-sm py-2 px-2 sm:py-3 sm:px-4"
+                  {renderPagination()}
+
+                  <div className="w-full overflow-x-auto relative">
+                    {isLoading && (
+                      <div className="absolute inset-0 bg-bg-overlay flex items-center justify-center z-10 rounded-xl">
+                        <Spinner size="2rem" />
+                      </div>
+                    )}
+                    <Table.Root className="w-full">
+                      <Table.Header>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                          <Table.Row
+                            key={headerGroup.id}
+                            className="border-b border-border-primary"
                           >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </Table.Cell>
+                            {headerGroup.headers.map((header) => (
+                              <Table.ColumnHeaderCell
+                                key={header.id}
+                                colSpan={header.colSpan}
+                                className="py-2 px-2 sm:py-4 sm:px-4"
+                              >
+                                {header.isPlaceholder ? null : (
+                                  <div
+                                    className={
+                                      header.column.getCanSort()
+                                        ? 'cursor-pointer select-none hover:text-primary-light transition-colors duration-150 text-sm font-medium'
+                                        : 'text-sm font-medium'
+                                    }
+                                    onClick={header.column.getToggleSortingHandler()}
+                                    onKeyDown={(ev) => {
+                                      if (ev.key === 'Enter') {
+                                        header.column.getToggleSortingHandler();
+                                      }
+                                    }}
+                                    role="button"
+                                    tabIndex={0}
+                                  >
+                                    {flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                                    {{
+                                      asc: ' 🔼',
+                                      desc: ' 🔽'
+                                    }[header.column.getIsSorted() as string] ?? null}
+                                  </div>
+                                )}
+                              </Table.ColumnHeaderCell>
+                            ))}
+                          </Table.Row>
                         ))}
-                      </Table.Row>
-                    ))}
-                  </Table.Body>
-                </Table.Root>
-              </div>
+                      </Table.Header>
 
-              {renderPagination()}
-            </>
-            )}
+                      <Table.Body>
+                        {table.getRowModel().rows.map((row, index) => (
+                          <Table.Row
+                            key={row.id}
+                            className={`border-b border-border-primary hover:bg-bg-tertiary transition-colors duration-150 ${
+                              index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
+                            }`}
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <Table.Cell
+                                key={cell.id}
+                                className="align-middle text-sm py-2 px-2 sm:py-3 sm:px-4"
+                              >
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </Table.Cell>
+                            ))}
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </div>
+
+                  {renderPagination()}
+                </>
+              )}
             </div>
           )}
         </div>
