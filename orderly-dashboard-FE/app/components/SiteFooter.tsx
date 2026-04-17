@@ -716,7 +716,7 @@ function FooterSheet({ sectionKey, onClose }: { sectionKey: string; onClose: () 
       className="fixed inset-0 z-[9999] flex items-end"
       style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
       onClick={onClose}
-      onKeyDown={onClose}
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
     >
       <motion.div
         initial={{ y: '100%' }}
