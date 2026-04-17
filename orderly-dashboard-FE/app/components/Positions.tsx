@@ -246,7 +246,7 @@ export const Positions: FC<PositionsProps> = ({
                         }
                       })()
                 }
-                className="font-mono text-sm text-blue-400 hover:text-blue-300 hover:underline"
+                className="font-address text-sm"
               >
                 {formatAddress(row.original.address)}
               </Link>
@@ -268,7 +268,7 @@ export const Positions: FC<PositionsProps> = ({
               )}
             </div>
           ) : (
-            <span className="font-mono text-sm">-</span>
+            <span className="font-address text-sm">-</span>
           ),
         enableSorting: false
       },
@@ -278,10 +278,7 @@ export const Positions: FC<PositionsProps> = ({
         cell: ({ row }) =>
           row.original.account_id ? (
             <div className="flex items-center gap-1">
-              <Link
-                to={`/address/${row.original.account_id}`}
-                className="font-mono text-sm text-blue-400 hover:text-blue-300 hover:underline"
-              >
+              <Link to={`/address/${row.original.account_id}`} className="font-address text-sm">
                 {formatAddress(row.original.account_id)}
               </Link>
               {!hideQuickActions && (
@@ -302,7 +299,7 @@ export const Positions: FC<PositionsProps> = ({
               )}
             </div>
           ) : (
-            <span className="font-mono text-sm">-</span>
+            <span className="font-address text-sm">-</span>
           ),
         enableSorting: false
       },
@@ -487,7 +484,7 @@ export const Positions: FC<PositionsProps> = ({
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm">
+      <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 text-sm">
         <span className="flex items-center gap-2 text-gray-300">
           <span>Page</span>
           <strong className="text-white">{currentPage}</strong>
@@ -514,9 +511,9 @@ export const Positions: FC<PositionsProps> = ({
   );
 
   return (
-    <div className="space-y-8 animate-fade-in flex flex-col align-center">
+    <div className="space-y-4 sm:space-y-8 animate-fade-in flex flex-col align-center">
       {!hideTitle && (
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-2 sm:space-y-4">
           <h2 className="text-2xl font-bold text-white">Positions</h2>
           <p className="text-gray-300 max-w-3xl mx-auto">
             Track positions across different addresses, accounts, and brokers. View holding values,
@@ -527,271 +524,298 @@ export const Positions: FC<PositionsProps> = ({
         </div>
       )}
 
-      {/* Filters Section */}
-      {!hideFilters && (
-        <div className="card space-y-6 max-w-2xl mxa min-w-[min-content]">
-          {/* Additional Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="broker-id" className="text-sm font-medium text-white">
-                Broker ID
-              </label>
-              <select
-                id="broker-id"
-                value={queryParams.broker_id || ''}
-                onChange={(e) => handleInputChange('broker_id', e.target.value)}
-                className="w-full"
-              >
-                <option value="">All brokers</option>
-                {brokers?.map((broker) => (
-                  <option key={broker.broker_id} value={broker.broker_id}>
-                    {broker.broker_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="symbol-input" className="text-sm font-medium text-white">
-                Symbol
-              </label>
-              <select
-                id="symbol-input"
-                value={queryParams.symbol || ''}
-                onChange={(e) => handleInputChange('symbol', e.target.value)}
-                className="w-full"
-              >
-                <option value="">All symbols</option>
-                {symbols?.map((symbol) => {
-                  const parts = symbol.symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol.symbol;
-                  return (
-                    <option key={symbol.symbol} value={symbol.symbol}>
-                      {baseToken}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="address-input" className="text-sm font-medium text-white">
-                Address
-              </label>
-              <div className="relative">
-                <input
-                  id="address-input"
-                  type="text"
-                  placeholder="Enter EVM/Solana address or Account ID"
-                  value={addressInput}
-                  onChange={(e) => handleAddressChange(e.target.value)}
-                  className="w-full pr-10"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  {addressLoading && <Spinner size="1rem" />}
-                  {!addressLoading &&
-                    searchedAddress &&
-                    addressData &&
-                    addressData.filter((account) => (account.perp_volume || 0) > 0).length ===
-                      0 && <Cross2Icon className="w-4 h-4 text-red-400" />}
-                </div>
-              </div>
-            </div>
-            {accountIdInput && (
+      <div className="card w-full space-y-4 sm:space-y-6">
+        {/* Filters Section */}
+        {!hideFilters && (
+          <div className="space-y-4 sm:space-y-6 w-full">
+            {/* Additional Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <div className="text-sm font-medium text-white">Account ID Filter</div>
-                <div className="flex items-center gap-2">
+                <label htmlFor="broker-id" className="text-sm font-medium text-white">
+                  Broker ID
+                </label>
+                <select
+                  id="broker-id"
+                  value={queryParams.broker_id || ''}
+                  onChange={(e) => handleInputChange('broker_id', e.target.value)}
+                  className="w-full"
+                >
+                  <option value="">All brokers</option>
+                  {brokers?.map((broker) => (
+                    <option key={broker.broker_id} value={broker.broker_id}>
+                      {broker.broker_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="symbol-input" className="text-sm font-medium text-white">
+                  Symbol
+                </label>
+                <select
+                  id="symbol-input"
+                  value={queryParams.symbol || ''}
+                  onChange={(e) => handleInputChange('symbol', e.target.value)}
+                  className="w-full"
+                >
+                  <option value="">All symbols</option>
+                  {symbols?.map((symbol) => {
+                    const parts = symbol.symbol.split('_');
+                    const baseToken = parts.length >= 2 ? parts[1] : symbol.symbol;
+                    return (
+                      <option key={symbol.symbol} value={symbol.symbol}>
+                        {baseToken}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="address-input" className="text-sm font-medium text-white">
+                  Address
+                </label>
+                <div className="relative">
                   <input
+                    id="address-input"
                     type="text"
-                    value={accountIdInput}
-                    readOnly
-                    className="flex-1 bg-bg-secondary text-gray-300 cursor-not-allowed"
+                    placeholder="Enter EVM/Solana address or Account ID"
+                    value={addressInput}
+                    onChange={(e) => handleAddressChange(e.target.value)}
+                    className="w-full pr-10"
                   />
-                  <button
-                    onClick={() => handleAccountIdChange('')}
-                    className="btn btn-secondary px-3"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            )}
-            <div className="space-y-2" style={{ display: 'none' }}>
-              <label htmlFor="account-id-input" className="text-sm font-medium text-white">
-                Account ID
-              </label>
-              <input
-                id="account-id-input"
-                type="text"
-                placeholder="Enter account ID"
-                value={accountIdInput}
-                onChange={(e) => {
-                  handleAccountIdChange(e.target.value);
-                }}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Table Section */}
-      <div className="card">
-        {!filteredData ? (
-          <div className="flex justify-center py-12 w-full">
-            <Spinner size="2.5rem" />
-          </div>
-        ) : filteredData.rows.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            <p>No positions found for the selected criteria.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {/* Closed Positions Filter */}
-            {hasClosedPositions && (
-              <div className="flex justify-start pb-0! p-3 sm:p-4">
-                <div className="flex items-center gap-2">
-                  <input
-                    id="show-closed-positions"
-                    type="checkbox"
-                    checked={showClosedPositions}
-                    onChange={(e) => setShowClosedPositions(e.target.checked)}
-                    className="rounded"
-                  />
-                  <label htmlFor="show-closed-positions" className="text-sm font-medium text-white">
-                    Show closed positions
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* Column Filters */}
-            <div className="flex justify-start pb-0! p-3 sm:p-4">
-              <Popover.Root>
-                <Popover.Trigger className="w-auto">
-                  <Button variant="soft" className="btn btn-secondary">
-                    <MixerHorizontalIcon width="16" height="16" />
-                    Column Filters
-                  </Button>
-                </Popover.Trigger>
-                <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw] card">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => {
-                          table.resetColumnVisibility();
-                        }}
-                        className="btn btn-primary"
-                      >
-                        Reset to default
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={table.getIsAllColumnsVisible()}
-                        onChange={table.getToggleAllColumnsVisibilityHandler()}
-                        className="rounded"
-                      />
-                      <label htmlFor="toggle-all" className="text-sm text-white">
-                        Toggle All
-                      </label>
-                    </div>
-                    <hr className="w-full border-border-primary" />
-                    {table.getAllLeafColumns().map((column) => {
-                      return (
-                        <div key={column.id} className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={column.getIsVisible()}
-                            onChange={column.getToggleVisibilityHandler()}
-                            className="rounded"
-                          />
-                          <label className="text-sm text-white">
-                            {
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              flexRender(column.columnDef.header, undefined as any)
-                            }{' '}
-                            ({column.id})
-                          </label>
-                        </div>
-                      );
-                    })}
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {addressLoading && <Spinner size="1rem" />}
+                    {!addressLoading &&
+                      searchedAddress &&
+                      addressData &&
+                      addressData.filter((account) => (account.perp_volume || 0) > 0).length ===
+                        0 && <Cross2Icon className="w-4 h-4 text-red-400" />}
                   </div>
-                </Popover.Content>
-              </Popover.Root>
-            </div>
-
-            {renderPagination()}
-
-            <div className="w-full overflow-x-auto relative">
-              {isLoading && (
-                <div className="absolute inset-0 bg-bg-overlay flex items-center justify-center z-10 rounded-xl">
-                  <Spinner size="2rem" />
+                </div>
+              </div>
+              {accountIdInput && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-white">Account ID Filter</div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={accountIdInput}
+                      readOnly
+                      className="flex-1 bg-bg-secondary text-gray-300 cursor-not-allowed"
+                    />
+                    <button
+                      onClick={() => handleAccountIdChange('')}
+                      className="btn btn-secondary px-3"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
               )}
-              <Table.Root className="w-full">
-                <Table.Header>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <Table.Row key={headerGroup.id} className="border-b border-border-primary">
-                      {headerGroup.headers.map((header) => (
-                        <Table.ColumnHeaderCell
-                          key={header.id}
-                          colSpan={header.colSpan}
-                          className="py-2 px-2 sm:py-4 sm:px-4"
-                        >
-                          {header.isPlaceholder ? null : (
-                            <div
-                              className={
-                                header.column.getCanSort()
-                                  ? 'cursor-pointer select-none hover:text-primary-light transition-colors duration-150 text-sm font-medium'
-                                  : 'text-sm font-medium'
-                              }
-                              onClick={header.column.getToggleSortingHandler()}
-                              onKeyDown={(ev) => {
-                                if (ev.key === 'Enter') {
-                                  header.column.getToggleSortingHandler();
-                                }
-                              }}
-                              role="button"
-                              tabIndex={0}
-                            >
-                              {flexRender(header.column.columnDef.header, header.getContext())}
-                              {{
-                                asc: ' 🔼',
-                                desc: ' 🔽'
-                              }[header.column.getIsSorted() as string] ?? null}
-                            </div>
-                          )}
-                        </Table.ColumnHeaderCell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Header>
-
-                <Table.Body>
-                  {table.getRowModel().rows.map((row, index) => (
-                    <Table.Row
-                      key={row.id}
-                      className={`border-b border-border-primary hover:bg-bg-tertiary transition-colors duration-150 ${
-                        index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
-                      }`}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <Table.Cell
-                          key={cell.id}
-                          className="align-middle text-sm py-2 px-2 sm:py-3 sm:px-4"
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </Table.Cell>
-                      ))}
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
+              <div className="space-y-2" style={{ display: 'none' }}>
+                <label htmlFor="account-id-input" className="text-sm font-medium text-white">
+                  Account ID
+                </label>
+                <input
+                  id="account-id-input"
+                  type="text"
+                  placeholder="Enter account ID"
+                  value={accountIdInput}
+                  onChange={(e) => {
+                    handleAccountIdChange(e.target.value);
+                  }}
+                  className="w-full"
+                />
+              </div>
             </div>
-
-            {renderPagination()}
           </div>
         )}
+
+        {/* Table Section */}
+        <div className="w-full">
+          {!filteredData ? (
+            <div className="flex justify-center py-12 w-full">
+              <Spinner size="2.5rem" />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {/* Closed Positions Filter - always visible when closed positions exist */}
+              {hasClosedPositions && (
+                <div className="flex justify-start pb-0! p-3 sm:p-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="show-closed-positions"
+                      type="checkbox"
+                      checked={showClosedPositions}
+                      onChange={(e) => setShowClosedPositions(e.target.checked)}
+                      className="rounded"
+                    />
+                    <label
+                      htmlFor="show-closed-positions"
+                      className="text-sm font-medium text-white"
+                    >
+                      Show closed positions
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {filteredData.rows.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <p>
+                    No {!showClosedPositions && hasClosedPositions ? 'open ' : ''}positions found
+                    for the selected criteria.
+                  </p>
+                  {!showClosedPositions && hasClosedPositions && (
+                    <p className="text-sm mt-1">
+                      Enable &ldquo;Show closed positions&rdquo; above to view all positions.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Column Filters */}
+                  <div className="flex justify-start pb-0! p-3 sm:p-4">
+                    <Popover.Root>
+                      <Popover.Trigger className="w-auto">
+                        <Button variant="soft" className="btn btn-secondary">
+                          <MixerHorizontalIcon width="16" height="16" />
+                          Column Filters
+                        </Button>
+                      </Popover.Trigger>
+                      <Popover.Content
+                        width="20rem"
+                        maxHeight="26rem"
+                        className="max-w-[90vw] card"
+                      >
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => {
+                                table.resetColumnVisibility();
+                              }}
+                              className="btn btn-primary"
+                            >
+                              Reset to default
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={table.getIsAllColumnsVisible()}
+                              onChange={table.getToggleAllColumnsVisibilityHandler()}
+                              className="rounded"
+                            />
+                            <label htmlFor="toggle-all" className="text-sm text-white">
+                              Toggle All
+                            </label>
+                          </div>
+                          <hr className="w-full border-border-primary" />
+                          {table.getAllLeafColumns().map((column) => {
+                            return (
+                              <div key={column.id} className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={column.getIsVisible()}
+                                  onChange={column.getToggleVisibilityHandler()}
+                                  className="rounded"
+                                />
+                                <label className="text-sm text-white">
+                                  {
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    flexRender(column.columnDef.header, undefined as any)
+                                  }{' '}
+                                  ({column.id})
+                                </label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </Popover.Content>
+                    </Popover.Root>
+                  </div>
+
+                  {renderPagination()}
+
+                  <div className="w-full overflow-x-auto relative">
+                    {isLoading && (
+                      <div className="absolute inset-0 bg-bg-overlay flex items-center justify-center z-10 rounded-xl">
+                        <Spinner size="2rem" />
+                      </div>
+                    )}
+                    <Table.Root className="w-full">
+                      <Table.Header>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                          <Table.Row
+                            key={headerGroup.id}
+                            className="border-b border-border-primary"
+                          >
+                            {headerGroup.headers.map((header) => (
+                              <Table.ColumnHeaderCell
+                                key={header.id}
+                                colSpan={header.colSpan}
+                                className="py-2 px-2 sm:py-4 sm:px-4"
+                              >
+                                {header.isPlaceholder ? null : (
+                                  <div
+                                    className={
+                                      header.column.getCanSort()
+                                        ? 'cursor-pointer select-none hover:text-primary-light transition-colors duration-150 text-sm font-medium'
+                                        : 'text-sm font-medium'
+                                    }
+                                    onClick={header.column.getToggleSortingHandler()}
+                                    onKeyDown={(ev) => {
+                                      if (ev.key === 'Enter') {
+                                        header.column.getToggleSortingHandler();
+                                      }
+                                    }}
+                                    role="button"
+                                    tabIndex={0}
+                                  >
+                                    {flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                                    {{
+                                      asc: ' 🔼',
+                                      desc: ' 🔽'
+                                    }[header.column.getIsSorted() as string] ?? null}
+                                  </div>
+                                )}
+                              </Table.ColumnHeaderCell>
+                            ))}
+                          </Table.Row>
+                        ))}
+                      </Table.Header>
+
+                      <Table.Body>
+                        {table.getRowModel().rows.map((row, index) => (
+                          <Table.Row
+                            key={row.id}
+                            className={`border-b border-border-primary hover:bg-bg-tertiary transition-colors duration-150 ${
+                              index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
+                            }`}
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <Table.Cell
+                                key={cell.id}
+                                className="align-middle text-sm py-2 px-2 sm:py-3 sm:px-4"
+                              >
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </Table.Cell>
+                            ))}
+                          </Table.Row>
+                        ))}
+                      </Table.Body>
+                    </Table.Root>
+                  </div>
+
+                  {renderPagination()}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Address Search Modal */}
@@ -851,7 +875,7 @@ export const Positions: FC<PositionsProps> = ({
                         </div>
                         <div className="space-y-2">
                           <span className="text-xs sm:text-sm text-gray-400">Account ID</span>
-                          <div className="font-mono text-xs sm:text-sm bg-bg-primary p-2 rounded border border-border-primary break-all">
+                          <div className="font-address text-xs sm:text-sm bg-bg-primary p-2 rounded border border-border-primary break-all">
                             {data.account_id.substring(0, 7)}...{data.account_id.substr(-7)}
                           </div>
                         </div>
