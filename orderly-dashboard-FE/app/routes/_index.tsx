@@ -38,19 +38,19 @@ export default function Index() {
   };
 
   return (
-    <div className="space-y-12 animate-fade-in">
+    <div className="space-y-6 sm:space-y-12 animate-fade-in">
       {/* Hero Section */}
       <div className="text-center">
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-6">
           <h1
             style={{
               fontFamily: 'var(--font-display)',
-              fontSize: '60px',
+              fontSize: 'clamp(2rem, 8vw, 60px)',
               fontWeight: 800,
               lineHeight: 1.05,
               color: '#fff',
               letterSpacing: '-0.01em',
-              marginTop: '30px'
+              marginTop: 'clamp(10px, 4vw, 30px)'
             }}
           >
             Orderly Dashboard
@@ -72,7 +72,7 @@ export default function Index() {
         </div>
 
         {/* Search card */}
-        <div className="mx-auto" style={{ maxWidth: 1200, paddingLeft: 24, paddingRight: 24 }}>
+        <div className="mx-auto px-4 sm:px-6" style={{ maxWidth: 1200 }}>
           <div
             style={{
               maxWidth: '820px',
@@ -80,11 +80,11 @@ export default function Index() {
               background: '#6700CE',
               border: 'none',
               borderRadius: '16px',
-              padding: '36px',
+              padding: 'clamp(16px, 4vw, 36px)',
               backdropFilter: 'blur(20px)'
             }}
           >
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
               <h3
                 style={{
                   fontFamily: 'var(--font-display)',
@@ -105,7 +105,7 @@ export default function Index() {
 
             <div className="space-y-4">
               <div
-                className="flex items-center justify-center space-x-6 text-sm"
+                className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm"
                 style={{ color: '#fff' }}
               >
                 <div className="flex items-center space-x-2">
@@ -152,10 +152,11 @@ export default function Index() {
       </div>
 
       {/* Leaderboard Section */}
-      <div className="mt-16 mx-auto" style={{ maxWidth: 1200, paddingLeft: 24, paddingRight: 24 }}>
+      <div className="mt-8 sm:mt-16 mx-auto px-4 sm:px-6" style={{ maxWidth: 1200 }}>
         {/* Tab Navigation */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-4 sm:mb-8">
           <div
+            className="max-w-full overflow-x-auto"
             style={{
               display: 'flex',
               gap: '8px',
@@ -167,7 +168,7 @@ export default function Index() {
           >
             <button
               onClick={() => handleTabChange('trading')}
-              className="btn"
+              className="btn whitespace-nowrap text-xs sm:text-sm"
               style={
                 activeTab === 'trading'
                   ? { background: 'var(--color-purple)', color: '#fff', borderRadius: '12px' }
@@ -178,11 +179,11 @@ export default function Index() {
                     }
               }
             >
-              Trading Leaderboard
+              Trading<span className="hidden sm:inline"> Leaderboard</span>
             </button>
             <button
               onClick={() => handleTabChange('positions')}
-              className="btn"
+              className="btn whitespace-nowrap text-xs sm:text-sm"
               style={
                 activeTab === 'positions'
                   ? { background: 'var(--color-purple)', color: '#fff', borderRadius: '12px' }
@@ -193,7 +194,7 @@ export default function Index() {
                     }
               }
             >
-              Positions Leaderboard
+              Positions<span className="hidden sm:inline"> Leaderboard</span>
             </button>
           </div>
         </div>

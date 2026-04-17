@@ -511,9 +511,9 @@ export const Positions: FC<PositionsProps> = ({
   );
 
   return (
-    <div className="space-y-8 animate-fade-in flex flex-col align-center">
+    <div className="space-y-4 sm:space-y-8 animate-fade-in flex flex-col align-center">
       {!hideTitle && (
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-2 sm:space-y-4">
           <h2 className="text-2xl font-bold text-white">Positions</h2>
           <p className="text-gray-300 max-w-3xl mx-auto">
             Track positions across different addresses, accounts, and brokers. View holding values,
@@ -524,10 +524,10 @@ export const Positions: FC<PositionsProps> = ({
         </div>
       )}
 
-      <div className="card w-full space-y-6">
+      <div className="card w-full space-y-4 sm:space-y-6">
         {/* Filters Section */}
         {!hideFilters && (
-          <div className="space-y-6 w-full">
+          <div className="space-y-4 sm:space-y-6 w-full">
             {/* Additional Filters */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">

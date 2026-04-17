@@ -552,8 +552,8 @@ export const Leaderboard: FC = () => {
   );
 
   return (
-    <div className="space-y-8 animate-fade-in flex flex-col align-center">
-      <div className="text-center space-y-4">
+    <div className="space-y-4 sm:space-y-8 animate-fade-in flex flex-col align-center">
+      <div className="text-center space-y-2 sm:space-y-4">
         <h2 className="text-2xl font-bold text-white">Trading Leaderboard</h2>
         <p className="text-gray-300 max-w-3xl mx-auto">
           Track trading performance across different addresses, accounts, and brokers. View perp
@@ -561,11 +561,11 @@ export const Leaderboard: FC = () => {
         </p>
       </div>
 
-      <div className="card w-full space-y-6">
+      <div className="card w-full space-y-4 sm:space-y-6">
         {/* Filters Section */}
-        <div className="space-y-6 w-full">
+        <div className="space-y-4 sm:space-y-6 w-full">
           {/* Date Range */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <span className="text-sm font-medium text-white" role="heading" aria-level={3}>
               Date Range
             </span>
@@ -715,9 +715,8 @@ export const Leaderboard: FC = () => {
               {renderPagination(
                 <Popover.Root>
                   <Popover.Trigger className="w-auto">
-                    <Button variant="soft" className="btn btn-secondary">
+                    <Button variant="soft" className="btn btn-secondary p-2">
                       <MixerHorizontalIcon width="16" height="16" />
-                      Column Filters
                     </Button>
                   </Popover.Trigger>
                   <Popover.Content width="20rem" maxHeight="26rem" className="max-w-[90vw] card">
