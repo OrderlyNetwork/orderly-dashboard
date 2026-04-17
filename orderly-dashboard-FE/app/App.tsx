@@ -33,8 +33,7 @@ function getLayout(w: number): Layout {
 }
 
 export const App: FC = () => {
-  // Default to 'desktop' for SSR; corrected on client after hydration.
-  const [layout, setLayout] = useState<Layout>('desktop');
+  const [layout, setLayout] = useState<Layout | null>(null);
   const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
@@ -44,21 +43,17 @@ export const App: FC = () => {
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  // Close drawer when switching to desktop breakpoint.
   useEffect(() => {
     if (layout === 'desktop') setNavOpen(false);
   }, [layout]);
 
+  const resolved = layout ?? 'desktop';
+
   return (
     <>
-      {/* ── Mobile fixed top bar (< 600 px) ── */}
-      {layout === 'mobile' && <MobileFixedNav onMenuClick={() => setNavOpen(true)} />}
-
-      {/* ── Tablet sticky top bar (600 – 1023 px) ── */}
-      {layout === 'tablet' && <TabletNav onMenuClick={() => setNavOpen(true)} />}
-
-      {/* ── Desktop floating pill (≥ 1024 px) ── */}
-      {layout === 'desktop' && (
+      {resolved === 'mobile' && <MobileFixedNav onMenuClick={() => setNavOpen(true)} />}
+      {resolved === 'tablet' && <TabletNav onMenuClick={() => setNavOpen(true)} />}
+      {resolved === 'desktop' && (
         <div
           style={{
             position: 'fixed',
@@ -86,28 +81,26 @@ export const App: FC = () => {
         </div>
       )}
 
-      {/* ── Nav drawer — shared by mobile and tablet ── */}
       <AnimatePresence>
         {navOpen && (
           <MobileNavDrawer
             key="nav-drawer"
             onClose={() => setNavOpen(false)}
-            deviceLayout={layout === 'tablet' ? 'tablet' : 'mobile'}
+            deviceLayout={resolved === 'tablet' ? 'tablet' : 'mobile'}
           />
         )}
       </AnimatePresence>
 
-      {/* ── Page content ── */}
       <div
         className="w-full max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-8 xl:px-32"
-        style={{ paddingTop: layout === 'desktop' ? 120 : layout === 'tablet' ? 0 : 72 }}
+        style={{ paddingTop: resolved === 'desktop' ? 120 : resolved === 'tablet' ? 0 : 72 }}
       >
         <Outlet />
       </div>
 
-      {layout === 'mobile' && <MobileFooter />}
-      {layout === 'tablet' && <TabletFooter />}
-      {layout === 'desktop' && (
+      {resolved === 'mobile' && <MobileFooter />}
+      {resolved === 'tablet' && <TabletFooter />}
+      {resolved === 'desktop' && (
         <div className="w-full max-w-screen-2xl mx-auto px-2 sm:px-4 lg:px-8 xl:px-32">
           <div
             className="mx-auto w-full"
