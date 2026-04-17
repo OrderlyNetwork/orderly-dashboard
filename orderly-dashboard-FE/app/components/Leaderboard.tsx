@@ -1,3 +1,4 @@
+import { DatePicker } from '@mantine/dates';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -597,24 +598,46 @@ export const Leaderboard: FC = () => {
                 );
               })}
             </div>
-            <div className="flex items-center gap-3">
-              <input
-                type="date"
-                value={dateRange[0] || ''}
-                max={dateRange[1] || dayjs().format('YYYY-MM-DD')}
-                onChange={(e) => handleDateChange([e.target.value || null, dateRange[1]])}
-                className="flex-1"
-              />
-              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>→</span>
-              <input
-                type="date"
-                value={dateRange[1] || ''}
-                min={dateRange[0] || undefined}
-                max={dayjs().format('YYYY-MM-DD')}
-                onChange={(e) => handleDateChange([dateRange[0], e.target.value || null])}
-                className="flex-1"
-              />
-            </div>
+            <Popover.Root>
+              <Popover.Trigger>
+                <button
+                  type="button"
+                  className="btn btn-secondary flex items-center gap-2 text-sm"
+                  style={{ padding: '4px 14px' }}
+                >
+                  {dateRange[0] && dateRange[1]
+                    ? `${dayjs(dateRange[0]).format('MMM D, YYYY')} → ${dayjs(dateRange[1]).format('MMM D, YYYY')}`
+                    : 'Select date range'}
+                </button>
+              </Popover.Trigger>
+              <Popover.Content
+                width="auto"
+                className="card"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
+                <DatePicker
+                  type="range"
+                  value={dateRange}
+                  maxLevel="year"
+                  allowSingleDateInRange={true}
+                  maxDate={
+                    dateRange[0] && dateRange[1]
+                      ? dayjs().format('YYYY-MM-DD')
+                      : dateRange[0]
+                        ? (() => {
+                            const today = dayjs();
+                            const maxRangeDate = dayjs(dateRange[0]).add(89, 'day');
+                            return today.isBefore(maxRangeDate)
+                              ? today.format('YYYY-MM-DD')
+                              : maxRangeDate.format('YYYY-MM-DD');
+                          })()
+                        : dayjs().format('YYYY-MM-DD')
+                  }
+                  onChange={handleDateChange}
+                  highlightToday={true}
+                />
+              </Popover.Content>
+            </Popover.Root>
           </div>
 
           {/* Aggregate By */}
