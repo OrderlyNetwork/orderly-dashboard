@@ -38,7 +38,7 @@ const SVG = {
 export function HeaderLogo() {
   return (
     <a
-      href="https://orderly.network"
+      href="https://dashboard.orderly.network"
       target="_blank"
       rel="noopener noreferrer"
       className="h-[29.999px] relative shrink-0 w-[110.959px] block hover:opacity-80 transition-opacity"
