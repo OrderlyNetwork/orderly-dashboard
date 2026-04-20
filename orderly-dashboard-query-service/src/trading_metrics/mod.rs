@@ -601,7 +601,7 @@ example: {\"days\": 1, \"size\": 10}
 )]
 #[get("/ranking/trading_volume")]
 pub async fn get_trading_volume_rank(param: web::Query<VolumeRankingRequest>) -> HttpResponse {
-    tracing::debug!(target: TRADING_METRICS, "/ranking/trading_volume request, days: {}, size: {}", param.days, param.size);
+    tracing::info!(target: TRADING_METRICS, "/ranking/trading_volume request, days: {}, size: {}", param.days, param.size);
     write_response(get_daily_trading_volume_ranking(param.to_hour(), param.size as i64).await)
 }
 
@@ -609,7 +609,7 @@ pub async fn get_trading_volume_rank(param: web::Query<VolumeRankingRequest>) ->
 pub async fn get_perp_holding_rank(
     param: web::Query<PerpHoldingRankingRequest>,
 ) -> Result<impl Responder> {
-    tracing::debug!(target: TRADING_METRICS, "/ranking/perp_holding request, days: {}, size: {}", param.symbol, param.size);
+    tracing::info!(target: TRADING_METRICS, "/ranking/perp_holding request, days: {}, size: {}", param.symbol, param.size);
     Ok(write_response(
         get_user_perp_holding_ranking(param.symbol.clone(), param.size as i64).await,
     ))
@@ -631,7 +631,7 @@ example2: {\"days\": 3, \"size\": 10} \n
 )]
 #[get("/ranking/recent_days_perp_pnl")]
 pub async fn get_perp_recent_days_pnl_rank(param: web::Query<PnlRankingRequest>) -> HttpResponse {
-    tracing::debug!(target: TRADING_METRICS, "/ranking/pnl, days: {}, size: {}", param.days, param.size);
+    tracing::info!(target: TRADING_METRICS, "/ranking/pnl, days: {}, size: {}", param.days, param.size);
     write_response(
         get_pnl_ranking(
             param.to_hour(),
@@ -659,7 +659,7 @@ example1: {\"days\": 3, \"size\": 10, \"token\": \"USDC\"} \n
 pub async fn get_token_deposit_rank(
     param: web::Query<DepositWithdrawRankingRequest>,
 ) -> HttpResponse {
-    tracing::debug!(target: TRADING_METRICS, "/ranking/deposit, days: {}, size: {}", param.days, param.size);
+    tracing::info!(target: TRADING_METRICS, "/ranking/deposit, days: {}, size: {}", param.days, param.size);
     const MAX_DAYS: u32 = 90;
     if param.days > MAX_DAYS {
         let resp = FailureResponse::new(
@@ -708,7 +708,7 @@ pub async fn get_token_withdraw_rank(
     _req: HttpRequest,
     param: web::Query<DepositWithdrawRankingRequest>,
 ) -> HttpResponse {
-    tracing::debug!(target: TRADING_METRICS, "/ranking/withdraw, days: {}, size: {}", param.days, param.size);
+    tracing::info!(target: TRADING_METRICS, "/ranking/withdraw, days: {}, size: {}", param.days, param.size);
     const MAX_DAYS: u32 = 90;
     if param.days > MAX_DAYS {
         let resp = FailureResponse::new(
