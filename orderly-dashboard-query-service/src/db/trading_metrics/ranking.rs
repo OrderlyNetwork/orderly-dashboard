@@ -299,7 +299,8 @@ pub async fn query_user_perp_max_symbol_holding(
     FROM
       user_perp_summary u
       JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.symbol = $1 AND u.broker_id = $2
+    WHERE u.holding <> 0 
+    AND u.symbol = $1 AND u.broker_id = $2
     ORDER BY holding_value DESC
     OFFSET $3
     LIMIT $4;
@@ -339,7 +340,8 @@ pub async fn query_user_perp_max_symbol_holding(
     FROM
       user_perp_summary u
       JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.broker_id = $1
+    WHERE u.holding <> 0 
+    AND u.broker_id = $1
     ORDER BY holding_value DESC
     OFFSET $2
     LIMIT $3;
@@ -383,6 +385,7 @@ SELECT
 FROM
   user_perp_summary u
   JOIN market_info m ON u.symbol = m.symbol_hash
+WHERE u.holding <> 0 
 ORDER BY holding_value DESC
 OFFSET $1
 LIMIT $2;
@@ -420,7 +423,8 @@ LIMIT $2;
         u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.symbol = $1
+    WHERE u.holding <> 0 
+    AND u.symbol = $1
     ORDER BY holding_value DESC
     OFFSET $2
     LIMIT $3;
@@ -465,7 +469,8 @@ LIMIT $2;
         u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.account_id = $1
+    WHERE u.holding <> 0 
+    AND u.account_id = $1
     ORDER BY holding_value DESC
     OFFSET $2
     LIMIT $3;
@@ -510,7 +515,8 @@ LIMIT $2;
         u.opening_cost
     FROM user_perp_summary u
     JOIN market_info m ON u.symbol = m.symbol_hash
-    WHERE u.account_id = $1 AND u.symbol = $2
+    WHERE u.holding <> 0 
+    AND u.account_id = $1 AND u.symbol = $2
     ORDER BY holding_value DESC
     OFFSET $3
     LIMIT $4;
