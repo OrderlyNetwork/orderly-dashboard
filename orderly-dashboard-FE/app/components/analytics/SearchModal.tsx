@@ -8,20 +8,90 @@ type SearchResult = {
 };
 
 const ALL_RESULTS: SearchResult[] = [
-  { id: 'dashboards', label: 'Dashboards', category: 'Navigation', description: 'Overview of key metrics' },
-  { id: 'queries', label: 'Queries', category: 'Navigation', description: 'Saved analytics queries' },
-  { id: 'api-catalog', label: 'API Catalog', category: 'Navigation', description: 'REST API endpoints for Orderly Network' },
-  { id: 'starred', label: 'Starred', category: 'Navigation', description: 'Your bookmarked dashboards and queries' },
-  { id: 'btc-perp', label: 'BTC-PERP', category: 'Trading Pair', description: '$67,234 · Volume $145M' },
-  { id: 'eth-perp', label: 'ETH-PERP', category: 'Trading Pair', description: '$3,521 · Volume $98M' },
-  { id: 'sol-perp', label: 'SOL-PERP', category: 'Trading Pair', description: '$178 · Volume $52M' },
-  { id: 'arb-perp', label: 'ARB-PERP', category: 'Trading Pair', description: '$1.24 · Volume $31M' },
-  { id: 'woofi', label: 'WOOFi', category: 'Broker', description: 'Volume $125M · Market Share 29.4%' },
-  { id: 'orderly-dex', label: 'Orderly DEX', category: 'Broker', description: 'Volume $98M · Market Share 23%' },
-  { id: 'aeterna', label: 'Aeterna', category: 'Broker', description: 'Volume $72M · Market Share 16.9%' },
-  { id: 'volume-7d', label: '7D Volume', category: 'Metric', description: 'Total trading volume last 7 days' },
-  { id: 'active-traders', label: 'Active Traders', category: 'Metric', description: '24h unique active traders count' },
-  { id: 'open-interest', label: 'Open Interest', category: 'Metric', description: 'Total open interest across all pairs' }
+  {
+    id: 'dashboards',
+    label: 'Dashboards',
+    category: 'Navigation',
+    description: 'Overview of key metrics'
+  },
+  {
+    id: 'queries',
+    label: 'Queries',
+    category: 'Navigation',
+    description: 'Saved analytics queries'
+  },
+  {
+    id: 'api-catalog',
+    label: 'API Catalog',
+    category: 'Navigation',
+    description: 'REST API endpoints for Orderly Network'
+  },
+  {
+    id: 'starred',
+    label: 'Starred',
+    category: 'Navigation',
+    description: 'Your bookmarked dashboards and queries'
+  },
+  {
+    id: 'btc-perp',
+    label: 'BTC-PERP',
+    category: 'Trading Pair',
+    description: '$67,234 · Volume $145M'
+  },
+  {
+    id: 'eth-perp',
+    label: 'ETH-PERP',
+    category: 'Trading Pair',
+    description: '$3,521 · Volume $98M'
+  },
+  {
+    id: 'sol-perp',
+    label: 'SOL-PERP',
+    category: 'Trading Pair',
+    description: '$178 · Volume $52M'
+  },
+  {
+    id: 'arb-perp',
+    label: 'ARB-PERP',
+    category: 'Trading Pair',
+    description: '$1.24 · Volume $31M'
+  },
+  {
+    id: 'woofi',
+    label: 'WOOFi',
+    category: 'Broker',
+    description: 'Volume $125M · Market Share 29.4%'
+  },
+  {
+    id: 'orderly-dex',
+    label: 'Orderly DEX',
+    category: 'Broker',
+    description: 'Volume $98M · Market Share 23%'
+  },
+  {
+    id: 'aeterna',
+    label: 'Aeterna',
+    category: 'Broker',
+    description: 'Volume $72M · Market Share 16.9%'
+  },
+  {
+    id: 'volume-7d',
+    label: '7D Volume',
+    category: 'Metric',
+    description: 'Total trading volume last 7 days'
+  },
+  {
+    id: 'active-traders',
+    label: 'Active Traders',
+    category: 'Metric',
+    description: '24h unique active traders count'
+  },
+  {
+    id: 'open-interest',
+    label: 'Open Interest',
+    category: 'Metric',
+    description: 'Total open interest across all pairs'
+  }
 ];
 
 const CATEGORY_ORDER = ['Navigation', 'Trading Pair', 'Broker', 'Metric'];
@@ -142,7 +212,14 @@ export const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate })
             borderBottom: '1px solid rgba(156,117,255,0.12)'
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="rgba(255,255,255,0.4)"
+            strokeWidth="2"
+          >
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -293,9 +370,15 @@ export const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate })
             color: 'rgba(255,255,255,0.25)'
           }}
         >
-          <span><kbd style={{ fontFamily: 'monospace', fontSize: 10 }}>↑↓</kbd> navigate</span>
-          <span><kbd style={{ fontFamily: 'monospace', fontSize: 10 }}>↵</kbd> select</span>
-          <span><kbd style={{ fontFamily: 'monospace', fontSize: 10 }}>esc</kbd> close</span>
+          <span>
+            <kbd style={{ fontFamily: 'monospace', fontSize: 10 }}>↑↓</kbd> navigate
+          </span>
+          <span>
+            <kbd style={{ fontFamily: 'monospace', fontSize: 10 }}>↵</kbd> select
+          </span>
+          <span>
+            <kbd style={{ fontFamily: 'monospace', fontSize: 10 }}>esc</kbd> close
+          </span>
         </div>
       </div>
     </div>

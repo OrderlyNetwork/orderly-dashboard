@@ -14,16 +14,96 @@ type Activity = {
 };
 
 const MOCK_ACTIVITY: Activity[] = [
-  { txHash: '0xabc1…ef23', type: 'Trade', pair: 'BTC-PERP', size: '$124,500', price: '$67,234', broker: 'WOOFi', time: '2s ago' },
-  { txHash: '0xdef4…ab56', type: 'Trade', pair: 'ETH-PERP', size: '$32,800', price: '$3,521', broker: 'Orderly DEX', time: '5s ago' },
-  { txHash: '0x111a…bc78', type: 'Deposit', pair: '—', size: '$50,000', price: '—', broker: 'Aeterna', time: '12s ago' },
-  { txHash: '0x222b…cd89', type: 'Trade', pair: 'SOL-PERP', size: '$18,200', price: '$178', broker: 'WOOFi', time: '18s ago' },
-  { txHash: '0x333c…de90', type: 'Liquidation', pair: 'ARB-PERP', size: '$7,350', price: '$1.24', broker: 'FlowX', time: '23s ago' },
-  { txHash: '0x444d…ef01', type: 'Trade', pair: 'BTC-PERP', size: '$89,000', price: '$67,190', broker: 'WOOFi', time: '31s ago' },
-  { txHash: '0x555e…f012', type: 'Withdrawal', pair: '—', size: '$25,000', price: '—', broker: 'Orderly DEX', time: '45s ago' },
-  { txHash: '0x666f…0123', type: 'Trade', pair: 'ETH-PERP', size: '$11,400', price: '$3,518', broker: 'Aeterna', time: '1m ago' },
-  { txHash: '0x777a…1234', type: 'Trade', pair: 'OP-PERP', size: '$5,600', price: '$2.34', broker: 'FlowX', time: '1m ago' },
-  { txHash: '0x888b…2345', type: 'Liquidation', pair: 'SOL-PERP', size: '$3,200', price: '$176', broker: 'WOOFi', time: '2m ago' }
+  {
+    txHash: '0xabc1…ef23',
+    type: 'Trade',
+    pair: 'BTC-PERP',
+    size: '$124,500',
+    price: '$67,234',
+    broker: 'WOOFi',
+    time: '2s ago'
+  },
+  {
+    txHash: '0xdef4…ab56',
+    type: 'Trade',
+    pair: 'ETH-PERP',
+    size: '$32,800',
+    price: '$3,521',
+    broker: 'Orderly DEX',
+    time: '5s ago'
+  },
+  {
+    txHash: '0x111a…bc78',
+    type: 'Deposit',
+    pair: '—',
+    size: '$50,000',
+    price: '—',
+    broker: 'Aeterna',
+    time: '12s ago'
+  },
+  {
+    txHash: '0x222b…cd89',
+    type: 'Trade',
+    pair: 'SOL-PERP',
+    size: '$18,200',
+    price: '$178',
+    broker: 'WOOFi',
+    time: '18s ago'
+  },
+  {
+    txHash: '0x333c…de90',
+    type: 'Liquidation',
+    pair: 'ARB-PERP',
+    size: '$7,350',
+    price: '$1.24',
+    broker: 'FlowX',
+    time: '23s ago'
+  },
+  {
+    txHash: '0x444d…ef01',
+    type: 'Trade',
+    pair: 'BTC-PERP',
+    size: '$89,000',
+    price: '$67,190',
+    broker: 'WOOFi',
+    time: '31s ago'
+  },
+  {
+    txHash: '0x555e…f012',
+    type: 'Withdrawal',
+    pair: '—',
+    size: '$25,000',
+    price: '—',
+    broker: 'Orderly DEX',
+    time: '45s ago'
+  },
+  {
+    txHash: '0x666f…0123',
+    type: 'Trade',
+    pair: 'ETH-PERP',
+    size: '$11,400',
+    price: '$3,518',
+    broker: 'Aeterna',
+    time: '1m ago'
+  },
+  {
+    txHash: '0x777a…1234',
+    type: 'Trade',
+    pair: 'OP-PERP',
+    size: '$5,600',
+    price: '$2.34',
+    broker: 'FlowX',
+    time: '1m ago'
+  },
+  {
+    txHash: '0x888b…2345',
+    type: 'Liquidation',
+    pair: 'SOL-PERP',
+    size: '$3,200',
+    price: '$176',
+    broker: 'WOOFi',
+    time: '2m ago'
+  }
 ];
 
 const TYPE_COLORS: Record<Activity['type'], string> = {
@@ -107,7 +187,15 @@ export const DiscoverView: FC = () => {
               padding: '14px 16px'
             }}
           >
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.4)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.07em',
+                fontWeight: 600
+              }}
+            >
               {s.label}
             </div>
             <div style={{ fontSize: 20, fontWeight: 700, color: s.color ?? '#fff', marginTop: 4 }}>
@@ -145,7 +233,9 @@ export const DiscoverView: FC = () => {
             }}
           />
           <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Live Activity Feed</span>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Mock data — updates in real time</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
+            Mock data — updates in real time
+          </span>
         </div>
         <SortableTable data={MOCK_ACTIVITY} columns={columns} rowKey={(r) => r.txHash} />
       </div>

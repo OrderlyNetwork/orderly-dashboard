@@ -14,18 +14,114 @@ export type PairRow = {
 };
 
 export const PAIRS_DATA: PairRow[] = [
-  { pair: 'BTC-PERP', price: 67_234.5, volume24h: 145_000_000, change24h: 2.34, openInterest: 450_000_000, fundingRate: 0.0012, trades24h: 28_430 },
-  { pair: 'ETH-PERP', price: 3_521.2, volume24h: 98_000_000, change24h: -0.87, openInterest: 310_000_000, fundingRate: 0.0008, trades24h: 22_100 },
-  { pair: 'SOL-PERP', price: 178.4, volume24h: 52_000_000, change24h: 5.62, openInterest: 120_000_000, fundingRate: 0.0021, trades24h: 15_600 },
-  { pair: 'ARB-PERP', price: 1.24, volume24h: 31_000_000, change24h: -2.15, openInterest: 78_000_000, fundingRate: -0.0004, trades24h: 9_800 },
-  { pair: 'OP-PERP', price: 2.34, volume24h: 24_000_000, change24h: 1.08, openInterest: 62_000_000, fundingRate: 0.0006, trades24h: 7_200 },
-  { pair: 'AVAX-PERP', price: 38.7, volume24h: 18_500_000, change24h: 3.41, openInterest: 44_000_000, fundingRate: 0.0014, trades24h: 5_100 },
-  { pair: 'MATIC-PERP', price: 0.87, volume24h: 14_200_000, change24h: -1.56, openInterest: 31_000_000, fundingRate: -0.0002, trades24h: 4_300 },
-  { pair: 'SUI-PERP', price: 1.42, volume24h: 12_800_000, change24h: 8.94, openInterest: 28_000_000, fundingRate: 0.0033, trades24h: 6_700 },
-  { pair: 'NEAR-PERP', price: 6.23, volume24h: 9_400_000, change24h: 0.54, openInterest: 19_000_000, fundingRate: 0.0005, trades24h: 2_900 },
-  { pair: 'TIA-PERP', price: 11.8, volume24h: 8_100_000, change24h: -4.22, openInterest: 17_500_000, fundingRate: -0.0009, trades24h: 2_400 },
-  { pair: 'INJ-PERP', price: 24.5, volume24h: 7_600_000, change24h: 2.88, openInterest: 15_000_000, fundingRate: 0.0011, trades24h: 1_900 },
-  { pair: 'DOGE-PERP', price: 0.162, volume24h: 6_200_000, change24h: -0.62, openInterest: 12_000_000, fundingRate: 0.0001, trades24h: 3_200 }
+  {
+    pair: 'BTC-PERP',
+    price: 67_234.5,
+    volume24h: 145_000_000,
+    change24h: 2.34,
+    openInterest: 450_000_000,
+    fundingRate: 0.0012,
+    trades24h: 28_430
+  },
+  {
+    pair: 'ETH-PERP',
+    price: 3_521.2,
+    volume24h: 98_000_000,
+    change24h: -0.87,
+    openInterest: 310_000_000,
+    fundingRate: 0.0008,
+    trades24h: 22_100
+  },
+  {
+    pair: 'SOL-PERP',
+    price: 178.4,
+    volume24h: 52_000_000,
+    change24h: 5.62,
+    openInterest: 120_000_000,
+    fundingRate: 0.0021,
+    trades24h: 15_600
+  },
+  {
+    pair: 'ARB-PERP',
+    price: 1.24,
+    volume24h: 31_000_000,
+    change24h: -2.15,
+    openInterest: 78_000_000,
+    fundingRate: -0.0004,
+    trades24h: 9_800
+  },
+  {
+    pair: 'OP-PERP',
+    price: 2.34,
+    volume24h: 24_000_000,
+    change24h: 1.08,
+    openInterest: 62_000_000,
+    fundingRate: 0.0006,
+    trades24h: 7_200
+  },
+  {
+    pair: 'AVAX-PERP',
+    price: 38.7,
+    volume24h: 18_500_000,
+    change24h: 3.41,
+    openInterest: 44_000_000,
+    fundingRate: 0.0014,
+    trades24h: 5_100
+  },
+  {
+    pair: 'MATIC-PERP',
+    price: 0.87,
+    volume24h: 14_200_000,
+    change24h: -1.56,
+    openInterest: 31_000_000,
+    fundingRate: -0.0002,
+    trades24h: 4_300
+  },
+  {
+    pair: 'SUI-PERP',
+    price: 1.42,
+    volume24h: 12_800_000,
+    change24h: 8.94,
+    openInterest: 28_000_000,
+    fundingRate: 0.0033,
+    trades24h: 6_700
+  },
+  {
+    pair: 'NEAR-PERP',
+    price: 6.23,
+    volume24h: 9_400_000,
+    change24h: 0.54,
+    openInterest: 19_000_000,
+    fundingRate: 0.0005,
+    trades24h: 2_900
+  },
+  {
+    pair: 'TIA-PERP',
+    price: 11.8,
+    volume24h: 8_100_000,
+    change24h: -4.22,
+    openInterest: 17_500_000,
+    fundingRate: -0.0009,
+    trades24h: 2_400
+  },
+  {
+    pair: 'INJ-PERP',
+    price: 24.5,
+    volume24h: 7_600_000,
+    change24h: 2.88,
+    openInterest: 15_000_000,
+    fundingRate: 0.0011,
+    trades24h: 1_900
+  },
+  {
+    pair: 'DOGE-PERP',
+    price: 0.162,
+    volume24h: 6_200_000,
+    change24h: -0.62,
+    openInterest: 12_000_000,
+    fundingRate: 0.0001,
+    trades24h: 3_200
+  }
 ];
 
 function fmtUsd(n: number) {
@@ -35,7 +131,8 @@ function fmtUsd(n: number) {
 }
 
 function fmtPrice(n: number) {
-  if (n >= 1000) return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (n >= 1000)
+    return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   if (n >= 1) return `$${n.toFixed(2)}`;
   return `$${n.toFixed(4)}`;
 }
@@ -82,7 +179,8 @@ const columns: ColumnDef<PairRow, unknown>[] = [
       const pos = v >= 0;
       return (
         <span style={{ color: pos ? '#34d399' : '#f87171', fontWeight: 600 }}>
-          {pos ? '+' : ''}{v.toFixed(2)}%
+          {pos ? '+' : ''}
+          {v.toFixed(2)}%
         </span>
       );
     }
@@ -110,7 +208,8 @@ const columns: ColumnDef<PairRow, unknown>[] = [
       const pos = v >= 0;
       return (
         <span style={{ color: pos ? '#34d399' : '#f87171', fontFamily: 'monospace', fontSize: 12 }}>
-          {pos ? '+' : ''}{(v * 100).toFixed(4)}%
+          {pos ? '+' : ''}
+          {(v * 100).toFixed(4)}%
         </span>
       );
     }
@@ -143,13 +242,21 @@ export const TradingPairsView: FC = () => {
               padding: '14px 16px'
             }}
           >
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.4)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.07em',
+                fontWeight: 600
+              }}
+            >
               {s.label}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>{s.value}</div>
-            {s.sub && (
-              <div style={{ fontSize: 11, color: '#34d399', marginTop: 2 }}>{s.sub}</div>
-            )}
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>
+              {s.value}
+            </div>
+            {s.sub && <div style={{ fontSize: 11, color: '#34d399', marginTop: 2 }}>{s.sub}</div>}
           </div>
         ))}
       </div>

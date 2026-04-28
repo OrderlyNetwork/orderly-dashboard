@@ -74,7 +74,9 @@ export function SortableTable<T extends object>({ data, columns, rowKey }: Sorta
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {canSort && (
-                        <SortIcon asc={sortDir === 'asc' ? true : sortDir === 'desc' ? false : null} />
+                        <SortIcon
+                          asc={sortDir === 'asc' ? true : sortDir === 'desc' ? false : null}
+                        />
                       )}
                     </div>
                   </th>

@@ -1,6 +1,12 @@
 import { FC } from 'react';
 
-export type NavId = 'dashboards' | 'queries' | 'api-catalog' | 'starred' | 'leaderboard' | 'explorer';
+export type NavId =
+  | 'dashboards'
+  | 'queries'
+  | 'api-catalog'
+  | 'starred'
+  | 'leaderboard'
+  | 'explorer';
 
 export type Role = 'trader' | 'builder' | 'analyst';
 
@@ -17,7 +23,16 @@ const NAV_ITEMS: {
     color: '#9C75FF',
     bgAlpha: 'rgba(156,117,255,0.15)',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <rect x="3" y="3" width="7" height="7" rx="1" />
         <rect x="14" y="3" width="7" height="7" rx="1" />
         <rect x="3" y="14" width="7" height="7" rx="1" />
@@ -31,7 +46,16 @@ const NAV_ITEMS: {
     color: '#34D399',
     bgAlpha: 'rgba(52,211,153,0.15)',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <polyline points="4 17 10 11 4 5" />
         <line x1="12" y1="19" x2="20" y2="19" />
       </svg>
@@ -43,7 +67,16 @@ const NAV_ITEMS: {
     color: '#FB923C',
     bgAlpha: 'rgba(251,146,60,0.15)',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <polyline points="16 18 22 12 16 6" />
         <polyline points="8 6 2 12 8 18" />
       </svg>
@@ -55,7 +88,16 @@ const NAV_ITEMS: {
     color: '#FBBF24',
     bgAlpha: 'rgba(251,191,36,0.15)',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
       </svg>
     )
@@ -66,7 +108,16 @@ const NAV_ITEMS: {
     color: '#FB923C',
     bgAlpha: 'rgba(251,146,60,0.15)',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <line x1="18" y1="20" x2="18" y2="10" />
         <line x1="12" y1="20" x2="12" y2="4" />
         <line x1="6" y1="20" x2="6" y2="14" />
@@ -79,12 +130,21 @@ const NAV_ITEMS: {
     color: '#34D399',
     bgAlpha: 'rgba(52,211,153,0.15)',
     icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <circle cx="11" cy="11" r="8" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
       </svg>
     )
-  },
+  }
 ];
 
 const ROLES: { id: Role; label: string }[] = [
@@ -194,7 +254,8 @@ export const Sidebar: FC<SidebarProps> = ({ activeNav, onNavChange, role, onRole
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)';
+                  (e.currentTarget as HTMLButtonElement).style.background =
+                    'rgba(255,255,255,0.04)';
                   (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.75)';
                 }
               }}
@@ -249,56 +310,56 @@ export const Sidebar: FC<SidebarProps> = ({ activeNav, onNavChange, role, onRole
 
       {/* Role switcher — only shown on Dashboards tab */}
       {ROLE_NAV_IDS.includes(activeNav) && (
-      <div style={{ padding: '12px 10px 16px', borderTop: '1px solid rgba(156,117,255,0.1)' }}>
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 600,
-            color: 'rgba(255,255,255,0.25)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            padding: '0 10px 8px'
-          }}
-        >
-          Role
+        <div style={{ padding: '12px 10px 16px', borderTop: '1px solid rgba(156,117,255,0.1)' }}>
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.25)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              padding: '0 10px 8px'
+            }}
+          >
+            Role
+          </div>
+          <div
+            style={{
+              background: 'rgba(156,117,255,0.06)',
+              border: '1px solid rgba(156,117,255,0.15)',
+              borderRadius: 10,
+              padding: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2
+            }}
+          >
+            {ROLES.map((r) => {
+              const isActive = role === r.id;
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => onRoleChange(r.id)}
+                  style={{
+                    width: '100%',
+                    padding: '7px 12px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: isActive ? '#9C75FF' : 'transparent',
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
+                    fontSize: 12,
+                    fontWeight: isActive ? 600 : 400,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div
-          style={{
-            background: 'rgba(156,117,255,0.06)',
-            border: '1px solid rgba(156,117,255,0.15)',
-            borderRadius: 10,
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2
-          }}
-        >
-          {ROLES.map((r) => {
-            const isActive = role === r.id;
-            return (
-              <button
-                key={r.id}
-                onClick={() => onRoleChange(r.id)}
-                style={{
-                  width: '100%',
-                  padding: '7px 12px',
-                  borderRadius: 8,
-                  border: 'none',
-                  background: isActive ? '#9C75FF' : 'transparent',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
-                  fontSize: 12,
-                  fontWeight: isActive ? 600 : 400,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.15s'
-                }}
-              >
-                {r.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
       )}
     </div>
   );

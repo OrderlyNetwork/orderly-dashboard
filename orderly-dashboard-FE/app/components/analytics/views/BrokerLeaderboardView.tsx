@@ -15,14 +15,86 @@ export type BrokerRow = {
 };
 
 export const BROKER_DATA: BrokerRow[] = [
-  { rank: 1, broker: 'WOOFi', brokerId: 'woofi', volume24h: 125_000_000, traders: 3421, revenue: 62_500, marketShare: 29.4, change7d: 4.2 },
-  { rank: 2, broker: 'Orderly DEX', brokerId: 'orderly', volume24h: 98_000_000, traders: 2156, revenue: 49_000, marketShare: 23.0, change7d: -1.1 },
-  { rank: 3, broker: 'Aeterna', brokerId: 'aeterna', volume24h: 72_000_000, traders: 1830, revenue: 36_000, marketShare: 16.9, change7d: 8.5 },
-  { rank: 4, broker: 'FlowX', brokerId: 'flowx', volume24h: 55_000_000, traders: 1244, revenue: 27_500, marketShare: 12.9, change7d: 2.3 },
-  { rank: 5, broker: 'Perp Pro', brokerId: 'perppro', volume24h: 38_000_000, traders: 987, revenue: 19_000, marketShare: 8.9, change7d: -3.6 },
-  { rank: 6, broker: 'TradeX', brokerId: 'tradex', volume24h: 21_000_000, traders: 654, revenue: 10_500, marketShare: 4.9, change7d: 1.8 },
-  { rank: 7, broker: 'DeltaDex', brokerId: 'deltadex', volume24h: 12_400_000, traders: 398, revenue: 6_200, marketShare: 2.9, change7d: 12.4 },
-  { rank: 8, broker: 'NovaTrade', brokerId: 'novatrade', volume24h: 3_900_000, traders: 157, revenue: 1_950, marketShare: 0.9, change7d: -0.5 }
+  {
+    rank: 1,
+    broker: 'WOOFi',
+    brokerId: 'woofi',
+    volume24h: 125_000_000,
+    traders: 3421,
+    revenue: 62_500,
+    marketShare: 29.4,
+    change7d: 4.2
+  },
+  {
+    rank: 2,
+    broker: 'Orderly DEX',
+    brokerId: 'orderly',
+    volume24h: 98_000_000,
+    traders: 2156,
+    revenue: 49_000,
+    marketShare: 23.0,
+    change7d: -1.1
+  },
+  {
+    rank: 3,
+    broker: 'Aeterna',
+    brokerId: 'aeterna',
+    volume24h: 72_000_000,
+    traders: 1830,
+    revenue: 36_000,
+    marketShare: 16.9,
+    change7d: 8.5
+  },
+  {
+    rank: 4,
+    broker: 'FlowX',
+    brokerId: 'flowx',
+    volume24h: 55_000_000,
+    traders: 1244,
+    revenue: 27_500,
+    marketShare: 12.9,
+    change7d: 2.3
+  },
+  {
+    rank: 5,
+    broker: 'Perp Pro',
+    brokerId: 'perppro',
+    volume24h: 38_000_000,
+    traders: 987,
+    revenue: 19_000,
+    marketShare: 8.9,
+    change7d: -3.6
+  },
+  {
+    rank: 6,
+    broker: 'TradeX',
+    brokerId: 'tradex',
+    volume24h: 21_000_000,
+    traders: 654,
+    revenue: 10_500,
+    marketShare: 4.9,
+    change7d: 1.8
+  },
+  {
+    rank: 7,
+    broker: 'DeltaDex',
+    brokerId: 'deltadex',
+    volume24h: 12_400_000,
+    traders: 398,
+    revenue: 6_200,
+    marketShare: 2.9,
+    change7d: 12.4
+  },
+  {
+    rank: 8,
+    broker: 'NovaTrade',
+    brokerId: 'novatrade',
+    volume24h: 3_900_000,
+    traders: 157,
+    revenue: 1_950,
+    marketShare: 0.9,
+    change7d: -0.5
+  }
 ];
 
 function fmtUsd(n: number) {
@@ -95,7 +167,15 @@ const columns: ColumnDef<BrokerRow, unknown>[] = [
       const pct = info.getValue() as number;
       return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(156,117,255,0.1)', maxWidth: 80 }}>
+          <div
+            style={{
+              flex: 1,
+              height: 4,
+              borderRadius: 2,
+              background: 'rgba(156,117,255,0.1)',
+              maxWidth: 80
+            }}
+          >
             <div
               style={{
                 height: '100%',
@@ -124,7 +204,8 @@ const columns: ColumnDef<BrokerRow, unknown>[] = [
             fontSize: 13
           }}
         >
-          {pos ? '+' : ''}{v.toFixed(1)}%
+          {pos ? '+' : ''}
+          {v.toFixed(1)}%
         </span>
       );
     }
@@ -157,12 +238,24 @@ export const BrokerLeaderboardView: FC = () => {
               padding: '14px 16px'
             }}
           >
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.4)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.07em',
+                fontWeight: 600
+              }}
+            >
               {s.label}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>{s.value}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>
+              {s.value}
+            </div>
             {s.sub && (
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{s.sub}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                {s.sub}
+              </div>
             )}
           </div>
         ))}

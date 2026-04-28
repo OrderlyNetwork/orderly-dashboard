@@ -26,7 +26,16 @@ export const LeaderboardView: FC = () => {
               color: '#FB923C'
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="18" y1="20" x2="18" y2="10" />
               <line x1="12" y1="20" x2="12" y2="4" />
               <line x1="6" y1="20" x2="6" y2="14" />
@@ -61,7 +70,16 @@ export const LeaderboardView: FC = () => {
             gap: 7
           }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
             <polyline points="16 7 22 7 22 13" />
           </svg>
@@ -73,7 +91,8 @@ export const LeaderboardView: FC = () => {
             padding: '8px 20px',
             borderRadius: 10,
             border: '1px solid',
-            borderColor: activeTab === 'positions' ? 'rgba(96,165,250,0.4)' : 'rgba(255,255,255,0.1)',
+            borderColor:
+              activeTab === 'positions' ? 'rgba(96,165,250,0.4)' : 'rgba(255,255,255,0.1)',
             background: activeTab === 'positions' ? 'rgba(96,165,250,0.15)' : 'transparent',
             color: activeTab === 'positions' ? '#60A5FA' : 'rgba(255,255,255,0.45)',
             fontSize: 13,
@@ -85,7 +104,16 @@ export const LeaderboardView: FC = () => {
             gap: 7
           }}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <rect x="2" y="7" width="20" height="14" rx="2" />
             <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
           </svg>

@@ -14,13 +14,69 @@ export type FeeTierRow = {
 };
 
 export const FEE_TIERS_DATA: FeeTierRow[] = [
-  { tier: 'Basic', makerFee: '0.02%', takerFee: '0.06%', volumeReq: '$0', volumeReqRaw: 0, users: 45_200, rebate: '0%' },
-  { tier: 'Bronze', makerFee: '0.018%', takerFee: '0.055%', volumeReq: '$500K', volumeReqRaw: 500_000, users: 8_400, rebate: '5%' },
-  { tier: 'Silver', makerFee: '0.015%', takerFee: '0.048%', volumeReq: '$2M', volumeReqRaw: 2_000_000, users: 3_100, rebate: '10%' },
-  { tier: 'Gold', makerFee: '0.012%', takerFee: '0.040%', volumeReq: '$10M', volumeReqRaw: 10_000_000, users: 980, rebate: '18%' },
-  { tier: 'Platinum', makerFee: '0.008%', takerFee: '0.030%', volumeReq: '$50M', volumeReqRaw: 50_000_000, users: 210, rebate: '28%' },
-  { tier: 'Diamond', makerFee: '0.005%', takerFee: '0.020%', volumeReq: '$100M', volumeReqRaw: 100_000_000, users: 47, rebate: '40%' },
-  { tier: 'Market Maker', makerFee: '-0.002%', takerFee: '0.010%', volumeReq: 'By Application', volumeReqRaw: 999_999_999, users: 12, rebate: '50%' }
+  {
+    tier: 'Basic',
+    makerFee: '0.02%',
+    takerFee: '0.06%',
+    volumeReq: '$0',
+    volumeReqRaw: 0,
+    users: 45_200,
+    rebate: '0%'
+  },
+  {
+    tier: 'Bronze',
+    makerFee: '0.018%',
+    takerFee: '0.055%',
+    volumeReq: '$500K',
+    volumeReqRaw: 500_000,
+    users: 8_400,
+    rebate: '5%'
+  },
+  {
+    tier: 'Silver',
+    makerFee: '0.015%',
+    takerFee: '0.048%',
+    volumeReq: '$2M',
+    volumeReqRaw: 2_000_000,
+    users: 3_100,
+    rebate: '10%'
+  },
+  {
+    tier: 'Gold',
+    makerFee: '0.012%',
+    takerFee: '0.040%',
+    volumeReq: '$10M',
+    volumeReqRaw: 10_000_000,
+    users: 980,
+    rebate: '18%'
+  },
+  {
+    tier: 'Platinum',
+    makerFee: '0.008%',
+    takerFee: '0.030%',
+    volumeReq: '$50M',
+    volumeReqRaw: 50_000_000,
+    users: 210,
+    rebate: '28%'
+  },
+  {
+    tier: 'Diamond',
+    makerFee: '0.005%',
+    takerFee: '0.020%',
+    volumeReq: '$100M',
+    volumeReqRaw: 100_000_000,
+    users: 47,
+    rebate: '40%'
+  },
+  {
+    tier: 'Market Maker',
+    makerFee: '-0.002%',
+    takerFee: '0.010%',
+    volumeReq: 'By Application',
+    volumeReqRaw: 999_999_999,
+    users: 12,
+    rebate: '50%'
+  }
 ];
 
 const TIER_COLORS: Record<string, string> = {
@@ -64,7 +120,13 @@ const columns: ColumnDef<FeeTierRow, unknown>[] = [
       const v = info.getValue() as string;
       const isNegative = v.startsWith('-');
       return (
-        <span style={{ fontFamily: 'monospace', color: isNegative ? '#34d399' : 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
+        <span
+          style={{
+            fontFamily: 'monospace',
+            color: isNegative ? '#34d399' : 'rgba(255,255,255,0.85)',
+            fontWeight: 600
+          }}
+        >
           {v}
         </span>
       );
@@ -119,7 +181,9 @@ export const FeeTiersView: FC = () => {
           padding: 24
         }}
       >
-        <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 16 }}>User Distribution by Tier</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 16 }}>
+          User Distribution by Tier
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {FEE_TIERS_DATA.map((tier) => {
             const pct = (tier.users / totalUsers) * 100;
@@ -129,7 +193,15 @@ export const FeeTiersView: FC = () => {
                 <div style={{ width: 80, fontSize: 12, color, fontWeight: 600, flexShrink: 0 }}>
                   {tier.tier}
                 </div>
-                <div style={{ flex: 1, height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                <div
+                  style={{
+                    flex: 1,
+                    height: 8,
+                    borderRadius: 4,
+                    background: 'rgba(255,255,255,0.06)',
+                    overflow: 'hidden'
+                  }}
+                >
                   <div
                     style={{
                       height: '100%',
@@ -141,10 +213,26 @@ export const FeeTiersView: FC = () => {
                     }}
                   />
                 </div>
-                <div style={{ width: 60, fontSize: 12, color: 'rgba(255,255,255,0.5)', textAlign: 'right', flexShrink: 0 }}>
+                <div
+                  style={{
+                    width: 60,
+                    fontSize: 12,
+                    color: 'rgba(255,255,255,0.5)',
+                    textAlign: 'right',
+                    flexShrink: 0
+                  }}
+                >
                   {tier.users.toLocaleString()}
                 </div>
-                <div style={{ width: 40, fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'right', flexShrink: 0 }}>
+                <div
+                  style={{
+                    width: 40,
+                    fontSize: 11,
+                    color: 'rgba(255,255,255,0.35)',
+                    textAlign: 'right',
+                    flexShrink: 0
+                  }}
+                >
                   {pct.toFixed(1)}%
                 </div>
               </div>
@@ -154,7 +242,13 @@ export const FeeTiersView: FC = () => {
       </div>
 
       {/* Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gap: 12
+        }}
+      >
         {[
           { label: 'Total Users', value: totalUsers.toLocaleString() },
           { label: 'Fee Tiers', value: `${FEE_TIERS_DATA.length}` },
@@ -170,11 +264,25 @@ export const FeeTiersView: FC = () => {
               padding: '14px 16px'
             }}
           >
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.4)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.07em',
+                fontWeight: 600
+              }}
+            >
               {s.label}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>{s.value}</div>
-            {s.sub && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{s.sub}</div>}
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>
+              {s.value}
+            </div>
+            {s.sub && (
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                {s.sub}
+              </div>
+            )}
           </div>
         ))}
       </div>

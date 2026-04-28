@@ -15,7 +15,16 @@ const TYPE_META = {
     border: 'rgba(156,117,255,0.25)',
     label: 'Dashboard',
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <rect x="3" y="3" width="7" height="7" rx="1" />
         <rect x="14" y="3" width="7" height="7" rx="1" />
         <rect x="3" y="14" width="7" height="7" rx="1" />
@@ -29,7 +38,16 @@ const TYPE_META = {
     border: 'rgba(52,211,153,0.25)',
     label: 'Query',
     icon: (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <polyline points="4 17 10 11 4 5" />
         <line x1="12" y1="19" x2="20" y2="19" />
       </svg>
@@ -69,7 +87,14 @@ export const StarredView: FC<StarredViewProps> = ({ starred, onRemove, onNavigat
               color: '#FBBF24'
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
           </div>
@@ -95,11 +120,27 @@ export const StarredView: FC<StarredViewProps> = ({ starred, onRemove, onNavigat
           }}
         >
           <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.3 }}>☆</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+          <div
+            style={{
+              fontSize: 15,
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.5)',
+              marginBottom: 8
+            }}
+          >
             Nothing starred yet
           </div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.28)', maxWidth: 320, margin: '0 auto', lineHeight: 1.6 }}>
-            Click the ☆ icon on any dashboard or query to bookmark it here. Saved locally — no login needed.
+          <div
+            style={{
+              fontSize: 13,
+              color: 'rgba(255,255,255,0.28)',
+              maxWidth: 320,
+              margin: '0 auto',
+              lineHeight: 1.6
+            }}
+          >
+            Click the ☆ icon on any dashboard or query to bookmark it here. Saved locally — no login
+            needed.
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 24 }}>
             <button
@@ -147,9 +188,7 @@ export const StarredView: FC<StarredViewProps> = ({ starred, onRemove, onNavigat
                   marginBottom: 12
                 }}
               >
-                <span style={{ color: '#9C75FF' }}>
-                  {TYPE_META.dashboard.icon}
-                </span>
+                <span style={{ color: '#9C75FF' }}>{TYPE_META.dashboard.icon}</span>
                 <span
                   style={{
                     fontSize: 11,
@@ -162,9 +201,20 @@ export const StarredView: FC<StarredViewProps> = ({ starred, onRemove, onNavigat
                   Dashboards · {dashboards.length}
                 </span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                  gap: 12
+                }}
+              >
                 {dashboards.map((item) => (
-                  <StarredCard key={item.id} item={item} onRemove={onRemove} onNavigate={onNavigate} />
+                  <StarredCard
+                    key={item.id}
+                    item={item}
+                    onRemove={onRemove}
+                    onNavigate={onNavigate}
+                  />
                 ))}
               </div>
             </section>
@@ -174,9 +224,7 @@ export const StarredView: FC<StarredViewProps> = ({ starred, onRemove, onNavigat
           {queries.length > 0 && (
             <section>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <span style={{ color: '#34D399' }}>
-                  {TYPE_META.query.icon}
-                </span>
+                <span style={{ color: '#34D399' }}>{TYPE_META.query.icon}</span>
                 <span
                   style={{
                     fontSize: 11,
@@ -189,9 +237,20 @@ export const StarredView: FC<StarredViewProps> = ({ starred, onRemove, onNavigat
                   Queries · {queries.length}
                 </span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                  gap: 12
+                }}
+              >
                 {queries.map((item) => (
-                  <StarredCard key={item.id} item={item} onRemove={onRemove} onNavigate={onNavigate} />
+                  <StarredCard
+                    key={item.id}
+                    item={item}
+                    onRemove={onRemove}
+                    onNavigate={onNavigate}
+                  />
                 ))}
               </div>
             </section>
@@ -201,7 +260,14 @@ export const StarredView: FC<StarredViewProps> = ({ starred, onRemove, onNavigat
 
       {/* Footer note */}
       {starred.length > 0 && (
-        <p style={{ marginTop: 32, fontSize: 12, color: 'rgba(255,255,255,0.2)', textAlign: 'center' }}>
+        <p
+          style={{
+            marginTop: 32,
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.2)',
+            textAlign: 'center'
+          }}
+        >
           Starred items are saved in your browser's localStorage — no account required.
         </p>
       )}
@@ -260,7 +326,10 @@ const StarredCard: FC<{
         </span>
         {/* Remove star */}
         <button
-          onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(item.id);
+          }}
           title="Remove from starred"
           style={{
             background: 'none',
@@ -272,7 +341,14 @@ const StarredCard: FC<{
             lineHeight: 1
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
         </button>

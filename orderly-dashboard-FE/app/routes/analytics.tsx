@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
 import { json } from '@remix-run/node';
-import { useLoaderData, useRevalidator } from '@remix-run/react';
 import type { LoaderFunctionArgs } from '@remix-run/node';
+import { useLoaderData, useRevalidator } from '@remix-run/react';
+import { useEffect, useState } from 'react';
 
 import { SearchModal } from '~/components/analytics/SearchModal';
 import { Sidebar, type NavId, type Role } from '~/components/analytics/Sidebar';
 import { Topbar } from '~/components/analytics/Topbar';
-import { DashboardsView } from '~/components/analytics/views/DashboardsView';
-import { QueriesView } from '~/components/analytics/views/QueriesView';
 import { ApiCatalogView } from '~/components/analytics/views/ApiCatalogView';
-import { StarredView } from '~/components/analytics/views/StarredView';
-import { LeaderboardView } from '~/components/analytics/views/LeaderboardView';
+import { DashboardsView } from '~/components/analytics/views/DashboardsView';
 import { ExplorerView } from '~/components/analytics/views/ExplorerView';
-import { useStarred } from '~/hooks/useStarred';
+import { LeaderboardView } from '~/components/analytics/views/LeaderboardView';
+import { QueriesView } from '~/components/analytics/views/QueriesView';
+import { StarredView } from '~/components/analytics/views/StarredView';
 import { useRefreshTimer } from '~/hooks/useRefreshTimer';
+import { useStarred } from '~/hooks/useStarred';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -68,10 +68,9 @@ const DUNE_KEY = process.env.DUNE_API_KEY;
 
 async function duneJson(queryId: number) {
   try {
-    const res = await fetch(
-      `https://api.dune.com/api/v1/query/${queryId}/results?limit=1000`,
-      { headers: { 'x-dune-api-key': DUNE_KEY } }
-    );
+    const res = await fetch(`https://api.dune.com/api/v1/query/${queryId}/results?limit=1000`, {
+      headers: { 'x-dune-api-key': DUNE_KEY }
+    });
     if (!res.ok) return { result: { rows: [] } };
     return res.json();
   } catch {
@@ -80,27 +79,24 @@ async function duneJson(queryId: number) {
 }
 
 export async function loader(_args: LoaderFunctionArgs) {
-  const [volData, tvlData, feeData, acctData, mktData, bldFeeData, bldData] =
-    await Promise.all([
-      duneJson(3368961),  // volume
-      duneJson(6383913),  // tvl by chain
-      duneJson(3429965),  // net fees
-      duneJson(3795110),  // total accounts
-      duneJson(4119181),  // markets
-      duneJson(3612752),  // builder fees
-      duneJson(4119185),  // active builders
-    ]);
+  const [volData, tvlData, feeData, acctData, mktData, bldFeeData, bldData] = await Promise.all([
+    duneJson(3368961), // volume
+    duneJson(6383913), // tvl by chain
+    duneJson(3429965), // net fees
+    duneJson(3795110), // total accounts
+    duneJson(4119181), // markets
+    duneJson(3612752), // builder fees
+    duneJson(4119185) // active builders
+  ]);
 
   return json<DuneData>({
     volumeRows: volData.result?.rows ?? [],
-    tvlChains: (tvlData.result?.rows ?? []).filter(
-      (r: TvlChainRow) => r.chain !== 'Total'
-    ),
+    tvlChains: (tvlData.result?.rows ?? []).filter((r: TvlChainRow) => r.chain !== 'Total'),
     feeRows: feeData.result?.rows ?? [],
     accountRows: acctData.result?.rows ?? [],
     marketRows: mktData.result?.rows ?? [],
     builderFees: bldFeeData.result?.rows?.[0]?.broker_fee ?? 0,
-    activeBuilders: bldData.result?.rows?.[0]?.builders ?? 0,
+    activeBuilders: bldData.result?.rows?.[0]?.builders ?? 0
   });
 }
 
@@ -196,7 +192,14 @@ export default function Analytics() {
   }, []);
 
   const handleSearchNavigate = (id: string) => {
-    const navIds: NavId[] = ['dashboards', 'queries', 'api-catalog', 'starred', 'leaderboard', 'explorer'];
+    const navIds: NavId[] = [
+      'dashboards',
+      'queries',
+      'api-catalog',
+      'starred',
+      'leaderboard',
+      'explorer'
+    ];
     if (navIds.includes(id as NavId)) {
       setActiveNav(id as NavId);
     } else {
@@ -272,9 +275,7 @@ export default function Analytics() {
               <StarredView
                 starred={starred}
                 onRemove={removeStar}
-                onNavigate={(type) =>
-                  setActiveNav(type === 'dashboard' ? 'dashboards' : 'queries')
-                }
+                onNavigate={(type) => setActiveNav(type === 'dashboard' ? 'dashboards' : 'queries')}
               />
             )}
             {activeNav === 'leaderboard' && <LeaderboardView />}

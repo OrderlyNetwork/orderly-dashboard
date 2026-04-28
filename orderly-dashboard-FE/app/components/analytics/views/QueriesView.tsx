@@ -1,6 +1,11 @@
 import { FC, useState } from 'react';
 
-type StarFn = (item: { id: string; type: 'dashboard' | 'query'; title: string; description: string }) => void;
+type StarFn = (item: {
+  id: string;
+  type: 'dashboard' | 'query';
+  title: string;
+  description: string;
+}) => void;
 
 type Query = {
   id: string;
@@ -13,14 +18,78 @@ type Query = {
 };
 
 const MOCK_QUERIES: Query[] = [
-  { id: 'q1', name: 'Daily Volume by Broker', description: 'Aggregate trading volume grouped by broker_id for the last 30 days', category: 'Volume', lastRun: '2m ago', runCount: 142, saved: true },
-  { id: 'q2', name: 'Top 100 Traders by PnL', description: 'Ranked list of traders by realized PnL over the selected date range', category: 'Traders', lastRun: '15m ago', runCount: 89, saved: true },
-  { id: 'q3', name: 'Fee Revenue by Tier', description: 'Breakdown of fee income per fee tier with user counts', category: 'Fees', lastRun: '1h ago', runCount: 34, saved: true },
-  { id: 'q4', name: 'Perp Pair Dominance', description: 'Market share of each trading pair by volume over time', category: 'Pairs', lastRun: '3h ago', runCount: 67, saved: false },
-  { id: 'q5', name: 'Liquidation Heatmap', description: 'Liquidation events by hour of day and day of week', category: 'Traders', lastRun: '6h ago', runCount: 21, saved: true },
-  { id: 'q6', name: 'Funding Rate Arbitrage', description: 'Cross-pair funding rate differentials over 90 day window', category: 'Pairs', lastRun: '1d ago', runCount: 12, saved: false },
-  { id: 'q7', name: 'Broker Retention Rate', description: 'Returning trader percentage per broker month-over-month', category: 'Volume', lastRun: '2d ago', runCount: 8, saved: true },
-  { id: 'q8', name: 'Custom Query', description: 'Ad-hoc SQL workspace for live data exploration', category: 'Custom', lastRun: '5m ago', runCount: 204, saved: false }
+  {
+    id: 'q1',
+    name: 'Daily Volume by Broker',
+    description: 'Aggregate trading volume grouped by broker_id for the last 30 days',
+    category: 'Volume',
+    lastRun: '2m ago',
+    runCount: 142,
+    saved: true
+  },
+  {
+    id: 'q2',
+    name: 'Top 100 Traders by PnL',
+    description: 'Ranked list of traders by realized PnL over the selected date range',
+    category: 'Traders',
+    lastRun: '15m ago',
+    runCount: 89,
+    saved: true
+  },
+  {
+    id: 'q3',
+    name: 'Fee Revenue by Tier',
+    description: 'Breakdown of fee income per fee tier with user counts',
+    category: 'Fees',
+    lastRun: '1h ago',
+    runCount: 34,
+    saved: true
+  },
+  {
+    id: 'q4',
+    name: 'Perp Pair Dominance',
+    description: 'Market share of each trading pair by volume over time',
+    category: 'Pairs',
+    lastRun: '3h ago',
+    runCount: 67,
+    saved: false
+  },
+  {
+    id: 'q5',
+    name: 'Liquidation Heatmap',
+    description: 'Liquidation events by hour of day and day of week',
+    category: 'Traders',
+    lastRun: '6h ago',
+    runCount: 21,
+    saved: true
+  },
+  {
+    id: 'q6',
+    name: 'Funding Rate Arbitrage',
+    description: 'Cross-pair funding rate differentials over 90 day window',
+    category: 'Pairs',
+    lastRun: '1d ago',
+    runCount: 12,
+    saved: false
+  },
+  {
+    id: 'q7',
+    name: 'Broker Retention Rate',
+    description: 'Returning trader percentage per broker month-over-month',
+    category: 'Volume',
+    lastRun: '2d ago',
+    runCount: 8,
+    saved: true
+  },
+  {
+    id: 'q8',
+    name: 'Custom Query',
+    description: 'Ad-hoc SQL workspace for live data exploration',
+    category: 'Custom',
+    lastRun: '5m ago',
+    runCount: 204,
+    saved: false
+  }
 ];
 
 const CATEGORY_COLORS: Record<Query['category'], string> = {
@@ -82,12 +151,20 @@ export const QueriesView: FC<Props> = ({ isStarred, toggleStar }) => {
       >
         <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(52,211,153,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#34D399"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="4 17 10 11 4 5" />
+              <line x1="12" y1="19" x2="20" y2="19" />
             </svg>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#34D399' }}>
-              Saved Queries
-            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#34D399' }}>Saved Queries</div>
           </div>
           <input
             value={filter}
@@ -113,7 +190,10 @@ export const QueriesView: FC<Props> = ({ isStarred, toggleStar }) => {
             return (
               <div
                 key={q.id}
-                onClick={() => { setActiveQuery(q); setHasResult(false); }}
+                onClick={() => {
+                  setActiveQuery(q);
+                  setHasResult(false);
+                }}
                 style={{
                   padding: '10px 12px',
                   borderRadius: 10,
@@ -124,10 +204,12 @@ export const QueriesView: FC<Props> = ({ isStarred, toggleStar }) => {
                   transition: 'background 0.15s'
                 }}
                 onMouseEnter={(e) => {
-                  if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'rgba(52,211,153,0.05)';
+                  if (!isActive)
+                    (e.currentTarget as HTMLDivElement).style.background = 'rgba(52,211,153,0.05)';
                 }}
                 onMouseLeave={(e) => {
-                  if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'transparent';
+                  if (!isActive)
+                    (e.currentTarget as HTMLDivElement).style.background = 'transparent';
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
@@ -147,7 +229,12 @@ export const QueriesView: FC<Props> = ({ isStarred, toggleStar }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleStar({ id: `query-${q.id}`, type: 'query', title: q.name, description: q.description });
+                      toggleStar({
+                        id: `query-${q.id}`,
+                        type: 'query',
+                        title: q.name,
+                        description: q.description
+                      });
                     }}
                     title={isStarred(`query-${q.id}`) ? 'Remove from Starred' : 'Add to Starred'}
                     style={{
@@ -161,15 +248,26 @@ export const QueriesView: FC<Props> = ({ isStarred, toggleStar }) => {
                       flexShrink: 0
                     }}
                   >
-                    <svg width="11" height="11" viewBox="0 0 24 24"
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
                       fill={isStarred(`query-${q.id}`) ? 'currentColor' : 'none'}
-                      stroke="currentColor" strokeWidth="2"
+                      stroke="currentColor"
+                      strokeWidth="2"
                     >
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                     </svg>
                   </button>
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#fff' : 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.75)',
+                    lineHeight: 1.3
+                  }}
+                >
                   {q.name}
                 </div>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
@@ -204,8 +302,12 @@ export const QueriesView: FC<Props> = ({ isStarred, toggleStar }) => {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{activeQuery.name}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{activeQuery.description}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                    {activeQuery.name}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>
+                    {activeQuery.description}
+                  </div>
                 </div>
                 <button
                   onClick={handleRun}
@@ -227,7 +329,15 @@ export const QueriesView: FC<Props> = ({ isStarred, toggleStar }) => {
                 >
                   {isRunning ? (
                     <>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}>
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        style={{ animation: 'spin 1s linear infinite' }}
+                      >
                         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                       </svg>
                       Running…
@@ -285,17 +395,40 @@ export const QueriesView: FC<Props> = ({ isStarred, toggleStar }) => {
                   overflow: 'hidden'
                 }}
               >
-                <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(52,211,153,0.12)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: '1px solid rgba(52,211,153,0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
+                  }}
+                >
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>Results</div>
                   {hasResult && (
-                    <span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.1)', borderRadius: 5, padding: '1px 7px' }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: '#34d399',
+                        background: 'rgba(52,211,153,0.1)',
+                        borderRadius: 5,
+                        padding: '1px 7px'
+                      }}
+                    >
                       5 rows
                     </span>
                   )}
                 </div>
                 <div style={{ padding: 16 }}>
                   {isRunning ? (
-                    <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 13, padding: '20px 0' }}>
+                    <div
+                      style={{
+                        textAlign: 'center',
+                        color: 'rgba(255,255,255,0.4)',
+                        fontSize: 13,
+                        padding: '20px 0'
+                      }}
+                    >
                       Executing query…
                     </div>
                   ) : (
@@ -332,7 +465,14 @@ export const QueriesView: FC<Props> = ({ isStarred, toggleStar }) => {
               fontSize: 14
             }}
           >
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(52,211,153,0.3)" strokeWidth="1.5">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="rgba(52,211,153,0.3)"
+              strokeWidth="1.5"
+            >
               <polyline points="4 17 10 11 4 5" />
               <line x1="12" y1="19" x2="20" y2="19" />
             </svg>

@@ -20,27 +20,146 @@ const METHOD_COLORS: Record<HttpMethod, { bg: string; text: string }> = {
 
 const ENDPOINTS: Endpoint[] = [
   // Market Data
-  { method: 'GET', path: '/v1/public/info', description: 'Get exchange info and supported assets', category: 'Market Data', version: 'v1', auth: false },
-  { method: 'GET', path: '/v1/public/market_trades', description: 'Get recent public market trades for a symbol', category: 'Market Data', version: 'v1', auth: false },
-  { method: 'GET', path: '/v1/public/orderbook/{symbol}', description: 'Get current order book snapshot', category: 'Market Data', version: 'v1', auth: false },
-  { method: 'GET', path: '/v1/public/kline', description: 'Get OHLCV candlestick data', category: 'Market Data', version: 'v1', auth: false },
-  { method: 'GET', path: '/v1/public/funding_rate/{symbol}', description: 'Get current and predicted funding rate', category: 'Market Data', version: 'v1', auth: false },
+  {
+    method: 'GET',
+    path: '/v1/public/info',
+    description: 'Get exchange info and supported assets',
+    category: 'Market Data',
+    version: 'v1',
+    auth: false
+  },
+  {
+    method: 'GET',
+    path: '/v1/public/market_trades',
+    description: 'Get recent public market trades for a symbol',
+    category: 'Market Data',
+    version: 'v1',
+    auth: false
+  },
+  {
+    method: 'GET',
+    path: '/v1/public/orderbook/{symbol}',
+    description: 'Get current order book snapshot',
+    category: 'Market Data',
+    version: 'v1',
+    auth: false
+  },
+  {
+    method: 'GET',
+    path: '/v1/public/kline',
+    description: 'Get OHLCV candlestick data',
+    category: 'Market Data',
+    version: 'v1',
+    auth: false
+  },
+  {
+    method: 'GET',
+    path: '/v1/public/funding_rate/{symbol}',
+    description: 'Get current and predicted funding rate',
+    category: 'Market Data',
+    version: 'v1',
+    auth: false
+  },
   // Account
-  { method: 'GET', path: '/v1/client/info', description: 'Get account info and balances', category: 'Account', version: 'v1', auth: true },
-  { method: 'GET', path: '/v1/client/holding', description: 'Get current positions and holdings', category: 'Account', version: 'v1', auth: true },
-  { method: 'GET', path: '/v1/asset/history', description: 'Get deposit and withdrawal history', category: 'Account', version: 'v1', auth: true },
+  {
+    method: 'GET',
+    path: '/v1/client/info',
+    description: 'Get account info and balances',
+    category: 'Account',
+    version: 'v1',
+    auth: true
+  },
+  {
+    method: 'GET',
+    path: '/v1/client/holding',
+    description: 'Get current positions and holdings',
+    category: 'Account',
+    version: 'v1',
+    auth: true
+  },
+  {
+    method: 'GET',
+    path: '/v1/asset/history',
+    description: 'Get deposit and withdrawal history',
+    category: 'Account',
+    version: 'v1',
+    auth: true
+  },
   // Orders
-  { method: 'POST', path: '/v1/order', description: 'Place a new order', category: 'Orders', version: 'v1', auth: true },
-  { method: 'DELETE', path: '/v1/order', description: 'Cancel an existing order by order_id', category: 'Orders', version: 'v1', auth: true },
-  { method: 'GET', path: '/v1/order/{order_id}', description: 'Get details of a specific order', category: 'Orders', version: 'v1', auth: true },
-  { method: 'GET', path: '/v1/orders', description: 'Get list of orders with filters', category: 'Orders', version: 'v1', auth: true },
-  { method: 'POST', path: '/v1/batch-order', description: 'Place multiple orders in a single call', category: 'Orders', version: 'v1', auth: true },
+  {
+    method: 'POST',
+    path: '/v1/order',
+    description: 'Place a new order',
+    category: 'Orders',
+    version: 'v1',
+    auth: true
+  },
+  {
+    method: 'DELETE',
+    path: '/v1/order',
+    description: 'Cancel an existing order by order_id',
+    category: 'Orders',
+    version: 'v1',
+    auth: true
+  },
+  {
+    method: 'GET',
+    path: '/v1/order/{order_id}',
+    description: 'Get details of a specific order',
+    category: 'Orders',
+    version: 'v1',
+    auth: true
+  },
+  {
+    method: 'GET',
+    path: '/v1/orders',
+    description: 'Get list of orders with filters',
+    category: 'Orders',
+    version: 'v1',
+    auth: true
+  },
+  {
+    method: 'POST',
+    path: '/v1/batch-order',
+    description: 'Place multiple orders in a single call',
+    category: 'Orders',
+    version: 'v1',
+    auth: true
+  },
   // Trades
-  { method: 'GET', path: '/v1/client/trades', description: 'Get historical fills for the account', category: 'Trades', version: 'v1', auth: true },
-  { method: 'GET', path: '/v1/client/trades/{trade_id}', description: 'Get a specific trade by ID', category: 'Trades', version: 'v1', auth: true },
+  {
+    method: 'GET',
+    path: '/v1/client/trades',
+    description: 'Get historical fills for the account',
+    category: 'Trades',
+    version: 'v1',
+    auth: true
+  },
+  {
+    method: 'GET',
+    path: '/v1/client/trades/{trade_id}',
+    description: 'Get a specific trade by ID',
+    category: 'Trades',
+    version: 'v1',
+    auth: true
+  },
   // Analytics
-  { method: 'GET', path: '/v1/client/statistics', description: 'Get aggregated PnL and volume statistics', category: 'Analytics', version: 'v1', auth: true },
-  { method: 'GET', path: '/v1/public/stats', description: 'Get protocol-level stats (volume, users, fees)', category: 'Analytics', version: 'v1', auth: false },
+  {
+    method: 'GET',
+    path: '/v1/client/statistics',
+    description: 'Get aggregated PnL and volume statistics',
+    category: 'Analytics',
+    version: 'v1',
+    auth: true
+  },
+  {
+    method: 'GET',
+    path: '/v1/public/stats',
+    description: 'Get protocol-level stats (volume, users, fees)',
+    category: 'Analytics',
+    version: 'v1',
+    auth: false
+  }
 ];
 
 const CATEGORIES = ['All', ...Array.from(new Set(ENDPOINTS.map((e) => e.category)))];
@@ -83,7 +202,16 @@ export const ApiCatalogView: FC = () => {
               color: '#FB923C'
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="16 18 22 12 16 6" />
               <polyline points="8 6 2 12 8 18" />
             </svg>
@@ -101,11 +229,16 @@ export const ApiCatalogView: FC = () => {
       <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <svg
-            width="14" height="14"
-            viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="rgba(255,255,255,0.3)"
+            strokeWidth="2"
             style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}
           >
-            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <input
             value={search}
@@ -135,8 +268,12 @@ export const ApiCatalogView: FC = () => {
                 padding: '0 14px',
                 height: 36,
                 borderRadius: 8,
-                border: activeCategory === cat ? '1px solid rgba(251,146,60,0.5)' : '1px solid rgba(255,255,255,0.1)',
-                background: activeCategory === cat ? 'rgba(251,146,60,0.15)' : 'rgba(255,255,255,0.04)',
+                border:
+                  activeCategory === cat
+                    ? '1px solid rgba(251,146,60,0.5)'
+                    : '1px solid rgba(255,255,255,0.1)',
+                background:
+                  activeCategory === cat ? 'rgba(251,146,60,0.15)' : 'rgba(255,255,255,0.04)',
                 color: activeCategory === cat ? '#FB923C' : 'rgba(255,255,255,0.5)',
                 fontSize: 12,
                 fontWeight: activeCategory === cat ? 600 : 400,
@@ -180,9 +317,7 @@ export const ApiCatalogView: FC = () => {
               const mc = METHOD_COLORS[ep.method];
               return (
                 <div key={key}>
-                  {i > 0 && (
-                    <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
-                  )}
+                  {i > 0 && <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />}
                   <button
                     onClick={() => setExpanded(isOpen ? null : key)}
                     style={{
@@ -246,8 +381,12 @@ export const ApiCatalogView: FC = () => {
                     )}
                     {/* Chevron */}
                     <svg
-                      width="14" height="14" viewBox="0 0 24 24" fill="none"
-                      stroke="rgba(255,255,255,0.3)" strokeWidth="2"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="rgba(255,255,255,0.3)"
+                      strokeWidth="2"
                       style={{
                         flexShrink: 0,
                         marginLeft: ep.auth ? 8 : 'auto',
@@ -266,17 +405,48 @@ export const ApiCatalogView: FC = () => {
                         background: 'rgba(255,255,255,0.02)'
                       }}
                     >
-                      <p style={{ margin: '0 0 12px', fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                      <p
+                        style={{
+                          margin: '0 0 12px',
+                          fontSize: 13,
+                          color: 'rgba(255,255,255,0.6)',
+                          lineHeight: 1.6
+                        }}
+                      >
                         {ep.description}
                       </p>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            background: 'rgba(255,255,255,0.06)',
+                            color: 'rgba(255,255,255,0.4)'
+                          }}
+                        >
                           {ep.version}
                         </span>
-                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            background: 'rgba(255,255,255,0.06)',
+                            color: 'rgba(255,255,255,0.4)'
+                          }}
+                        >
                           REST
                         </span>
-                        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            background: 'rgba(255,255,255,0.06)',
+                            color: 'rgba(255,255,255,0.4)'
+                          }}
+                        >
                           {ep.auth ? 'Requires API key' : 'Public'}
                         </span>
                       </div>
@@ -290,7 +460,14 @@ export const ApiCatalogView: FC = () => {
       ))}
 
       {filtered.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,0.25)', fontSize: 14 }}>
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '60px 0',
+            color: 'rgba(255,255,255,0.25)',
+            fontSize: 14
+          }}
+        >
           No endpoints match your search.
         </div>
       )}

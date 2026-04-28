@@ -39,9 +39,7 @@ export const KPICard: FC<KPICardProps> = ({ label, value, subValue, delta, icon 
         >
           {label}
         </span>
-        {icon && (
-          <span style={{ color: '#9C75FF', opacity: 0.8 }}>{icon}</span>
-        )}
+        {icon && <span style={{ color: '#9C75FF', opacity: 0.8 }}>{icon}</span>}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
@@ -67,16 +65,13 @@ export const KPICard: FC<KPICardProps> = ({ label, value, subValue, delta, icon 
               padding: '2px 7px'
             }}
           >
-            {isPositive ? '+' : ''}{delta.toFixed(2)}%
+            {isPositive ? '+' : ''}
+            {delta.toFixed(2)}%
           </span>
         )}
       </div>
 
-      {subValue && (
-        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
-          {subValue}
-        </span>
-      )}
+      {subValue && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{subValue}</span>}
     </div>
   );
 };
