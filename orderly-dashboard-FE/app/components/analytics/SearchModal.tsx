@@ -15,22 +15,16 @@ const ALL_RESULTS: SearchResult[] = [
     description: 'Overview of key metrics'
   },
   {
-    id: 'queries',
-    label: 'Queries',
+    id: 'leaderboard',
+    label: 'Leaderboard',
     category: 'Navigation',
-    description: 'Saved analytics queries'
+    description: 'Trading performance and open positions'
   },
   {
-    id: 'api-catalog',
-    label: 'API Catalog',
+    id: 'explorer',
+    label: 'Explorer',
     category: 'Navigation',
-    description: 'REST API endpoints for Orderly Network'
-  },
-  {
-    id: 'starred',
-    label: 'Starred',
-    category: 'Navigation',
-    description: 'Your bookmarked dashboards and queries'
+    description: 'Search wallets and accounts'
   },
   {
     id: 'btc-perp',
@@ -179,7 +173,12 @@ export const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate })
     >
       {/* Backdrop */}
       <div
+        role="button"
+        tabIndex={-1}
         onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') onClose();
+        }}
         style={{
           position: 'absolute',
           inset: 0,
@@ -240,6 +239,8 @@ export const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate })
             }}
           />
           <kbd
+            role="button"
+            tabIndex={0}
             style={{
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
@@ -251,6 +252,9 @@ export const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate })
               cursor: 'pointer'
             }}
             onClick={onClose}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') onClose();
+            }}
           >
             ESC
           </kbd>
@@ -293,7 +297,12 @@ export const SearchModal: FC<SearchModalProps> = ({ open, onClose, onNavigate })
                     return (
                       <div
                         key={item.id}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => handleSelect(item)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSelect(item);
+                        }}
                         onMouseEnter={() => setSelectedIdx(idx)}
                         style={{
                           display: 'flex',

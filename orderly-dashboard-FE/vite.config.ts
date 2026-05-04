@@ -6,5 +6,6 @@ export default defineConfig({
   plugins: [remix(), tsconfigPaths()],
   ssr: {
     noExternal: process.env.NODE_ENV === 'production' ? ['@mui/**/*'] : undefined
-  }
+  },
+  envPrefix: ['VITE_', 'DATA_API_']
 });

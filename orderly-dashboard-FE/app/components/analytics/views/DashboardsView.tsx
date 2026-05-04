@@ -13,9 +13,9 @@ import {
 import { FC, useState } from 'react';
 import { Bar, Line } from 'react-chartjs-2';
 
-import type { Role } from '../Sidebar';
 import { KPICard } from '../widgets/KPICard';
 
+import type { Role } from '~/components/analytics/Sidebar';
 import {
   useDexUsers,
   useDistributorInvitees,
@@ -26,7 +26,7 @@ import {
   useStakeVsSupply,
   useVolumeSegments
 } from '~/hooks/useOrderlyMetrics';
-import type { DuneData } from '~/routes/analytics';
+import type { DuneData } from '~/types/dune';
 
 ChartJS.register(
   CategoryScale,
@@ -161,27 +161,17 @@ const baseBarOpts: ChartOptions<'bar'> = {
 
 // ── Panel + UI primitives ──────────────────────────────────────────────────────
 
-type StarPanelProps = {
-  id: string;
-  title: string;
-  description: string;
-  isStarred: boolean;
-  onToggle: () => void;
-};
-
 function Panel({
   title,
   subtitle,
   height = 240,
   controls,
-  starProps,
   children
 }: {
   title: string;
   subtitle?: string;
   height?: number;
   controls?: React.ReactNode;
-  starProps?: StarPanelProps;
   children: React.ReactNode;
 }) {
   return (
@@ -210,37 +200,7 @@ function Panel({
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {controls}
-          {starProps && (
-            <button
-              onClick={starProps.onToggle}
-              title={starProps.isStarred ? 'Remove from Starred' : 'Add to Starred'}
-              style={{
-                background: starProps.isStarred ? 'rgba(251,191,36,0.1)' : 'transparent',
-                border: `1px solid ${starProps.isStarred ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                borderRadius: 6,
-                padding: '4px 6px',
-                display: 'flex',
-                alignItems: 'center',
-                cursor: 'pointer',
-                color: starProps.isStarred ? '#FBBF24' : 'rgba(255,255,255,0.3)',
-                transition: 'all 0.15s'
-              }}
-            >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill={starProps.isStarred ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            </button>
-          )}
-        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{controls}</div>
       </div>
       <div style={{ padding: '12px 16px 16px', height }}>{children}</div>
     </div>
@@ -1153,16 +1113,9 @@ function DistributorsSection() {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-type StarFn = (item: {
-  id: string;
-  type: 'dashboard' | 'query';
-  title: string;
-  description: string;
-}) => void;
+type Props = { role: Role; data: DuneData };
 
-type Props = { role: Role; isStarred: (id: string) => boolean; toggleStar: StarFn; data: DuneData };
-
-export const DashboardsView: FC<Props> = ({ role, isStarred, toggleStar, data }) => {
+export const DashboardsView: FC<Props> = ({ role, data }) => {
   const [period, setPeriod] = useState<Period>('30D');
 
   const { volumeRows, tvlChains, feeRows, accountRows, marketRows, builderFees, activeBuilders } =
@@ -1188,14 +1141,6 @@ export const DashboardsView: FC<Props> = ({ role, isStarred, toggleStar, data })
     builder: 'Revenue · Ecosystem · Liquidity',
     analyst: 'Full Protocol Overview'
   };
-
-  const chartStar = (id: string, title: string, description: string): StarPanelProps => ({
-    id,
-    title,
-    description,
-    isStarred: isStarred(id),
-    onToggle: () => toggleStar({ id, type: 'dashboard', title, description })
-  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -1261,11 +1206,6 @@ export const DashboardsView: FC<Props> = ({ role, isStarred, toggleStar, data })
             title="Trading Volume — Daily"
             controls={<PeriodSelector period={period} onChange={setPeriod} />}
             height={260}
-            starProps={chartStar(
-              'chart-volume-daily',
-              'Trading Volume — Daily',
-              'Daily trading volume bar chart'
-            )}
           >
             <VolumeBarChart rows={volumeRows} period={period} />
           </Panel>
@@ -1277,16 +1217,7 @@ export const DashboardsView: FC<Props> = ({ role, isStarred, toggleStar, data })
             <VolumeSegmentsSection />
           </div>
 
-          <Panel
-            title="TVL by Chain"
-            subtitle={`Total: ${fmtCompact(tvlTotal)}`}
-            height={260}
-            starProps={chartStar(
-              'chart-tvl-chain',
-              'TVL by Chain',
-              'Total value locked across chains'
-            )}
-          >
+          <Panel title="TVL by Chain" subtitle={`Total: ${fmtCompact(tvlTotal)}`} height={260}>
             <TvlBarChart chains={tvlChains} />
           </Panel>
 
@@ -1402,28 +1333,10 @@ export const DashboardsView: FC<Props> = ({ role, isStarred, toggleStar, data })
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Panel
-              title="TVL by Chain"
-              subtitle={`Total: ${fmtCompact(tvlTotal)}`}
-              height={260}
-              starProps={chartStar(
-                'chart-tvl-chain',
-                'TVL by Chain',
-                'Total value locked across chains'
-              )}
-            >
+            <Panel title="TVL by Chain" subtitle={`Total: ${fmtCompact(tvlTotal)}`} height={260}>
               <TvlBarChart chains={tvlChains} />
             </Panel>
-            <Panel
-              title="Net Fees (cumulative)"
-              subtitle="90-day running total"
-              height={260}
-              starProps={chartStar(
-                'chart-net-fees-cumulative',
-                'Net Fees (cumulative)',
-                '90-day cumulative net fees line chart'
-              )}
-            >
+            <Panel title="Net Fees (cumulative)" subtitle="90-day running total" height={260}>
               <NetFeesLineChart rows={feeRows} />
             </Panel>
           </div>
@@ -1527,38 +1440,15 @@ export const DashboardsView: FC<Props> = ({ role, isStarred, toggleStar, data })
             title="Trading Volume — Daily"
             controls={<PeriodSelector period={period} onChange={setPeriod} />}
             height={260}
-            starProps={chartStar(
-              'chart-volume-daily',
-              'Trading Volume — Daily',
-              'Daily trading volume bar chart'
-            )}
           >
             <VolumeBarChart rows={volumeRows} period={period} />
           </Panel>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Panel
-              title="TVL by Chain"
-              subtitle={`Total: ${fmtCompact(tvlTotal)}`}
-              height={260}
-              starProps={chartStar(
-                'chart-tvl-chain',
-                'TVL by Chain',
-                'Total value locked across chains'
-              )}
-            >
+            <Panel title="TVL by Chain" subtitle={`Total: ${fmtCompact(tvlTotal)}`} height={260}>
               <TvlBarChart chains={tvlChains} />
             </Panel>
-            <Panel
-              title="Net Fees (cumulative)"
-              subtitle="90-day running total"
-              height={260}
-              starProps={chartStar(
-                'chart-net-fees-cumulative',
-                'Net Fees (cumulative)',
-                '90-day cumulative net fees line chart'
-              )}
-            >
+            <Panel title="Net Fees (cumulative)" subtitle="90-day running total" height={260}>
               <NetFeesLineChart rows={feeRows} />
             </Panel>
           </div>

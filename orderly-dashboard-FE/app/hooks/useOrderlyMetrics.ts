@@ -1,13 +1,13 @@
 import useSWR from 'swr';
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { 'x-api-key': process.env.DATA_API_KEY! } });
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   return res.json() as Promise<T>;
 }
 
 function useFetch<T>(path: string) {
-  return useSWR<T>(`${process.env.DATA_API_URL}${path}`, fetchJson<T>, {
+  return useSWR<T>(`${import.meta.env.DATA_API_URL}${path}`, fetchJson<T>, {
     revalidateOnFocus: false,
     shouldRetryOnError: false
   });

@@ -1,21 +1,15 @@
 import { FC } from 'react';
 
-import { NavId } from './Sidebar';
+import type { NavId } from './Sidebar';
 
 const NAV_LABELS: Record<NavId, string> = {
   dashboards: 'Dashboards',
-  queries: 'Queries',
-  'api-catalog': 'API Catalog',
-  starred: 'Starred',
   leaderboard: 'Leaderboard',
   explorer: 'Explorer'
 };
 
 const NAV_SUBTITLES: Record<NavId, string> = {
   dashboards: 'Overview of key metrics and performance indicators',
-  queries: 'Saved and recent analytics queries',
-  'api-catalog': 'REST API endpoints for Orderly Network',
-  starred: 'Your bookmarked dashboards and queries',
   leaderboard: 'Trading performance and open positions across the network',
   explorer: 'Search wallets and accounts for detailed trading history'
 };
@@ -24,17 +18,10 @@ type TopbarProps = {
   activeNav: NavId;
   secondsAgo: number;
   onRefresh: () => void;
-  onExportCsv: () => void;
   onSearchOpen: () => void;
 };
 
-export const Topbar: FC<TopbarProps> = ({
-  activeNav,
-  secondsAgo,
-  onRefresh,
-  onExportCsv,
-  onSearchOpen
-}) => {
+export const Topbar: FC<TopbarProps> = ({ activeNav, secondsAgo, onRefresh, onSearchOpen }) => {
   return (
     <div
       style={{
@@ -67,7 +54,7 @@ export const Topbar: FC<TopbarProps> = ({
               letterSpacing: '-0.01em'
             }}
           >
-            {NAV_LABELS[activeNav]}
+            {NAV_LABELS[activeNav] ?? 'Dashboard'}
           </h1>
           <span
             style={{
@@ -76,7 +63,7 @@ export const Topbar: FC<TopbarProps> = ({
               fontWeight: 400
             }}
           >
-            {NAV_SUBTITLES[activeNav]}
+            {NAV_SUBTITLES[activeNav] ?? ''}
           </span>
         </div>
       </div>
@@ -183,47 +170,6 @@ export const Topbar: FC<TopbarProps> = ({
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
           </svg>
           Refresh
-        </button>
-
-        {/* Export CSV */}
-        <button
-          onClick={onExportCsv}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            background: '#9C75FF',
-            border: 'none',
-            borderRadius: 8,
-            color: '#fff',
-            fontSize: 12,
-            fontWeight: 600,
-            padding: '6px 14px',
-            cursor: 'pointer',
-            transition: 'opacity 0.15s'
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.opacity = '0.85';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.opacity = '1';
-          }}
-        >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Export CSV
         </button>
       </div>
     </div>
