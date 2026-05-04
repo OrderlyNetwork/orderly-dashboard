@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import type { NavId } from './Sidebar';
+import type { NavId } from '~/components/analytics/Sidebar';
 
 const NAV_LABELS: Record<NavId, string> = {
   dashboards: 'Dashboards',
@@ -16,12 +16,10 @@ const NAV_SUBTITLES: Record<NavId, string> = {
 
 type TopbarProps = {
   activeNav: NavId;
-  secondsAgo: number;
-  onRefresh: () => void;
   onSearchOpen: () => void;
 };
 
-export const Topbar: FC<TopbarProps> = ({ activeNav, secondsAgo, onRefresh, onSearchOpen }) => {
+export const Topbar: FC<TopbarProps> = ({ activeNav, onSearchOpen }) => {
   return (
     <div
       style={{
@@ -41,7 +39,6 @@ export const Topbar: FC<TopbarProps> = ({ activeNav, secondsAgo, onRefresh, onSe
         gap: 16
       }}
     >
-      {/* Title + subtitle */}
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
           <h1
@@ -56,21 +53,13 @@ export const Topbar: FC<TopbarProps> = ({ activeNav, secondsAgo, onRefresh, onSe
           >
             {NAV_LABELS[activeNav] ?? 'Dashboard'}
           </h1>
-          <span
-            style={{
-              fontSize: 12,
-              color: 'rgba(255,255,255,0.4)',
-              fontWeight: 400
-            }}
-          >
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 400 }}>
             {NAV_SUBTITLES[activeNav] ?? ''}
           </span>
         </div>
       </div>
 
-      {/* Right controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        {/* Search trigger */}
         <button
           onClick={onSearchOpen}
           title="Search (⌘K)"
@@ -120,56 +109,6 @@ export const Topbar: FC<TopbarProps> = ({ activeNav, secondsAgo, onRefresh, onSe
           >
             ⌘K
           </kbd>
-        </button>
-
-        {/* Updated N seconds ago */}
-        <div
-          style={{
-            fontSize: 12,
-            color: 'rgba(255,255,255,0.35)',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          Updated {secondsAgo}s ago
-        </div>
-
-        {/* Refresh button */}
-        <button
-          onClick={onRefresh}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            background: 'rgba(156,117,255,0.1)',
-            border: '1px solid rgba(156,117,255,0.25)',
-            borderRadius: 8,
-            color: '#9C75FF',
-            fontSize: 12,
-            fontWeight: 600,
-            padding: '6px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.15s'
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(156,117,255,0.2)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(156,117,255,0.1)';
-          }}
-        >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          >
-            <polyline points="23 4 23 10 17 10" />
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-          </svg>
-          Refresh
         </button>
       </div>
     </div>

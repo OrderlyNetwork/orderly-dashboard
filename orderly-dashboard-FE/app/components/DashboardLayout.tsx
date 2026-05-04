@@ -1,10 +1,9 @@
-import { Outlet, useLocation, useNavigate, useRevalidator } from '@remix-run/react';
+import { Outlet, useLocation, useNavigate } from '@remix-run/react';
 import { createContext, useContext, useEffect, useState, type FC } from 'react';
 
 import { SearchModal } from '~/components/analytics/SearchModal';
 import { Sidebar, type NavId, type Role } from '~/components/analytics/Sidebar';
 import { Topbar } from '~/components/analytics/Topbar';
-import { useRefreshTimer } from '~/hooks/useRefreshTimer';
 
 const PATH_TO_NAV: Record<string, NavId> = {
   '/': 'dashboards',
@@ -40,14 +39,11 @@ function getActiveNav(pathname: string): NavId {
 export const DashboardLayout: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { revalidate } = useRevalidator();
 
   const activeNav = getActiveNav(location.pathname);
 
   const [role, setRole] = useState<Role>('trader');
   const [searchOpen, setSearchOpen] = useState(false);
-
-  const { secondsAgo, refresh } = useRefreshTimer(() => revalidate());
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -93,12 +89,7 @@ export const DashboardLayout: FC = () => {
             overflow: 'hidden'
           }}
         >
-          <Topbar
-            activeNav={activeNav}
-            secondsAgo={secondsAgo}
-            onRefresh={refresh}
-            onSearchOpen={() => setSearchOpen(true)}
-          />
+          <Topbar activeNav={activeNav} onSearchOpen={() => setSearchOpen(true)} />
 
           <div
             style={{
