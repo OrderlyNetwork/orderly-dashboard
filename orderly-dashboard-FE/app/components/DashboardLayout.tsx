@@ -1,7 +1,6 @@
-import { Outlet, useLocation, useNavigate } from '@remix-run/react';
-import { createContext, useContext, useEffect, useState, type FC } from 'react';
+import { Outlet, useLocation } from '@remix-run/react';
+import { createContext, useContext, useState, type FC } from 'react';
 
-import { SearchModal } from '~/components/analytics/SearchModal';
 import { Sidebar, type NavId, type Role } from '~/components/analytics/Sidebar';
 import { Topbar } from '~/components/analytics/Topbar';
 
@@ -9,12 +8,6 @@ const PATH_TO_NAV: Record<string, NavId> = {
   '/': 'dashboards',
   '/leaderboard': 'leaderboard',
   '/explorer': 'explorer'
-};
-
-const NAV_TO_PATH: Record<NavId, string> = {
-  dashboards: '/',
-  leaderboard: '/leaderboard',
-  explorer: '/explorer'
 };
 
 type DashboardLayoutContextType = {
@@ -38,32 +31,9 @@ function getActiveNav(pathname: string): NavId {
 
 export const DashboardLayout: FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-
   const activeNav = getActiveNav(location.pathname);
 
   const [role, setRole] = useState<Role>('trader');
-  const [searchOpen, setSearchOpen] = useState(false);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setSearchOpen((v) => !v);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
-
-  const handleSearchNavigate = (id: string) => {
-    const path = NAV_TO_PATH[id as NavId];
-    if (path) {
-      navigate(path);
-    } else {
-      navigate('/');
-    }
-  };
 
   return (
     <DashboardLayoutContext.Provider value={{ role, setRole }}>
@@ -89,7 +59,7 @@ export const DashboardLayout: FC = () => {
             overflow: 'hidden'
           }}
         >
-          <Topbar activeNav={activeNav} onSearchOpen={() => setSearchOpen(true)} />
+          <Topbar activeNav={activeNav} />
 
           <div
             style={{
@@ -104,12 +74,6 @@ export const DashboardLayout: FC = () => {
           </div>
         </div>
       </div>
-
-      <SearchModal
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        onNavigate={handleSearchNavigate}
-      />
     </DashboardLayoutContext.Provider>
   );
 };

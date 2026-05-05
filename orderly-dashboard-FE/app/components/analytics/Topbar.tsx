@@ -16,10 +16,9 @@ const NAV_SUBTITLES: Record<NavId, string> = {
 
 type TopbarProps = {
   activeNav: NavId;
-  onSearchOpen: () => void;
 };
 
-export const Topbar: FC<TopbarProps> = ({ activeNav, onSearchOpen }) => {
+export const Topbar: FC<TopbarProps> = ({ activeNav }) => {
   return (
     <div
       style={{
@@ -57,59 +56,6 @@ export const Topbar: FC<TopbarProps> = ({ activeNav, onSearchOpen }) => {
             {NAV_SUBTITLES[activeNav] ?? ''}
           </span>
         </div>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <button
-          onClick={onSearchOpen}
-          title="Search (⌘K)"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            background: 'rgba(156,117,255,0.08)',
-            border: '1px solid rgba(156,117,255,0.2)',
-            borderRadius: 8,
-            color: 'rgba(255,255,255,0.5)',
-            fontSize: 12,
-            padding: '6px 12px',
-            cursor: 'pointer',
-            transition: 'all 0.15s'
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(156,117,255,0.5)';
-            (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.8)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(156,117,255,0.2)';
-            (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.5)';
-          }}
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <span>Search</span>
-          <kbd
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 4,
-              padding: '1px 5px',
-              fontSize: 10,
-              fontFamily: 'monospace'
-            }}
-          >
-            ⌘K
-          </kbd>
-        </button>
       </div>
     </div>
   );
