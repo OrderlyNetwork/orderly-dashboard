@@ -33,7 +33,7 @@ export const DashboardLayout: FC = () => {
   const location = useLocation();
   const activeNav = getActiveNav(location.pathname);
 
-  const [role, setRole] = useState<Role>('trader');
+  const [role, setRole] = useState<Role>('analyst');
 
   return (
     <DashboardLayoutContext.Provider value={{ role, setRole }}>

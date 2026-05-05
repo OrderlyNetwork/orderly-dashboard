@@ -85,9 +85,9 @@ const NAV_ITEMS: {
 ];
 
 const ROLES: { id: Role; label: string }[] = [
+  { id: 'analyst', label: 'Analyst' },
   { id: 'trader', label: 'Trader' },
-  { id: 'builder', label: 'Builder' },
-  { id: 'analyst', label: 'Analyst' }
+  { id: 'builder', label: 'Builder' }
 ];
 
 type SidebarProps = {
