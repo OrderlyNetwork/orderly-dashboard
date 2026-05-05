@@ -221,11 +221,6 @@ export const FOOTER_NAV: Record<string, FooterNavLink[]> = {
   About: [
     { label: 'Team', href: 'https://orderly.network/team/', external: true },
     { label: 'FAQ', href: '/faq', external: false },
-    {
-      label: 'Dune Dashboard',
-      href: 'https://dune.com/orderly_network/orderly-dashboard',
-      external: true
-    },
     { label: 'Careers', href: 'https://job-boards.greenhouse.io/orderly', external: true },
     {
       label: 'Brand Kit',

@@ -16,7 +16,7 @@ import { Bar } from 'react-chartjs-2';
 import { CHAIN_COLORS, baseTooltipOpts } from '../shared/chartConfig';
 import { capitalize, fmtCompact } from '../shared/formatters';
 
-import type { DuneData } from '~/types/dune';
+import type { TvlChainRow } from '~/types/dashboard';
 
 ChartJS.register(
   CategoryScale,
@@ -29,14 +29,14 @@ ChartJS.register(
 );
 
 export const TvlByChainWidget: FC<{
-  chains: DuneData['tvlChains'];
+  chains: TvlChainRow[];
 }> = ({ chains }) => {
-  const sorted = [...chains].sort((a, b) => b.tvl - a.tvl).slice(0, 12);
+  const sorted = [...chains].sort((a, b) => b.tvl_usd - a.tvl_usd).slice(0, 12);
   const data: ChartData<'bar'> = {
     labels: sorted.map((c) => capitalize(c.chain)),
     datasets: [
       {
-        data: sorted.map((c) => c.tvl),
+        data: sorted.map((c) => c.tvl_usd),
         backgroundColor: sorted.map((c) => (CHAIN_COLORS[c.chain] ?? '#9C75FF') + 'CC'),
         hoverBackgroundColor: sorted.map((c) => CHAIN_COLORS[c.chain] ?? '#9C75FF'),
         borderRadius: 4,
@@ -50,7 +50,10 @@ export const TvlByChainWidget: FC<{
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` } }
+      tooltip: {
+        ...baseTooltipOpts,
+        callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` }
+      }
     },
     scales: {
       x: {

@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { Leaderboard } from '~/components/Leaderboard';
 import { Positions } from '~/components/Positions';
+import { PeriodSelector, type Period } from '~/components/analytics/shared/primitives';
 import { AnalystKPIWidget } from '~/components/analytics/widgets/AnalystKPIWidget';
 import { BuilderKPIWidget } from '~/components/analytics/widgets/BuilderKPIWidget';
 import { DexUsersWidget } from '~/components/analytics/widgets/DexUsersWidget';
@@ -11,7 +12,6 @@ import { DistributorsWidget } from '~/components/analytics/widgets/DistributorsW
 import { NetFeesWidget } from '~/components/analytics/widgets/NetFeesWidget';
 import { OmnivaultTvlWidget } from '~/components/analytics/widgets/OmnivaultTvlWidget';
 import { OverviewWidget } from '~/components/analytics/widgets/OverviewWidget';
-import { PeriodSelector, type Period } from '~/components/analytics/shared/primitives';
 import { StakeUsersWidget } from '~/components/analytics/widgets/StakeUsersWidget';
 import { StakeVsSupplyWidget } from '~/components/analytics/widgets/StakeVsSupplyWidget';
 import { TraderKPIWidget } from '~/components/analytics/widgets/TraderKPIWidget';
@@ -19,53 +19,29 @@ import { TvlByChainWidget } from '~/components/analytics/widgets/TvlByChainWidge
 import { VolumeChartWidget } from '~/components/analytics/widgets/VolumeChartWidget';
 import { VolumeSegmentsWidget } from '~/components/analytics/widgets/VolumeSegmentsWidget';
 import { WidgetWrapper } from '~/components/analytics/widgets/WidgetWrapper';
-import type { DuneData, TvlChainRow } from '~/types/dune';
-import { duneJson } from '~/utils/dune';
+import type { DashboardData } from '~/types/dashboard';
+import { fetchDashboardData } from '~/utils/data-api';
 
-type LoaderData = {
-  widgetId: string;
-  volumeRows?: DuneData['volumeRows'];
-  tvlChains?: DuneData['tvlChains'];
-  feeRows?: DuneData['feeRows'];
-  accountRows?: DuneData['accountRows'];
-  marketRows?: DuneData['marketRows'];
-  builderFees?: number;
-  activeBuilders?: number;
-};
+type LoaderData = DashboardData & { widgetId: string };
 
 const KPI_WIDGET_IDS = ['kpi-trader', 'kpi-builder', 'kpi-analyst'];
 
+const NEEDS_DASHBOARD = ['volume', 'tvl-chain', 'net-fees', ...KPI_WIDGET_IDS];
+
 export async function loader({ params }: { params: { widgetId: string } }) {
   const { widgetId } = params;
-  const data: LoaderData = { widgetId };
+  const data: LoaderData = {
+    widgetId,
+    mainRows: [],
+    tvlChains: [],
+    marketRows: []
+  };
 
-  if (widgetId === 'volume') {
-    const volData = await duneJson(3368961);
-    data.volumeRows = volData.result?.rows ?? [];
-  } else if (widgetId === 'tvl-chain') {
-    const tvlData = await duneJson(6383913);
-    const chains = (tvlData.result?.rows ?? []).filter((r: TvlChainRow) => r.chain !== 'Total');
-    data.tvlChains = chains;
-  } else if (widgetId === 'net-fees') {
-    const feeData = await duneJson(3429965);
-    data.feeRows = feeData.result?.rows ?? [];
-  } else if (KPI_WIDGET_IDS.includes(widgetId)) {
-    const [volData, tvlData, feeData, acctData, mktData, bldFeeData, bldData] = await Promise.all([
-      duneJson(3368961),
-      duneJson(6383913),
-      duneJson(3429965),
-      duneJson(3795110),
-      duneJson(4119181),
-      duneJson(3612752),
-      duneJson(4119185)
-    ]);
-    data.volumeRows = volData.result?.rows ?? [];
-    data.tvlChains = (tvlData.result?.rows ?? []).filter((r: TvlChainRow) => r.chain !== 'Total');
-    data.feeRows = feeData.result?.rows ?? [];
-    data.accountRows = acctData.result?.rows ?? [];
-    data.marketRows = mktData.result?.rows ?? [];
-    data.builderFees = bldFeeData.result?.rows?.[0]?.broker_fee ?? 0;
-    data.activeBuilders = bldData.result?.rows?.[0]?.builders ?? 0;
+  if (NEEDS_DASHBOARD.includes(widgetId)) {
+    const dashboard = await fetchDashboardData(90);
+    data.mainRows = dashboard.mainRows;
+    data.tvlChains = dashboard.tvlChains;
+    data.marketRows = dashboard.marketRows;
   }
 
   return json(data);
@@ -78,25 +54,21 @@ const WIDGET_META: Record<
     subtitle?: string;
     height?: number;
     hasPeriodControl?: boolean;
-    useDuneData?: 'volume' | 'tvl-chain' | 'net-fees';
   }
 > = {
   volume: {
     title: 'Trading Volume — Daily',
     height: 260,
-    hasPeriodControl: true,
-    useDuneData: 'volume'
+    hasPeriodControl: true
   },
   'tvl-chain': {
     title: 'TVL by Chain',
-    height: 260,
-    useDuneData: 'tvl-chain'
+    height: 260
   },
   'net-fees': {
     title: 'Net Fees (cumulative)',
     subtitle: '90-day running total',
-    height: 260,
-    useDuneData: 'net-fees'
+    height: 260
   },
   overview: { title: 'Protocol Overview (Weekly)' },
   'dex-users': { title: 'DEX Users by Broker' },
@@ -241,7 +213,8 @@ export default function WidgetRoute() {
 
   const isKpi = KPI_WIDGET_IDS.includes(widgetId);
 
-  const tvlTotal = (loaderData.tvlChains ?? []).reduce((s, c) => s + c.tvl, 0);
+  const { mainRows, tvlChains, marketRows } = loaderData;
+  const tvlTotal = tvlChains.reduce((s, c) => s + c.tvl_usd, 0);
   const fmtCompact = (n: number) => {
     if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
     if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
@@ -249,8 +222,7 @@ export default function WidgetRoute() {
     return `$${n.toFixed(0)}`;
   };
 
-  const subtitle =
-    widgetId === 'tvl-chain' ? `Total: ${fmtCompact(tvlTotal)}` : meta.subtitle;
+  const subtitle = widgetId === 'tvl-chain' ? `Total: ${fmtCompact(tvlTotal)}` : meta.subtitle;
 
   const controls = meta.hasPeriodControl ? (
     <PeriodSelector period={volPeriod} onChange={setVolPeriod} />
@@ -258,25 +230,17 @@ export default function WidgetRoute() {
 
   let widgetContent: React.ReactNode;
 
-  const fullData: DuneData = {
-    volumeRows: loaderData.volumeRows ?? [],
-    tvlChains: loaderData.tvlChains ?? [],
-    feeRows: loaderData.feeRows ?? [],
-    accountRows: loaderData.accountRows ?? [],
-    marketRows: loaderData.marketRows ?? [],
-    builderFees: loaderData.builderFees ?? 0,
-    activeBuilders: loaderData.activeBuilders ?? 0
-  };
+  const fullData: DashboardData = { mainRows, tvlChains, marketRows };
 
   switch (widgetId) {
     case 'volume':
-      widgetContent = <VolumeChartWidget rows={loaderData.volumeRows ?? []} period={volPeriod} />;
+      widgetContent = <VolumeChartWidget rows={mainRows} period={volPeriod} />;
       break;
     case 'tvl-chain':
-      widgetContent = <TvlByChainWidget chains={loaderData.tvlChains ?? []} />;
+      widgetContent = <TvlByChainWidget chains={tvlChains} />;
       break;
     case 'net-fees':
-      widgetContent = <NetFeesWidget rows={loaderData.feeRows ?? []} />;
+      widgetContent = <NetFeesWidget rows={mainRows} />;
       break;
     case 'overview':
       widgetContent = <OverviewWidget />;
@@ -327,14 +291,61 @@ export default function WidgetRoute() {
       <>
         {kpiStyles}
         <div
-        style={{
-          padding: 24,
-          minHeight: '100vh',
-          color: '#fff',
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-        }}
-      >
+          style={{
+            padding: 24,
+            minHeight: '100vh',
+            color: '#fff',
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+          }}
+        >
+          <WidgetWrapper
+            widgetId={widgetId}
+            title={meta.title}
+            subtitle={subtitle}
+            height={meta.height}
+            controls={controls}
+            hideLink
+          >
+            {widgetContent}
+          </WidgetWrapper>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {kpiStyles}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <Link
+          to="/"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 12,
+            color: 'rgba(156,117,255,0.6)',
+            textDecoration: 'none',
+            marginBottom: -8
+          }}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          Back to Dashboard
+        </Link>
+
         <WidgetWrapper
           widgetId={widgetId}
           title={meta.title}
@@ -345,55 +356,8 @@ export default function WidgetRoute() {
         >
           {widgetContent}
         </WidgetWrapper>
-      </div>
-      </>
-    );
-  }
 
-  return (
-    <>
-      {kpiStyles}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <Link
-        to="/"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          fontSize: 12,
-          color: 'rgba(156,117,255,0.6)',
-          textDecoration: 'none',
-          marginBottom: -8
-        }}
-      >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="19" y1="12" x2="5" y2="12" />
-          <polyline points="12 19 5 12 12 5" />
-        </svg>
-        Back to Dashboard
-      </Link>
-
-      <WidgetWrapper
-        widgetId={widgetId}
-        title={meta.title}
-        subtitle={subtitle}
-        height={meta.height}
-        controls={controls}
-        hideLink
-      >
-        {widgetContent}
-      </WidgetWrapper>
-
-      <CopyBlock widgetId={widgetId} />
+        <CopyBlock widgetId={widgetId} />
       </div>
     </>
   );

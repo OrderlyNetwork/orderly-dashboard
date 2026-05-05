@@ -16,7 +16,7 @@ import { Line } from 'react-chartjs-2';
 import { baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
 import { fmtCompact, labelFromDate } from '../shared/formatters';
 
-import type { DuneData } from '~/types/dune';
+import type { MainDailyRow } from '~/types/dashboard';
 
 ChartJS.register(
   CategoryScale,
@@ -28,13 +28,13 @@ ChartJS.register(
   Tooltip
 );
 
-export const NetFeesWidget: FC<{ rows: DuneData['feeRows'] }> = ({ rows }) => {
-  const sliced = [...rows].slice(0, 90).reverse();
+export const NetFeesWidget: FC<{ rows: MainDailyRow[] }> = ({ rows }) => {
+  const sliced = [...rows.slice(0, 90)].reverse();
   const data: ChartData<'line'> = {
-    labels: sliced.map((r) => labelFromDate(r.volume_date)),
+    labels: sliced.map((r) => labelFromDate(r.date)),
     datasets: [
       {
-        data: sliced.map((r) => r.cum_rev),
+        data: sliced.map((r) => r.cumulative_revenue_usd),
         fill: true,
         backgroundColor: 'rgba(52,211,153,0.12)',
         borderColor: '#34d399',
@@ -48,7 +48,10 @@ export const NetFeesWidget: FC<{ rows: DuneData['feeRows'] }> = ({ rows }) => {
     ...baseLineOpts,
     plugins: {
       legend: { display: false },
-      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` } }
+      tooltip: {
+        ...baseTooltipOpts,
+        callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` }
+      }
     },
     scales: {
       x: {

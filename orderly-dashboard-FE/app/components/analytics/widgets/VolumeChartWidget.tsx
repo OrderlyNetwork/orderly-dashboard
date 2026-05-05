@@ -17,7 +17,7 @@ import { baseBarOpts, baseTooltipOpts } from '../shared/chartConfig';
 import { fmtCompact, labelFromDate } from '../shared/formatters';
 import { type Period } from '../shared/primitives';
 
-import type { DuneData } from '~/types/dune';
+import type { MainDailyRow } from '~/types/dashboard';
 
 ChartJS.register(
   CategoryScale,
@@ -29,17 +29,17 @@ ChartJS.register(
   Tooltip
 );
 
-export const VolumeChartWidget: FC<{ rows: DuneData['volumeRows']; period?: Period }> = ({
+export const VolumeChartWidget: FC<{ rows: MainDailyRow[]; period?: Period }> = ({
   rows,
   period = '30D'
 }) => {
   const count = period === '30D' ? 30 : 90;
   const reversed = [...rows.slice(0, count)].reverse();
   const data: ChartData<'bar'> = {
-    labels: reversed.map((r) => labelFromDate(r.volume_date)),
+    labels: reversed.map((r) => labelFromDate(r.date)),
     datasets: [
       {
-        data: reversed.map((r) => r.volume),
+        data: reversed.map((r) => r.taker_volume_usd),
         backgroundColor: 'rgba(156,117,255,0.65)',
         hoverBackgroundColor: 'rgba(156,117,255,0.9)',
         borderRadius: 3,
@@ -51,7 +51,10 @@ export const VolumeChartWidget: FC<{ rows: DuneData['volumeRows']; period?: Peri
     ...baseBarOpts,
     plugins: {
       legend: { display: false },
-      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` } }
+      tooltip: {
+        ...baseTooltipOpts,
+        callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` }
+      }
     },
     scales: {
       x: {

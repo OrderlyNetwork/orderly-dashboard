@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 
-import { fmtCompact, fmtDeltaPct } from '../shared/formatters';
+import { fmtCompact } from '../shared/formatters';
 import { PeriodSelector, SectionHeading, type Period } from '../shared/primitives';
 import { AnalystKPIWidget } from '../widgets/AnalystKPIWidget';
 import { BuilderKPIWidget } from '../widgets/BuilderKPIWidget';
@@ -18,9 +18,9 @@ import { VolumeSegmentsWidget } from '../widgets/VolumeSegmentsWidget';
 import { WidgetWrapper } from '../widgets/WidgetWrapper';
 
 import type { Role } from '~/components/analytics/Sidebar';
-import type { DuneData } from '~/types/dune';
+import type { DashboardData } from '~/types/dashboard';
 
-type Props = { role: Role; data: DuneData };
+type Props = { role: Role; data: DashboardData };
 
 const ROLE_TITLES: Record<Role, string> = {
   trader: 'Markets · Volume · Users',
@@ -40,25 +40,16 @@ const StatPill: FC<{ label: string; value: string; color?: string }> = ({
 );
 
 export const DashboardsView: FC<Props> = ({ role, data }) => {
-  const { volumeRows, tvlChains, feeRows, accountRows, marketRows, builderFees, activeBuilders } =
-    data;
+  const { mainRows, tvlChains } = data;
 
   const [volPeriod, setVolPeriod] = useState<Period>('30D');
 
-  const todayVol = volumeRows[0]?.volume ?? 0;
-  const yestVol = volumeRows[1]?.volume ?? 0;
-  const cumVol = volumeRows[0]?.cumulative_volume ?? 0;
-  const vol30d = volumeRows[0]?.rolling_total_volume ?? 0;
-  const vol30dPrev = volumeRows[7]?.rolling_total_volume ?? 0;
-  const totalAccounts = accountRows[0]?.cumulative_accounts ?? 0;
-  const prevWeekAccounts = accountRows[7]?.cumulative_accounts ?? 0;
-  const latestMarkets = marketRows[0]?.markets ?? 0;
-  const prevMarkets = marketRows[1]?.markets ?? 0;
-  const cumFees = feeRows[0]?.cum_rev ?? 0;
-  const dailyFees = feeRows[0]?.daily_rev ?? 0;
-  const fees30d = feeRows[0]?.rolling_total_rev ?? 0;
-  const rollingAvgFee = feeRows[0]?.rolling_rev ?? 0;
-  const tvlTotal = tvlChains.reduce((s, c) => s + c.tvl, 0);
+  const cumFees = mainRows[0]?.cumulative_revenue_usd ?? 0;
+  const dailyFees = mainRows[0]?.daily_revenue_usd ?? 0;
+  const fees30d = mainRows[0]?.rolling_30d_revenue_usd ?? 0;
+  const rollingAvgFee = (mainRows[0]?.rolling_30d_revenue_usd ?? 0) / 30;
+  const builderFees = mainRows[0]?.cumulative_broker_fees_usd ?? 0;
+  const tvlTotal = tvlChains.reduce((s, c) => s + c.tvl_usd, 0);
   const tvlSubtitle = `Total: ${fmtCompact(tvlTotal)}`;
 
   const KPI_WIDGET: Record<Role, { id: string; el: React.ReactNode }> = {
@@ -128,19 +119,34 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
 
         {role === 'trader' && (
           <>
-            <WidgetWrapper widgetId="volume" title="Trading Volume — Daily" height={260} controls={<PeriodSelector period={volPeriod} onChange={setVolPeriod} />}>
-              <VolumeChartWidget rows={volumeRows} period={volPeriod} />
+            <WidgetWrapper
+              widgetId="volume"
+              title="Trading Volume — Daily"
+              height={260}
+              controls={<PeriodSelector period={volPeriod} onChange={setVolPeriod} />}
+            >
+              <VolumeChartWidget rows={mainRows} period={volPeriod} />
             </WidgetWrapper>
 
             <WidgetWrapper widgetId="dex-users" title="DEX Users by Broker">
               <DexUsersWidget />
             </WidgetWrapper>
 
-            <WidgetWrapper widgetId="volume-segments" title="Volume Segments" subtitle="weekly by segment (2B / 2C / MM)" height={260}>
+            <WidgetWrapper
+              widgetId="volume-segments"
+              title="Volume Segments"
+              subtitle="weekly by segment (2B / 2C / MM)"
+              height={260}
+            >
               <VolumeSegmentsWidget />
             </WidgetWrapper>
 
-            <WidgetWrapper widgetId="tvl-chain" title="TVL by Chain" subtitle={tvlSubtitle} height={260}>
+            <WidgetWrapper
+              widgetId="tvl-chain"
+              title="TVL by Chain"
+              subtitle={tvlSubtitle}
+              height={260}
+            >
               <TvlByChainWidget chains={tvlChains} />
             </WidgetWrapper>
 
@@ -148,7 +154,11 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
               <div className="dash-grid-sm">
                 <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
                 <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-                <StatPill label="Builder Fees (total)" value={fmtCompact(builderFees)} color="#f59e0b" />
+                <StatPill
+                  label="Builder Fees (total)"
+                  value={fmtCompact(builderFees)}
+                  color="#f59e0b"
+                />
                 <StatPill label="Cum. Net Fees" value={fmtCompact(cumFees)} color="#9C75FF" />
               </div>
             </WidgetWrapper>
@@ -159,23 +169,46 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
           <>
             <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
               <div className="dash-grid-sm">
-                <StatPill label="Rolling Avg Daily Fee" value={`${fmtCompact(rollingAvgFee)}/day`} color="#f59e0b" />
+                <StatPill
+                  label="Rolling Avg Daily Fee"
+                  value={`${fmtCompact(rollingAvgFee)}/day`}
+                  color="#f59e0b"
+                />
                 <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
                 <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-                <StatPill label="Builder Fees (total)" value={fmtCompact(builderFees)} color="#f59e0b" />
+                <StatPill
+                  label="Builder Fees (total)"
+                  value={fmtCompact(builderFees)}
+                  color="#f59e0b"
+                />
               </div>
             </WidgetWrapper>
 
             <div className="dash-grid-lg">
-              <WidgetWrapper widgetId="tvl-chain" title="TVL by Chain" subtitle={tvlSubtitle} height={260}>
+              <WidgetWrapper
+                widgetId="tvl-chain"
+                title="TVL by Chain"
+                subtitle={tvlSubtitle}
+                height={260}
+              >
                 <TvlByChainWidget chains={tvlChains} />
               </WidgetWrapper>
-              <WidgetWrapper widgetId="net-fees" title="Net Fees (cumulative)" subtitle="90-day running total" height={260}>
-                <NetFeesWidget rows={feeRows} />
+              <WidgetWrapper
+                widgetId="net-fees"
+                title="Net Fees (cumulative)"
+                subtitle="90-day running total"
+                height={260}
+              >
+                <NetFeesWidget rows={mainRows} />
               </WidgetWrapper>
             </div>
 
-            <WidgetWrapper widgetId="omnivault-tvl" title="Omnivault TVL" subtitle="avg weekly TVL per vault (USD millions)" height={260}>
+            <WidgetWrapper
+              widgetId="omnivault-tvl"
+              title="Omnivault TVL"
+              subtitle="avg weekly TVL per vault (USD millions)"
+              height={260}
+            >
               <OmnivaultTvlWidget />
             </WidgetWrapper>
 
@@ -191,16 +224,31 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
               <OverviewWidget />
             </WidgetWrapper>
 
-            <WidgetWrapper widgetId="volume" title="Trading Volume — Daily" height={260} controls={<PeriodSelector period={volPeriod} onChange={setVolPeriod} />}>
-              <VolumeChartWidget rows={volumeRows} period={volPeriod} />
+            <WidgetWrapper
+              widgetId="volume"
+              title="Trading Volume — Daily"
+              height={260}
+              controls={<PeriodSelector period={volPeriod} onChange={setVolPeriod} />}
+            >
+              <VolumeChartWidget rows={mainRows} period={volPeriod} />
             </WidgetWrapper>
 
             <div className="dash-grid-lg">
-              <WidgetWrapper widgetId="tvl-chain" title="TVL by Chain" subtitle={tvlSubtitle} height={260}>
+              <WidgetWrapper
+                widgetId="tvl-chain"
+                title="TVL by Chain"
+                subtitle={tvlSubtitle}
+                height={260}
+              >
                 <TvlByChainWidget chains={tvlChains} />
               </WidgetWrapper>
-              <WidgetWrapper widgetId="net-fees" title="Net Fees (cumulative)" subtitle="90-day running total" height={260}>
-                <NetFeesWidget rows={feeRows} />
+              <WidgetWrapper
+                widgetId="net-fees"
+                title="Net Fees (cumulative)"
+                subtitle="90-day running total"
+                height={260}
+              >
+                <NetFeesWidget rows={mainRows} />
               </WidgetWrapper>
             </div>
 
@@ -209,7 +257,11 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
                 <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
                 <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
                 <StatPill label="Cumulative Net Fees" value={fmtCompact(cumFees)} color="#34d399" />
-                <StatPill label="Rolling Avg Daily Fee" value={`${fmtCompact(rollingAvgFee)}/day`} color="#9C75FF" />
+                <StatPill
+                  label="Rolling Avg Daily Fee"
+                  value={`${fmtCompact(rollingAvgFee)}/day`}
+                  color="#9C75FF"
+                />
               </div>
             </WidgetWrapper>
 
@@ -220,10 +272,20 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
             <div>
               <SectionHeading>Volume &amp; Liquidity</SectionHeading>
               <div className="dash-grid-lg">
-                <WidgetWrapper widgetId="volume-segments" title="Volume Segments" subtitle="weekly by segment (2B / 2C / MM)" height={260}>
+                <WidgetWrapper
+                  widgetId="volume-segments"
+                  title="Volume Segments"
+                  subtitle="weekly by segment (2B / 2C / MM)"
+                  height={260}
+                >
                   <VolumeSegmentsWidget />
                 </WidgetWrapper>
-                <WidgetWrapper widgetId="omnivault-tvl" title="Omnivault TVL" subtitle="avg weekly TVL per vault (USD millions)" height={260}>
+                <WidgetWrapper
+                  widgetId="omnivault-tvl"
+                  title="Omnivault TVL"
+                  subtitle="avg weekly TVL per vault (USD millions)"
+                  height={260}
+                >
                   <OmnivaultTvlWidget />
                 </WidgetWrapper>
               </div>
@@ -232,10 +294,20 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
             <div>
               <SectionHeading>Staking</SectionHeading>
               <div className="dash-grid-lg">
-                <WidgetWrapper widgetId="stake-users" title="Active Stakers" subtitle="weekly avg active ORDER stakers" height={220}>
+                <WidgetWrapper
+                  widgetId="stake-users"
+                  title="Active Stakers"
+                  subtitle="weekly avg active ORDER stakers"
+                  height={220}
+                >
                   <StakeUsersWidget />
                 </WidgetWrapper>
-                <WidgetWrapper widgetId="stake-vs-supply" title="Stake vs Circulating Supply" subtitle="weekly ORDER token staking vs circulating supply" height={220}>
+                <WidgetWrapper
+                  widgetId="stake-vs-supply"
+                  title="Stake vs Circulating Supply"
+                  subtitle="weekly ORDER token staking vs circulating supply"
+                  height={220}
+                >
                   <StakeVsSupplyWidget />
                 </WidgetWrapper>
               </div>
