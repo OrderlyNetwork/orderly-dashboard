@@ -45,33 +45,23 @@ export function SortableTable<T extends object>({ data, columns, rowKey }: Sorta
   });
 
   return (
-    <div style={{ overflowX: 'auto', width: '100%' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+    <div className="overflow-x-auto w-full">
+      <table className="w-full border-collapse text-sm">
         <thead>
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
-              {hg.headers.map((header) => {
+              {hg.headers.map((header, colIdx) => {
                 const canSort = header.column.getCanSort();
                 const sortDir = header.column.getIsSorted();
+                const isFirstCol = colIdx === 0;
                 return (
                   <th
                     key={header.id}
                     onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                    style={{
-                      padding: '10px 14px',
-                      textAlign: 'left',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: 'rgba(255,255,255,0.45)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.07em',
-                      borderBottom: '1px solid rgba(156,117,255,0.12)',
-                      cursor: canSort ? 'pointer' : 'default',
-                      whiteSpace: 'nowrap',
-                      userSelect: 'none'
-                    }}
+                    className={`py-[10px] px-[14px] text-left text-[11px] font-semibold text-[rgba(255,255,255,0.45)] uppercase tracking-[0.07em] whitespace-nowrap select-none ${canSort ? 'cursor-pointer' : ''} ${isFirstCol ? 'sticky left-0 z-2 bg-[rgba(20,15,35,.95)]' : ''}`}
+                    style={{ borderBottom: '1px solid rgba(156,117,255,0.12)' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div className="flex items-center gap-1.5">
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {canSort && (
                         <SortIcon
@@ -86,48 +76,42 @@ export function SortableTable<T extends object>({ data, columns, rowKey }: Sorta
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map((row, i) => (
-            <tr
-              key={rowKey ? rowKey(row.original) : row.id}
-              style={{
-                background: i % 2 === 0 ? 'transparent' : 'rgba(156,117,255,0.03)',
-                transition: 'background 0.15s'
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLTableRowElement).style.background =
-                  'rgba(156,117,255,0.08)';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLTableRowElement).style.background =
-                  i % 2 === 0 ? 'transparent' : 'rgba(156,117,255,0.03)';
-              }}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  style={{
-                    padding: '11px 14px',
-                    color: 'rgba(255,255,255,0.85)',
-                    borderBottom: '1px solid rgba(156,117,255,0.07)',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {table.getRowModel().rows.map((row, i) => {
+            const bgClass = i % 2 === 0 ? '' : 'bg-[rgba(156,117,255,0.03)]';
+            return (
+              <tr
+                key={rowKey ? rowKey(row.original) : row.id}
+                className={`transition-all duration-150 ${bgClass}`}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLTableRowElement).style.background =
+                    'rgba(156,117,255,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLTableRowElement).style.background =
+                    i % 2 === 0 ? 'transparent' : 'rgba(156,117,255,0.03)';
+                }}
+              >
+                {row.getVisibleCells().map((cell, colIdx) => (
+                  <td
+                    key={cell.id}
+                    className={`py-[11px] px-[14px] text-[rgba(255,255,255,0.85)] whitespace-nowrap ${colIdx === 0 ? 'sticky left-0 z-1' : ''}`}
+                    style={{
+                      borderBottom: '1px solid rgba(156,117,255,0.07)',
+                      ...(colIdx === 0
+                        ? { background: i % 2 === 0 ? 'rgba(20,15,35,.95)' : 'rgba(22,17,40,.95)' }
+                        : {})
+                    }}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {data.length === 0 && (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '40px 0',
-            color: 'rgba(255,255,255,0.3)',
-            fontSize: 14
-          }}
-        >
+        <div className="text-center py-10 text-[rgba(255,255,255,0.3)] text-sm">
           No data available
         </div>
       )}
@@ -135,5 +119,4 @@ export function SortableTable<T extends object>({ data, columns, rowKey }: Sorta
   );
 }
 
-// Make it usable as FC too
 export const SortableTableFC = SortableTable as FC<SortableTableProps<object>>;

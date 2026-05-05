@@ -33,9 +33,19 @@ const StatPill: FC<{ label: string; value: string; color?: string }> = ({
   value,
   color = '#34d399'
 }) => (
-  <div className="dash-stat-pill" style={{ '--pill-color': color } as React.CSSProperties}>
-    <div className="dash-stat-pill__label">{label}</div>
-    <div className="dash-stat-pill__value">{value}</div>
+  <div
+    className="rounded-[10px] py-[14px] px-4"
+    style={{
+      background: 'rgba(255,255,255,0.03)',
+      border: `1px solid color-mix(in srgb, ${color} 12%, transparent)`
+    }}
+  >
+    <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.38)] uppercase tracking-[0.08em] mb-2">
+      {label}
+    </div>
+    <div className="text-lg font-bold" style={{ color }}>
+      {value}
+    </div>
   </div>
 );
 
@@ -59,88 +69,92 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
   };
 
   return (
-    <>
-      <style>{`
-        .dash-grid-sm {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-          gap: 12px;
-        }
-        .dash-grid-lg {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-        }
-        @media (max-width: 900px) {
-          .dash-grid-lg { grid-template-columns: 1fr; }
-        }
-        .dash-stat-pill {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid color-mix(in srgb, var(--pill-color) 12%, transparent);
-          border-radius: 10px;
-          padding: 14px 16px;
-        }
-        .dash-stat-pill__label {
-          font-size: 10px;
-          font-weight: 600;
-          color: rgba(255,255,255,0.38);
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          margin-bottom: 8px;
-        }
-        .dash-stat-pill__value {
-          font-size: 18px;
-          font-weight: 700;
-          color: var(--pill-color);
-        }
-      `}</style>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-[10px]">
+        <span
+          className="rounded-[20px] py-[3px] px-3 text-xs font-semibold text-[#9C75FF]"
+          style={{
+            background: 'rgba(156,117,255,0.12)',
+            border: '1px solid rgba(156,117,255,0.25)'
+          }}
+        >
+          {role.charAt(0).toUpperCase() + role.slice(1)} View
+        </span>
+        <span className="text-[13px] text-[rgba(255,255,255,0.4)]">{ROLE_TITLES[role]}</span>
+      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span
-            style={{
-              background: 'rgba(156,117,255,0.12)',
-              border: '1px solid rgba(156,117,255,0.25)',
-              borderRadius: 20,
-              padding: '3px 12px',
-              fontSize: 12,
-              fontWeight: 600,
-              color: '#9C75FF'
-            }}
+      <WidgetWrapper widgetId={KPI_WIDGET[role].id} title="Key Metrics">
+        {KPI_WIDGET[role].el}
+      </WidgetWrapper>
+
+      {role === 'trader' && (
+        <>
+          <WidgetWrapper
+            widgetId="volume"
+            title="Trading Volume — Daily"
+            height={260}
+            controls={<PeriodSelector period={volPeriod} onChange={setVolPeriod} />}
           >
-            {role.charAt(0).toUpperCase() + role.slice(1)} View
-          </span>
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{ROLE_TITLES[role]}</span>
-        </div>
+            <VolumeChartWidget rows={mainRows} period={volPeriod} />
+          </WidgetWrapper>
 
-        <WidgetWrapper widgetId={KPI_WIDGET[role].id} title="Key Metrics">
-          {KPI_WIDGET[role].el}
-        </WidgetWrapper>
+          <WidgetWrapper widgetId="dex-users" title="DEX Users by Broker">
+            <DexUsersWidget />
+          </WidgetWrapper>
 
-        {role === 'trader' && (
-          <>
-            <WidgetWrapper
-              widgetId="volume"
-              title="Trading Volume — Daily"
-              height={260}
-              controls={<PeriodSelector period={volPeriod} onChange={setVolPeriod} />}
-            >
-              <VolumeChartWidget rows={mainRows} period={volPeriod} />
-            </WidgetWrapper>
+          <WidgetWrapper
+            widgetId="volume-segments"
+            title="Volume Segments"
+            subtitle="weekly by segment (2B / 2C / MM)"
+            height={260}
+          >
+            <VolumeSegmentsWidget />
+          </WidgetWrapper>
 
-            <WidgetWrapper widgetId="dex-users" title="DEX Users by Broker">
-              <DexUsersWidget />
-            </WidgetWrapper>
+          <WidgetWrapper
+            widgetId="tvl-chain"
+            title="TVL by Chain"
+            subtitle={tvlSubtitle}
+            height={260}
+          >
+            <TvlByChainWidget chains={tvlChains} />
+          </WidgetWrapper>
 
-            <WidgetWrapper
-              widgetId="volume-segments"
-              title="Volume Segments"
-              subtitle="weekly by segment (2B / 2C / MM)"
-              height={260}
-            >
-              <VolumeSegmentsWidget />
-            </WidgetWrapper>
+          <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
+            <div className="dash-grid-sm">
+              <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
+              <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
+              <StatPill
+                label="Builder Fees (total)"
+                value={fmtCompact(builderFees)}
+                color="#f59e0b"
+              />
+              <StatPill label="Cum. Net Fees" value={fmtCompact(cumFees)} color="#9C75FF" />
+            </div>
+          </WidgetWrapper>
+        </>
+      )}
 
+      {role === 'builder' && (
+        <>
+          <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
+            <div className="dash-grid-sm">
+              <StatPill
+                label="Rolling Avg Daily Fee"
+                value={`${fmtCompact(rollingAvgFee)}/day`}
+                color="#f59e0b"
+              />
+              <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
+              <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
+              <StatPill
+                label="Builder Fees (total)"
+                value={fmtCompact(builderFees)}
+                color="#f59e0b"
+              />
+            </div>
+          </WidgetWrapper>
+
+          <div className="dash-grid-lg">
             <WidgetWrapper
               widgetId="tvl-chain"
               title="TVL by Chain"
@@ -149,176 +163,131 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
             >
               <TvlByChainWidget chains={tvlChains} />
             </WidgetWrapper>
-
-            <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
-              <div className="dash-grid-sm">
-                <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
-                <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-                <StatPill
-                  label="Builder Fees (total)"
-                  value={fmtCompact(builderFees)}
-                  color="#f59e0b"
-                />
-                <StatPill label="Cum. Net Fees" value={fmtCompact(cumFees)} color="#9C75FF" />
-              </div>
-            </WidgetWrapper>
-          </>
-        )}
-
-        {role === 'builder' && (
-          <>
-            <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
-              <div className="dash-grid-sm">
-                <StatPill
-                  label="Rolling Avg Daily Fee"
-                  value={`${fmtCompact(rollingAvgFee)}/day`}
-                  color="#f59e0b"
-                />
-                <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
-                <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-                <StatPill
-                  label="Builder Fees (total)"
-                  value={fmtCompact(builderFees)}
-                  color="#f59e0b"
-                />
-              </div>
-            </WidgetWrapper>
-
-            <div className="dash-grid-lg">
-              <WidgetWrapper
-                widgetId="tvl-chain"
-                title="TVL by Chain"
-                subtitle={tvlSubtitle}
-                height={260}
-              >
-                <TvlByChainWidget chains={tvlChains} />
-              </WidgetWrapper>
-              <WidgetWrapper
-                widgetId="net-fees"
-                title="Net Fees (cumulative)"
-                subtitle="90-day running total"
-                height={260}
-              >
-                <NetFeesWidget rows={mainRows} />
-              </WidgetWrapper>
-            </div>
-
             <WidgetWrapper
-              widgetId="omnivault-tvl"
-              title="Omnivault TVL"
-              subtitle="avg weekly TVL per vault (USD millions)"
+              widgetId="net-fees"
+              title="Net Fees (cumulative)"
+              subtitle="90-day running total"
               height={260}
             >
-              <OmnivaultTvlWidget />
+              <NetFeesWidget rows={mainRows} />
             </WidgetWrapper>
+          </div>
 
-            <WidgetWrapper widgetId="distributors" title="Distributors">
-              <DistributorsWidget />
-            </WidgetWrapper>
-          </>
-        )}
+          <WidgetWrapper
+            widgetId="omnivault-tvl"
+            title="Omnivault TVL"
+            subtitle="avg weekly TVL per vault (USD millions)"
+            height={260}
+          >
+            <OmnivaultTvlWidget />
+          </WidgetWrapper>
 
-        {role === 'analyst' && (
-          <>
-            <WidgetWrapper widgetId="overview" title="Protocol Overview (Weekly)">
-              <OverviewWidget />
-            </WidgetWrapper>
+          <WidgetWrapper widgetId="distributors" title="Distributors">
+            <DistributorsWidget />
+          </WidgetWrapper>
+        </>
+      )}
 
+      {role === 'analyst' && (
+        <>
+          <WidgetWrapper widgetId="overview" title="Protocol Overview (Weekly)">
+            <OverviewWidget />
+          </WidgetWrapper>
+
+          <WidgetWrapper
+            widgetId="volume"
+            title="Trading Volume — Daily"
+            height={260}
+            controls={<PeriodSelector period={volPeriod} onChange={setVolPeriod} />}
+          >
+            <VolumeChartWidget rows={mainRows} period={volPeriod} />
+          </WidgetWrapper>
+
+          <div className="dash-grid-lg">
             <WidgetWrapper
-              widgetId="volume"
-              title="Trading Volume — Daily"
+              widgetId="tvl-chain"
+              title="TVL by Chain"
+              subtitle={tvlSubtitle}
               height={260}
-              controls={<PeriodSelector period={volPeriod} onChange={setVolPeriod} />}
             >
-              <VolumeChartWidget rows={mainRows} period={volPeriod} />
+              <TvlByChainWidget chains={tvlChains} />
             </WidgetWrapper>
+            <WidgetWrapper
+              widgetId="net-fees"
+              title="Net Fees (cumulative)"
+              subtitle="90-day running total"
+              height={260}
+            >
+              <NetFeesWidget rows={mainRows} />
+            </WidgetWrapper>
+          </div>
 
+          <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
+            <div className="dash-grid-sm">
+              <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
+              <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
+              <StatPill label="Cumulative Net Fees" value={fmtCompact(cumFees)} color="#34d399" />
+              <StatPill
+                label="Rolling Avg Daily Fee"
+                value={`${fmtCompact(rollingAvgFee)}/day`}
+                color="#9C75FF"
+              />
+            </div>
+          </WidgetWrapper>
+
+          <WidgetWrapper widgetId="dex-users" title="DEX Users by Broker">
+            <DexUsersWidget />
+          </WidgetWrapper>
+
+          <div>
+            <SectionHeading>Volume &amp; Liquidity</SectionHeading>
             <div className="dash-grid-lg">
               <WidgetWrapper
-                widgetId="tvl-chain"
-                title="TVL by Chain"
-                subtitle={tvlSubtitle}
+                widgetId="volume-segments"
+                title="Volume Segments"
+                subtitle="weekly by segment (2B / 2C / MM)"
                 height={260}
               >
-                <TvlByChainWidget chains={tvlChains} />
+                <VolumeSegmentsWidget />
               </WidgetWrapper>
               <WidgetWrapper
-                widgetId="net-fees"
-                title="Net Fees (cumulative)"
-                subtitle="90-day running total"
+                widgetId="omnivault-tvl"
+                title="Omnivault TVL"
+                subtitle="avg weekly TVL per vault (USD millions)"
                 height={260}
               >
-                <NetFeesWidget rows={mainRows} />
+                <OmnivaultTvlWidget />
               </WidgetWrapper>
             </div>
+          </div>
 
-            <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
-              <div className="dash-grid-sm">
-                <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
-                <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-                <StatPill label="Cumulative Net Fees" value={fmtCompact(cumFees)} color="#34d399" />
-                <StatPill
-                  label="Rolling Avg Daily Fee"
-                  value={`${fmtCompact(rollingAvgFee)}/day`}
-                  color="#9C75FF"
-                />
-              </div>
-            </WidgetWrapper>
-
-            <WidgetWrapper widgetId="dex-users" title="DEX Users by Broker">
-              <DexUsersWidget />
-            </WidgetWrapper>
-
-            <div>
-              <SectionHeading>Volume &amp; Liquidity</SectionHeading>
-              <div className="dash-grid-lg">
-                <WidgetWrapper
-                  widgetId="volume-segments"
-                  title="Volume Segments"
-                  subtitle="weekly by segment (2B / 2C / MM)"
-                  height={260}
-                >
-                  <VolumeSegmentsWidget />
-                </WidgetWrapper>
-                <WidgetWrapper
-                  widgetId="omnivault-tvl"
-                  title="Omnivault TVL"
-                  subtitle="avg weekly TVL per vault (USD millions)"
-                  height={260}
-                >
-                  <OmnivaultTvlWidget />
-                </WidgetWrapper>
-              </div>
+          <div>
+            <SectionHeading>Staking</SectionHeading>
+            <div className="dash-grid-lg">
+              <WidgetWrapper
+                widgetId="stake-users"
+                title="Active Stakers"
+                subtitle="weekly avg active ORDER stakers"
+                height={220}
+              >
+                <StakeUsersWidget />
+              </WidgetWrapper>
+              <WidgetWrapper
+                widgetId="stake-vs-supply"
+                title="Stake vs Circulating Supply"
+                subtitle="weekly ORDER token staking vs circulating supply"
+                height={220}
+              >
+                <StakeVsSupplyWidget />
+              </WidgetWrapper>
             </div>
+          </div>
 
-            <div>
-              <SectionHeading>Staking</SectionHeading>
-              <div className="dash-grid-lg">
-                <WidgetWrapper
-                  widgetId="stake-users"
-                  title="Active Stakers"
-                  subtitle="weekly avg active ORDER stakers"
-                  height={220}
-                >
-                  <StakeUsersWidget />
-                </WidgetWrapper>
-                <WidgetWrapper
-                  widgetId="stake-vs-supply"
-                  title="Stake vs Circulating Supply"
-                  subtitle="weekly ORDER token staking vs circulating supply"
-                  height={220}
-                >
-                  <StakeVsSupplyWidget />
-                </WidgetWrapper>
-              </div>
-            </div>
-
-            <WidgetWrapper widgetId="distributors" title="Distributors">
-              <DistributorsWidget />
-            </WidgetWrapper>
-          </>
-        )}
-      </div>
-    </>
+          <WidgetWrapper widgetId="distributors" title="Distributors">
+            <DistributorsWidget />
+          </WidgetWrapper>
+        </>
+      )}
+    </div>
   );
 };

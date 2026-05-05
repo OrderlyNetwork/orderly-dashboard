@@ -10,33 +10,24 @@ export const Panel: FC<{
   children: ReactNode;
 }> = ({ title, subtitle, height = 240, controls, children }) => (
   <div
-    style={{
-      background: 'rgba(20,15,35,.9)',
-      border: '1px solid rgba(156,117,255,0.15)',
-      borderRadius: 16,
-      overflow: 'hidden'
-    }}
+    className="rounded-2xl overflow-hidden"
+    style={{ background: 'rgba(20,15,35,.9)', border: '1px solid rgba(156,117,255,0.15)' }}
   >
     <div
-      style={{
-        padding: '16px 20px',
-        borderBottom: '1px solid rgba(156,117,255,0.08)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}
+      className="flex items-center justify-between border-b px-5 py-4"
+      style={{ borderBottomColor: 'rgba(156,117,255,0.08)' }}
     >
       <div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{title}</div>
+        <div className="text-sm font-semibold text-white">{title}</div>
         {subtitle && (
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-            {subtitle}
-          </div>
+          <div className="text-[11px] mt-0.5 text-[rgba(255,255,255,0.35)]">{subtitle}</div>
         )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{controls}</div>
+      <div className="flex items-center gap-2">{controls}</div>
     </div>
-    <div style={{ padding: '12px 16px 16px', height }}>{children}</div>
+    <div className="px-4 pt-3 pb-4" style={{ height }}>
+      {children}
+    </div>
   </div>
 );
 
@@ -45,29 +36,18 @@ export const PeriodSelector: FC<{ period: Period; onChange: (p: Period) => void 
   onChange
 }) => (
   <div
-    style={{
-      display: 'flex',
-      background: 'rgba(156,117,255,0.06)',
-      border: '1px solid rgba(156,117,255,0.15)',
-      borderRadius: 8,
-      padding: 3,
-      gap: 2
-    }}
+    className="flex p-[3px] gap-[2px] rounded-lg"
+    style={{ background: 'rgba(156,117,255,0.06)', border: '1px solid rgba(156,117,255,0.15)' }}
   >
     {(['30D', '90D'] as Period[]).map((p) => (
       <button
         key={p}
         onClick={() => onChange(p)}
+        className="px-3 py-1 rounded-md border-none cursor-pointer text-xs transition-all duration-150"
         style={{
-          padding: '4px 12px',
-          borderRadius: 6,
-          border: 'none',
           background: period === p ? '#9C75FF' : 'transparent',
           color: period === p ? '#fff' : 'rgba(255,255,255,0.45)',
-          fontSize: 12,
-          fontWeight: period === p ? 600 : 400,
-          cursor: 'pointer',
-          transition: 'all 0.15s'
+          fontWeight: period === p ? 600 : 400
         }}
       >
         {p}
@@ -83,47 +63,27 @@ export const StatCard: FC<{
   color?: string;
 }> = ({ label, value, sub, color = '#9C75FF' }) => (
   <div
+    className="rounded-xl py-[14px] px-[18px]"
     style={{
       background: 'rgba(20,15,35,.9)',
       border: `1px solid ${color}22`,
-      borderLeft: `3px solid ${color}`,
-      borderRadius: 12,
-      padding: '14px 18px'
+      borderLeft: `3px solid ${color}`
     }}
   >
-    <div
-      style={{
-        fontSize: 10,
-        fontWeight: 600,
-        color: 'rgba(255,255,255,0.38)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.08em',
-        marginBottom: 6
-      }}
-    >
+    <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.38)] uppercase tracking-[0.08em] mb-1.5">
       {label}
     </div>
-    <div style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{value}</div>
-    {sub && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{sub}</div>}
+    <div className="text-xl font-bold text-white">{value}</div>
+    {sub && <div className="text-[11px] mt-1 text-[rgba(255,255,255,0.3)]">{sub}</div>}
   </div>
 );
 
 export const Skeleton: FC<{ height?: number }> = ({ height = 40 }) => (
-  <div style={{ height, borderRadius: 8, background: 'rgba(156,117,255,0.07)' }} />
+  <div className="rounded-lg" style={{ height, background: 'rgba(156,117,255,0.07)' }} />
 );
 
 export const Empty: FC<{ msg: string }> = ({ msg }) => (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100%',
-      color: 'rgba(255,255,255,0.25)',
-      fontSize: 13,
-      gap: 8
-    }}
-  >
+  <div className="flex items-center justify-center h-full text-[rgba(255,255,255,0.25)] text-[13px] gap-2">
     <svg
       width="15"
       height="15"
@@ -141,27 +101,18 @@ export const Empty: FC<{ msg: string }> = ({ msg }) => (
 );
 
 export const SectionHeading: FC<{ children: ReactNode }> = ({ children }) => (
-  <div
-    style={{
-      fontSize: 11,
-      fontWeight: 600,
-      color: 'rgba(255,255,255,0.3)',
-      textTransform: 'uppercase',
-      letterSpacing: '0.1em',
-      marginBottom: 12
-    }}
-  >
+  <div className="text-[11px] font-semibold text-[rgba(255,255,255,0.3)] uppercase tracking-widest mb-3">
     {children}
   </div>
 );
 
 export const TableWrap: FC<{ children: ReactNode }> = ({ children }) => (
   <div
+    className="rounded-2xl overflow-x-auto"
     style={{
       background: 'rgba(20,15,35,.9)',
       border: '1px solid rgba(156,117,255,0.15)',
-      borderRadius: 16,
-      overflow: 'hidden'
+      WebkitOverflowScrolling: 'touch'
     }}
   >
     {children}
@@ -185,3 +136,19 @@ export const TD: React.CSSProperties = {
   borderBottom: '1px solid rgba(255,255,255,0.04)',
   fontSize: 12
 };
+
+export const TH_STICKY: React.CSSProperties = {
+  ...TH,
+  position: 'sticky',
+  left: 0,
+  zIndex: 2,
+  background: 'rgba(20,15,35,.95)'
+};
+
+export const tdSticky = (rowIdx: number): React.CSSProperties => ({
+  ...TD,
+  position: 'sticky',
+  left: 0,
+  zIndex: 1,
+  background: rowIdx % 2 === 0 ? 'rgba(20,15,35,.95)' : 'rgba(22,17,40,.95)'
+});

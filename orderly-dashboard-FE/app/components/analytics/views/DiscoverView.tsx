@@ -113,14 +113,17 @@ const TYPE_COLORS: Record<Activity['type'], string> = {
   Withdrawal: '#f59e0b'
 };
 
+const cardBgStyle = {
+  background: 'rgba(20,15,35,.9)',
+  border: '1px solid rgba(156,117,255,0.15)'
+};
+
 const columns: ColumnDef<Activity, unknown>[] = [
   {
     accessorKey: 'txHash',
     header: 'Tx Hash',
     cell: (info) => (
-      <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#9C75FF' }}>
-        {info.getValue() as string}
-      </span>
+      <span className="font-mono text-xs text-[#9C75FF]">{info.getValue() as string}</span>
     ),
     enableSorting: false
   },
@@ -131,13 +134,10 @@ const columns: ColumnDef<Activity, unknown>[] = [
       const t = info.getValue() as Activity['type'];
       return (
         <span
+          className="text-[11px] font-semibold rounded-md px-2 py-[2px]"
           style={{
-            fontSize: 11,
-            fontWeight: 600,
             color: TYPE_COLORS[t],
-            background: `${TYPE_COLORS[t]}18`,
-            borderRadius: 6,
-            padding: '2px 8px'
+            background: `${TYPE_COLORS[t]}18`
           }}
         >
           {t}
@@ -152,90 +152,37 @@ const columns: ColumnDef<Activity, unknown>[] = [
   {
     accessorKey: 'time',
     header: 'Time',
-    cell: (info) => (
-      <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>
-        {info.getValue() as string}
-      </span>
-    ),
+    cell: (info) => <span className="text-white/40 text-xs">{info.getValue() as string}</span>,
     enableSorting: false
   }
 ];
 
 export const DiscoverView: FC = () => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Summary row */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: 12
-        }}
-      >
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
         {[
           { label: 'Trades (24h)', value: '89,234' },
           { label: 'Liquidations (24h)', value: '342', color: '#f87171' },
           { label: 'Deposits (24h)', value: '$48.2M', color: '#34d399' },
           { label: 'Withdrawals (24h)', value: '$31.7M', color: '#f59e0b' }
         ].map((s) => (
-          <div
-            key={s.label}
-            style={{
-              background: 'rgba(20,15,35,.9)',
-              border: '1px solid rgba(156,117,255,0.15)',
-              borderRadius: 12,
-              padding: '14px 16px'
-            }}
-          >
-            <div
-              style={{
-                fontSize: 11,
-                color: 'rgba(255,255,255,0.4)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.07em',
-                fontWeight: 600
-              }}
-            >
+          <div key={s.label} className="rounded-xl py-[14px] px-4" style={cardBgStyle}>
+            <div className="text-[11px] text-white/40 uppercase tracking-[0.07em] font-semibold">
               {s.label}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: s.color ?? '#fff', marginTop: 4 }}>
+            <div className="text-xl font-bold mt-1" style={{ color: s.color ?? '#fff' }}>
               {s.value}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Live activity feed */}
-      <div
-        style={{
-          background: 'rgba(20,15,35,.9)',
-          border: '1px solid rgba(156,117,255,0.15)',
-          borderRadius: 16,
-          overflow: 'hidden'
-        }}
-      >
-        <div
-          style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid rgba(156,117,255,0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10
-          }}
-        >
-          <div
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: '#34d399',
-              boxShadow: '0 0 6px #34d399'
-            }}
-          />
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Live Activity Feed</span>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
-            Mock data — updates in real time
-          </span>
+      <div className="rounded-2xl overflow-hidden" style={cardBgStyle}>
+        <div className="px-5 py-4 border-b border-[rgba(156,117,255,0.1)] flex items-center gap-[10px]">
+          <div className="w-2 h-2 rounded-full bg-[#34d399] shadow-[0_0_6px_#34d399]" />
+          <span className="text-sm font-semibold text-white">Live Activity Feed</span>
+          <span className="text-xs text-white/35">Mock data — updates in real time</span>
         </div>
         <SortableTable data={MOCK_ACTIVITY} columns={columns} rowKey={(r) => r.txHash} />
       </div>

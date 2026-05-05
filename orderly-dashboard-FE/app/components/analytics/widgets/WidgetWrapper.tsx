@@ -11,35 +11,6 @@ type WidgetWrapperProps = {
   children: ReactNode;
 };
 
-const linkStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: 28,
-  height: 28,
-  borderRadius: 8,
-  background: 'rgba(156,117,255,0.08)',
-  border: '1px solid rgba(156,117,255,0.15)',
-  color: 'rgba(255,255,255,0.3)',
-  textDecoration: 'none',
-  transition: 'all 0.15s',
-  flexShrink: 0
-};
-
-const hoverOn = (e: React.MouseEvent) => {
-  const el = e.currentTarget as HTMLElement;
-  el.style.background = 'rgba(156,117,255,0.2)';
-  el.style.color = '#9C75FF';
-  el.style.borderColor = 'rgba(156,117,255,0.4)';
-};
-
-const hoverOff = (e: React.MouseEvent) => {
-  const el = e.currentTarget as HTMLElement;
-  el.style.background = 'rgba(156,117,255,0.08)';
-  el.style.color = 'rgba(255,255,255,0.3)';
-  el.style.borderColor = 'rgba(156,117,255,0.15)';
-};
-
 const LinkIcon = () => (
   <svg
     width="13"
@@ -68,52 +39,58 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
 }) => {
   const showHeader = title || controls || !hideLink;
   const linkEl = !hideLink ? (
-    <Link to={`/widget/${widgetId}`} title="Open widget" style={linkStyle} onMouseEnter={hoverOn} onMouseLeave={hoverOff}>
+    <Link
+      to={`/widget/${widgetId}`}
+      title="Open widget"
+      className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0 no-underline transition-all duration-150 text-[rgba(255,255,255,0.3)]"
+      style={{
+        background: 'rgba(156,117,255,0.08)',
+        border: '1px solid rgba(156,117,255,0.15)'
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.background = 'rgba(156,117,255,0.2)';
+        el.style.color = '#9C75FF';
+        el.style.borderColor = 'rgba(156,117,255,0.4)';
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.background = 'rgba(156,117,255,0.08)';
+        el.style.color = 'rgba(255,255,255,0.3)';
+        el.style.borderColor = 'rgba(156,117,255,0.15)';
+      }}
+    >
       <LinkIcon />
     </Link>
   ) : null;
 
   return (
     <div
+      className="rounded-2xl overflow-hidden"
       style={{
         background: 'rgba(20,15,35,.9)',
-        border: '1px solid rgba(156,117,255,0.15)',
-        borderRadius: 16,
-        overflow: 'hidden'
+        border: '1px solid rgba(156,117,255,0.15)'
       }}
     >
       {showHeader && (
         <div
-          style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid rgba(156,117,255,0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12
-          }}
+          className="flex items-center justify-between gap-3 py-4 px-5"
+          style={{ borderBottom: '1px solid rgba(156,117,255,0.08)' }}
         >
-          <div style={{ minWidth: 0 }}>
-            {title && <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{title}</div>}
+          <div className="min-w-0">
+            {title && <div className="text-sm font-semibold text-white">{title}</div>}
             {subtitle && (
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-                {subtitle}
-              </div>
+              <div className="text-[11px] mt-0.5 text-[rgba(255,255,255,0.35)]">{subtitle}</div>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <div className="flex items-center gap-2 shrink-0">
             {controls}
             {linkEl}
           </div>
         </div>
       )}
 
-      <div
-        style={{
-          padding: '12px 16px 16px',
-          ...(height ? { height, overflow: 'hidden' } : {})
-        }}
-      >
+      <div className="pt-3 pb-4 px-4" style={{ ...(height ? { height, overflow: 'hidden' } : {}) }}>
         {children}
       </div>
     </div>

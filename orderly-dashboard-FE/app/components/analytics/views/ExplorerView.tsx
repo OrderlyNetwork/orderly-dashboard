@@ -4,21 +4,14 @@ import { SearchInput } from '~/components/SearchInput';
 
 export const ExplorerView: FC = () => {
   return (
-    <div style={{ maxWidth: 860 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+    <div className="max-w-[860px]">
+      <div className="mb-7">
+        <div className="flex items-center gap-3 mb-1.5">
           <div
+            className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[#34D399]"
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
               background: 'rgba(52,211,153,0.15)',
-              border: '1px solid rgba(52,211,153,0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#34D399'
+              border: '1px solid rgba(52,211,153,0.3)'
             }}
           >
             <svg
@@ -36,65 +29,40 @@ export const ExplorerView: FC = () => {
             </svg>
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#fff' }}>Explorer</h1>
-            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>
+            <h1 className="m-0 text-[22px] font-bold text-white">Explorer</h1>
+            <p className="m-0 text-[13px] text-[rgba(255,255,255,0.45)]">
               Search wallets and accounts to view detailed trading history
             </p>
           </div>
         </div>
       </div>
 
-      {/* Search card */}
-      <div
-        style={{
-          background: '#6700CE',
-          borderRadius: 16,
-          padding: '32px 36px',
-          marginBottom: 32
-        }}
-      >
-        <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#fff' }}>
-          Explore Trading Data
-        </h3>
-        <p
-          style={{
-            margin: '0 0 20px',
-            fontSize: 14,
-            color: 'rgba(255,255,255,0.8)',
-            lineHeight: 1.6
-          }}
-        >
+      <div className="rounded-2xl p-5 py-8 mb-8 md:px-9" style={{ background: '#6700CE' }}>
+        <h3 className="m-0 mb-2 text-lg font-bold text-white">Explore Trading Data</h3>
+        <p className="m-0 mb-5 text-sm text-[rgba(255,255,255,0.8)] leading-relaxed">
           Search for wallet addresses or account IDs to view detailed trading information including
           executed trades, deposits &amp; withdrawals, liquidations, and performance metrics.
         </p>
 
-        {/* Address type indicators */}
-        <div style={{ display: 'flex', gap: 20, marginBottom: 20, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#34D399' }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>EVM Addresses</span>
+        <div className="flex gap-5 mb-5 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-[#34D399]" />
+            <span className="text-[13px] font-semibold text-white">EVM Addresses</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#A78BFA' }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>Solana Addresses</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-[#A78BFA]" />
+            <span className="text-[13px] font-semibold text-white">Solana Addresses</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FBBF24' }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>Account IDs</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-[#FBBF24]" />
+            <span className="text-[13px] font-semibold text-white">Account IDs</span>
           </div>
         </div>
 
         <SearchInput />
       </div>
 
-      {/* Info cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-          gap: 16
-        }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
             icon: (
@@ -188,22 +156,14 @@ export const ExplorerView: FC = () => {
         ].map((card) => (
           <div
             key={card.title}
-            style={{
-              padding: '16px 18px',
-              borderRadius: 12,
-              border: `1px solid ${card.border}`,
-              background: card.bg
-            }}
+            className="rounded-xl py-4 px-[18px]"
+            style={{ border: `1px solid ${card.border}`, background: card.bg }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div className="flex items-center gap-2 mb-2">
               <span style={{ color: card.color }}>{card.icon}</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>{card.title}</span>
+              <span className="text-[13px] font-semibold text-white">{card.title}</span>
             </div>
-            <p
-              style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}
-            >
-              {card.desc}
-            </p>
+            <p className="m-0 text-xs text-[rgba(255,255,255,0.45)] leading-relaxed">{card.desc}</p>
           </div>
         ))}
       </div>

@@ -142,27 +142,17 @@ const columns: ColumnDef<PairRow, unknown>[] = [
     accessorKey: 'pair',
     header: 'Pair',
     cell: (info) => (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="flex items-center gap-2">
         <div
+          className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[9px] font-extrabold text-[#9C75FF] tracking-[-0.03em] shrink-0"
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: 7,
             background: 'linear-gradient(135deg, rgba(156,117,255,0.25), rgba(156,117,255,0.08))',
-            border: '1px solid rgba(156,117,255,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 9,
-            fontWeight: 800,
-            color: '#9C75FF',
-            letterSpacing: '-0.03em',
-            flexShrink: 0
+            border: '1px solid rgba(156,117,255,0.2)'
           }}
         >
           {(info.getValue() as string).replace('-PERP', '').slice(0, 3)}
         </div>
-        <span style={{ fontWeight: 600, color: '#fff' }}>{info.getValue() as string}</span>
+        <span className="font-semibold text-white">{info.getValue() as string}</span>
       </div>
     )
   },
@@ -178,7 +168,7 @@ const columns: ColumnDef<PairRow, unknown>[] = [
       const v = info.getValue() as number;
       const pos = v >= 0;
       return (
-        <span style={{ color: pos ? '#34d399' : '#f87171', fontWeight: 600 }}>
+        <span className={`font-semibold ${pos ? 'text-[#34d399]' : 'text-[#f87171]'}`}>
           {pos ? '+' : ''}
           {v.toFixed(2)}%
         </span>
@@ -207,7 +197,9 @@ const columns: ColumnDef<PairRow, unknown>[] = [
       const v = info.getValue() as number;
       const pos = v >= 0;
       return (
-        <span style={{ color: pos ? '#34d399' : '#f87171', fontFamily: 'monospace', fontSize: 12 }}>
+        <span
+          className={`font-mono text-xs font-semibold ${pos ? 'text-[#34d399]' : 'text-[#f87171]'}`}
+        >
           {pos ? '+' : ''}
           {(v * 100).toFixed(4)}%
         </span>
@@ -218,14 +210,10 @@ const columns: ColumnDef<PairRow, unknown>[] = [
 
 export const TradingPairsView: FC = () => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Header stats */}
+    <div className="flex flex-col gap-5">
       <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: 12
-        }}
+        className="grid gap-3"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}
       >
         {[
           { label: 'Active Pairs', value: `${PAIRS_DATA.length}` },
@@ -235,44 +223,25 @@ export const TradingPairsView: FC = () => {
         ].map((s) => (
           <div
             key={s.label}
-            style={{
-              background: 'rgba(20,15,35,.9)',
-              border: '1px solid rgba(156,117,255,0.15)',
-              borderRadius: 12,
-              padding: '14px 16px'
-            }}
+            className="rounded-xl px-4 py-3.5"
+            style={{ background: 'rgba(20,15,35,.9)', border: '1px solid rgba(156,117,255,0.15)' }}
           >
-            <div
-              style={{
-                fontSize: 11,
-                color: 'rgba(255,255,255,0.4)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.07em',
-                fontWeight: 600
-              }}
-            >
+            <div className="text-[11px] font-semibold text-[rgba(255,255,255,0.4)] uppercase tracking-[0.07em]">
               {s.label}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>
-              {s.value}
-            </div>
-            {s.sub && <div style={{ fontSize: 11, color: '#34d399', marginTop: 2 }}>{s.sub}</div>}
+            <div className="text-xl font-bold text-white mt-1">{s.value}</div>
+            {s.sub && <div className="text-[11px] text-[#34d399] mt-0.5">{s.sub}</div>}
           </div>
         ))}
       </div>
 
-      {/* Table */}
       <div
-        style={{
-          background: 'rgba(20,15,35,.9)',
-          border: '1px solid rgba(156,117,255,0.15)',
-          borderRadius: 16,
-          overflow: 'hidden'
-        }}
+        className="rounded-2xl overflow-hidden"
+        style={{ background: 'rgba(20,15,35,.9)', border: '1px solid rgba(156,117,255,0.15)' }}
       >
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(156,117,255,0.1)' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>All Perpetual Pairs</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+        <div className="px-5 py-4 border-b" style={{ borderBottomColor: 'rgba(156,117,255,0.1)' }}>
+          <div className="text-sm font-semibold text-white">All Perpetual Pairs</div>
+          <div className="text-xs text-[rgba(255,255,255,0.35)] mt-0.5">
             Click column headers to sort · 24h snapshot · Funding rate per 8h
           </div>
         </div>

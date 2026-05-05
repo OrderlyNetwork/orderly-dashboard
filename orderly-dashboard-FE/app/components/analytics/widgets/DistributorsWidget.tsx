@@ -1,9 +1,30 @@
 import { FC } from 'react';
 
 import { fmtNum, fmtUsd } from '../shared/formatters';
-import { Empty, Skeleton, TD, TH } from '../shared/primitives';
+import { Empty, Skeleton, TD, TH_STICKY, tdSticky } from '../shared/primitives';
 
 import { useDistributorInvitees, useDistributorStats } from '~/hooks/useOrderlyMetrics';
+
+const DISTRIBUTOR_HEADERS = [
+  'Name',
+  'Type',
+  'Fee Tier',
+  'Invitees',
+  'Graduated',
+  '30D Volume',
+  '30D Revenue',
+  'Total Revenue'
+];
+
+const INVITEE_HEADERS = [
+  'Invitee DEX',
+  'Status',
+  'Orderly One',
+  'DEX Link',
+  '30D Volume',
+  '30D Revenue',
+  'Date Invited'
+];
 
 export const DistributorsWidget: FC = () => {
   const { data: stats, isLoading: sLoad, error: sErr } = useDistributorStats();
@@ -17,31 +38,35 @@ export const DistributorsWidget: FC = () => {
     : [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ overflowX: 'auto', maxHeight: 300, overflowY: 'auto' }}>
+    <div className="flex flex-col gap-4">
+      <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
         {sLoad ? (
-          <div style={{ padding: 20 }}>
+          <div className="p-5">
             <Skeleton height={120} />
           </div>
         ) : sErr || distributors.length === 0 ? (
-          <div style={{ padding: 24 }}>
+          <div className="p-6">
             <Empty msg={sErr ? 'Failed to load' : 'No data'} />
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <table className="w-full border-collapse text-xs">
             <thead>
               <tr>
-                {[
-                  'Name',
-                  'Type',
-                  'Fee Tier',
-                  'Invitees',
-                  'Graduated',
-                  '30D Volume',
-                  '30D Revenue',
-                  'Total Revenue'
-                ].map((h) => (
-                  <th key={h} style={TH}>
+                {DISTRIBUTOR_HEADERS.map((h, idx) => (
+                  <th
+                    key={h}
+                    style={
+                      idx === 0
+                        ? TH_STICKY
+                        : {
+                            ...TH_STICKY,
+                            position: undefined,
+                            left: undefined,
+                            zIndex: undefined,
+                            background: undefined
+                          }
+                    }
+                  >
                     {h}
                   </th>
                 ))}
@@ -50,7 +75,7 @@ export const DistributorsWidget: FC = () => {
             <tbody>
               {distributors.map((d, i) => (
                 <tr key={i}>
-                  <td style={{ ...TD, color: '#9C75FF', fontWeight: 600 }}>
+                  <td style={{ ...tdSticky(i), color: '#9C75FF', fontWeight: 600 }}>
                     {d['Distributor Name'] ?? '—'}
                   </td>
                   <td style={{ ...TD, color: 'rgba(255,255,255,0.5)' }}>
@@ -58,15 +83,13 @@ export const DistributorsWidget: FC = () => {
                   </td>
                   <td style={TD}>
                     <span
+                      className="py-[2px] px-2 rounded-md text-[11px]"
                       style={{
                         background:
                           d['Fee Tier'] === 'PLATINUM'
                             ? 'rgba(156,117,255,0.2)'
                             : 'rgba(255,255,255,0.05)',
-                        color: d['Fee Tier'] === 'PLATINUM' ? '#c4a8ff' : 'rgba(255,255,255,0.5)',
-                        padding: '2px 8px',
-                        borderRadius: 6,
-                        fontSize: 11
+                        color: d['Fee Tier'] === 'PLATINUM' ? '#c4a8ff' : 'rgba(255,255,255,0.5)'
                       }}
                     >
                       {d['Fee Tier'] ?? '—'}
@@ -90,29 +113,34 @@ export const DistributorsWidget: FC = () => {
         )}
       </div>
 
-      <div style={{ overflowX: 'auto', maxHeight: 300, overflowY: 'auto' }}>
+      <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
         {iLoad ? (
-          <div style={{ padding: 20 }}>
+          <div className="p-5">
             <Skeleton height={120} />
           </div>
         ) : iErr || invList.length === 0 ? (
-          <div style={{ padding: 24 }}>
+          <div className="p-6">
             <Empty msg={iErr ? 'Failed to load' : 'No data'} />
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <table className="w-full border-collapse text-xs">
             <thead>
               <tr>
-                {[
-                  'Invitee DEX',
-                  'Status',
-                  'Orderly One',
-                  'DEX Link',
-                  '30D Volume',
-                  '30D Revenue',
-                  'Date Invited'
-                ].map((h) => (
-                  <th key={h} style={TH}>
+                {INVITEE_HEADERS.map((h, idx) => (
+                  <th
+                    key={h}
+                    style={
+                      idx === 0
+                        ? TH_STICKY
+                        : {
+                            ...TH_STICKY,
+                            position: undefined,
+                            left: undefined,
+                            zIndex: undefined,
+                            background: undefined
+                          }
+                    }
+                  >
                     {h}
                   </th>
                 ))}
@@ -121,21 +149,19 @@ export const DistributorsWidget: FC = () => {
             <tbody>
               {invList.map((inv, i) => (
                 <tr key={i}>
-                  <td style={{ ...TD, color: '#9C75FF', fontWeight: 600 }}>
+                  <td style={{ ...tdSticky(i), color: '#9C75FF', fontWeight: 600 }}>
                     {inv['Invitee DEX'] ?? '—'}
                   </td>
                   <td style={TD}>
                     <span
+                      className="py-[2px] px-2 rounded-md text-[11px]"
                       style={{
                         background:
                           inv['DEX status'] === 'Graduated'
                             ? 'rgba(52,211,153,0.15)'
                             : 'rgba(255,255,255,0.05)',
                         color:
-                          inv['DEX status'] === 'Graduated' ? '#34d399' : 'rgba(255,255,255,0.5)',
-                        padding: '2px 8px',
-                        borderRadius: 6,
-                        fontSize: 11
+                          inv['DEX status'] === 'Graduated' ? '#34d399' : 'rgba(255,255,255,0.5)'
                       }}
                     >
                       {inv['DEX status'] ?? '—'}

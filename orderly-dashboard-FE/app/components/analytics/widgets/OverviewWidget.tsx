@@ -50,7 +50,10 @@ export const OverviewWidget: FC = () => {
     ...baseBarOpts,
     plugins: {
       legend: { display: false },
-      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtUsd(ctx.raw as number)}` } }
+      tooltip: {
+        ...baseTooltipOpts,
+        callbacks: { label: (ctx) => ` ${fmtUsd(ctx.raw as number)}` }
+      }
     },
     scales: {
       ...baseBarOpts.scales,

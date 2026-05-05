@@ -5,25 +5,72 @@ import { Positions } from '~/components/Positions';
 
 type Tab = 'trading' | 'positions';
 
+const TAB_CONFIG: {
+  id: Tab;
+  label: string;
+  activeColor: string;
+  activeBg: string;
+  activeBorder: string;
+  icon: JSX.Element;
+}[] = [
+  {
+    id: 'trading',
+    label: 'Trading Leaderboard',
+    activeColor: '#FB923C',
+    activeBg: 'rgba(251,146,60,0.15)',
+    activeBorder: 'rgba(251,146,60,0.4)',
+    icon: (
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+        <polyline points="16 7 22 7 22 13" />
+      </svg>
+    )
+  },
+  {
+    id: 'positions',
+    label: 'Positions Leaderboard',
+    activeColor: '#60A5FA',
+    activeBg: 'rgba(96,165,250,0.15)',
+    activeBorder: 'rgba(96,165,250,0.4)',
+    icon: (
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="2" y="7" width="20" height="14" rx="2" />
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+      </svg>
+    )
+  }
+];
+
 export const LeaderboardView: FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('trading');
 
   return (
-    <div style={{ width: '100%' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+    <div className="w-full">
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-1.5">
           <div
+            className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[#FB923C]"
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
               background: 'rgba(251,146,60,0.15)',
-              border: '1px solid rgba(251,146,60,0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FB923C'
+              border: '1px solid rgba(251,146,60,0.3)'
             }}
           >
             <svg
@@ -42,86 +89,35 @@ export const LeaderboardView: FC = () => {
             </svg>
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#fff' }}>Leaderboard</h1>
-            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>
+            <h1 className="m-0 text-[22px] font-bold text-white">Leaderboard</h1>
+            <p className="m-0 text-[13px] text-[rgba(255,255,255,0.45)]">
               Trading performance and open positions ranked across the Orderly network
             </p>
           </div>
         </div>
       </div>
 
-      {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        <button
-          onClick={() => setActiveTab('trading')}
-          style={{
-            padding: '8px 20px',
-            borderRadius: 10,
-            border: '1px solid',
-            borderColor: activeTab === 'trading' ? 'rgba(251,146,60,0.4)' : 'rgba(255,255,255,0.1)',
-            background: activeTab === 'trading' ? 'rgba(251,146,60,0.15)' : 'transparent',
-            color: activeTab === 'trading' ? '#FB923C' : 'rgba(255,255,255,0.45)',
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 7
-          }}
-        >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-            <polyline points="16 7 22 7 22 13" />
-          </svg>
-          Trading Leaderboard
-        </button>
-        <button
-          onClick={() => setActiveTab('positions')}
-          style={{
-            padding: '8px 20px',
-            borderRadius: 10,
-            border: '1px solid',
-            borderColor:
-              activeTab === 'positions' ? 'rgba(96,165,250,0.4)' : 'rgba(255,255,255,0.1)',
-            background: activeTab === 'positions' ? 'rgba(96,165,250,0.15)' : 'transparent',
-            color: activeTab === 'positions' ? '#60A5FA' : 'rgba(255,255,255,0.45)',
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 7
-          }}
-        >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="2" y="7" width="20" height="14" rx="2" />
-            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-          </svg>
-          Positions Leaderboard
-        </button>
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {TAB_CONFIG.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex items-center gap-[7px] py-2 px-5 rounded-[10px] text-[13px] font-semibold cursor-pointer transition-all duration-150"
+              style={{
+                border: `1px solid ${isActive ? tab.activeBorder : 'rgba(255,255,255,0.1)'}`,
+                background: isActive ? tab.activeBg : 'transparent',
+                color: isActive ? tab.activeColor : 'rgba(255,255,255,0.45)'
+              }}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Content */}
       {activeTab === 'trading' ? <Leaderboard /> : <Positions />}
     </div>
   );

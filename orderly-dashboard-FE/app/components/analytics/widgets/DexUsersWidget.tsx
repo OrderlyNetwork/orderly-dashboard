@@ -1,45 +1,58 @@
 import { FC } from 'react';
 
 import { fmtNum, fmtPct } from '../shared/formatters';
-import { Empty, Skeleton, TD, TH } from '../shared/primitives';
+import { Empty, Skeleton, TD, TH_STICKY, tdSticky } from '../shared/primitives';
 
 import { useDexUsers } from '~/hooks/useOrderlyMetrics';
+
+const HEADERS = ['Broker', 'DAU', 'DoD%', 'WAU', 'WoW%', 'MAU', 'MoM%', 'Total', 'New 30d'];
 
 export const DexUsersWidget: FC = () => {
   const { data, isLoading, error } = useDexUsers();
   const brokers = (data?.data ?? []).sort((a, b) => (b.total_users ?? 0) - (a.total_users ?? 0));
 
   return (
-    <div style={{ overflowX: 'auto', maxHeight: 340, overflowY: 'auto' }}>
+    <div className="overflow-x-auto max-h-[340px] overflow-y-auto">
       {isLoading ? (
-        <div style={{ padding: 20 }}>
+        <div className="p-5">
           <Skeleton height={160} />
         </div>
       ) : error ? (
-        <div style={{ padding: 24 }}>
+        <div className="p-6">
           <Empty msg="Failed to load" />
         </div>
       ) : brokers.length === 0 ? (
-        <div style={{ padding: 24 }}>
+        <div className="p-6">
           <Empty msg="No data" />
         </div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+        <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
-              {['Broker', 'DAU', 'DoD%', 'WAU', 'WoW%', 'MAU', 'MoM%', 'Total', 'New 30d'].map(
-                (h) => (
-                  <th key={h} style={TH}>
-                    {h}
-                  </th>
-                )
-              )}
+              {HEADERS.map((h, idx) => (
+                <th
+                  key={h}
+                  style={
+                    idx === 0
+                      ? TH_STICKY
+                      : {
+                          ...TH_STICKY,
+                          position: undefined,
+                          left: undefined,
+                          zIndex: undefined,
+                          background: undefined
+                        }
+                  }
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {brokers.map((b, i) => (
               <tr key={i}>
-                <td style={{ ...TD, color: '#9C75FF', fontWeight: 600 }}>
+                <td style={{ ...tdSticky(i), color: '#9C75FF', fontWeight: 600 }}>
                   {b.broker_name ?? b.broker_id ?? '—'}
                 </td>
                 <td style={{ ...TD, color: '#fff' }}>{fmtNum(b.dau)}</td>

@@ -112,7 +112,7 @@ const columns: ColumnDef<BrokerRow, unknown>[] = [
       const colors = ['#f59e0b', '#94a3b8', '#cd7c3a'];
       const color = r <= 3 ? colors[r - 1] : 'rgba(255,255,255,0.3)';
       return (
-        <span style={{ fontWeight: 700, color, fontSize: 14 }}>
+        <span className="text-sm font-bold" style={{ color }}>
           {r <= 3 ? ['🥇', '🥈', '🥉'][r - 1] : `#${r}`}
         </span>
       );
@@ -122,26 +122,11 @@ const columns: ColumnDef<BrokerRow, unknown>[] = [
     accessorKey: 'broker',
     header: 'Broker',
     cell: (info) => (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 8,
-            background: 'rgba(156,117,255,0.15)',
-            border: '1px solid rgba(156,117,255,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 11,
-            fontWeight: 700,
-            color: '#9C75FF',
-            flexShrink: 0
-          }}
-        >
+      <div className="flex items-center gap-2.5">
+        <div className="w-[30px] h-[30px] rounded-lg bg-[rgba(156,117,255,0.15)] border border-[rgba(156,117,255,0.2)] flex items-center justify-center text-[11px] font-bold text-[#9C75FF] shrink-0">
           {(info.getValue() as string).slice(0, 2).toUpperCase()}
         </div>
-        <span style={{ fontWeight: 600, color: '#fff' }}>{info.getValue() as string}</span>
+        <span className="font-semibold text-white">{info.getValue() as string}</span>
       </div>
     )
   },
@@ -166,23 +151,11 @@ const columns: ColumnDef<BrokerRow, unknown>[] = [
     cell: (info) => {
       const pct = info.getValue() as number;
       return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div
-            style={{
-              flex: 1,
-              height: 4,
-              borderRadius: 2,
-              background: 'rgba(156,117,255,0.1)',
-              maxWidth: 80
-            }}
-          >
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-1 rounded-sm bg-[rgba(156,117,255,0.1)] max-w-[80px]">
             <div
-              style={{
-                height: '100%',
-                width: `${pct}%`,
-                borderRadius: 2,
-                background: 'linear-gradient(90deg, #9C75FF, #6b3fcb)'
-              }}
+              className="h-full rounded-sm bg-gradient-to-r from-[#9C75FF] to-[#6b3fcb]"
+              style={{ width: `${pct}%` }}
             />
           </div>
           <span>{pct.toFixed(1)}%</span>
@@ -197,13 +170,7 @@ const columns: ColumnDef<BrokerRow, unknown>[] = [
       const v = info.getValue() as number;
       const pos = v >= 0;
       return (
-        <span
-          style={{
-            color: pos ? '#34d399' : '#f87171',
-            fontWeight: 600,
-            fontSize: 13
-          }}
-        >
+        <span className="font-semibold text-[13px]" style={{ color: pos ? '#34d399' : '#f87171' }}>
           {pos ? '+' : ''}
           {v.toFixed(1)}%
         </span>
@@ -214,15 +181,8 @@ const columns: ColumnDef<BrokerRow, unknown>[] = [
 
 export const BrokerLeaderboardView: FC = () => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Summary cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: 12
-        }}
-      >
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
         {[
           { label: 'Total Brokers', value: '24' },
           { label: 'Top Volume', value: '$125M', sub: 'WOOFi (24h)' },
@@ -231,48 +191,23 @@ export const BrokerLeaderboardView: FC = () => {
         ].map((s) => (
           <div
             key={s.label}
-            style={{
-              background: 'rgba(20,15,35,.9)',
-              border: '1px solid rgba(156,117,255,0.15)',
-              borderRadius: 12,
-              padding: '14px 16px'
-            }}
+            className="bg-[rgba(20,15,35,.9)] border border-[rgba(156,117,255,0.15)] rounded-xl p-[14px_16px]"
           >
-            <div
-              style={{
-                fontSize: 11,
-                color: 'rgba(255,255,255,0.4)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.07em',
-                fontWeight: 600
-              }}
-            >
+            <div className="text-[11px] text-[rgba(255,255,255,0.4)] uppercase tracking-[0.07em] font-semibold">
               {s.label}
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', marginTop: 4 }}>
-              {s.value}
-            </div>
+            <div className="text-xl font-bold text-white mt-1">{s.value}</div>
             {s.sub && (
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-                {s.sub}
-              </div>
+              <div className="text-[11px] text-[rgba(255,255,255,0.35)] mt-0.5">{s.sub}</div>
             )}
           </div>
         ))}
       </div>
 
-      {/* Table */}
-      <div
-        style={{
-          background: 'rgba(20,15,35,.9)',
-          border: '1px solid rgba(156,117,255,0.15)',
-          borderRadius: 16,
-          overflow: 'hidden'
-        }}
-      >
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(156,117,255,0.1)' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Broker Rankings</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+      <div className="bg-[rgba(20,15,35,.9)] border border-[rgba(156,117,255,0.15)] rounded-2xl overflow-hidden">
+        <div className="p-[16px_20px] border-b border-[rgba(156,117,255,0.1)]">
+          <div className="text-sm font-semibold text-white">Broker Rankings</div>
+          <div className="text-xs text-[rgba(255,255,255,0.35)] mt-0.5">
             Click column headers to sort · 24h snapshot
           </div>
         </div>

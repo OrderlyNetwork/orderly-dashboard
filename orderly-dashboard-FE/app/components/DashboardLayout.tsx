@@ -1,8 +1,14 @@
 import { Outlet, useLocation } from '@remix-run/react';
-import { createContext, useContext, useState, type FC } from 'react';
+import { createContext, useCallback, useContext, useState, type FC } from 'react';
 
-import { Sidebar, type NavId, type Role } from '~/components/analytics/Sidebar';
+import {
+  MobileSidebarDrawer,
+  Sidebar,
+  type NavId,
+  type Role
+} from '~/components/analytics/Sidebar';
 import { Topbar } from '~/components/analytics/Topbar';
+import { useIsMobile } from '~/hooks/useMediaQuery';
 
 const PATH_TO_NAV: Record<string, NavId> = {
   '/': 'dashboards',
@@ -32,43 +38,47 @@ function getActiveNav(pathname: string): NavId {
 export const DashboardLayout: FC = () => {
   const location = useLocation();
   const activeNav = getActiveNav(location.pathname);
+  const isMobile = useIsMobile(768);
 
   const [role, setRole] = useState<Role>('analyst');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const toggleDrawer = useCallback(() => setDrawerOpen((v) => !v), []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   return (
     <DashboardLayoutContext.Provider value={{ role, setRole }}>
       <div
+        className="fixed inset-0 flex min-w-[375px]"
         style={{
-          position: 'fixed',
-          inset: 0,
           background: '#0A0010',
-          display: 'flex',
           fontFamily:
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
         }}
       >
-        <Sidebar activeNav={activeNav} role={role} onRoleChange={setRole} />
+        {!isMobile && <Sidebar activeNav={activeNav} role={role} onRoleChange={setRole} />}
+
+        {isMobile && (
+          <MobileSidebarDrawer
+            open={drawerOpen}
+            onClose={closeDrawer}
+            activeNav={activeNav}
+            role={role}
+            onRoleChange={setRole}
+          />
+        )}
 
         <div
-          style={{
-            marginLeft: 224,
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            minWidth: 0,
-            overflow: 'hidden'
-          }}
+          className={`flex flex-col flex-1 min-w-0 overflow-hidden ${isMobile ? 'ml-0' : 'ml-[224px]'}`}
         >
-          <Topbar activeNav={activeNav} />
+          <Topbar
+            activeNav={activeNav}
+            isMobile={isMobile}
+            onMenuToggle={isMobile ? toggleDrawer : undefined}
+          />
 
           <div
-            style={{
-              marginTop: 64,
-              flex: 1,
-              overflowY: 'auto',
-              padding: '28px 32px',
-              minHeight: 0
-            }}
+            className={`flex-1 overflow-y-auto min-h-0 ${isMobile ? 'mt-14 p-4' : 'mt-16 py-7 px-8'}`}
           >
             <Outlet />
           </div>

@@ -570,6 +570,19 @@ select option {
   }
 }
 
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.25s ease-out;
+}
+
 @keyframes pulse {
   0%,
   100% {
@@ -615,7 +628,11 @@ select option {
 }
 
 /* Mobile-specific improvements */
-@media (max-width: 639px) {
+@media (max-width: 767px) {
+  .sidebar-desktop {
+    display: none !important;
+  }
+
   .break-all {
     word-break: break-all;
     overflow-wrap: break-word;
@@ -663,6 +680,23 @@ select option {
 
 /* Improve table responsiveness */
 @media (max-width: 768px) {
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  .card {
+    padding: var(--spacing-4);
+    border-radius: var(--radius-lg);
+  }
+
   table {
     font-size: var(--font-size-sm);
   }
@@ -683,4 +717,30 @@ select option {
 /* Orderly display font helper */
 .font-display {
   font-family: var(--font-display);
+}
+
+/* Dashboard grid layouts */
+.dash-grid-sm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.dash-grid-lg {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .dash-grid-lg {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+  .dash-grid-sm {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }

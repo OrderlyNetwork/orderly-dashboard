@@ -52,7 +52,10 @@ export const StakeUsersWidget: FC = () => {
     ...baseLineOpts,
     plugins: {
       legend: { display: false },
-      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtNum(ctx.raw as number)} stakers` } }
+      tooltip: {
+        ...baseTooltipOpts,
+        callbacks: { label: (ctx) => ` ${fmtNum(ctx.raw as number)} stakers` }
+      }
     },
     scales: {
       ...baseLineOpts.scales,

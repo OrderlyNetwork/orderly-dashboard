@@ -15,55 +15,30 @@ export const KPICard: FC<KPICardProps> = ({ label, value, subValue, delta, icon,
 
   return (
     <div
+      className={`flex flex-col gap-1.5 min-w-0 transition-colors duration-200 ${flat ? 'rounded-[10px] py-[14px] px-4' : 'rounded-2xl py-5 px-6 backdrop-blur-md'}`}
       style={{
         background: flat ? 'rgba(255,255,255,0.03)' : 'rgba(20,15,35,.9)',
         border: flat ? '1px solid rgba(156,117,255,0.08)' : '1px solid rgba(156,117,255,0.18)',
-        borderRadius: flat ? 10 : 16,
-        padding: flat ? '14px 16px' : '20px 24px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
-        backdropFilter: flat ? 'none' : 'blur(12px)',
-        transition: 'border-color 0.2s',
-        minWidth: 0
+        backdropFilter: flat ? 'none' : undefined
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 600,
-            color: 'rgba(255,255,255,0.5)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em'
-          }}
-        >
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-[rgba(255,255,255,0.5)] uppercase tracking-[0.08em]">
           {label}
         </span>
-        {icon && <span style={{ color: '#9C75FF', opacity: 0.8 }}>{icon}</span>}
+        {icon && <span className="text-[#9C75FF] opacity-80">{icon}</span>}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-        <span
-          style={{
-            fontSize: 26,
-            fontWeight: 700,
-            color: '#fff',
-            lineHeight: 1.1,
-            letterSpacing: '-0.02em'
-          }}
-        >
+      <div className="flex items-baseline gap-[10px]">
+        <span className="text-[26px] font-bold text-white leading-tight tracking-tight">
           {value}
         </span>
         {delta !== undefined && (
           <span
+            className="text-xs font-semibold rounded-md py-[2px] px-[7px]"
             style={{
-              fontSize: 12,
-              fontWeight: 600,
               color: deltaColor,
-              background: isPositive ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)',
-              borderRadius: 6,
-              padding: '2px 7px'
+              background: isPositive ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)'
             }}
           >
             {isPositive ? '+' : ''}
@@ -72,7 +47,7 @@ export const KPICard: FC<KPICardProps> = ({ label, value, subValue, delta, icon,
         )}
       </div>
 
-      {subValue && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{subValue}</span>}
+      {subValue && <span className="text-xs text-[rgba(255,255,255,0.4)]">{subValue}</span>}
     </div>
   );
 };
