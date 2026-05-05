@@ -4,6 +4,8 @@ import { useState } from 'react';
 
 import { Leaderboard } from '~/components/Leaderboard';
 import { Positions } from '~/components/Positions';
+import { AnalystKPIWidget } from '~/components/analytics/widgets/AnalystKPIWidget';
+import { BuilderKPIWidget } from '~/components/analytics/widgets/BuilderKPIWidget';
 import { DexUsersWidget } from '~/components/analytics/widgets/DexUsersWidget';
 import { DistributorsWidget } from '~/components/analytics/widgets/DistributorsWidget';
 import { NetFeesWidget } from '~/components/analytics/widgets/NetFeesWidget';
@@ -12,6 +14,7 @@ import { OverviewWidget } from '~/components/analytics/widgets/OverviewWidget';
 import { PeriodSelector, type Period } from '~/components/analytics/shared/primitives';
 import { StakeUsersWidget } from '~/components/analytics/widgets/StakeUsersWidget';
 import { StakeVsSupplyWidget } from '~/components/analytics/widgets/StakeVsSupplyWidget';
+import { TraderKPIWidget } from '~/components/analytics/widgets/TraderKPIWidget';
 import { TvlByChainWidget } from '~/components/analytics/widgets/TvlByChainWidget';
 import { VolumeChartWidget } from '~/components/analytics/widgets/VolumeChartWidget';
 import { VolumeSegmentsWidget } from '~/components/analytics/widgets/VolumeSegmentsWidget';
@@ -24,7 +27,13 @@ type LoaderData = {
   volumeRows?: DuneData['volumeRows'];
   tvlChains?: DuneData['tvlChains'];
   feeRows?: DuneData['feeRows'];
+  accountRows?: DuneData['accountRows'];
+  marketRows?: DuneData['marketRows'];
+  builderFees?: number;
+  activeBuilders?: number;
 };
+
+const KPI_WIDGET_IDS = ['kpi-trader', 'kpi-builder', 'kpi-analyst'];
 
 export async function loader({ params }: { params: { widgetId: string } }) {
   const { widgetId } = params;
@@ -40,6 +49,23 @@ export async function loader({ params }: { params: { widgetId: string } }) {
   } else if (widgetId === 'net-fees') {
     const feeData = await duneJson(3429965);
     data.feeRows = feeData.result?.rows ?? [];
+  } else if (KPI_WIDGET_IDS.includes(widgetId)) {
+    const [volData, tvlData, feeData, acctData, mktData, bldFeeData, bldData] = await Promise.all([
+      duneJson(3368961),
+      duneJson(6383913),
+      duneJson(3429965),
+      duneJson(3795110),
+      duneJson(4119181),
+      duneJson(3612752),
+      duneJson(4119185)
+    ]);
+    data.volumeRows = volData.result?.rows ?? [];
+    data.tvlChains = (tvlData.result?.rows ?? []).filter((r: TvlChainRow) => r.chain !== 'Total');
+    data.feeRows = feeData.result?.rows ?? [];
+    data.accountRows = acctData.result?.rows ?? [];
+    data.marketRows = mktData.result?.rows ?? [];
+    data.builderFees = bldFeeData.result?.rows?.[0]?.broker_fee ?? 0;
+    data.activeBuilders = bldData.result?.rows?.[0]?.builders ?? 0;
   }
 
   return json(data);
@@ -96,7 +122,10 @@ const WIDGET_META: Record<
   },
   distributors: { title: 'Distributors' },
   leaderboard: { title: 'Leaderboard' },
-  positions: { title: 'Positions' }
+  positions: { title: 'Positions' },
+  'kpi-trader': { title: 'Key Metrics — Trader' },
+  'kpi-builder': { title: 'Key Metrics — Builder' },
+  'kpi-analyst': { title: 'Key Metrics — Analyst' }
 };
 
 function CopyBlock({ widgetId }: { widgetId: string }) {
@@ -210,6 +239,8 @@ export default function WidgetRoute() {
     return <div style={{ color: '#fff' }}>Unknown widget: {widgetId}</div>;
   }
 
+  const isKpi = KPI_WIDGET_IDS.includes(widgetId);
+
   const tvlTotal = (loaderData.tvlChains ?? []).reduce((s, c) => s + c.tvl, 0);
   const fmtCompact = (n: number) => {
     if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
@@ -226,6 +257,16 @@ export default function WidgetRoute() {
   ) : undefined;
 
   let widgetContent: React.ReactNode;
+
+  const fullData: DuneData = {
+    volumeRows: loaderData.volumeRows ?? [],
+    tvlChains: loaderData.tvlChains ?? [],
+    feeRows: loaderData.feeRows ?? [],
+    accountRows: loaderData.accountRows ?? [],
+    marketRows: loaderData.marketRows ?? [],
+    builderFees: loaderData.builderFees ?? 0,
+    activeBuilders: loaderData.activeBuilders ?? 0
+  };
 
   switch (widgetId) {
     case 'volume':
@@ -264,13 +305,28 @@ export default function WidgetRoute() {
     case 'positions':
       widgetContent = <Positions hideFilters hideTitle hideQuickActions />;
       break;
+    case 'kpi-trader':
+      widgetContent = <TraderKPIWidget data={fullData} />;
+      break;
+    case 'kpi-builder':
+      widgetContent = <BuilderKPIWidget data={fullData} />;
+      break;
+    case 'kpi-analyst':
+      widgetContent = <AnalystKPIWidget data={fullData} />;
+      break;
     default:
       widgetContent = null;
   }
 
+  const kpiStyles = isKpi ? (
+    <style>{`.dash-grid-sm{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}`}</style>
+  ) : null;
+
   if (isEmbed) {
     return (
-      <div
+      <>
+        {kpiStyles}
+        <div
         style={{
           padding: 24,
           minHeight: '100vh',
@@ -290,11 +346,14 @@ export default function WidgetRoute() {
           {widgetContent}
         </WidgetWrapper>
       </div>
+      </>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <>
+      {kpiStyles}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <Link
         to="/"
         style={{
@@ -335,6 +394,7 @@ export default function WidgetRoute() {
       </WidgetWrapper>
 
       <CopyBlock widgetId={widgetId} />
-    </div>
+      </div>
+    </>
   );
 }

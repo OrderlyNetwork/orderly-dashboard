@@ -4,25 +4,26 @@ export type KPICardProps = {
   label: string;
   value: string;
   subValue?: string;
-  delta?: number; // percentage change, e.g. 2.4 means +2.4%
+  delta?: number;
   icon?: ReactNode;
+  flat?: boolean;
 };
 
-export const KPICard: FC<KPICardProps> = ({ label, value, subValue, delta, icon }) => {
+export const KPICard: FC<KPICardProps> = ({ label, value, subValue, delta, icon, flat }) => {
   const isPositive = delta !== undefined && delta >= 0;
   const deltaColor = isPositive ? '#34d399' : '#f87171';
 
   return (
     <div
       style={{
-        background: 'rgba(20,15,35,.9)',
-        border: '1px solid rgba(156,117,255,0.18)',
-        borderRadius: 16,
-        padding: '20px 24px',
+        background: flat ? 'rgba(255,255,255,0.03)' : 'rgba(20,15,35,.9)',
+        border: flat ? '1px solid rgba(156,117,255,0.08)' : '1px solid rgba(156,117,255,0.18)',
+        borderRadius: flat ? 10 : 16,
+        padding: flat ? '14px 16px' : '20px 24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
-        backdropFilter: 'blur(12px)',
+        gap: 6,
+        backdropFilter: flat ? 'none' : 'blur(12px)',
         transition: 'border-color 0.2s',
         minWidth: 0
       }}
