@@ -13,7 +13,7 @@ import {
 import { FC } from 'react';
 import { Bar } from 'react-chartjs-2';
 
-import { baseBarOpts } from '../shared/chartConfig';
+import { baseBarOpts, baseTooltipOpts } from '../shared/chartConfig';
 import { fmtNum, fmtUsd, weekLabel } from '../shared/formatters';
 import { Empty, Skeleton, StatCard } from '../shared/primitives';
 
@@ -50,7 +50,7 @@ export const OverviewWidget: FC = () => {
     ...baseBarOpts,
     plugins: {
       legend: { display: false },
-      tooltip: { callbacks: { label: (ctx) => ` ${fmtUsd(ctx.raw as number)}` } }
+      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtUsd(ctx.raw as number)}` } }
     },
     scales: {
       ...baseBarOpts.scales,

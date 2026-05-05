@@ -13,7 +13,7 @@ import {
 import { FC } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { baseLineOpts } from '../shared/chartConfig';
+import { baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
 import { fmtCompact, labelFromDate } from '../shared/formatters';
 
 import type { DuneData } from '~/types/dune';
@@ -48,7 +48,7 @@ export const NetFeesWidget: FC<{ rows: DuneData['feeRows'] }> = ({ rows }) => {
     ...baseLineOpts,
     plugins: {
       legend: { display: false },
-      tooltip: { callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` } }
+      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` } }
     },
     scales: {
       x: {

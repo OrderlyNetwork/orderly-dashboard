@@ -22,6 +22,8 @@ export const CHAIN_COLORS: Record<string, string> = {
   morph: '#A78BFA'
 };
 
+export const baseTooltipOpts = { mode: 'index' as const, intersect: false };
+
 export const CHART_COLORS = [
   '#9C75FF',
   '#34d399',
@@ -35,7 +37,8 @@ export const CHART_COLORS = [
 export const baseLineOpts: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+  interaction: { mode: 'index', intersect: false },
+  plugins: { legend: { display: false }, tooltip: { ...baseTooltipOpts } },
   scales: {
     x: {
       grid: { color: 'rgba(255,255,255,0.04)' },
@@ -56,7 +59,8 @@ export const baseLineOpts: ChartOptions<'line'> = {
 export const baseBarOpts: ChartOptions<'bar'> = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+  interaction: { mode: 'index', intersect: false },
+  plugins: { legend: { display: false }, tooltip: { ...baseTooltipOpts } },
   scales: {
     x: {
       grid: { color: 'rgba(255,255,255,0.04)' },

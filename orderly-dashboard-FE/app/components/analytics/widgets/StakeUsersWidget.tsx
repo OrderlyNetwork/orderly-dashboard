@@ -13,7 +13,7 @@ import {
 import { FC } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { baseLineOpts } from '../shared/chartConfig';
+import { baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
 import { fmtNum, weekLabel } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
@@ -52,7 +52,7 @@ export const StakeUsersWidget: FC = () => {
     ...baseLineOpts,
     plugins: {
       legend: { display: false },
-      tooltip: { callbacks: { label: (ctx) => ` ${fmtNum(ctx.raw as number)} stakers` } }
+      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtNum(ctx.raw as number)} stakers` } }
     },
     scales: {
       ...baseLineOpts.scales,

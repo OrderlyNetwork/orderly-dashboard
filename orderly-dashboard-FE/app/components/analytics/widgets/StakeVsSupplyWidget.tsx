@@ -13,7 +13,7 @@ import {
 import { FC } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { baseLineOpts } from '../shared/chartConfig';
+import { baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
 import { fmtNum, weekLabel } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
@@ -66,6 +66,7 @@ export const StakeVsSupplyWidget: FC = () => {
         labels: { color: 'rgba(255,255,255,0.5)', font: { size: 11 }, boxWidth: 12 }
       },
       tooltip: {
+        ...baseTooltipOpts,
         callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmtNum(ctx.raw as number)} ORDER` }
       }
     },

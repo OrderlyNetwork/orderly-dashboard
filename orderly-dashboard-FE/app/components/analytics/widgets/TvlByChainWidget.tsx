@@ -13,7 +13,7 @@ import {
 import { FC } from 'react';
 import { Bar } from 'react-chartjs-2';
 
-import { CHAIN_COLORS } from '../shared/chartConfig';
+import { CHAIN_COLORS, baseTooltipOpts } from '../shared/chartConfig';
 import { capitalize, fmtCompact } from '../shared/formatters';
 
 import type { DuneData } from '~/types/dune';
@@ -50,7 +50,7 @@ export const TvlByChainWidget: FC<{
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: { callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` } }
+      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` } }
     },
     scales: {
       x: {

@@ -13,7 +13,7 @@ import {
 import { FC } from 'react';
 import { Bar } from 'react-chartjs-2';
 
-import { baseBarOpts } from '../shared/chartConfig';
+import { baseBarOpts, baseTooltipOpts } from '../shared/chartConfig';
 import { fmtCompact, labelFromDate } from '../shared/formatters';
 import { type Period } from '../shared/primitives';
 
@@ -51,7 +51,7 @@ export const VolumeChartWidget: FC<{ rows: DuneData['volumeRows']; period?: Peri
     ...baseBarOpts,
     plugins: {
       legend: { display: false },
-      tooltip: { callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` } }
+      tooltip: { ...baseTooltipOpts, callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` } }
     },
     scales: {
       x: {

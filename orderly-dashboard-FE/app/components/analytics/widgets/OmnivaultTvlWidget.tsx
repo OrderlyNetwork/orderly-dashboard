@@ -13,7 +13,7 @@ import {
 import { FC } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { CHART_COLORS, baseLineOpts } from '../shared/chartConfig';
+import { CHART_COLORS, baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
 import { weekLabel } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
@@ -67,6 +67,7 @@ export const OmnivaultTvlWidget: FC = () => {
         labels: { color: 'rgba(255,255,255,0.5)', font: { size: 11 }, boxWidth: 12 }
       },
       tooltip: {
+        ...baseTooltipOpts,
         callbacks: { label: (ctx) => ` ${ctx.dataset.label}: $${(ctx.raw as number).toFixed(2)}M` }
       }
     },

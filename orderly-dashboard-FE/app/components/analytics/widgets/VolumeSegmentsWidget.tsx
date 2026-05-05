@@ -13,7 +13,7 @@ import {
 import { FC } from 'react';
 import { Bar } from 'react-chartjs-2';
 
-import { CHART_COLORS, baseBarOpts } from '../shared/chartConfig';
+import { CHART_COLORS, baseBarOpts, baseTooltipOpts } from '../shared/chartConfig';
 import { fmtUsd, weekLabel } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
@@ -65,6 +65,7 @@ export const VolumeSegmentsWidget: FC = () => {
         labels: { color: 'rgba(255,255,255,0.5)', font: { size: 11 }, boxWidth: 12 }
       },
       tooltip: {
+        ...baseTooltipOpts,
         callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmtUsd(ctx.raw as number)}` }
       }
     },
