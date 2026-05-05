@@ -6,6 +6,7 @@ import { AnalystKPIWidget } from '../widgets/AnalystKPIWidget';
 import { BuilderKPIWidget } from '../widgets/BuilderKPIWidget';
 import { DexUsersWidget } from '../widgets/DexUsersWidget';
 import { DistributorsWidget } from '../widgets/DistributorsWidget';
+import { FeesStatsWidget } from '../widgets/FeesStatsWidget';
 import { NetFeesWidget } from '../widgets/NetFeesWidget';
 import { OmnivaultTvlWidget } from '../widgets/OmnivaultTvlWidget';
 import { OverviewWidget } from '../widgets/OverviewWidget';
@@ -28,37 +29,11 @@ const ROLE_TITLES: Record<Role, string> = {
   analyst: 'Full Protocol Overview'
 };
 
-const StatPill: FC<{ label: string; value: string; color?: string }> = ({
-  label,
-  value,
-  color = '#34d399'
-}) => (
-  <div
-    className="rounded-[10px] py-[14px] px-4"
-    style={{
-      background: 'rgba(255,255,255,0.03)',
-      border: `1px solid color-mix(in srgb, ${color} 12%, transparent)`
-    }}
-  >
-    <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.38)] uppercase tracking-[0.08em] mb-2">
-      {label}
-    </div>
-    <div className="text-lg font-bold" style={{ color }}>
-      {value}
-    </div>
-  </div>
-);
-
 export const DashboardsView: FC<Props> = ({ role, data }) => {
   const { mainRows, tvlChains } = data;
 
   const [volPeriod, setVolPeriod] = useState<Period>('30D');
 
-  const cumFees = mainRows[0]?.cumulative_revenue_usd ?? 0;
-  const dailyFees = mainRows[0]?.daily_revenue_usd ?? 0;
-  const fees30d = mainRows[0]?.rolling_30d_revenue_usd ?? 0;
-  const rollingAvgFee = (mainRows[0]?.rolling_30d_revenue_usd ?? 0) / 30;
-  const builderFees = mainRows[0]?.cumulative_broker_fees_usd ?? 0;
   const tvlTotal = tvlChains.reduce((s, c) => s + c.tvl_usd, 0);
   const tvlSubtitle = `Total: ${fmtCompact(tvlTotal)}`;
 
@@ -121,16 +96,7 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
           </WidgetWrapper>
 
           <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
-            <div className="dash-grid-sm">
-              <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
-              <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-              <StatPill
-                label="Builder Fees (total)"
-                value={fmtCompact(builderFees)}
-                color="#f59e0b"
-              />
-              <StatPill label="Cum. Net Fees" value={fmtCompact(cumFees)} color="#9C75FF" />
-            </div>
+            <FeesStatsWidget data={data} />
           </WidgetWrapper>
         </>
       )}
@@ -138,20 +104,7 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
       {role === 'builder' && (
         <>
           <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
-            <div className="dash-grid-sm">
-              <StatPill
-                label="Rolling Avg Daily Fee"
-                value={`${fmtCompact(rollingAvgFee)}/day`}
-                color="#f59e0b"
-              />
-              <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
-              <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-              <StatPill
-                label="Builder Fees (total)"
-                value={fmtCompact(builderFees)}
-                color="#f59e0b"
-              />
-            </div>
+            <FeesStatsWidget data={data} />
           </WidgetWrapper>
 
           <div className="dash-grid-lg">
@@ -223,16 +176,7 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
           </div>
 
           <WidgetWrapper widgetId="fees-stats" title="Fees &amp; Revenue">
-            <div className="dash-grid-sm">
-              <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
-              <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-              <StatPill label="Cumulative Net Fees" value={fmtCompact(cumFees)} color="#34d399" />
-              <StatPill
-                label="Rolling Avg Daily Fee"
-                value={`${fmtCompact(rollingAvgFee)}/day`}
-                color="#9C75FF"
-              />
-            </div>
+            <FeesStatsWidget data={data} />
           </WidgetWrapper>
 
           <WidgetWrapper widgetId="dex-users" title="DEX Users by Broker">

@@ -9,6 +9,7 @@ import { AnalystKPIWidget } from '~/components/analytics/widgets/AnalystKPIWidge
 import { BuilderKPIWidget } from '~/components/analytics/widgets/BuilderKPIWidget';
 import { DexUsersWidget } from '~/components/analytics/widgets/DexUsersWidget';
 import { DistributorsWidget } from '~/components/analytics/widgets/DistributorsWidget';
+import { FeesStatsWidget } from '~/components/analytics/widgets/FeesStatsWidget';
 import { NetFeesWidget } from '~/components/analytics/widgets/NetFeesWidget';
 import { OmnivaultTvlWidget } from '~/components/analytics/widgets/OmnivaultTvlWidget';
 import { OverviewWidget } from '~/components/analytics/widgets/OverviewWidget';
@@ -26,7 +27,7 @@ type LoaderData = DashboardData & { widgetId: string };
 
 const KPI_WIDGET_IDS = ['kpi-trader', 'kpi-builder', 'kpi-analyst'];
 
-const NEEDS_DASHBOARD = ['volume', 'tvl-chain', 'net-fees', ...KPI_WIDGET_IDS];
+const NEEDS_DASHBOARD = ['volume', 'tvl-chain', 'net-fees', 'fees-stats', ...KPI_WIDGET_IDS];
 
 export async function loader({ params }: { params: { widgetId: string } }) {
   const { widgetId } = params;
@@ -93,6 +94,7 @@ const WIDGET_META: Record<
     height: 220
   },
   distributors: { title: 'Distributors' },
+  'fees-stats': { title: 'Fees & Revenue' },
   leaderboard: { title: 'Leaderboard' },
   positions: { title: 'Positions' },
   'kpi-trader': { title: 'Key Metrics — Trader' },
@@ -263,6 +265,9 @@ export default function WidgetRoute() {
     case 'distributors':
       widgetContent = <DistributorsWidget />;
       break;
+    case 'fees-stats':
+      widgetContent = <FeesStatsWidget data={fullData} />;
+      break;
     case 'leaderboard':
       widgetContent = <Leaderboard />;
       break;
@@ -282,14 +287,15 @@ export default function WidgetRoute() {
       widgetContent = null;
   }
 
-  const kpiStyles = isKpi ? (
+  const needsGrid = isKpi || widgetId === 'fees-stats';
+  const gridStyles = needsGrid ? (
     <style>{`.dash-grid-sm{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}`}</style>
   ) : null;
 
   if (isEmbed) {
     return (
       <>
-        {kpiStyles}
+        {gridStyles}
         <div
           style={{
             padding: 24,
@@ -316,7 +322,7 @@ export default function WidgetRoute() {
 
   return (
     <>
-      {kpiStyles}
+      {gridStyles}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Link
           to="/"
