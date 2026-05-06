@@ -1,5 +1,7 @@
 import { withEmotionCache } from '@emotion/react';
 import { MantineProvider } from '@mantine/core';
+import mantineCoreStyles from '@mantine/core/styles.css?url';
+import mantineDatesStyles from '@mantine/dates/styles.css?url';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Theme } from '@radix-ui/themes';
 import radixTheme from '@radix-ui/themes/styles.css?url';
@@ -15,10 +17,7 @@ import { ClientStyleContext, ServerStyleContext } from './styles';
 
 import favicon from '~/assets/favicon.svg?url';
 import globalCss from '~/global.css?url';
-import uno from '~/styles/uno.css?url';
-
-import '@mantine/core/styles.css';
-import '@mantine/dates/styles.css';
+import 'virtual:uno.css';
 
 dayjs.extend(localizedFormat);
 
@@ -27,9 +26,31 @@ export const links: LinksFunction = () => [
     rel: 'stylesheet',
     href: radixTheme
   },
+  { rel: 'stylesheet', href: mantineCoreStyles },
+  { rel: 'stylesheet', href: mantineDatesStyles },
   { rel: 'stylesheet', href: globalCss },
-  { rel: 'stylesheet', href: uno },
-  { rel: 'icon', href: favicon, type: 'image/svg+xml' }
+  { rel: 'icon', href: favicon, type: 'image/svg+xml' },
+  {
+    rel: 'preload',
+    href: '/fonts/AtypBLText-Regular.otf',
+    as: 'font',
+    type: 'font/otf',
+    crossOrigin: 'anonymous'
+  },
+  {
+    rel: 'preload',
+    href: '/fonts/AtypBLText-Semibold.otf',
+    as: 'font',
+    type: 'font/otf',
+    crossOrigin: 'anonymous'
+  },
+  {
+    rel: 'preload',
+    href: '/fonts/AtypBLDisplay-Bold.otf',
+    as: 'font',
+    type: 'font/otf',
+    crossOrigin: 'anonymous'
+  }
 ];
 
 export const meta: MetaFunction = () => {
@@ -89,7 +110,7 @@ const Root = withEmotionCache((_, emotionCache) => {
   }, [clientStyleData, emotionCache.sheet]);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta
@@ -107,7 +128,7 @@ const Root = withEmotionCache((_, emotionCache) => {
           />
         ))}
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <Theme
           hasBackground={false}
           appearance="dark"

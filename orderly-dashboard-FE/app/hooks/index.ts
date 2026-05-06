@@ -1,6 +1,7 @@
 export * from './useBrokers';
 export * from './useEvents';
 export * from './useBulkEvents';
+export * from './useMediaQuery';
 export * from './usePositions';
 export * from './useSearchAddress';
 export * from './useSymbols';
