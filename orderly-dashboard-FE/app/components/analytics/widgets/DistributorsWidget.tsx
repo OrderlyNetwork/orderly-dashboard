@@ -7,7 +7,6 @@ import { useDistributorInvitees, useDistributorStats } from '~/hooks/useOrderlyM
 
 const DISTRIBUTOR_HEADERS = [
   'Name',
-  'Type',
   'Fee Tier',
   'Invitees',
   'Graduated',
@@ -19,7 +18,6 @@ const DISTRIBUTOR_HEADERS = [
 const INVITEE_HEADERS = [
   'Invitee DEX',
   'Status',
-  'Orderly One',
   'DEX Link',
   '30D Volume',
   '30D Revenue',
@@ -77,9 +75,6 @@ export const DistributorsWidget: FC = () => {
                 <tr key={i}>
                   <td style={{ ...tdSticky(i), color: '#9C75FF', fontWeight: 600 }}>
                     {d['Distributor Name'] ?? '—'}
-                  </td>
-                  <td style={{ ...TD, color: 'rgba(255,255,255,0.5)' }}>
-                    {d['Distributor Type'] ?? '—'}
                   </td>
                   <td style={TD}>
                     <span
@@ -166,14 +161,6 @@ export const DistributorsWidget: FC = () => {
                     >
                       {inv['DEX status'] ?? '—'}
                     </span>
-                  </td>
-                  <td
-                    style={{
-                      ...TD,
-                      color: inv['is_orderly_one'] === 'yes' ? '#34d399' : 'rgba(255,255,255,0.4)'
-                    }}
-                  >
-                    {inv['is_orderly_one'] === 'yes' ? '✓' : '—'}
                   </td>
                   <td style={{ ...TD, color: '#60a5fa', fontSize: 11 }}>
                     {inv['DEX link'] ?? '—'}
