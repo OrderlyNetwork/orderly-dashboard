@@ -1,5 +1,6 @@
-import { Link } from '@remix-run/react';
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useState } from 'react';
+
+import { WidgetShareDialog } from './WidgetShareDialog';
 
 type WidgetWrapperProps = {
   widgetId: string;
@@ -11,7 +12,7 @@ type WidgetWrapperProps = {
   children: ReactNode;
 };
 
-const LinkIcon = () => (
+const ShareIcon = () => (
   <svg
     width="13"
     height="13"
@@ -22,9 +23,11 @@ const LinkIcon = () => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-    <polyline points="15 3 21 3 21 9" />
-    <line x1="10" y1="14" x2="21" y2="3" />
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
   </svg>
 );
 
@@ -37,31 +40,40 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
   hideLink,
   children
 }) => {
+  const [shareOpen, setShareOpen] = useState(false);
   const showHeader = title || controls || !hideLink;
   const linkEl = !hideLink ? (
-    <Link
-      to={`/widget/${widgetId}`}
-      title="Open widget"
-      className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0 no-underline transition-all duration-150 text-[rgba(255,255,255,0.3)]"
-      style={{
-        background: 'rgba(156,117,255,0.08)',
-        border: '1px solid rgba(156,117,255,0.15)'
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.background = 'rgba(156,117,255,0.2)';
-        el.style.color = '#9C75FF';
-        el.style.borderColor = 'rgba(156,117,255,0.4)';
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.background = 'rgba(156,117,255,0.08)';
-        el.style.color = 'rgba(255,255,255,0.3)';
-        el.style.borderColor = 'rgba(156,117,255,0.15)';
-      }}
-    >
-      <LinkIcon />
-    </Link>
+    <>
+      <button
+        onClick={() => setShareOpen(true)}
+        title="Share widget"
+        className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-all duration-150 text-[rgba(255,255,255,0.3)] cursor-pointer"
+        style={{
+          background: 'rgba(156,117,255,0.08)',
+          border: '1px solid rgba(156,117,255,0.15)'
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = 'rgba(156,117,255,0.2)';
+          el.style.color = '#9C75FF';
+          el.style.borderColor = 'rgba(156,117,255,0.4)';
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget as HTMLElement;
+          el.style.background = 'rgba(156,117,255,0.08)';
+          el.style.color = 'rgba(255,255,255,0.3)';
+          el.style.borderColor = 'rgba(156,117,255,0.15)';
+        }}
+      >
+        <ShareIcon />
+      </button>
+      <WidgetShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        widgetId={widgetId}
+        title={title}
+      />
+    </>
   ) : null;
 
   return (
