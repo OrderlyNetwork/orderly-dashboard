@@ -13,7 +13,7 @@ import {
 import { FC } from 'react';
 import { Bar } from 'react-chartjs-2';
 
-import { CHAIN_COLORS, baseTooltipOpts } from '../shared/chartConfig';
+import { CHAIN_COLORS } from '../shared/chartConfig';
 import { capitalize, fmtCompact } from '../shared/formatters';
 
 import type { TvlChainRow } from '~/types/dashboard';
@@ -48,10 +48,13 @@ export const TvlByChainWidget: FC<{
     indexAxis: 'y',
     responsive: true,
     maintainAspectRatio: false,
+    interaction: { mode: 'nearest', axis: 'y', intersect: false },
     plugins: {
       legend: { display: false },
       tooltip: {
-        ...baseTooltipOpts,
+        mode: 'nearest',
+        axis: 'y',
+        intersect: false,
         callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` }
       }
     },
