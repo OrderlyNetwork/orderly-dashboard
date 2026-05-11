@@ -3,8 +3,6 @@ import { FC, useEffect, useState } from 'react';
 
 export type NavId = 'dashboards' | 'leaderboard' | 'explorer';
 
-export type Role = 'trader' | 'builder' | 'analyst';
-
 const NAV_ITEMS: {
   id: NavId;
   path: string;
@@ -84,19 +82,9 @@ const NAV_ITEMS: {
   }
 ];
 
-const ROLES: { id: Role; label: string }[] = [
-  { id: 'analyst', label: 'Analyst' },
-  { id: 'trader', label: 'Trader' },
-  { id: 'builder', label: 'Builder' }
-];
-
 type SidebarProps = {
   activeNav: NavId;
-  role: Role;
-  onRoleChange: (role: Role) => void;
 };
-
-const ROLE_NAV_IDS: NavId[] = ['dashboards'];
 
 function renderNavItems(activeNav: NavId, onNavigate?: () => void) {
   return NAV_ITEMS.map((item) => {
@@ -150,32 +138,7 @@ function renderNavItems(activeNav: NavId, onNavigate?: () => void) {
   });
 }
 
-function renderRoleSwitcher(role: Role, onRoleChange: (role: Role) => void) {
-  return ROLES.map((r) => {
-    const isActive = role === r.id;
-    return (
-      <button
-        key={r.id}
-        onClick={() => onRoleChange(r.id)}
-        className="w-full py-[7px] px-3 rounded-lg border-none cursor-pointer text-left transition-all duration-150 text-xs"
-        style={{
-          background: isActive ? '#9C75FF' : 'transparent',
-          color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
-          fontWeight: isActive ? 600 : 400
-        }}
-      >
-        {r.label}
-      </button>
-    );
-  });
-}
-
-function SidebarContent({
-  activeNav,
-  role,
-  onRoleChange,
-  onNavigate
-}: SidebarProps & { onNavigate?: () => void }) {
+function SidebarContent({ activeNav, onNavigate }: SidebarProps & { onNavigate?: () => void }) {
   return (
     <>
       <div className="py-5 px-5 pb-4 border-b border-[rgba(156,117,255,0.1)]">
@@ -203,17 +166,6 @@ function SidebarContent({
         </div>
         {renderNavItems(activeNav, onNavigate)}
       </nav>
-
-      {ROLE_NAV_IDS.includes(activeNav) && (
-        <div className="py-3 px-[10px] pb-4 border-t border-[rgba(156,117,255,0.1)]">
-          <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.25)] tracking-widest uppercase px-[10px] pb-2">
-            Role
-          </div>
-          <div className="bg-[rgba(156,117,255,0.06)] border border-[rgba(156,117,255,0.15)] rounded-[10px] p-1 flex flex-col gap-[2px]">
-            {renderRoleSwitcher(role, onRoleChange)}
-          </div>
-        </div>
-      )}
     </>
   );
 }

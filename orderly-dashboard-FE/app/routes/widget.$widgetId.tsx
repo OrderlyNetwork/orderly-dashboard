@@ -11,7 +11,6 @@ import {
   type Period
 } from '~/components/analytics/shared/primitives';
 import { AnalystKPIWidget } from '~/components/analytics/widgets/AnalystKPIWidget';
-import { BuilderKPIWidget } from '~/components/analytics/widgets/BuilderKPIWidget';
 import { CopyBlock } from '~/components/analytics/widgets/CopyBlock';
 import { DexUsersWidget } from '~/components/analytics/widgets/DexUsersWidget';
 import { DistributorsWidget } from '~/components/analytics/widgets/DistributorsWidget';
@@ -21,7 +20,6 @@ import { OmnivaultTvlWidget } from '~/components/analytics/widgets/OmnivaultTvlW
 import { OverviewWidget } from '~/components/analytics/widgets/OverviewWidget';
 import { StakeUsersWidget } from '~/components/analytics/widgets/StakeUsersWidget';
 import { StakeVsSupplyWidget } from '~/components/analytics/widgets/StakeVsSupplyWidget';
-import { TraderKPIWidget } from '~/components/analytics/widgets/TraderKPIWidget';
 import { TvlByChainWidget } from '~/components/analytics/widgets/TvlByChainWidget';
 import { VolumeChartWidget } from '~/components/analytics/widgets/VolumeChartWidget';
 import { VolumeSegmentsWidget } from '~/components/analytics/widgets/VolumeSegmentsWidget';
@@ -31,7 +29,7 @@ import { fetchDashboardData } from '~/utils/data-api';
 
 type LoaderData = DashboardData & { widgetId: string };
 
-const KPI_WIDGET_IDS = ['kpi-trader', 'kpi-builder', 'kpi-analyst'];
+const KPI_WIDGET_IDS = ['kpi-analyst'];
 
 const NEEDS_DASHBOARD = ['volume', 'tvl-chain', 'net-fees', 'fees-stats', ...KPI_WIDGET_IDS];
 
@@ -104,9 +102,7 @@ const WIDGET_META: Record<
   'fees-stats': { title: 'Fees & Revenue' },
   leaderboard: { title: 'Leaderboard' },
   positions: { title: 'Positions' },
-  'kpi-trader': { title: 'Key Metrics — Trader' },
-  'kpi-builder': { title: 'Key Metrics — Builder' },
-  'kpi-analyst': { title: 'Key Metrics — Analyst' }
+  'kpi-analyst': { title: 'Key Metrics' }
 };
 
 export default function WidgetRoute() {
@@ -184,12 +180,6 @@ export default function WidgetRoute() {
       break;
     case 'positions':
       widgetContent = <Positions hideFilters hideTitle hideQuickActions />;
-      break;
-    case 'kpi-trader':
-      widgetContent = <TraderKPIWidget data={fullData} />;
-      break;
-    case 'kpi-builder':
-      widgetContent = <BuilderKPIWidget data={fullData} />;
       break;
     case 'kpi-analyst':
       widgetContent = <AnalystKPIWidget data={fullData} />;
