@@ -2,6 +2,8 @@ import type { FC, ReactNode } from 'react';
 
 export type Period = '30D' | '90D';
 
+export type Granularity = 'weekly' | 'monthly';
+
 export const Panel: FC<{
   title: string;
   subtitle?: string;
@@ -56,18 +58,52 @@ export const PeriodSelector: FC<{ period: Period; onChange: (p: Period) => void 
   </div>
 );
 
+export const GranularitySelector: FC<{
+  granularity: Granularity;
+  onChange: (g: Granularity) => void;
+}> = ({ granularity, onChange }) => (
+  <div
+    className="flex p-[3px] gap-[2px] rounded-lg"
+    style={{ background: 'rgba(156,117,255,0.06)', border: '1px solid rgba(156,117,255,0.15)' }}
+  >
+    {(['weekly', 'monthly'] as Granularity[]).map((g) => (
+      <button
+        key={g}
+        onClick={() => onChange(g)}
+        className="px-3 py-1 rounded-md border-none cursor-pointer text-xs transition-all duration-150 capitalize"
+        style={{
+          background: granularity === g ? '#9C75FF' : 'transparent',
+          color: granularity === g ? '#fff' : 'rgba(255,255,255,0.45)',
+          fontWeight: granularity === g ? 600 : 400
+        }}
+      >
+        {g}
+      </button>
+    ))}
+  </div>
+);
+
 export const StatCard: FC<{
   label: string;
   value: string;
   sub?: string;
   color?: string;
-}> = ({ label, value, sub, color = '#9C75FF' }) => (
+  selected?: boolean;
+  onClick?: () => void;
+}> = ({ label, value, sub, color = '#9C75FF', selected, onClick }) => (
   <div
+    role={onClick ? 'button' : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    onClick={onClick}
+    onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
     className="rounded-xl py-[14px] px-[18px]"
     style={{
-      background: 'rgba(20,15,35,.9)',
-      border: `1px solid ${color}22`,
-      borderLeft: `3px solid ${color}`
+      background: selected ? `${color}12` : 'rgba(20,15,35,.9)',
+      border: `1px solid ${selected ? `${color}66` : `${color}22`}`,
+      borderLeft: selected ? undefined : `3px solid ${color}`,
+      boxShadow: selected ? `0 0 12px ${color}22` : 'none',
+      cursor: onClick ? 'pointer' : undefined,
+      transition: 'background .15s, border-color .15s, box-shadow .15s'
     }}
   >
     <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.38)] uppercase tracking-[0.08em] mb-1.5">

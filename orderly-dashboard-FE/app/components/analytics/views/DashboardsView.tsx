@@ -1,7 +1,13 @@
 import { FC, useState } from 'react';
 
 import { fmtCompact } from '../shared/formatters';
-import { PeriodSelector, SectionHeading, type Period } from '../shared/primitives';
+import {
+  GranularitySelector,
+  PeriodSelector,
+  SectionHeading,
+  type Granularity,
+  type Period
+} from '../shared/primitives';
 import { AnalystKPIWidget } from '../widgets/AnalystKPIWidget';
 import { BuilderKPIWidget } from '../widgets/BuilderKPIWidget';
 import { DexUsersWidget } from '../widgets/DexUsersWidget';
@@ -33,6 +39,7 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
   const { mainRows, tvlChains } = data;
 
   const [volPeriod, setVolPeriod] = useState<Period>('30D');
+  const [overviewGran, setOverviewGran] = useState<Granularity>('weekly');
 
   const tvlTotal = tvlChains.reduce((s, c) => s + c.tvl_usd, 0);
   const tvlSubtitle = `Total: ${fmtCompact(tvlTotal)}`;
@@ -143,8 +150,12 @@ export const DashboardsView: FC<Props> = ({ role, data }) => {
 
       {role === 'analyst' && (
         <>
-          <WidgetWrapper widgetId="overview" title="Protocol Overview (Weekly)">
-            <OverviewWidget />
+          <WidgetWrapper
+            widgetId="overview"
+            title="Protocol Overview"
+            controls={<GranularitySelector granularity={overviewGran} onChange={setOverviewGran} />}
+          >
+            <OverviewWidget granularity={overviewGran} />
           </WidgetWrapper>
 
           <WidgetWrapper

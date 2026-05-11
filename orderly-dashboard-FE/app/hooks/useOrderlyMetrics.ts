@@ -83,18 +83,21 @@ export type DexUsersBroker = {
 };
 export type DexUsers = { data?: DexUsersBroker[] };
 
-// /metrics/overview — weekly aggregates
-export type OverviewWeek = {
+// /metrics/overview — weekly & monthly aggregates
+export type OverviewPeriod = {
   week_start?: string;
   week_start_date?: string;
   week_end_date?: string;
+  month_start?: string;
+  month_start_date?: string;
+  month_end_date?: string;
   avg_new_user?: number;
   avg_active_user?: number;
   avg_trading_volume?: number;
   avg_orderly_revenue?: number;
   [key: string]: unknown;
 };
-export type MetricsOverview = { weekly?: OverviewWeek[] };
+export type MetricsOverview = { weekly?: OverviewPeriod[]; monthly?: OverviewPeriod[] };
 
 // /metrics/volume-segments — weekly by mm_retail type
 export type VolumeSegmentRow = {

@@ -4,7 +4,12 @@ import { useState } from 'react';
 
 import { Leaderboard } from '~/components/Leaderboard';
 import { Positions } from '~/components/Positions';
-import { PeriodSelector, type Period } from '~/components/analytics/shared/primitives';
+import {
+  GranularitySelector,
+  PeriodSelector,
+  type Granularity,
+  type Period
+} from '~/components/analytics/shared/primitives';
 import { AnalystKPIWidget } from '~/components/analytics/widgets/AnalystKPIWidget';
 import { BuilderKPIWidget } from '~/components/analytics/widgets/BuilderKPIWidget';
 import { CopyBlock } from '~/components/analytics/widgets/CopyBlock';
@@ -56,6 +61,7 @@ const WIDGET_META: Record<
     subtitle?: string;
     height?: number;
     hasPeriodControl?: boolean;
+    hasGranularityControl?: boolean;
   }
 > = {
   volume: {
@@ -72,7 +78,7 @@ const WIDGET_META: Record<
     subtitle: '90-day running total',
     height: 260
   },
-  overview: { title: 'Protocol Overview (Weekly)' },
+  overview: { title: 'Protocol Overview', hasGranularityControl: true },
   'dex-users': { title: 'DEX Users by Broker' },
   'volume-segments': {
     title: 'Volume Segments',
@@ -109,6 +115,7 @@ export default function WidgetRoute() {
   const isEmbed = searchParams.get('embed') === 'true';
   const { widgetId } = loaderData;
   const [volPeriod, setVolPeriod] = useState<Period>('30D');
+  const [overviewGran, setOverviewGran] = useState<Granularity>('weekly');
 
   const meta = WIDGET_META[widgetId];
   if (!meta) {
@@ -130,6 +137,8 @@ export default function WidgetRoute() {
 
   const controls = meta.hasPeriodControl ? (
     <PeriodSelector period={volPeriod} onChange={setVolPeriod} />
+  ) : meta.hasGranularityControl ? (
+    <GranularitySelector granularity={overviewGran} onChange={setOverviewGran} />
   ) : undefined;
 
   let widgetContent: React.ReactNode;
@@ -147,7 +156,7 @@ export default function WidgetRoute() {
       widgetContent = <NetFeesWidget rows={mainRows} />;
       break;
     case 'overview':
-      widgetContent = <OverviewWidget />;
+      widgetContent = <OverviewWidget granularity={overviewGran} />;
       break;
     case 'dex-users':
       widgetContent = <DexUsersWidget />;

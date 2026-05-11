@@ -1,7 +1,7 @@
 const compactFmt = new Intl.NumberFormat('en', {
   notation: 'compact',
   compactDisplay: 'short',
-  maximumFractionDigits: 2,
+  maximumFractionDigits: 2
 });
 
 const compactUsd = new Intl.NumberFormat('en', {
@@ -9,19 +9,19 @@ const compactUsd = new Intl.NumberFormat('en', {
   currency: 'USD',
   notation: 'compact',
   compactDisplay: 'short',
-  maximumFractionDigits: 2,
+  maximumFractionDigits: 2
 });
 
 const numFmt = new Intl.NumberFormat('en', {
   notation: 'compact',
   compactDisplay: 'short',
-  maximumFractionDigits: 1,
+  maximumFractionDigits: 1
 });
 
 const numPreciseFmt = new Intl.NumberFormat('en', {
   notation: 'compact',
   compactDisplay: 'short',
-  maximumFractionDigits: 2,
+  maximumFractionDigits: 2
 });
 
 const wholeFmt = new Intl.NumberFormat('en', { maximumFractionDigits: 0 });
@@ -61,7 +61,9 @@ export function fmtDeltaPct(current: number, previous: number): number | undefin
 }
 
 export function labelFromDate(dateStr: string): string {
-  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(dateStr));
+  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(
+    new Date(dateStr)
+  );
 }
 
 export function weekLabel(dateStr: string | undefined): string {
@@ -69,6 +71,13 @@ export function weekLabel(dateStr: string | undefined): string {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
   return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(d);
+}
+
+export function monthLabel(dateStr: string | undefined): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(d);
 }
 
 export function capitalize(s: string): string {

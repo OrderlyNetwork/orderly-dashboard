@@ -10,14 +10,14 @@ import {
   type ChartData,
   type ChartOptions
 } from 'chart.js';
-import { FC, useRef } from 'react';
+import { FC, useMemo, useRef, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 
 import { baseBarOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
-import { fmtNum, fmtUsd, weekLabel } from '../shared/formatters';
-import { Empty, Skeleton, StatCard } from '../shared/primitives';
+import { fmtNum, fmtUsd, monthLabel, weekLabel } from '../shared/formatters';
+import { Empty, Skeleton, StatCard, type Granularity } from '../shared/primitives';
 
-import { useMetricsOverview } from '~/hooks/useOrderlyMetrics';
+import { useMetricsOverview, type OverviewPeriod } from '~/hooks/useOrderlyMetrics';
 
 ChartJS.register(
   CategoryScale,
@@ -29,32 +29,89 @@ ChartJS.register(
   Tooltip
 );
 
-export const OverviewWidget: FC = () => {
+type MetricKey = 'avg_new_user' | 'avg_active_user' | 'avg_trading_volume' | 'avg_orderly_revenue';
+
+const METRICS: {
+  key: MetricKey;
+  label: (g: Granularity) => string;
+  color: string;
+  fmt: (n: number | undefined | null) => string;
+}[] = [
+  {
+    key: 'avg_new_user',
+    label: (g) => `Avg New Users / ${g === 'weekly' ? 'wk' : 'mo'}`,
+    color: '#60a5fa',
+    fmt: fmtNum
+  },
+  {
+    key: 'avg_active_user',
+    label: (g) => `Avg Active Users / ${g === 'weekly' ? 'wk' : 'mo'}`,
+    color: '#34d399',
+    fmt: fmtNum
+  },
+  {
+    key: 'avg_trading_volume',
+    label: (g) => `Avg Volume / ${g === 'weekly' ? 'wk' : 'mo'}`,
+    color: '#9C75FF',
+    fmt: fmtUsd
+  },
+  {
+    key: 'avg_orderly_revenue',
+    label: (g) => `Avg Revenue / ${g === 'weekly' ? 'wk' : 'mo'}`,
+    color: '#f59e0b',
+    fmt: fmtUsd
+  }
+];
+
+const periodLabel = (g: Granularity, row: OverviewPeriod) =>
+  g === 'weekly' ? weekLabel(row.week_start_date) : monthLabel(row.month_start_date);
+
+const periodSub = (g: Granularity, row: OverviewPeriod) =>
+  g === 'weekly'
+    ? `week of ${weekLabel(row.week_start_date)}`
+    : row.month_start_date
+      ? monthLabel(row.month_start_date)
+      : undefined;
+
+export const OverviewWidget: FC<{ granularity?: Granularity }> = ({ granularity = 'weekly' }) => {
   const { data, isLoading, error } = useMetricsOverview();
   const chartRef = useRef<ChartJS<'bar'>>(null);
   useChartReady(chartRef);
-  const weeks = data?.weekly ?? [];
-  const latest = weeks[weeks.length - 1];
+
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('avg_trading_volume');
+
+  const rows = useMemo(
+    () => (granularity === 'weekly' ? (data?.weekly ?? []) : (data?.monthly ?? [])),
+    [data, granularity]
+  );
+  const latest = rows[rows.length - 1];
+  const active = METRICS.find((m) => m.key === selectedMetric)!;
 
   const chartData: ChartData<'bar'> = {
-    labels: weeks.map((w) => weekLabel(w.week_start_date)),
+    labels: rows.map((r) => periodLabel(granularity, r)),
     datasets: [
       {
-        label: 'Avg Weekly Volume',
-        data: weeks.map((w) => w.avg_trading_volume ?? 0),
-        backgroundColor: 'rgba(156,117,255,0.55)',
+        label: active.label(granularity),
+        data: rows.map((r) => r[active.key] ?? 0),
+        backgroundColor: `${active.color}8C`,
         borderRadius: 3,
         borderSkipped: false
       }
     ]
   };
+
+  const tooltipFmt =
+    active.key === 'avg_new_user' || active.key === 'avg_active_user'
+      ? (v: number) => fmtNum(v)
+      : (v: number) => fmtUsd(v);
+
   const options: ChartOptions<'bar'> = {
     ...baseBarOpts,
     plugins: {
       legend: { display: false },
       tooltip: {
         ...baseTooltipOpts,
-        callbacks: { label: (ctx) => ` ${fmtUsd(ctx.raw as number)}` }
+        callbacks: { label: (ctx) => ` ${tooltipFmt(ctx.raw as number)}` }
       }
     },
     scales: {
@@ -64,7 +121,7 @@ export const OverviewWidget: FC = () => {
         ticks: {
           color: 'rgba(255,255,255,0.3)',
           font: { size: 10 },
-          callback: (v) => fmtUsd(v as number)
+          callback: (v) => tooltipFmt(v as number)
         }
       }
     }
@@ -101,30 +158,24 @@ export const OverviewWidget: FC = () => {
           marginBottom: 20
         }}
       >
-        <StatCard
-          label="Avg New Users / wk"
-          value={fmtNum(latest?.avg_new_user)}
-          color="#60a5fa"
-          sub={`week of ${weekLabel(latest?.week_start_date)}`}
-        />
-        <StatCard
-          label="Avg Active Users / wk"
-          value={fmtNum(latest?.avg_active_user)}
-          color="#34d399"
-        />
-        <StatCard
-          label="Avg Volume / wk"
-          value={fmtUsd(latest?.avg_trading_volume)}
-          color="#9C75FF"
-        />
-        <StatCard
-          label="Avg Revenue / wk"
-          value={fmtUsd(latest?.avg_orderly_revenue)}
-          color="#f59e0b"
-        />
+        {METRICS.map((m) => (
+          <StatCard
+            key={m.key}
+            label={m.label(granularity)}
+            value={m.fmt(latest?.[m.key])}
+            color={m.color}
+            sub={periodSub(granularity, latest)}
+            selected={selectedMetric === m.key}
+            onClick={() => setSelectedMetric(m.key)}
+          />
+        ))}
       </div>
       <div style={{ height: 220 }}>
-        {weeks.length === 0 ? <Empty msg="No data" /> : <Bar ref={chartRef} data={chartData} options={options} />}
+        {rows.length === 0 ? (
+          <Empty msg="No data" />
+        ) : (
+          <Bar ref={chartRef} data={chartData} options={options} />
+        )}
       </div>
     </>
   );
