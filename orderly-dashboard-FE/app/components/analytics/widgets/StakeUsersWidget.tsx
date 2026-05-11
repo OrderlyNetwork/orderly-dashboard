@@ -14,7 +14,7 @@ import { FC } from 'react';
 import { Line } from 'react-chartjs-2';
 
 import { baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
-import { fmtNum, weekLabel } from '../shared/formatters';
+import { fmtWhole, weekLabel } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
 import { useStakeUsers } from '~/hooks/useOrderlyMetrics';
@@ -54,7 +54,7 @@ export const StakeUsersWidget: FC = () => {
       legend: { display: false },
       tooltip: {
         ...baseTooltipOpts,
-        callbacks: { label: (ctx) => ` ${fmtNum(ctx.raw as number)} stakers` }
+        callbacks: { label: (ctx) => ` ${fmtWhole(ctx.raw as number)} stakers` }
       }
     },
     scales: {
@@ -64,7 +64,7 @@ export const StakeUsersWidget: FC = () => {
         ticks: {
           color: 'rgba(255,255,255,0.3)',
           font: { size: 10 },
-          callback: (v) => fmtNum(v as number)
+          callback: (v) => fmtWhole(v as number)
         }
       }
     }
