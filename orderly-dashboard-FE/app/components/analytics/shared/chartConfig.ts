@@ -22,7 +22,11 @@ export const CHAIN_COLORS: Record<string, string> = {
   morph: '#A78BFA'
 };
 
-export const baseTooltipOpts = { mode: 'index' as const, intersect: false };
+export const baseTooltipOpts = {
+  mode: 'index' as const,
+  intersect: false,
+  itemSort: (a: { raw: unknown }, b: { raw: unknown }) => (b.raw as number) - (a.raw as number)
+};
 
 export const CHART_COLORS = [
   '#9C75FF',

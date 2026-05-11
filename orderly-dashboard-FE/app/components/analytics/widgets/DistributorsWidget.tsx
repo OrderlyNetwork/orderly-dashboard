@@ -55,13 +55,11 @@ export const DistributorsWidget: FC = () => {
                     key={h}
                     style={
                       idx === 0
-                        ? TH_STICKY
+                                                  ? TH_STICKY
                         : {
                             ...TH_STICKY,
-                            position: undefined,
                             left: undefined,
-                            zIndex: undefined,
-                            background: undefined
+                            zIndex: 2
                           }
                     }
                   >
@@ -126,13 +124,11 @@ export const DistributorsWidget: FC = () => {
                     key={h}
                     style={
                       idx === 0
-                        ? TH_STICKY
+                                                  ? TH_STICKY
                         : {
                             ...TH_STICKY,
-                            position: undefined,
                             left: undefined,
-                            zIndex: undefined,
-                            background: undefined
+                            zIndex: 2
                           }
                     }
                   >

@@ -58,7 +58,7 @@ export function SortableTable<T extends object>({ data, columns, rowKey }: Sorta
                   <th
                     key={header.id}
                     onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                    className={`py-[10px] px-[14px] text-left text-[11px] font-semibold text-[rgba(255,255,255,0.45)] uppercase tracking-[0.07em] whitespace-nowrap select-none ${canSort ? 'cursor-pointer' : ''} ${isFirstCol ? 'sticky left-0 z-2 bg-[rgba(20,15,35,.95)]' : ''}`}
+                    className={`py-[10px] px-[14px] text-left text-[11px] font-semibold text-[rgba(255,255,255,0.45)] uppercase tracking-[0.07em] whitespace-nowrap select-none ${canSort ? 'cursor-pointer' : ''} sticky top-0 bg-[rgba(20,15,35,.95)] ${isFirstCol ? 'left-0 z-3' : 'z-2'}`}
                     style={{ borderBottom: '1px solid rgba(156,117,255,0.12)' }}
                   >
                     <div className="flex items-center gap-1.5">

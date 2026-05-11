@@ -34,7 +34,7 @@ export const StakeUsersWidget: FC = () => {
   const rows = data?.weekly ?? [];
 
   const chartData: ChartData<'line'> = {
-    labels: rows.map((r) => weekLabel(r.week_start ?? r.wk)),
+    labels: rows.map((r) => weekLabel(r.wk ?? r.week_start)),
     datasets: [
       {
         label: 'Avg Active Stakers',
