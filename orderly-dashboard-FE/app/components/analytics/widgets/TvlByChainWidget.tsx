@@ -10,10 +10,10 @@ import {
   type ChartData,
   type ChartOptions
 } from 'chart.js';
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 
-import { CHAIN_COLORS } from '../shared/chartConfig';
+import { CHAIN_COLORS, useChartReady } from '../shared/chartConfig';
 import { capitalize, fmtCompact } from '../shared/formatters';
 
 import type { TvlChainRow } from '~/types/dashboard';
@@ -31,6 +31,8 @@ ChartJS.register(
 export const TvlByChainWidget: FC<{
   chains: TvlChainRow[];
 }> = ({ chains }) => {
+  const chartRef = useRef<ChartJS<'bar'>>(null);
+  useChartReady(chartRef);
   const sorted = [...chains].sort((a, b) => b.tvl_usd - a.tvl_usd).slice(0, 12);
   const data: ChartData<'bar'> = {
     labels: sorted.map((c) => capitalize(c.chain)),
@@ -73,7 +75,7 @@ export const TvlByChainWidget: FC<{
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 200 }}>
-      <Bar data={data} options={options} />
+      <Bar ref={chartRef} data={data} options={options} />
     </div>
   );
 };

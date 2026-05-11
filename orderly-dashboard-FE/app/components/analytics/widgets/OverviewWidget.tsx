@@ -10,10 +10,10 @@ import {
   type ChartData,
   type ChartOptions
 } from 'chart.js';
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 
-import { baseBarOpts, baseTooltipOpts } from '../shared/chartConfig';
+import { baseBarOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtNum, fmtUsd, weekLabel } from '../shared/formatters';
 import { Empty, Skeleton, StatCard } from '../shared/primitives';
 
@@ -31,6 +31,8 @@ ChartJS.register(
 
 export const OverviewWidget: FC = () => {
   const { data, isLoading, error } = useMetricsOverview();
+  const chartRef = useRef<ChartJS<'bar'>>(null);
+  useChartReady(chartRef);
   const weeks = data?.weekly ?? [];
   const latest = weeks[weeks.length - 1];
 
@@ -122,7 +124,7 @@ export const OverviewWidget: FC = () => {
         />
       </div>
       <div style={{ height: 220 }}>
-        {weeks.length === 0 ? <Empty msg="No data" /> : <Bar data={chartData} options={options} />}
+        {weeks.length === 0 ? <Empty msg="No data" /> : <Bar ref={chartRef} data={chartData} options={options} />}
       </div>
     </>
   );

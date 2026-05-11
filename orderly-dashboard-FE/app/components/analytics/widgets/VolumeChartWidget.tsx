@@ -10,10 +10,10 @@ import {
   type ChartData,
   type ChartOptions
 } from 'chart.js';
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 
-import { baseBarOpts, baseTooltipOpts } from '../shared/chartConfig';
+import { baseBarOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtCompact, labelFromDate } from '../shared/formatters';
 import { type Period } from '../shared/primitives';
 
@@ -33,6 +33,8 @@ export const VolumeChartWidget: FC<{ rows: MainDailyRow[]; period?: Period }> = 
   rows,
   period = '30D'
 }) => {
+  const chartRef = useRef<ChartJS<'bar'>>(null);
+  useChartReady(chartRef);
   const count = period === '30D' ? 30 : 90;
   const reversed = [...rows.slice(0, count)].reverse();
   const data: ChartData<'bar'> = {
@@ -79,7 +81,7 @@ export const VolumeChartWidget: FC<{ rows: MainDailyRow[]; period?: Period }> = 
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 200 }}>
-      <Bar data={data} options={options} />
+      <Bar ref={chartRef} data={data} options={options} />
     </div>
   );
 };

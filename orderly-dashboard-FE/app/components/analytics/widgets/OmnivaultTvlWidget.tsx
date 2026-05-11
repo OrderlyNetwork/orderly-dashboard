@@ -10,10 +10,10 @@ import {
   type ChartData,
   type ChartOptions
 } from 'chart.js';
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { CHART_COLORS, baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
+import { CHART_COLORS, baseLineOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { weekLabel } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
@@ -31,6 +31,8 @@ ChartJS.register(
 
 export const OmnivaultTvlWidget: FC = () => {
   const { data, isLoading, error } = useOmnivaultTvl();
+  const chartRef = useRef<ChartJS<'line'>>(null);
+  useChartReady(chartRef);
   const rows = data?.weekly ?? [];
 
   const weekMap = new Map<string, Record<string, number>>();
@@ -88,7 +90,7 @@ export const OmnivaultTvlWidget: FC = () => {
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (
         <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 200 }}>
-          <Line data={chartData} options={options} />
+          <Line ref={chartRef} data={chartData} options={options} />
         </div>
       )}
     </>

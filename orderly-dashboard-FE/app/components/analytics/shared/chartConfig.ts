@@ -1,4 +1,17 @@
-import type { ChartOptions } from 'chart.js';
+import { Chart as ChartJS, type ChartOptions } from 'chart.js';
+import { useEffect, type RefObject } from 'react';
+
+export function useChartReady<T extends 'bar' | 'line'>(chartRef: RefObject<ChartJS<T> | null>) {
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const chart = chartRef.current;
+      if (chart) {
+        chart.resize();
+        chart.update('none');
+      }
+    });
+  }, []);
+}
 
 export const CHAIN_COLORS: Record<string, string> = {
   solana: '#9945FF',
