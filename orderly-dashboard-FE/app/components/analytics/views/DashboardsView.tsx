@@ -27,12 +27,11 @@ import type { DashboardData } from '~/types/dashboard';
 type Props = { data: DashboardData };
 
 export const DashboardsView: FC<Props> = ({ data }) => {
-  const { mainRows, tvlChains } = data;
+  const { mainRows, tvlChains, tvlTotal } = data;
 
   const [volPeriod, setVolPeriod] = useState<Period>('30D');
   const [overviewGran, setOverviewGran] = useState<Granularity>('weekly');
 
-  const tvlTotal = tvlChains.reduce((s, c) => s + c.tvl_usd, 0);
   const tvlSubtitle = `Total: ${fmtCompact(tvlTotal)}`;
 
   return (

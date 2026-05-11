@@ -32,5 +32,6 @@ export type MarketRow = {
 export type DashboardData = {
   mainRows: MainDailyRow[];
   tvlChains: TvlChainRow[];
+  tvlTotal: number;
   marketRows: MarketRow[];
 };

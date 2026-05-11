@@ -37,6 +37,7 @@ export async function fetchDashboardData(days = 90) {
 
   const mainRows = [...(mainRes.rows ?? [])].reverse();
 
+  const tvlTotal = (tvlRes.rows ?? []).find((r) => r.is_total)?.tvl_usd ?? 0;
   const tvlChains = (tvlRes.rows ?? []).filter((r) => !r.is_total);
 
   const aggregateRows = (symbolRes.rows ?? []).filter((r) => r.listed_markets_count != null);
@@ -47,5 +48,5 @@ export async function fetchDashboardData(days = 90) {
       markets: r.listed_markets_count as number
     }));
 
-  return { mainRows, tvlChains, marketRows };
+  return { mainRows, tvlChains, tvlTotal, marketRows };
 }

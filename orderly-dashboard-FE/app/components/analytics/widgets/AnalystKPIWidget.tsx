@@ -9,7 +9,7 @@ import type { DashboardData } from '~/types/dashboard';
 type Props = { data: DashboardData };
 
 export const AnalystKPIWidget: FC<Props> = ({ data }) => {
-  const { mainRows, marketRows } = data;
+  const { mainRows, marketRows, tvlTotal } = data;
   const todayVol = mainRows[0]?.taker_volume_usd ?? 0;
   const yestVol = mainRows[1]?.taker_volume_usd ?? 0;
   const cumVol = mainRows[0]?.cumulative_volume_usd ?? 0;
@@ -39,6 +39,7 @@ export const AnalystKPIWidget: FC<Props> = ({ data }) => {
         subValue="rolling"
       />
       <KPICard flat label="Cumulative Volume" value={fmtCompact(cumVol)} />
+      <KPICard flat label="Total TVL" value={fmtCompact(tvlTotal)} />
       <KPICard
         flat
         label="Total Accounts"

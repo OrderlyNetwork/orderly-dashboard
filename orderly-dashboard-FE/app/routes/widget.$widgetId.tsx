@@ -39,6 +39,7 @@ export async function loader({ params }: { params: { widgetId: string } }) {
     widgetId,
     mainRows: [],
     tvlChains: [],
+    tvlTotal: 0,
     marketRows: []
   };
 
@@ -120,8 +121,7 @@ export default function WidgetRoute() {
 
   const isKpi = KPI_WIDGET_IDS.includes(widgetId);
 
-  const { mainRows, tvlChains, marketRows } = loaderData;
-  const tvlTotal = tvlChains.reduce((s, c) => s + c.tvl_usd, 0);
+  const { mainRows, tvlChains, tvlTotal, marketRows } = loaderData;
   const fmtCompact = (n: number) => {
     if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
     if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
@@ -139,7 +139,7 @@ export default function WidgetRoute() {
 
   let widgetContent: React.ReactNode;
 
-  const fullData: DashboardData = { mainRows, tvlChains, marketRows };
+  const fullData: DashboardData = { mainRows, tvlChains, tvlTotal, marketRows };
 
   switch (widgetId) {
     case 'volume':
