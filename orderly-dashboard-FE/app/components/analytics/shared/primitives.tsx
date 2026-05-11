@@ -140,8 +140,9 @@ export const TD: React.CSSProperties = {
 export const TH_STICKY: React.CSSProperties = {
   ...TH,
   position: 'sticky',
+  top: 0,
   left: 0,
-  zIndex: 2,
+  zIndex: 3,
   background: 'rgba(20,15,35,.95)'
 };
 
