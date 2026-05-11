@@ -36,7 +36,7 @@ export const OmnivaultTvlWidget: FC = () => {
   const weekMap = new Map<string, Record<string, number>>();
   const vaults = new Set<string>();
   rows.forEach((r) => {
-    const key = r.week_start ?? r.wk ?? '';
+    const key = r.wk ?? r.week_start ?? '';
     const vault = r.vault_name ?? 'unknown';
     vaults.add(vault);
     if (!weekMap.has(key)) weekMap.set(key, {});
