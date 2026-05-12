@@ -10,10 +10,10 @@ import {
   type ChartData,
   type ChartOptions
 } from 'chart.js';
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
+import { baseLineOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtCompact, labelFromDate } from '../shared/formatters';
 
 import type { MainDailyRow } from '~/types/dashboard';
@@ -29,6 +29,8 @@ ChartJS.register(
 );
 
 export const NetFeesWidget: FC<{ rows: MainDailyRow[] }> = ({ rows }) => {
+  const chartRef = useRef<ChartJS<'line'>>(null);
+  useChartReady(chartRef);
   const sliced = [...rows.slice(0, 90)].reverse();
   const data: ChartData<'line'> = {
     labels: sliced.map((r) => labelFromDate(r.date)),
@@ -76,7 +78,7 @@ export const NetFeesWidget: FC<{ rows: MainDailyRow[] }> = ({ rows }) => {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 200 }}>
-      <Line data={data} options={options} />
+      <Line ref={chartRef} data={data} options={options} />
     </div>
   );
 };

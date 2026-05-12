@@ -10,11 +10,11 @@ import {
   type ChartData,
   type ChartOptions
 } from 'chart.js';
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
-import { fmtNum, weekLabel } from '../shared/formatters';
+import { baseLineOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
+import { fmtNum, fmtPctOfSupply, weekLabel } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
 import { useStakeVsSupply } from '~/hooks/useOrderlyMetrics';
@@ -31,6 +31,8 @@ ChartJS.register(
 
 export const StakeVsSupplyWidget: FC = () => {
   const { data, isLoading, error } = useStakeVsSupply();
+  const chartRef = useRef<ChartJS<'line'>>(null);
+  useChartReady(chartRef);
   const rows = data?.weekly ?? [];
 
   const chartData: ChartData<'line'> = {
@@ -67,7 +69,15 @@ export const StakeVsSupplyWidget: FC = () => {
       },
       tooltip: {
         ...baseTooltipOpts,
-        callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmtNum(ctx.raw as number)} ORDER` }
+        callbacks: {
+          label: (ctx) => ` ${ctx.dataset.label}: ${fmtNum(ctx.raw as number)} ORDER`,
+          afterBody: (items) => {
+            const idx = items[0]?.dataIndex;
+            if (idx == null) return '';
+            const perc = rows[idx]?.stake_order_perc_avg;
+            return perc != null ? `Staked: ${fmtPctOfSupply(perc)} of circ supply` : '';
+          }
+        }
       }
     },
     scales: {
@@ -91,7 +101,7 @@ export const StakeVsSupplyWidget: FC = () => {
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (
         <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 200 }}>
-          <Line data={chartData} options={options} />
+          <Line ref={chartRef} data={chartData} options={options} />
         </div>
       )}
     </>

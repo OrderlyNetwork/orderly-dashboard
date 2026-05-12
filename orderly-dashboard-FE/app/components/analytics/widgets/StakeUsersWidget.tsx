@@ -10,11 +10,11 @@ import {
   type ChartData,
   type ChartOptions
 } from 'chart.js';
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import { baseLineOpts, baseTooltipOpts } from '../shared/chartConfig';
-import { fmtNum, weekLabel } from '../shared/formatters';
+import { baseLineOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
+import { fmtWhole, weekLabel } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
 import { useStakeUsers } from '~/hooks/useOrderlyMetrics';
@@ -31,6 +31,8 @@ ChartJS.register(
 
 export const StakeUsersWidget: FC = () => {
   const { data, isLoading, error } = useStakeUsers();
+  const chartRef = useRef<ChartJS<'line'>>(null);
+  useChartReady(chartRef);
   const rows = data?.weekly ?? [];
 
   const chartData: ChartData<'line'> = {
@@ -54,7 +56,7 @@ export const StakeUsersWidget: FC = () => {
       legend: { display: false },
       tooltip: {
         ...baseTooltipOpts,
-        callbacks: { label: (ctx) => ` ${fmtNum(ctx.raw as number)} stakers` }
+        callbacks: { label: (ctx) => ` ${fmtWhole(ctx.raw as number)} stakers` }
       }
     },
     scales: {
@@ -64,7 +66,7 @@ export const StakeUsersWidget: FC = () => {
         ticks: {
           color: 'rgba(255,255,255,0.3)',
           font: { size: 10 },
-          callback: (v) => fmtNum(v as number)
+          callback: (v) => fmtWhole(v as number)
         }
       }
     }
@@ -78,7 +80,7 @@ export const StakeUsersWidget: FC = () => {
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (
         <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 200 }}>
-          <Line data={chartData} options={options} />
+          <Line ref={chartRef} data={chartData} options={options} />
         </div>
       )}
     </>

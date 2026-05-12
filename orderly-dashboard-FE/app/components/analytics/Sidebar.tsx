@@ -1,9 +1,9 @@
 import { Link } from '@remix-run/react';
 import { FC, useEffect, useState } from 'react';
 
-export type NavId = 'dashboards' | 'leaderboard' | 'explorer';
+import orderlyLogo from '~/assets/orderly.svg';
 
-export type Role = 'trader' | 'builder' | 'analyst';
+export type NavId = 'dashboards' | 'leaderboard' | 'explorer';
 
 const NAV_ITEMS: {
   id: NavId;
@@ -84,19 +84,9 @@ const NAV_ITEMS: {
   }
 ];
 
-const ROLES: { id: Role; label: string }[] = [
-  { id: 'analyst', label: 'Analyst' },
-  { id: 'trader', label: 'Trader' },
-  { id: 'builder', label: 'Builder' }
-];
-
 type SidebarProps = {
   activeNav: NavId;
-  role: Role;
-  onRoleChange: (role: Role) => void;
 };
-
-const ROLE_NAV_IDS: NavId[] = ['dashboards'];
 
 function renderNavItems(activeNav: NavId, onNavigate?: () => void) {
   return NAV_ITEMS.map((item) => {
@@ -150,51 +140,14 @@ function renderNavItems(activeNav: NavId, onNavigate?: () => void) {
   });
 }
 
-function renderRoleSwitcher(role: Role, onRoleChange: (role: Role) => void) {
-  return ROLES.map((r) => {
-    const isActive = role === r.id;
-    return (
-      <button
-        key={r.id}
-        onClick={() => onRoleChange(r.id)}
-        className="w-full py-[7px] px-3 rounded-lg border-none cursor-pointer text-left transition-all duration-150 text-xs"
-        style={{
-          background: isActive ? '#9C75FF' : 'transparent',
-          color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
-          fontWeight: isActive ? 600 : 400
-        }}
-      >
-        {r.label}
-      </button>
-    );
-  });
-}
-
-function SidebarContent({
-  activeNav,
-  role,
-  onRoleChange,
-  onNavigate
-}: SidebarProps & { onNavigate?: () => void }) {
+function SidebarContent({ activeNav, onNavigate }: SidebarProps & { onNavigate?: () => void }) {
   return (
     <>
       <div className="py-5 px-5 pb-4 border-b border-[rgba(156,117,255,0.1)]">
-        <div className="flex items-center gap-[10px]">
-          <div
-            className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg, #9C75FF 0%, #6b3fcb 100%)' }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" />
-              <path d="M2 17l10 5 10-5" opacity=".6" />
-              <path d="M2 12l10 5 10-5" opacity=".8" />
-            </svg>
-          </div>
-          <div>
-            <div className="text-[13px] font-bold text-white leading-none">Dashboard</div>
-            <div className="text-[11px] mt-0.5 text-[rgba(156,117,255,0.7)]">Orderly Network</div>
-          </div>
-        </div>
+        <Link to="/" className="no-underline inline-block">
+          <img src={orderlyLogo} alt="Orderly" className="h-[30px] w-auto" />
+          <div className="text-[24px] mt--2 text-[#9C75FF] font-bold">Dashboard</div>
+        </Link>
       </div>
 
       <nav className="flex-1 py-3 px-[10px] overflow-y-auto">
@@ -202,18 +155,41 @@ function SidebarContent({
           Navigation
         </div>
         {renderNavItems(activeNav, onNavigate)}
+        <div className="my-3 mx-[10px]" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }} />
+        <a
+          href="https://orderly.network"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-[10px] w-full py-2 px-[10px] rounded-[10px] text-[13px] no-underline transition-all duration-150 cursor-pointer text-left"
+          style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 400 }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+            (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = 'transparent';
+            (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)';
+          }}
+        >
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis">Orderly Website</span>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="shrink-0"
+            style={{ opacity: 0.5 }}
+          >
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        </a>
       </nav>
-
-      {ROLE_NAV_IDS.includes(activeNav) && (
-        <div className="py-3 px-[10px] pb-4 border-t border-[rgba(156,117,255,0.1)]">
-          <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.25)] tracking-widest uppercase px-[10px] pb-2">
-            Role
-          </div>
-          <div className="bg-[rgba(156,117,255,0.06)] border border-[rgba(156,117,255,0.15)] rounded-[10px] p-1 flex flex-col gap-[2px]">
-            {renderRoleSwitcher(role, onRoleChange)}
-          </div>
-        </div>
-      )}
     </>
   );
 }

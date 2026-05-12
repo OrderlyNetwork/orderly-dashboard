@@ -4,9 +4,14 @@ import { useState } from 'react';
 
 import { Leaderboard } from '~/components/Leaderboard';
 import { Positions } from '~/components/Positions';
-import { PeriodSelector, type Period } from '~/components/analytics/shared/primitives';
+import { fmtPctOfSupply } from '~/components/analytics/shared/formatters';
+import {
+  GranularitySelector,
+  PeriodSelector,
+  type Granularity,
+  type Period
+} from '~/components/analytics/shared/primitives';
 import { AnalystKPIWidget } from '~/components/analytics/widgets/AnalystKPIWidget';
-import { BuilderKPIWidget } from '~/components/analytics/widgets/BuilderKPIWidget';
 import { CopyBlock } from '~/components/analytics/widgets/CopyBlock';
 import { DexUsersWidget } from '~/components/analytics/widgets/DexUsersWidget';
 import { DistributorsWidget } from '~/components/analytics/widgets/DistributorsWidget';
@@ -16,17 +21,17 @@ import { OmnivaultTvlWidget } from '~/components/analytics/widgets/OmnivaultTvlW
 import { OverviewWidget } from '~/components/analytics/widgets/OverviewWidget';
 import { StakeUsersWidget } from '~/components/analytics/widgets/StakeUsersWidget';
 import { StakeVsSupplyWidget } from '~/components/analytics/widgets/StakeVsSupplyWidget';
-import { TraderKPIWidget } from '~/components/analytics/widgets/TraderKPIWidget';
 import { TvlByChainWidget } from '~/components/analytics/widgets/TvlByChainWidget';
 import { VolumeChartWidget } from '~/components/analytics/widgets/VolumeChartWidget';
 import { VolumeSegmentsWidget } from '~/components/analytics/widgets/VolumeSegmentsWidget';
 import { WidgetWrapper } from '~/components/analytics/widgets/WidgetWrapper';
+import { useStakeVsSupply } from '~/hooks/useOrderlyMetrics';
 import type { DashboardData } from '~/types/dashboard';
 import { fetchDashboardData } from '~/utils/data-api';
 
 type LoaderData = DashboardData & { widgetId: string };
 
-const KPI_WIDGET_IDS = ['kpi-trader', 'kpi-builder', 'kpi-analyst'];
+const KPI_WIDGET_IDS = ['kpi-analyst'];
 
 const NEEDS_DASHBOARD = ['volume', 'tvl-chain', 'net-fees', 'fees-stats', ...KPI_WIDGET_IDS];
 
@@ -36,6 +41,7 @@ export async function loader({ params }: { params: { widgetId: string } }) {
     widgetId,
     mainRows: [],
     tvlChains: [],
+    tvlTotal: 0,
     marketRows: []
   };
 
@@ -56,6 +62,7 @@ const WIDGET_META: Record<
     subtitle?: string;
     height?: number;
     hasPeriodControl?: boolean;
+    hasGranularityControl?: boolean;
   }
 > = {
   volume: {
@@ -72,7 +79,7 @@ const WIDGET_META: Record<
     subtitle: '90-day running total',
     height: 260
   },
-  overview: { title: 'Protocol Overview (Weekly)' },
+  overview: { title: 'Protocol Overview', hasGranularityControl: true },
   'dex-users': { title: 'DEX Users by Broker' },
   'volume-segments': {
     title: 'Volume Segments',
@@ -98,9 +105,7 @@ const WIDGET_META: Record<
   'fees-stats': { title: 'Fees & Revenue' },
   leaderboard: { title: 'Leaderboard' },
   positions: { title: 'Positions' },
-  'kpi-trader': { title: 'Key Metrics — Trader' },
-  'kpi-builder': { title: 'Key Metrics — Builder' },
-  'kpi-analyst': { title: 'Key Metrics — Analyst' }
+  'kpi-analyst': { title: 'Key Metrics' }
 };
 
 export default function WidgetRoute() {
@@ -109,6 +114,8 @@ export default function WidgetRoute() {
   const isEmbed = searchParams.get('embed') === 'true';
   const { widgetId } = loaderData;
   const [volPeriod, setVolPeriod] = useState<Period>('30D');
+  const [overviewGran, setOverviewGran] = useState<Granularity>('weekly');
+  const { data: stakeVsSupplyData } = useStakeVsSupply();
 
   const meta = WIDGET_META[widgetId];
   if (!meta) {
@@ -117,8 +124,7 @@ export default function WidgetRoute() {
 
   const isKpi = KPI_WIDGET_IDS.includes(widgetId);
 
-  const { mainRows, tvlChains, marketRows } = loaderData;
-  const tvlTotal = tvlChains.reduce((s, c) => s + c.tvl_usd, 0);
+  const { mainRows, tvlChains, tvlTotal, marketRows } = loaderData;
   const fmtCompact = (n: number) => {
     if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
     if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
@@ -126,15 +132,27 @@ export default function WidgetRoute() {
     return `$${n.toFixed(0)}`;
   };
 
-  const subtitle = widgetId === 'tvl-chain' ? `Total: ${fmtCompact(tvlTotal)}` : meta.subtitle;
+  const subtitle = (() => {
+    if (widgetId === 'tvl-chain') return `Total: ${fmtCompact(tvlTotal)}`;
+    if (widgetId === 'stake-vs-supply') {
+      const rows = stakeVsSupplyData?.weekly ?? [];
+      const pct = [...rows]
+        .reverse()
+        .find((r) => r.stake_order_perc_avg != null)?.stake_order_perc_avg;
+      return pct != null ? `${meta.subtitle} · ${fmtPctOfSupply(pct)}` : meta.subtitle;
+    }
+    return meta.subtitle;
+  })();
 
   const controls = meta.hasPeriodControl ? (
     <PeriodSelector period={volPeriod} onChange={setVolPeriod} />
+  ) : meta.hasGranularityControl ? (
+    <GranularitySelector granularity={overviewGran} onChange={setOverviewGran} />
   ) : undefined;
 
   let widgetContent: React.ReactNode;
 
-  const fullData: DashboardData = { mainRows, tvlChains, marketRows };
+  const fullData: DashboardData = { mainRows, tvlChains, tvlTotal, marketRows };
 
   switch (widgetId) {
     case 'volume':
@@ -147,7 +165,7 @@ export default function WidgetRoute() {
       widgetContent = <NetFeesWidget rows={mainRows} />;
       break;
     case 'overview':
-      widgetContent = <OverviewWidget />;
+      widgetContent = <OverviewWidget granularity={overviewGran} />;
       break;
     case 'dex-users':
       widgetContent = <DexUsersWidget />;
@@ -175,12 +193,6 @@ export default function WidgetRoute() {
       break;
     case 'positions':
       widgetContent = <Positions hideFilters hideTitle hideQuickActions />;
-      break;
-    case 'kpi-trader':
-      widgetContent = <TraderKPIWidget data={fullData} />;
-      break;
-    case 'kpi-builder':
-      widgetContent = <BuilderKPIWidget data={fullData} />;
       break;
     case 'kpi-analyst':
       widgetContent = <AnalystKPIWidget data={fullData} />;
