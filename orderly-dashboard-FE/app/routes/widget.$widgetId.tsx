@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { Leaderboard } from '~/components/Leaderboard';
 import { Positions } from '~/components/Positions';
+import { fmtPctOfSupply } from '~/components/analytics/shared/formatters';
 import {
   GranularitySelector,
   PeriodSelector,
@@ -24,6 +25,7 @@ import { TvlByChainWidget } from '~/components/analytics/widgets/TvlByChainWidge
 import { VolumeChartWidget } from '~/components/analytics/widgets/VolumeChartWidget';
 import { VolumeSegmentsWidget } from '~/components/analytics/widgets/VolumeSegmentsWidget';
 import { WidgetWrapper } from '~/components/analytics/widgets/WidgetWrapper';
+import { useStakeVsSupply } from '~/hooks/useOrderlyMetrics';
 import type { DashboardData } from '~/types/dashboard';
 import { fetchDashboardData } from '~/utils/data-api';
 
@@ -113,6 +115,7 @@ export default function WidgetRoute() {
   const { widgetId } = loaderData;
   const [volPeriod, setVolPeriod] = useState<Period>('30D');
   const [overviewGran, setOverviewGran] = useState<Granularity>('weekly');
+  const { data: stakeVsSupplyData } = useStakeVsSupply();
 
   const meta = WIDGET_META[widgetId];
   if (!meta) {
@@ -129,7 +132,17 @@ export default function WidgetRoute() {
     return `$${n.toFixed(0)}`;
   };
 
-  const subtitle = widgetId === 'tvl-chain' ? `Total: ${fmtCompact(tvlTotal)}` : meta.subtitle;
+  const subtitle = (() => {
+    if (widgetId === 'tvl-chain') return `Total: ${fmtCompact(tvlTotal)}`;
+    if (widgetId === 'stake-vs-supply') {
+      const rows = stakeVsSupplyData?.weekly ?? [];
+      const pct = [...rows]
+        .reverse()
+        .find((r) => r.stake_order_perc_avg != null)?.stake_order_perc_avg;
+      return pct != null ? `${meta.subtitle} · ${fmtPctOfSupply(pct)}` : meta.subtitle;
+    }
+    return meta.subtitle;
+  })();
 
   const controls = meta.hasPeriodControl ? (
     <PeriodSelector period={volPeriod} onChange={setVolPeriod} />

@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 
-import { fmtCompact } from '../shared/formatters';
+import { fmtCompact, fmtPctOfSupply } from '../shared/formatters';
 import {
   GranularitySelector,
   PeriodSelector,
@@ -22,6 +22,7 @@ import { VolumeChartWidget } from '../widgets/VolumeChartWidget';
 import { VolumeSegmentsWidget } from '../widgets/VolumeSegmentsWidget';
 import { WidgetWrapper } from '../widgets/WidgetWrapper';
 
+import { useStakeVsSupply } from '~/hooks/useOrderlyMetrics';
 import type { DashboardData } from '~/types/dashboard';
 
 type Props = { data: DashboardData };
@@ -33,6 +34,16 @@ export const DashboardsView: FC<Props> = ({ data }) => {
   const [overviewGran, setOverviewGran] = useState<Granularity>('weekly');
 
   const tvlSubtitle = `Total: ${fmtCompact(tvlTotal)}`;
+
+  const { data: stakeVsSupplyData } = useStakeVsSupply();
+  const stakeRows = stakeVsSupplyData?.weekly ?? [];
+  const latestStakePct = [...stakeRows]
+    .reverse()
+    .find((r) => r.stake_order_perc_avg != null)?.stake_order_perc_avg;
+  const stakeSubtitle =
+    latestStakePct != null
+      ? `weekly ORDER token staking vs circulating supply · ${fmtPctOfSupply(latestStakePct)}`
+      : 'weekly ORDER token staking vs circulating supply';
 
   return (
     <div className="flex flex-col gap-6">
@@ -120,7 +131,7 @@ export const DashboardsView: FC<Props> = ({ data }) => {
           <WidgetWrapper
             widgetId="stake-vs-supply"
             title="Stake vs Circulating Supply"
-            subtitle="weekly ORDER token staking vs circulating supply"
+            subtitle={stakeSubtitle}
             height={220}
           >
             <StakeVsSupplyWidget />

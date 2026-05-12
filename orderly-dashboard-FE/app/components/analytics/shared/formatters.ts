@@ -1,9 +1,3 @@
-const compactFmt = new Intl.NumberFormat('en', {
-  notation: 'compact',
-  compactDisplay: 'short',
-  maximumFractionDigits: 2
-});
-
 const compactUsd = new Intl.NumberFormat('en', {
   style: 'currency',
   currency: 'USD',
@@ -21,6 +15,11 @@ const numFmt = new Intl.NumberFormat('en', {
 const numPreciseFmt = new Intl.NumberFormat('en', {
   notation: 'compact',
   compactDisplay: 'short',
+  maximumFractionDigits: 2
+});
+
+const pctRawFmt = new Intl.NumberFormat('en', {
+  minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
 
@@ -53,6 +52,11 @@ export function fmtNumPrecise(n: number | undefined | null): string {
 export function fmtPct(n: number | undefined | null): string {
   if (n == null || isNaN(n)) return '—';
   return `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
+}
+
+export function fmtPctOfSupply(n: number | undefined | null): string {
+  if (n == null || isNaN(n)) return '—';
+  return `${pctRawFmt.format(n * 100)}% staked`;
 }
 
 export function fmtDeltaPct(current: number, previous: number): number | undefined {

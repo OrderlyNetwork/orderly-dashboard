@@ -14,7 +14,7 @@ import { FC, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 
 import { baseLineOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
-import { fmtNum, weekLabel } from '../shared/formatters';
+import { fmtNum, fmtPctOfSupply, weekLabel } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
 import { useStakeVsSupply } from '~/hooks/useOrderlyMetrics';
@@ -69,7 +69,15 @@ export const StakeVsSupplyWidget: FC = () => {
       },
       tooltip: {
         ...baseTooltipOpts,
-        callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmtNum(ctx.raw as number)} ORDER` }
+        callbacks: {
+          label: (ctx) => ` ${ctx.dataset.label}: ${fmtNum(ctx.raw as number)} ORDER`,
+          afterBody: (items) => {
+            const idx = items[0]?.dataIndex;
+            if (idx == null) return '';
+            const perc = rows[idx]?.stake_order_perc_avg;
+            return perc != null ? `Staked: ${fmtPctOfSupply(perc)} of circ supply` : '';
+          }
+        }
       }
     },
     scales: {

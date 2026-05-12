@@ -55,7 +55,7 @@ export const DistributorsWidget: FC = () => {
                     key={h}
                     style={
                       idx === 0
-                                                  ? TH_STICKY
+                        ? TH_STICKY
                         : {
                             ...TH_STICKY,
                             left: undefined,
@@ -124,7 +124,7 @@ export const DistributorsWidget: FC = () => {
                     key={h}
                     style={
                       idx === 0
-                                                  ? TH_STICKY
+                        ? TH_STICKY
                         : {
                             ...TH_STICKY,
                             left: undefined,
