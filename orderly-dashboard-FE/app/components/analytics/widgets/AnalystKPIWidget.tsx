@@ -21,6 +21,7 @@ export const AnalystKPIWidget: FC<Props> = ({ data }) => {
   const prevMarkets = marketRows[1]?.markets ?? 0;
   const builderFees = mainRows[0]?.cumulative_broker_fees_usd ?? 0;
   const activeBuilders = mainRows[0]?.active_builders_count ?? 0;
+  const cumulativeNetFees = mainRows[0]?.cumulative_revenue_usd ?? 0;
 
   return (
     <div className="dash-grid-sm">
@@ -62,6 +63,8 @@ export const AnalystKPIWidget: FC<Props> = ({ data }) => {
         value={`${activeBuilders}`}
         subValue={`Fees: ${fmtCompact(builderFees)}`}
       />
+      <KPICard flat label="Cum. DEX Fees" value={fmtCompact(builderFees)} />
+      <KPICard flat label="Cum. Orderly Net Fees" value={fmtCompact(cumulativeNetFees)} />
     </div>
   );
 };
