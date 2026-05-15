@@ -155,6 +155,37 @@ export const TableWrap: FC<{ children: ReactNode }> = ({ children }) => (
   </div>
 );
 
+export const DatasetChips: FC<{
+  items: Array<{ label: string; color: string; visible: boolean }>;
+  onToggle: (index: number) => void;
+}> = ({ items, onToggle }) => (
+  <div className="flex flex-wrap gap-1.5 mb-2">
+    {items.map((item, i) => (
+      <button
+        key={item.label}
+        onClick={() => onToggle(i)}
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] cursor-pointer transition-all duration-150"
+        style={{
+          background: item.visible ? `${item.color}18` : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${item.visible ? `${item.color}44` : 'rgba(255,255,255,0.08)'}`,
+          color: item.visible ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)',
+          textDecoration: item.visible ? 'none' : 'line-through'
+        }}
+      >
+        <span
+          className="inline-block rounded-full shrink-0"
+          style={{
+            width: 8,
+            height: 8,
+            background: item.visible ? item.color : 'rgba(255,255,255,0.15)'
+          }}
+        />
+        {item.label}
+      </button>
+    ))}
+  </div>
+);
+
 export const TH: React.CSSProperties = {
   padding: '10px 16px',
   textAlign: 'left',

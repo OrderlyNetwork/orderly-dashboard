@@ -10,12 +10,12 @@ import {
   type ChartData,
   type ChartOptions
 } from 'chart.js';
-import { FC, useRef } from 'react';
+import { FC, useRef, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 
 import { CHART_COLORS, baseBarOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtUsd, weekLabel } from '../shared/formatters';
-import { Empty, Skeleton } from '../shared/primitives';
+import { DatasetChips, Empty, Skeleton } from '../shared/primitives';
 
 import { useVolumeSegments } from '~/hooks/useOrderlyMetrics';
 
@@ -48,9 +48,21 @@ export const VolumeSegmentsWidget: FC = () => {
   const weeks = Array.from(weekMap.keys()).sort();
   const segList = Array.from(segments);
 
+  const [hidden, setHidden] = useState<Set<number>>(() => new Set());
+
+  const chips = segList.map((seg, i) => ({
+    label: seg,
+    color: CHART_COLORS[i % CHART_COLORS.length],
+    visible: !hidden.has(i)
+  }));
+
+  const visibleDatasets = segList
+    .map((seg, i) => ({ seg, i }))
+    .filter(({ i }) => !hidden.has(i));
+
   const chartData: ChartData<'bar'> = {
     labels: weeks.map(weekLabel),
-    datasets: segList.map((seg, i) => ({
+    datasets: visibleDatasets.map(({ seg, i }) => ({
       label: seg,
       data: weeks.map((w) => weekMap.get(w)?.[seg] ?? 0),
       backgroundColor: CHART_COLORS[i % CHART_COLORS.length] + 'CC',
@@ -62,10 +74,7 @@ export const VolumeSegmentsWidget: FC = () => {
   const options: ChartOptions<'bar'> = {
     ...baseBarOpts,
     plugins: {
-      legend: {
-        display: true,
-        labels: { color: 'rgba(255,255,255,0.5)', font: { size: 11 }, boxWidth: 12 }
-      },
+      legend: { display: false },
       tooltip: {
         ...baseTooltipOpts,
         callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmtUsd(ctx.raw as number)}` }
@@ -93,6 +102,17 @@ export const VolumeSegmentsWidget: FC = () => {
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (
         <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 200 }}>
+          <DatasetChips
+            items={chips}
+            onToggle={(i) =>
+              setHidden((prev) => {
+                const next = new Set(prev);
+                if (next.has(i)) next.delete(i);
+                else next.add(i);
+                return next;
+              })
+            }
+          />
           <Bar ref={chartRef} data={chartData} options={options} />
         </div>
       )}
