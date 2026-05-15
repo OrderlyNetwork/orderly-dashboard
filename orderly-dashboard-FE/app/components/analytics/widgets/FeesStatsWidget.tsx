@@ -40,7 +40,7 @@ export const FeesStatsWidget: FC<Props> = ({ data }) => {
     <div className="dash-grid-sm">
       <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
       <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-      <StatPill label="Cumulative Net Fees" value={fmtCompact(cumFees)} color="#9C75FF" />
+      <StatPill label="Total Net Fees" value={fmtCompact(cumFees)} color="#9C75FF" />
       <StatPill label="Builder Fees (total)" value={fmtCompact(builderFees)} color="#f59e0b" />
       <StatPill
         label="Rolling Avg Daily Fee"

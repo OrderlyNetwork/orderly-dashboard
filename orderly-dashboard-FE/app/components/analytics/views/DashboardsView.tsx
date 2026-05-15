@@ -72,11 +72,7 @@ export const DashboardsView: FC<Props> = ({ data }) => {
         <WidgetWrapper widgetId="tvl-chain" title="TVL by Chain" subtitle={tvlSubtitle}>
           <TvlByChainWidget chains={tvlChains} />
         </WidgetWrapper>
-        <WidgetWrapper
-          widgetId="net-fees"
-          title="Net Fees (cumulative)"
-          subtitle="90-day running total"
-        >
+        <WidgetWrapper widgetId="net-fees" title="Net Fees" subtitle="daily & total net fees">
           <NetFeesWidget rows={mainRows} />
         </WidgetWrapper>
       </div>

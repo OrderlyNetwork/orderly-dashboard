@@ -75,8 +75,8 @@ const WIDGET_META: Record<
     height: 260
   },
   'net-fees': {
-    title: 'Net Fees (cumulative)',
-    subtitle: '90-day running total',
+    title: 'Net Fees',
+    subtitle: 'daily & total net fees',
     height: 260
   },
   overview: { title: 'Protocol Overview', hasGranularityControl: true },
