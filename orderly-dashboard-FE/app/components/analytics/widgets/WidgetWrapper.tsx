@@ -76,10 +76,16 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
     </>
   ) : null;
 
+  const contentStyle = height
+    ? { height, overflow: 'hidden' as const }
+    : { flex: '1 1 0%', minHeight: 0 };
+
   return (
     <div
       className="rounded-2xl overflow-hidden"
       style={{
+        display: 'flex',
+        flexDirection: 'column',
         background: 'rgba(20,15,35,.9)',
         border: '1px solid rgba(156,117,255,0.15)'
       }}
@@ -102,7 +108,7 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
         </div>
       )}
 
-      <div className="pt-3 pb-4 px-4" style={{ ...(height ? { height, overflow: 'hidden' } : {}) }}>
+      <div className="pt-3 pb-4 px-4" style={contentStyle}>
         {children}
       </div>
     </div>

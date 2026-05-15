@@ -69,19 +69,13 @@ export const DashboardsView: FC<Props> = ({ data }) => {
       </WidgetWrapper>
 
       <div className="dash-grid-lg">
-        <WidgetWrapper
-          widgetId="tvl-chain"
-          title="TVL by Chain"
-          subtitle={tvlSubtitle}
-          height={260}
-        >
+        <WidgetWrapper widgetId="tvl-chain" title="TVL by Chain" subtitle={tvlSubtitle}>
           <TvlByChainWidget chains={tvlChains} />
         </WidgetWrapper>
         <WidgetWrapper
           widgetId="net-fees"
           title="Net Fees (cumulative)"
           subtitle="90-day running total"
-          height={260}
         >
           <NetFeesWidget rows={mainRows} />
         </WidgetWrapper>
