@@ -80,7 +80,7 @@ const WIDGET_META: Record<
     height: 260
   },
   overview: { title: 'Protocol Overview', hasGranularityControl: true },
-  'dex-users': { title: 'DEX Users by Broker' },
+  'dex-users': { title: 'Users by DEX' },
   'volume-segments': {
     title: 'Volume Segments',
     subtitle: 'weekly by segment (2B / 2C / MM)',

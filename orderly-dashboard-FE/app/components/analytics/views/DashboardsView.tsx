@@ -85,7 +85,7 @@ export const DashboardsView: FC<Props> = ({ data }) => {
         <FeesStatsWidget data={data} />
       </WidgetWrapper>
 
-      <WidgetWrapper widgetId="dex-users" title="DEX Users by Broker">
+      <WidgetWrapper widgetId="dex-users" title="Users by DEX">
         <DexUsersWidget />
       </WidgetWrapper>
 
