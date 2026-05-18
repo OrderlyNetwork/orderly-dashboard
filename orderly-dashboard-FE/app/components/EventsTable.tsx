@@ -23,7 +23,7 @@ import dayjs from 'dayjs';
 import { FC, useState, useEffect, useMemo, useCallback } from 'react';
 
 import { Spinner } from '~/components';
-import { EventTableData, UIEventType, useSymbols, getSymbolName } from '~/hooks';
+import { EventTableData, UIEventType, useSymbols, useAllSymbols, getSymbolName } from '~/hooks';
 
 interface EventsTableProps {
   events: EventTableData[] | undefined;
@@ -149,14 +149,15 @@ export const EventsTable: FC<EventsTableProps> = ({
   const setSymbolFilter = setExternalSymbolFilter || setInternalSymbolFilter;
 
   const symbols = useSymbols();
+  const allSymbols = useAllSymbols();
 
   const getShortSymbolName = useCallback(
     (symbolHash: string) => {
-      const symbolName = getSymbolName(symbolHash, symbols);
+      const symbolName = getSymbolName(symbolHash, symbols, allSymbols);
       const parts = symbolName ? symbolName.split('_') : [];
       return parts.length >= 2 ? parts[1] : symbolName || symbolHash;
     },
-    [symbols]
+    [symbols, allSymbols]
   );
 
   const uniqueSymbols = useMemo(() => {

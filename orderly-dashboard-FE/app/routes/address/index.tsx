@@ -17,7 +17,9 @@ import {
   getTokenName,
   useEvents,
   useSymbols,
-  useTokens
+  useTokens,
+  useAllSymbols,
+  useAllTokens
 } from '~/hooks';
 
 export function useRenderColumns(
@@ -34,6 +36,8 @@ export function useRenderColumns(
 
   const tokens = useTokens();
   const symbols = useSymbols();
+  const allSymbols = useAllSymbols();
+  const allTokens = useAllTokens();
 
   const processedEvents = useMemo(() => {
     let result = events;
@@ -358,7 +362,7 @@ export function useRenderColumns(
               columnHelper.accessor('data.Transaction.token_hash', {
                 header: 'Token',
                 enableSorting: false,
-                cell: (info) => getTokenName(info.getValue(), tokens)
+                cell: (info) => getTokenName(info.getValue(), tokens, allTokens)
               })
             ]
           })
@@ -375,7 +379,7 @@ export function useRenderColumns(
             header: 'Symbol',
             enableSorting: false,
             cell: (info) => {
-              const symbol = getSymbolName(info.getValue(), symbols);
+              const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
               const parts = symbol.split('_');
               const baseToken = parts.length >= 2 ? parts[1] : symbol;
               return (
@@ -453,7 +457,7 @@ export function useRenderColumns(
           columnHelper.accessor('trade.fee_asset_hash', {
             header: 'Fee Asset',
             enableSorting: false,
-            cell: (info) => getTokenName(info.getValue(), tokens)
+            cell: (info) => getTokenName(info.getValue(), tokens, allTokens)
           }),
           columnHelper.accessor('trade.timestamp', {
             header: 'Timestamp',
@@ -516,7 +520,7 @@ export function useRenderColumns(
                 header: 'Symbol',
                 enableSorting: false,
                 cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
                   const parts = symbol.split('_');
                   const baseToken = parts.length >= 2 ? parts[1] : symbol;
                   return <span className="font-mono text-sm">{baseToken}</span>;
@@ -557,7 +561,7 @@ export function useRenderColumns(
               columnHelper.accessor('data.SettlementResult.settled_asset_hash', {
                 header: 'Settled Asset',
                 enableSorting: false,
-                cell: (info) => getTokenName(info.getValue(), tokens)
+                cell: (info) => getTokenName(info.getValue(), tokens, allTokens)
               }),
               columnHelper.accessor('settlement.mark_price', {
                 header: 'Mark Price',
@@ -608,7 +612,7 @@ export function useRenderColumns(
                 header: 'Symbol',
                 enableSorting: false,
                 cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
                   const parts = symbol.split('_');
                   const baseToken = parts.length >= 2 ? parts[1] : symbol;
                   return <span className="font-mono text-sm">{baseToken}</span>;
@@ -732,7 +736,7 @@ export function useRenderColumns(
                 header: 'Symbol',
                 enableSorting: false,
                 cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
                   const parts = symbol.split('_');
                   const baseToken = parts.length >= 2 ? parts[1] : symbol;
                   return <span className="font-mono text-sm">{baseToken}</span>;
@@ -820,7 +824,7 @@ export function useRenderColumns(
                 header: 'Symbol',
                 enableSorting: false,
                 cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
                   const parts = symbol.split('_');
                   const baseToken = parts.length >= 2 ? parts[1] : symbol;
                   return <span className="font-mono text-sm">{baseToken}</span>;
@@ -882,7 +886,7 @@ export function useRenderColumns(
                 header: 'Symbol',
                 enableSorting: false,
                 cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
                   const parts = symbol.split('_');
                   const baseToken = parts.length >= 2 ? parts[1] : symbol;
                   return <span className="font-mono text-sm">{baseToken}</span>;
@@ -939,7 +943,7 @@ export function useRenderColumns(
                 header: 'Symbol',
                 enableSorting: false,
                 cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
                   const parts = symbol.split('_');
                   const baseToken = parts.length >= 2 ? parts[1] : symbol;
                   return <span className="font-mono text-sm">{baseToken}</span>;
@@ -980,7 +984,7 @@ export function useRenderColumns(
               columnHelper.accessor('data.SettlementResultV3.settled_asset_hash', {
                 header: 'Settled Asset',
                 enableSorting: false,
-                cell: (info) => getTokenName(info.getValue(), tokens)
+                cell: (info) => getTokenName(info.getValue(), tokens, allTokens)
               }),
               columnHelper.accessor('settlementv3.mark_price', {
                 header: 'Mark Price',
@@ -1023,7 +1027,7 @@ export function useRenderColumns(
               columnHelper.accessor('settlementv3.iso_margin_asset_hash', {
                 header: 'ISO Margin Asset',
                 enableSorting: false,
-                cell: (info) => getTokenName(info.getValue(), tokens)
+                cell: (info) => getTokenName(info.getValue(), tokens, allTokens)
               })
             ]
           })
@@ -1044,7 +1048,7 @@ export function useRenderColumns(
                 header: 'Symbol',
                 enableSorting: false,
                 cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
                   const parts = symbol.split('_');
                   const baseToken = parts.length >= 2 ? parts[1] : symbol;
                   return <span className="font-mono text-sm">{baseToken}</span>;
@@ -1126,7 +1130,7 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '-';
-                  return getTokenName(value, tokens);
+                  return getTokenName(value, tokens, allTokens);
                 }
               }),
               columnHelper.accessor('liquidationv3.margin_to_cross', {
@@ -1159,7 +1163,7 @@ export function useRenderColumns(
                 header: 'Symbol',
                 enableSorting: false,
                 cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
                   const parts = symbol.split('_');
                   const baseToken = parts.length >= 2 ? parts[1] : symbol;
                   return <span className="font-mono text-sm">{baseToken}</span>;
@@ -1213,7 +1217,7 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '-';
-                  return getTokenName(value, tokens);
+                  return getTokenName(value, tokens, allTokens);
                 }
               }),
               columnHelper.accessor('data.AdlResultV3.margin_to_cross', {
@@ -1261,13 +1265,13 @@ export function useRenderColumns(
               columnHelper.accessor('data.MarginTransferV3.transfer_asset_hash', {
                 header: 'Transfer Asset',
                 enableSorting: false,
-                cell: (info) => getTokenName(info.getValue(), tokens)
+                cell: (info) => getTokenName(info.getValue(), tokens, allTokens)
               }),
               columnHelper.accessor('data.MarginTransferV3.iso_symbol_hash', {
                 header: 'ISO Symbol',
                 enableSorting: false,
                 cell: (info) => {
-                  const symbol = getSymbolName(info.getValue(), symbols);
+                  const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
                   const parts = symbol.split('_');
                   const baseToken = parts.length >= 2 ? parts[1] : symbol;
                   return <span className="font-mono text-sm">{baseToken}</span>;
@@ -1290,8 +1294,10 @@ export function useRenderColumns(
     processedEvents,
     setEventType,
     tokens,
+    allTokens,
     aggregateTrades,
     symbols,
+    allSymbols,
     onSymbolFilter
   ]);
 

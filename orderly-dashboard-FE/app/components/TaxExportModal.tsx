@@ -5,7 +5,7 @@ import { FC, useState, useCallback } from 'react';
 
 import { Spinner } from '.';
 
-import { useSymbols, useTokens } from '~/hooks';
+import { useSymbols, useTokens, useAllSymbols, useAllTokens } from '~/hooks';
 import {
   useBulkEvents,
   BulkFetchParams,
@@ -34,6 +34,8 @@ export const TaxExportModal: FC<TaxExportModalProps> = ({ open, onOpenChange, ac
   const { isFetching, progress, totalEvents, error, fetchAllEvents } = useBulkEvents();
   const symbols = useSymbols();
   const tokens = useTokens();
+  const allSymbols = useAllSymbols();
+  const allTokens = useAllTokens();
 
   const handleFetch = useCallback(async () => {
     if (!dateRange[0] || !dateRange[1]) return;
@@ -45,12 +47,12 @@ export const TaxExportModal: FC<TaxExportModalProps> = ({ open, onOpenChange, ac
         to_time: dayjs(dateRange[1]).endOf('day')
       };
 
-      const result = await fetchAllEvents(params, symbols, tokens);
+      const result = await fetchAllEvents(params, symbols, tokens, allSymbols, allTokens);
       setExportData(result);
     } catch (e) {
       // Error is handled in hook
     }
-  }, [dateRange, accountId, fetchAllEvents, symbols, tokens]);
+  }, [dateRange, accountId, fetchAllEvents, symbols, tokens, allSymbols, allTokens]);
 
   const handleDownload = useCallback(() => {
     if (!exportData) return;

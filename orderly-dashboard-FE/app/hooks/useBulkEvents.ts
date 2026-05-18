@@ -4,8 +4,8 @@ import { useState, useCallback } from 'react';
 import { P, match } from 'ts-pattern';
 
 import type { EventTableData, TradingEventCursor, EventType } from './useEvents';
-import { getSymbolName, type PerpSymbol } from './useSymbols';
-import { getTokenName, type Token } from './useTokens';
+import { getSymbolName, type PerpSymbol, type AllSymbol } from './useSymbols';
+import { getTokenName, type Token, type AllToken } from './useTokens';
 
 import { useAppState } from '~/App';
 import { types } from '~/types';
@@ -73,7 +73,9 @@ export function useBulkEvents() {
     async (
       params: BulkFetchParams,
       symbols?: PerpSymbol[],
-      tokens?: Token[]
+      tokens?: Token[],
+      allSymbols?: AllSymbol[],
+      allTokens?: AllToken[]
     ): Promise<BulkFetchResult> => {
       setState({
         isFetching: true,
@@ -193,8 +195,18 @@ export function useBulkEvents() {
         }
 
         // Aggregate trades
-        const aggregatedTrades = aggregateTradesForTax(allTrades, symbols, tokens);
-        const aggregatedLiquidations = aggregateLiquidationsForTax(allLiquidations, symbols);
+        const aggregatedTrades = aggregateTradesForTax(
+          allTrades,
+          symbols,
+          tokens,
+          allSymbols,
+          allTokens
+        );
+        const aggregatedLiquidations = aggregateLiquidationsForTax(
+          allLiquidations,
+          symbols,
+          allSymbols
+        );
 
         setState({
           isFetching: false,
@@ -307,7 +319,9 @@ function flattenEvents(events: types.TradingEvent[]): EventTableData[] {
 function aggregateTradesForTax(
   events: EventTableData[],
   symbols?: PerpSymbol[],
-  tokens?: Token[]
+  tokens?: Token[],
+  allSymbols?: AllSymbol[],
+  allTokens?: AllToken[]
 ): AggregatedTrade[] {
   const tradeGroups = new Map<string, EventTableData[]>();
 
@@ -327,8 +341,8 @@ function aggregateTradesForTax(
     const first = group[0];
     if (first.type !== 'trade') continue;
 
-    const symbolName = getSymbolName(first.trade.symbol_hash, symbols);
-    const feeAssetName = getTokenName(first.trade.fee_asset_hash, tokens);
+    const symbolName = getSymbolName(first.trade.symbol_hash, symbols, allSymbols);
+    const feeAssetName = getTokenName(first.trade.fee_asset_hash, tokens, allTokens);
 
     if (group.length === 1) {
       const qty = new FixedNumber(first.trade.trade_qty, 8);
@@ -395,13 +409,14 @@ function aggregateTradesForTax(
 
 function aggregateLiquidationsForTax(
   events: EventTableData[],
-  symbols?: PerpSymbol[]
+  symbols?: PerpSymbol[],
+  allSymbols?: AllSymbol[]
 ): AggregatedLiquidation[] {
   const liquidations: AggregatedLiquidation[] = [];
 
   for (const event of events) {
     if (event.type === 'liquidation') {
-      const symbolName = getSymbolName(event.liquidation.symbol_hash, symbols);
+      const symbolName = getSymbolName(event.liquidation.symbol_hash, symbols, allSymbols);
 
       const qty = new FixedNumber(event.liquidation.position_qty_transfer, 8);
       const price = new FixedNumber(event.liquidation.mark_price, 8);
@@ -419,7 +434,7 @@ function aggregateLiquidationsForTax(
         transaction_id: event.transaction_id
       });
     } else if (event.type === 'liquidationv2') {
-      const symbolName = getSymbolName(event.liquidationv2.symbol_hash, symbols);
+      const symbolName = getSymbolName(event.liquidationv2.symbol_hash, symbols, allSymbols);
 
       const qty = new FixedNumber(event.liquidationv2.position_qty_transfer, 8);
       const price = new FixedNumber(event.liquidationv2.mark_price, 8);
@@ -437,7 +452,7 @@ function aggregateLiquidationsForTax(
         transaction_id: event.transaction_id
       });
     } else if (event.type === 'liquidationv3') {
-      const symbolName = getSymbolName(event.liquidationv3.symbol_hash, symbols);
+      const symbolName = getSymbolName(event.liquidationv3.symbol_hash, symbols, allSymbols);
 
       const qty = new FixedNumber(event.liquidationv3.position_qty_transfer, 8);
       const price = new FixedNumber(event.liquidationv3.mark_price, 8);

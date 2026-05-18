@@ -5,6 +5,7 @@ pub mod error_code;
 pub mod events;
 pub mod format_extern;
 pub mod indexer_db;
+pub mod lookup;
 pub mod network_info;
 pub mod raw_query;
 pub mod service_base;
