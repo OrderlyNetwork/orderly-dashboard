@@ -32,27 +32,60 @@ export const NetFeesWidget: FC<{ rows: MainDailyRow[] }> = ({ rows }) => {
   const chartRef = useRef<ChartJS<'line'>>(null);
   useChartReady(chartRef);
   const sliced = [...rows.slice(0, 90)].reverse();
-  const data: ChartData<'line'> = {
+  const data = {
     labels: sliced.map((r) => labelFromDate(r.date)),
     datasets: [
       {
+        type: 'bar' as const,
+        label: 'Net Fees',
+        data: sliced.map((r) => r.daily_revenue_usd),
+        backgroundColor: 'rgba(156,117,255,0.5)',
+        borderColor: '#9C75FF',
+        borderWidth: 1,
+        borderRadius: 3,
+        yAxisID: 'yNet',
+        order: 2
+      },
+      {
+        type: 'line' as const,
+        label: 'Total',
         data: sliced.map((r) => r.cumulative_revenue_usd),
-        fill: true,
+        fill: false,
         backgroundColor: 'rgba(52,211,153,0.12)',
         borderColor: '#34d399',
         borderWidth: 2,
         pointRadius: 0,
-        tension: 0.35
+        tension: 0.35,
+        yAxisID: 'yTotal',
+        order: 1
       }
     ]
   };
   const options: ChartOptions<'line'> = {
     ...baseLineOpts,
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: true,
+        position: 'top',
+        align: 'end',
+        labels: {
+          color: 'rgba(255,255,255,0.5)',
+          font: { size: 10 },
+          boxWidth: 10,
+          boxHeight: 10,
+          borderRadius: 2,
+          useBorderRadius: true,
+          padding: 12
+        }
+      },
       tooltip: {
         ...baseTooltipOpts,
-        callbacks: { label: (ctx) => ` ${fmtCompact(ctx.raw as number)}` }
+        callbacks: {
+          label: (ctx) => {
+            const label = ctx.dataset.label ?? '';
+            return ` ${label}: ${fmtCompact(ctx.raw as number)}`;
+          }
+        }
       }
     },
     scales: {
@@ -65,10 +98,20 @@ export const NetFeesWidget: FC<{ rows: MainDailyRow[] }> = ({ rows }) => {
           maxRotation: 0
         }
       },
-      y: {
-        ...baseLineOpts.scales?.y,
+      yNet: {
+        position: 'left',
+        grid: { color: 'rgba(255,255,255,0.04)' },
         ticks: {
-          color: 'rgba(255,255,255,0.3)',
+          color: 'rgba(156,117,255,0.6)',
+          font: { size: 10 },
+          callback: (v) => fmtCompact(v as number)
+        }
+      },
+      yTotal: {
+        position: 'right',
+        grid: { drawOnChartArea: false },
+        ticks: {
+          color: 'rgba(52,211,153,0.6)',
           font: { size: 10 },
           callback: (v) => fmtCompact(v as number)
         }
@@ -78,7 +121,7 @@ export const NetFeesWidget: FC<{ rows: MainDailyRow[] }> = ({ rows }) => {
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 200 }}>
-      <Line ref={chartRef} data={data} options={options} />
+      <Line ref={chartRef} data={data as ChartData<'line'>} options={options} />
     </div>
   );
 };

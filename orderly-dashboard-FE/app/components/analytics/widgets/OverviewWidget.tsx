@@ -39,25 +39,25 @@ const METRICS: {
 }[] = [
   {
     key: 'avg_new_user',
-    label: (g) => `Avg New Users / ${g === 'weekly' ? 'wk' : 'mo'}`,
+    label: () => 'Avg New Users / day',
     color: '#60a5fa',
     fmt: fmtNum
   },
   {
     key: 'avg_active_user',
-    label: (g) => `Avg Active Users / ${g === 'weekly' ? 'wk' : 'mo'}`,
+    label: () => 'Avg Active Users / day',
     color: '#34d399',
     fmt: fmtNum
   },
   {
     key: 'avg_trading_volume',
-    label: (g) => `Avg Volume / ${g === 'weekly' ? 'wk' : 'mo'}`,
+    label: () => 'Avg Volume / day',
     color: '#9C75FF',
     fmt: fmtUsd
   },
   {
     key: 'avg_orderly_revenue',
-    label: (g) => `Avg Revenue / ${g === 'weekly' ? 'wk' : 'mo'}`,
+    label: () => 'Avg Revenue / day',
     color: '#f59e0b',
     fmt: fmtUsd
   }

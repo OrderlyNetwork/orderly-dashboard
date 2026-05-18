@@ -145,6 +145,107 @@ export type OmnivaultTvlRow = {
 };
 export type OmnivaultTvl = { weekly?: OmnivaultTvlRow[] };
 
+// /dashboard/orderly/by-broker — daily per-broker metrics
+export type BrokerDailyRow = {
+  date: string;
+  broker_id: string;
+  taker_volume: number;
+  maker_volume: number;
+  total_volume: number;
+  active_users: number;
+  broker_fee_usd: number;
+  net_flow_usd: number;
+  [key: string]: unknown;
+};
+export type BrokerDailyResponse = { rows: BrokerDailyRow[] };
+
+// /dashboard/fund-flows/by-broker — daily per-broker fund flows
+export type FundFlowBrokerRow = {
+  date: string;
+  broker_id: string;
+  deposits_usd: number;
+  withdrawals_usd: number;
+  net_flow_usd: number;
+  [key: string]: unknown;
+};
+export type FundFlowBrokerResponse = { rows: FundFlowBrokerRow[] };
+
+// /dashboard/orderly/by-symbol/daily — daily per-symbol metrics
+export type SymbolDailyRow = {
+  date: string;
+  symbol_type: string;
+  symbol: string;
+  liquidation_notional_usd?: number | null;
+  token_balance?: number | null;
+  tvl_usd?: number | null;
+  [key: string]: unknown;
+};
+export type SymbolDailyResponse = { rows: SymbolDailyRow[] };
+
+// /dashboard/orderly/funding-rates — 8h funding rates per perp symbol
+export type FundingRateRow = {
+  funding_time: string;
+  symbol: string;
+  funding_rate: number;
+  [key: string]: unknown;
+};
+export type FundingRatesResponse = { rows: FundingRateRow[] };
+
+// /dashboard/staking/daily — daily $ORDER staking metrics
+export type StakingDailyRow = {
+  date: string;
+  staked_order: number;
+  unstaked_order: number;
+  net_staked_order: number;
+  cumulative_staked_order: number;
+  daily_active_addresses: number;
+  cumulative_staker_addresses: number;
+  current_valor_balance: number;
+  total_burned_valor: number;
+  total_emitted_valor: number;
+  daily_burned_order: number;
+  cumulative_burned_order: number;
+  active_stakers_snapshot: number;
+  daily_buyback_order: number;
+  daily_buyback_usdc_spent: number;
+  cumulative_buyback_order: number;
+  cumulative_buyback_usdc_spent: number;
+  [key: string]: unknown;
+};
+export type StakingDailyResponse = { rows: StakingDailyRow[] };
+
+// /dashboard/fund-flows/by-chain — daily fund flows per chain
+export type FundFlowChainRow = {
+  date: string;
+  chain: string;
+  deposits_usd: number;
+  withdrawals_usd: number;
+  net_flow_usd: number;
+  [key: string]: unknown;
+};
+export type FundFlowChainResponse = { rows: FundFlowChainRow[] };
+
+// /dashboard/orderly/by-symbol/daily?symbol_type=perp — daily perp liquidations
+export type PerpSymbolDailyRow = {
+  date: string;
+  symbol_type: string;
+  symbol: string;
+  liquidation_notional_usd: number | null;
+  [key: string]: unknown;
+};
+export type PerpSymbolDailyResponse = { rows: PerpSymbolDailyRow[] };
+
+// /dashboard/orderly/by-symbol/weekly — weekly per-symbol volume
+export type SymbolWeeklyRow = {
+  as_of_date: string;
+  trade_week: string;
+  symbol: string;
+  volume_usd: number | null;
+  listed_markets_count?: number | null;
+  [key: string]: unknown;
+};
+export type SymbolWeeklyResponse = { rows: SymbolWeeklyRow[] };
+
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
 export const useDataSummary = () => useFetch<DataSummary>('/orderly/api/v1/data/summary');
@@ -173,3 +274,31 @@ export const useStakeVsSupply = () =>
 
 export const useOmnivaultTvl = () =>
   useFetch<OmnivaultTvl>('/orderly/api/v1/metrics/omnivault-tvl');
+
+export const useBrokerDaily = () =>
+  useFetch<BrokerDailyResponse>('/orderly/api/v1/dashboard/orderly/by-broker');
+
+export const useFundFlowsByBroker = () =>
+  useFetch<FundFlowBrokerResponse>('/orderly/api/v1/dashboard/fund-flows/by-broker');
+
+export const useTokenTvl = () =>
+  useFetch<SymbolDailyResponse>(
+    '/orderly/api/v1/dashboard/orderly/by-symbol/daily?symbol_type=token'
+  );
+
+export const useFundingRates = () =>
+  useFetch<FundingRatesResponse>('/orderly/api/v1/dashboard/orderly/funding-rates');
+
+export const useStakingDaily = () =>
+  useFetch<StakingDailyResponse>('/orderly/api/v1/dashboard/staking/daily');
+
+export const useFundFlowsByChain = () =>
+  useFetch<FundFlowChainResponse>('/orderly/api/v1/dashboard/fund-flows/by-chain');
+
+export const usePerpLiquidations = () =>
+  useFetch<PerpSymbolDailyResponse>(
+    '/orderly/api/v1/dashboard/orderly/by-symbol/daily?symbol_type=perp'
+  );
+
+export const useSymbolWeekly = () =>
+  useFetch<SymbolWeeklyResponse>('/orderly/api/v1/dashboard/orderly/by-symbol/weekly');
