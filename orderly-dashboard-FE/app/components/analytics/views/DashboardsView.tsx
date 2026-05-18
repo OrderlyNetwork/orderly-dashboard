@@ -9,15 +9,24 @@ import {
   type Period
 } from '../shared/primitives';
 import { AnalystKPIWidget } from '../widgets/AnalystKPIWidget';
+import { BuilderActiveTradersWidget } from '../widgets/BuilderActiveTradersWidget';
+import { BuilderRevenueWidget } from '../widgets/BuilderRevenueWidget';
+import { BuilderVolumeWidget } from '../widgets/BuilderVolumeWidget';
 import { DexUsersWidget } from '../widgets/DexUsersWidget';
 import { DistributorsWidget } from '../widgets/DistributorsWidget';
 import { FeesStatsWidget } from '../widgets/FeesStatsWidget';
+import { FundFlowsByChainWidget } from '../widgets/FundFlowsByChainWidget';
+import { FundingRatesWidget } from '../widgets/FundingRatesWidget';
+import { LiquidationsBySymbolWidget } from '../widgets/LiquidationsBySymbolWidget';
 import { NetFeesWidget } from '../widgets/NetFeesWidget';
+import { NetFlowByBuilderWidget } from '../widgets/NetFlowByBuilderWidget';
 import { OmnivaultTvlWidget } from '../widgets/OmnivaultTvlWidget';
 import { OverviewWidget } from '../widgets/OverviewWidget';
 import { StakeUsersWidget } from '../widgets/StakeUsersWidget';
 import { StakeVsSupplyWidget } from '../widgets/StakeVsSupplyWidget';
+import { StakingDailyWidget } from '../widgets/StakingDailyWidget';
 import { TvlByChainWidget } from '../widgets/TvlByChainWidget';
+import { TvlByTokenWidget } from '../widgets/TvlByTokenWidget';
 import { VolumeChartWidget } from '../widgets/VolumeChartWidget';
 import { VolumeSegmentsWidget } from '../widgets/VolumeSegmentsWidget';
 import { WidgetWrapper } from '../widgets/WidgetWrapper';
@@ -105,6 +114,22 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             <OmnivaultTvlWidget />
           </WidgetWrapper>
         </div>
+        <div className="dash-grid-lg" style={{ marginTop: 20 }}>
+          <WidgetWrapper
+            widgetId="liquidations-by-symbol"
+            title="Liquidations by Symbol"
+            subtitle="daily liquidation notional per symbol"
+          >
+            <LiquidationsBySymbolWidget />
+          </WidgetWrapper>
+          <WidgetWrapper
+            widgetId="funding-rates"
+            title="Funding Rates"
+            subtitle="latest 8h funding rate per symbol"
+          >
+            <FundingRatesWidget />
+          </WidgetWrapper>
+        </div>
       </div>
 
       <div>
@@ -127,11 +152,72 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             <StakeVsSupplyWidget />
           </WidgetWrapper>
         </div>
+        <div className="dash-grid-lg" style={{ marginTop: 20 }}>
+          <WidgetWrapper
+            widgetId="staking-daily"
+            title="Staking Activity"
+            subtitle="daily net staked ORDER & burned ORDER"
+          >
+            <StakingDailyWidget />
+          </WidgetWrapper>
+          <WidgetWrapper
+            widgetId="fund-flows-by-chain"
+            title="Net Flow by Chain"
+            subtitle="daily net flow breakdown per chain"
+          >
+            <FundFlowsByChainWidget />
+          </WidgetWrapper>
+        </div>
       </div>
 
       <WidgetWrapper widgetId="distributors" title="Distributors">
         <DistributorsWidget />
       </WidgetWrapper>
+
+      <div>
+        <SectionHeading>Builder Analytics</SectionHeading>
+        <div className="dash-grid-lg">
+          <WidgetWrapper
+            widgetId="builder-volume"
+            title="Builder Volume"
+            subtitle="daily trading volume breakdown per builder"
+          >
+            <BuilderVolumeWidget />
+          </WidgetWrapper>
+          <WidgetWrapper
+            widgetId="builder-active-traders"
+            title="Daily Active Traders"
+            subtitle="daily active trader breakdown per builder"
+          >
+            <BuilderActiveTradersWidget />
+          </WidgetWrapper>
+        </div>
+        <div className="dash-grid-lg" style={{ marginTop: 20 }}>
+          <WidgetWrapper
+            widgetId="builder-revenue"
+            title="Builder Revenue"
+            subtitle="daily revenue breakdown per builder"
+          >
+            <BuilderRevenueWidget />
+          </WidgetWrapper>
+          <WidgetWrapper
+            widgetId="net-flow-by-builder"
+            title="Net Flow by Builder"
+            subtitle="daily net flow breakdown per builder"
+          >
+            <NetFlowByBuilderWidget />
+          </WidgetWrapper>
+        </div>
+        <div style={{ marginTop: 20 }}>
+          <WidgetWrapper
+            widgetId="tvl-by-token"
+            title="TVL by Token"
+            subtitle="daily TVL breakdown per token"
+          >
+            <TvlByTokenWidget />
+          </WidgetWrapper>
+        </div>
+      </div>
     </div>
   );
 };

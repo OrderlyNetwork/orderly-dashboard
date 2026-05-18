@@ -56,9 +56,7 @@ export const VolumeSegmentsWidget: FC = () => {
     visible: !hidden.has(i)
   }));
 
-  const visibleDatasets = segList
-    .map((seg, i) => ({ seg, i }))
-    .filter(({ i }) => !hidden.has(i));
+  const visibleDatasets = segList.map((seg, i) => ({ seg, i })).filter(({ i }) => !hidden.has(i));
 
   const chartData: ChartData<'bar'> = {
     labels: weeks.map(weekLabel),

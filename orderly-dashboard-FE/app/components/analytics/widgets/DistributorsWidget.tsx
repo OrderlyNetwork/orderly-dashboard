@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { fmtNum, fmtUsd } from '../shared/formatters';
-import { Empty, Skeleton, TD, TH_STICKY, tdSticky } from '../shared/primitives';
+import { Empty, Skeleton, TD, TH_STICKY } from '../shared/primitives';
 
 import { useDistributorStats } from '~/hooks/useOrderlyMetrics';
 

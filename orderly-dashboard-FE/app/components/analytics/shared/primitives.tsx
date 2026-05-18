@@ -158,31 +158,73 @@ export const TableWrap: FC<{ children: ReactNode }> = ({ children }) => (
 export const DatasetChips: FC<{
   items: Array<{ label: string; color: string; visible: boolean }>;
   onToggle: (index: number) => void;
-}> = ({ items, onToggle }) => (
-  <div className="flex flex-wrap gap-1.5 mb-2">
-    {items.map((item, i) => (
-      <button
-        key={item.label}
-        onClick={() => onToggle(i)}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] cursor-pointer transition-all duration-150"
-        style={{
-          background: item.visible ? `${item.color}18` : 'rgba(255,255,255,0.03)',
-          border: `1px solid ${item.visible ? `${item.color}44` : 'rgba(255,255,255,0.08)'}`,
-          color: item.visible ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)',
-          textDecoration: item.visible ? 'none' : 'line-through'
-        }}
-      >
-        <span
-          className="inline-block rounded-full shrink-0"
+  maxHeight?: number;
+  onSelectAll?: () => void;
+  onDeselectAll?: () => void;
+}> = ({ items, onToggle, maxHeight, onSelectAll, onDeselectAll }) => (
+  <div
+    style={{
+      maxHeight,
+      overflowY: maxHeight ? 'auto' : undefined,
+      scrollbarWidth: maxHeight ? 'thin' : undefined,
+      scrollbarColor: maxHeight ? 'rgba(156,117,255,0.25) transparent' : undefined
+    }}
+  >
+    {(onSelectAll || onDeselectAll) && (
+      <div className="flex gap-1.5 mb-1.5">
+        {onSelectAll && (
+          <button
+            onClick={onSelectAll}
+            className="px-2 py-0.5 rounded text-[10px] cursor-pointer transition-all duration-150"
+            style={{
+              background: 'rgba(156,117,255,0.08)',
+              border: '1px solid rgba(156,117,255,0.2)',
+              color: 'rgba(156,117,255,0.6)'
+            }}
+          >
+            Select all
+          </button>
+        )}
+        {onDeselectAll && (
+          <button
+            onClick={onDeselectAll}
+            className="px-2 py-0.5 rounded text-[10px] cursor-pointer transition-all duration-150"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: 'rgba(255,255,255,0.35)'
+            }}
+          >
+            Deselect all
+          </button>
+        )}
+      </div>
+    )}
+    <div className="flex flex-wrap gap-1.5 mb-2">
+      {items.map((item, i) => (
+        <button
+          key={item.label}
+          onClick={() => onToggle(i)}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] cursor-pointer transition-all duration-150"
           style={{
-            width: 8,
-            height: 8,
-            background: item.visible ? item.color : 'rgba(255,255,255,0.15)'
+            background: item.visible ? `${item.color}18` : 'rgba(255,255,255,0.03)',
+            border: `1px solid ${item.visible ? `${item.color}44` : 'rgba(255,255,255,0.08)'}`,
+            color: item.visible ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)',
+            textDecoration: item.visible ? 'none' : 'line-through'
           }}
-        />
-        {item.label}
-      </button>
-    ))}
+        >
+          <span
+            className="inline-block rounded-full shrink-0"
+            style={{
+              width: 8,
+              height: 8,
+              background: item.visible ? item.color : 'rgba(255,255,255,0.15)'
+            }}
+          />
+          {item.label}
+        </button>
+      ))}
+    </div>
   </div>
 );
 

@@ -1,10 +1,4 @@
-import {
-  ArcElement,
-  Chart as ChartJS,
-  Tooltip,
-  type ChartData,
-  type ChartOptions
-} from 'chart.js';
+import { ArcElement, Chart as ChartJS, Tooltip, type ChartData, type ChartOptions } from 'chart.js';
 import { FC, useRef, useState } from 'react';
 import { Doughnut } from 'react-chartjs-2';
 
@@ -27,13 +21,11 @@ export const TvlByChainWidget: FC<{
 
   const chips = sorted.map((c, i) => ({
     label: capitalize(c.chain),
-    color: (CHAIN_COLORS[c.chain] ?? '#9C75FF'),
+    color: CHAIN_COLORS[c.chain] ?? '#9C75FF',
     visible: !hidden.has(i)
   }));
 
-  const visible = sorted
-    .map((c, i) => ({ c, i }))
-    .filter(({ i }) => !hidden.has(i));
+  const visible = sorted.map((c, i) => ({ c, i })).filter(({ i }) => !hidden.has(i));
 
   const data: ChartData<'doughnut'> = {
     labels: visible.map(({ c }) => capitalize(c.chain)),
@@ -58,7 +50,7 @@ export const TvlByChainWidget: FC<{
         callbacks: {
           label: (ctx) => {
             const total = ctx.dataset.data.reduce((s, v) => s + (v as number), 0);
-            const pct = ((ctx.raw as number) / total * 100).toFixed(1);
+            const pct = (((ctx.raw as number) / total) * 100).toFixed(1);
             return ` ${fmtCompact(ctx.raw as number)} (${pct}%)`;
           }
         }

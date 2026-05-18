@@ -12,16 +12,25 @@ import {
   type Period
 } from '~/components/analytics/shared/primitives';
 import { AnalystKPIWidget } from '~/components/analytics/widgets/AnalystKPIWidget';
+import { BuilderActiveTradersWidget } from '~/components/analytics/widgets/BuilderActiveTradersWidget';
+import { BuilderRevenueWidget } from '~/components/analytics/widgets/BuilderRevenueWidget';
+import { BuilderVolumeWidget } from '~/components/analytics/widgets/BuilderVolumeWidget';
 import { CopyBlock } from '~/components/analytics/widgets/CopyBlock';
 import { DexUsersWidget } from '~/components/analytics/widgets/DexUsersWidget';
 import { DistributorsWidget } from '~/components/analytics/widgets/DistributorsWidget';
 import { FeesStatsWidget } from '~/components/analytics/widgets/FeesStatsWidget';
+import { FundFlowsByChainWidget } from '~/components/analytics/widgets/FundFlowsByChainWidget';
+import { FundingRatesWidget } from '~/components/analytics/widgets/FundingRatesWidget';
+import { LiquidationsBySymbolWidget } from '~/components/analytics/widgets/LiquidationsBySymbolWidget';
 import { NetFeesWidget } from '~/components/analytics/widgets/NetFeesWidget';
+import { NetFlowByBuilderWidget } from '~/components/analytics/widgets/NetFlowByBuilderWidget';
 import { OmnivaultTvlWidget } from '~/components/analytics/widgets/OmnivaultTvlWidget';
 import { OverviewWidget } from '~/components/analytics/widgets/OverviewWidget';
 import { StakeUsersWidget } from '~/components/analytics/widgets/StakeUsersWidget';
 import { StakeVsSupplyWidget } from '~/components/analytics/widgets/StakeVsSupplyWidget';
+import { StakingDailyWidget } from '~/components/analytics/widgets/StakingDailyWidget';
 import { TvlByChainWidget } from '~/components/analytics/widgets/TvlByChainWidget';
+import { TvlByTokenWidget } from '~/components/analytics/widgets/TvlByTokenWidget';
 import { VolumeChartWidget } from '~/components/analytics/widgets/VolumeChartWidget';
 import { VolumeSegmentsWidget } from '~/components/analytics/widgets/VolumeSegmentsWidget';
 import { WidgetWrapper } from '~/components/analytics/widgets/WidgetWrapper';
@@ -103,9 +112,45 @@ const WIDGET_META: Record<
   },
   distributors: { title: 'Distributors' },
   'fees-stats': { title: 'Fees & Revenue' },
+  'builder-volume': {
+    title: 'Builder Volume',
+    subtitle: 'daily trading volume breakdown per builder'
+  },
+  'builder-active-traders': {
+    title: 'Daily Active Traders',
+    subtitle: 'daily active trader breakdown per builder'
+  },
+  'builder-revenue': {
+    title: 'Builder Revenue',
+    subtitle: 'daily revenue breakdown per builder'
+  },
+  'net-flow-by-builder': {
+    title: 'Net Flow by Builder',
+    subtitle: 'daily net flow breakdown per builder'
+  },
+  'tvl-by-token': {
+    title: 'TVL by Token',
+    subtitle: 'daily TVL breakdown per token'
+  },
   leaderboard: { title: 'Leaderboard' },
   positions: { title: 'Positions' },
-  'kpi-analyst': { title: 'Key Metrics' }
+  'kpi-analyst': { title: 'Key Metrics' },
+  'funding-rates': {
+    title: 'Funding Rates',
+    subtitle: 'latest 8h funding rate per symbol'
+  },
+  'staking-daily': {
+    title: 'Staking Activity',
+    subtitle: 'daily net staked ORDER & burned ORDER'
+  },
+  'fund-flows-by-chain': {
+    title: 'Net Flow by Chain',
+    subtitle: 'daily net flow breakdown per chain'
+  },
+  'liquidations-by-symbol': {
+    title: 'Liquidations by Symbol',
+    subtitle: 'daily liquidation notional per symbol'
+  }
 };
 
 export default function WidgetRoute() {
@@ -185,6 +230,21 @@ export default function WidgetRoute() {
     case 'distributors':
       widgetContent = <DistributorsWidget />;
       break;
+    case 'builder-volume':
+      widgetContent = <BuilderVolumeWidget />;
+      break;
+    case 'builder-active-traders':
+      widgetContent = <BuilderActiveTradersWidget />;
+      break;
+    case 'builder-revenue':
+      widgetContent = <BuilderRevenueWidget />;
+      break;
+    case 'net-flow-by-builder':
+      widgetContent = <NetFlowByBuilderWidget />;
+      break;
+    case 'tvl-by-token':
+      widgetContent = <TvlByTokenWidget />;
+      break;
     case 'fees-stats':
       widgetContent = <FeesStatsWidget data={fullData} />;
       break;
@@ -196,6 +256,18 @@ export default function WidgetRoute() {
       break;
     case 'kpi-analyst':
       widgetContent = <AnalystKPIWidget data={fullData} />;
+      break;
+    case 'funding-rates':
+      widgetContent = <FundingRatesWidget />;
+      break;
+    case 'staking-daily':
+      widgetContent = <StakingDailyWidget />;
+      break;
+    case 'fund-flows-by-chain':
+      widgetContent = <FundFlowsByChainWidget />;
+      break;
+    case 'liquidations-by-symbol':
+      widgetContent = <LiquidationsBySymbolWidget />;
       break;
     default:
       widgetContent = null;
