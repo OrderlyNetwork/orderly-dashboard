@@ -18,6 +18,7 @@ import {
   baseTooltipOpts,
   CHAIN_COLORS,
   chartColor,
+  normalizeChainName,
   rankKeys,
   tooltipTopN,
   useChartReady
@@ -47,7 +48,7 @@ export const FundFlowsByChainWidget: FC = () => {
   const allKeys = new Set<string>();
   rows.forEach((r) => {
     const key = r.date;
-    const chain = r.chain;
+    const chain = normalizeChainName(r.chain);
     allKeys.add(chain);
     if (!dateMap.has(key)) dateMap.set(key, {});
     dateMap.get(key)![chain] = r.net_flow_usd ?? 0;
