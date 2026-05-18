@@ -88,6 +88,58 @@ type SidebarProps = {
   activeNav: NavId;
 };
 
+const EXTERNAL_LINKS: { label: string; href: string }[] = [
+  { label: 'Orderly Website', href: 'https://orderly.network' },
+  { label: 'Documentation', href: 'https://orderly.network/docs' },
+  { label: 'Explorer', href: 'https://explorer.orderly.network/' },
+  { label: 'Orderly One', href: 'https://dex.orderly.network/' },
+  { label: 'Github', href: 'https://github.com/OrderlyNetwork' },
+  { label: 'Staking', href: 'https://app.orderly.network/' }
+];
+
+const ExternalLinkIcon = () => (
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="shrink-0"
+    style={{ opacity: 0.5 }}
+  >
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    <polyline points="15 3 21 3 21 9" />
+    <line x1="10" y1="14" x2="21" y2="3" />
+  </svg>
+);
+
+function renderExternalLinks() {
+  return EXTERNAL_LINKS.map((link) => (
+    <a
+      key={link.href}
+      href={link.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-[10px] w-full py-2 px-[10px] rounded-[10px] text-[13px] no-underline transition-all duration-150 cursor-pointer text-left"
+      style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 400 }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+        (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)';
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.background = 'transparent';
+        (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)';
+      }}
+    >
+      <span className="whitespace-nowrap overflow-hidden text-ellipsis">{link.label}</span>
+      <ExternalLinkIcon />
+    </a>
+  ));
+}
+
 function renderNavItems(activeNav: NavId, onNavigate?: () => void) {
   return NAV_ITEMS.map((item) => {
     const isActive = activeNav === item.id;
@@ -156,39 +208,7 @@ function SidebarContent({ activeNav, onNavigate }: SidebarProps & { onNavigate?:
         </div>
         {renderNavItems(activeNav, onNavigate)}
         <div className="my-3 mx-[10px]" style={{ borderTop: '2px solid rgba(255,255,255,0.2)' }} />
-        <a
-          href="https://orderly.network"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-[10px] w-full py-2 px-[10px] rounded-[10px] text-[13px] no-underline transition-all duration-150 cursor-pointer text-left"
-          style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 400 }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
-            (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = 'transparent';
-            (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)';
-          }}
-        >
-          <span className="whitespace-nowrap overflow-hidden text-ellipsis">Orderly Website</span>
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="shrink-0"
-            style={{ opacity: 0.5 }}
-          >
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-          </svg>
-        </a>
+        {renderExternalLinks()}
       </nav>
     </>
   );
