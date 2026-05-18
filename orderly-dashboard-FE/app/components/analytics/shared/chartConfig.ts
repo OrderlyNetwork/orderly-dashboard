@@ -16,6 +16,38 @@ export function useChartReady<T extends 'bar' | 'line' | 'doughnut'>(
   }, []);
 }
 
+const CHAIN_NAME_ALIASES: Record<string, string> = {
+  'bnb chain': 'bnb',
+  'bnb smart chain': 'bnb',
+  ethereum: 'ethereum',
+  arbitrum: 'arbitrum',
+  'arbitrum one': 'arbitrum',
+  solana: 'solana',
+  optimism: 'optimism',
+  base: 'base',
+  polygon: 'polygon',
+  'polygon pos': 'polygon',
+  avalanche: 'avalanche',
+  'avalanche c-chain': 'avalanche',
+  abstract: 'abstract',
+  berachain: 'berachain',
+  bera: 'berachain',
+  ceffu: 'ceffu',
+  story: 'story',
+  sonic: 'sonic',
+  mode: 'mode',
+  sei: 'sei',
+  mantle: 'mantle',
+  plume: 'plume',
+  monad: 'monad',
+  morph: 'morph'
+};
+
+export function normalizeChainName(raw: string): string {
+  const lower = raw.toLowerCase().trim();
+  return CHAIN_NAME_ALIASES[lower] ?? lower;
+}
+
 export const CHAIN_COLORS: Record<string, string> = {
   solana: '#9945FF',
   arbitrum: '#28A0F0',
