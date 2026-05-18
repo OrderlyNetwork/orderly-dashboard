@@ -276,7 +276,9 @@ export const useOmnivaultTvl = () =>
   useFetch<OmnivaultTvl>('/orderly/api/v1/metrics/omnivault-tvl');
 
 export const useBrokerDaily = () =>
-  useFetch<BrokerDailyResponse>('/orderly/api/v1/dashboard/orderly/by-broker');
+  useFetch<BrokerDailyResponse>(
+    '/orderly/api/v1/dashboard/orderly/by-broker?exclude_zero_volume=true'
+  );
 
 export const useFundFlowsByBroker = () =>
   useFetch<FundFlowBrokerResponse>('/orderly/api/v1/dashboard/fund-flows/by-broker');
