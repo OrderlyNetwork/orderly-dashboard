@@ -31,7 +31,6 @@ export const FundingRatesWidget: FC = () => {
   const { data: volData } = useSymbolWeekly();
   const chartRef = useRef<ChartJS<'line'>>(null);
   useChartReady(chartRef);
-  const rows = frData?.rows ?? [];
 
   const volumeBySymbol = useMemo(() => {
     const totals = new Map<string, number>();
@@ -43,15 +42,19 @@ export const FundingRatesWidget: FC = () => {
     return totals;
   }, [volData]);
 
-  const timeMap = new Map<string, Record<string, number>>();
-  const allSymbols = useMemo(() => new Set<string>(), []);
-  rows.forEach((r) => {
-    const key = r.funding_time;
-    const sym = r.symbol;
-    allSymbols.add(sym);
-    if (!timeMap.has(key)) timeMap.set(key, {});
-    timeMap.get(key)![sym] = r.funding_rate;
-  });
+  const rows = frData?.rows;
+  const { timeMap, allSymbols } = useMemo(() => {
+    const tm = new Map<string, Record<string, number>>();
+    const syms = new Set<string>();
+    for (const r of rows ?? []) {
+      const key = r.funding_time;
+      const sym = r.symbol;
+      syms.add(sym);
+      if (!tm.has(key)) tm.set(key, {});
+      tm.get(key)![sym] = r.funding_rate;
+    }
+    return { timeMap: tm, allSymbols: syms };
+  }, [rows]);
 
   const ranked = useMemo(() => {
     return Array.from(allSymbols).sort(
