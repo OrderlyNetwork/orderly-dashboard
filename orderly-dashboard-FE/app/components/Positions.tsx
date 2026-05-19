@@ -23,6 +23,7 @@ import { Spinner } from '~/components';
 import {
   useBrokers,
   useSymbols,
+  useAllSymbols,
   getSymbolName,
   getSymbolBaseTick,
   getMaxFractionDigits,
@@ -99,6 +100,7 @@ export const Positions: FC<PositionsProps> = ({
   const { data, error, isLoading } = usePositions(queryParams);
   const { data: brokers } = useBrokers();
   const symbols = useSymbols();
+  const allSymbols = useAllSymbols();
 
   const [previousData, setPreviousData] = useState<PositionsResponse | null>(null);
 
@@ -185,8 +187,8 @@ export const Positions: FC<PositionsProps> = ({
   };
 
   const formatSymbol = useCallback(
-    (symbolHash: string) => getSymbolName(symbolHash, symbols),
-    [symbols]
+    (symbolHash: string) => getSymbolName(symbolHash, symbols, allSymbols),
+    [symbols, allSymbols]
   );
 
   const isValidAddress = (address: string): boolean => {

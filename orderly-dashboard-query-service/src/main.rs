@@ -18,6 +18,7 @@ use orderly_dashboard_query_service::events::events_api::{
     list_events, list_events_v2, list_sol_events,
 };
 use orderly_dashboard_query_service::indexer_db::init_indexer_db_url;
+use orderly_dashboard_query_service::lookup::{get_symbols, get_tokens};
 use orderly_dashboard_query_service::network_info::get_network_info;
 use orderly_dashboard_query_service::raw_query::analyzer_raw_query;
 use orderly_dashboard_query_service::service_base::runtime::spawn_future;
@@ -163,6 +164,8 @@ async fn main() -> std::io::Result<()> {
             // duplicate with get_realized_pnl_rank
             .service(block_height)
             .service(get_network_info)
+            .service(get_symbols)
+            .service(get_tokens)
             .service(analyzer_raw_query)
             .service(get_status)
             .service(list_sol_events)
