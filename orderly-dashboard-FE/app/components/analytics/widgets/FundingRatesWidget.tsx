@@ -1,30 +1,25 @@
 import {
-  CategoryScale,
   Chart as ChartJS,
   Filler,
   LinearScale,
   LineElement,
   PointElement,
+  TimeScale,
   Tooltip,
   type ChartData,
   type ChartOptions
 } from 'chart.js';
+import 'chartjs-adapter-date-fns';
+import { format } from 'date-fns';
 import { FC, useMemo, useRef, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
-import {
-  baseLineOpts,
-  baseTooltipOpts,
-  chartColor,
-  tooltipTopN,
-  useChartReady
-} from '../shared/chartConfig';
-import { labelFromDate } from '../shared/formatters';
+import { baseTooltipOpts, chartColor, tooltipTopN, useChartReady } from '../shared/chartConfig';
 import { DatasetChips, Empty, Skeleton } from '../shared/primitives';
 
 import { useFundingRates, useSymbolWeekly } from '~/hooks/useOrderlyMetrics';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
+ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
 export const FundingRatesWidget: FC = () => {
   const { data: frData, isLoading: frLoading, error: frError } = useFundingRates();
@@ -43,17 +38,19 @@ export const FundingRatesWidget: FC = () => {
   }, [volData]);
 
   const rows = frData?.rows;
-  const { timeMap, allSymbols } = useMemo(() => {
-    const tm = new Map<string, Record<string, number>>();
+  const { seriesBySymbol, allSymbols } = useMemo(() => {
+    const map = new Map<string, { x: number; y: number }[]>();
     const syms = new Set<string>();
     for (const r of rows ?? []) {
-      const key = r.funding_time;
-      const sym = r.symbol;
-      syms.add(sym);
-      if (!tm.has(key)) tm.set(key, {});
-      tm.get(key)![sym] = r.funding_rate;
+      syms.add(r.symbol);
+      const arr = map.get(r.symbol) ?? [];
+      arr.push({ x: new Date(r.funding_time).getTime(), y: r.funding_rate * 100 });
+      map.set(r.symbol, arr);
     }
-    return { timeMap: tm, allSymbols: syms };
+    for (const arr of map.values()) {
+      arr.sort((a, b) => a.x - b.x);
+    }
+    return { seriesBySymbol: map, allSymbols: syms };
   }, [rows]);
 
   const ranked = useMemo(() => {
@@ -61,8 +58,6 @@ export const FundingRatesWidget: FC = () => {
       (a, b) => (volumeBySymbol.get(b) ?? 0) - (volumeBySymbol.get(a) ?? 0)
     );
   }, [allSymbols, volumeBySymbol]);
-
-  const times = Array.from(timeMap.keys()).sort();
 
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
 
@@ -78,12 +73,11 @@ export const FundingRatesWidget: FC = () => {
   }));
 
   const chartData: ChartData<'line'> = {
-    labels: times.map((t) => labelFromDate(t)),
     datasets: chartKeys.map((key) => {
       const i = ranked.indexOf(key);
       return {
         label: key.replace('PERP_', '').replace('_USDC', ''),
-        data: times.map((t) => (timeMap.get(t)?.[key] ?? 0) * 100),
+        data: seriesBySymbol.get(key) ?? [],
         borderColor: chartColor(i),
         backgroundColor: chartColor(i) + '20',
         tension: 0.2,
@@ -95,15 +89,25 @@ export const FundingRatesWidget: FC = () => {
   };
 
   const options: ChartOptions<'line'> = {
-    ...baseLineOpts,
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'nearest', axis: 'x', intersect: false },
     plugins: {
       legend: { display: false },
       tooltip: {
         ...baseTooltipOpts,
+        mode: 'nearest',
+        axis: 'x',
         filter: tooltipTopN(12),
         callbacks: {
+          title: (items) => {
+            if (!items.length) return '';
+            const x = items[0].parsed.x;
+            return format(new Date(x ?? 0), 'MMM d, HH:mm');
+          },
           label: (ctx) => {
-            const val = ctx.raw as number;
+            const val = ctx.parsed.y;
+            if (val == null) return '';
             const sign = val >= 0 ? '+' : '';
             return ` ${ctx.dataset.label}: ${sign}${val.toFixed(4)}%`;
           }
@@ -111,9 +115,25 @@ export const FundingRatesWidget: FC = () => {
       }
     },
     scales: {
-      x: baseLineOpts.scales?.x,
+      x: {
+        type: 'time',
+        grid: { color: 'rgba(255,255,255,0.04)' },
+        ticks: {
+          color: 'rgba(255,255,255,0.3)',
+          font: { size: 10 },
+          maxTicksLimit: 8,
+          maxRotation: 0
+        },
+        time: {
+          tooltipFormat: 'MMM d, HH:mm',
+          displayFormats: {
+            hour: 'MMM d HH:mm',
+            day: 'MMM d'
+          }
+        }
+      },
       y: {
-        ...baseLineOpts.scales?.y,
+        grid: { color: 'rgba(255,255,255,0.04)' },
         ticks: {
           color: 'rgba(255,255,255,0.3)',
           font: { size: 10 },
@@ -124,7 +144,7 @@ export const FundingRatesWidget: FC = () => {
   };
 
   if (frLoading) return <Skeleton height={236} />;
-  if (frError || times.length === 0) return <Empty msg={frError ? 'Failed to load' : 'No data'} />;
+  if (frError || !rows?.length) return <Empty msg={frError ? 'Failed to load' : 'No data'} />;
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
