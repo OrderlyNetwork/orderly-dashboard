@@ -47,22 +47,20 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
       <button
         onClick={() => setShareOpen(true)}
         title="Share widget"
-        className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-all duration-150 text-[rgba(255,255,255,0.3)] cursor-pointer"
+        className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-all duration-150 text-[rgba(255,255,255,0.3)] cursor-pointer outline-none focus:outline-none"
         style={{
-          background: 'rgba(156,117,255,0.08)',
-          border: '1px solid rgba(156,117,255,0.15)'
+          background: '#221E30',
+          border: 'none'
         }}
         onMouseEnter={(e) => {
           const el = e.currentTarget as HTMLElement;
-          el.style.background = 'rgba(156,117,255,0.2)';
+          el.style.background = '#2e2840';
           el.style.color = '#9C75FF';
-          el.style.borderColor = 'rgba(156,117,255,0.4)';
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget as HTMLElement;
-          el.style.background = 'rgba(156,117,255,0.08)';
+          el.style.background = '#221E30';
           el.style.color = 'rgba(255,255,255,0.3)';
-          el.style.borderColor = 'rgba(156,117,255,0.15)';
         }}
       >
         <ShareIcon />
@@ -82,18 +80,16 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
 
   return (
     <div
-      className="rounded-2xl overflow-hidden"
+      className=""
       style={{
         display: 'flex',
-        flexDirection: 'column',
-        background: 'rgba(20,15,35,.9)',
-        border: '1px solid rgba(156,117,255,0.15)'
+        flexDirection: 'column'
       }}
     >
       {showHeader && (
         <div
           className="flex items-center justify-between gap-3 py-4 px-5"
-          style={{ borderBottom: '1px solid rgba(156,117,255,0.08)' }}
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
         >
           <div className="min-w-0">
             {title && <div className="text-sm font-semibold text-white">{title}</div>}
@@ -108,7 +104,7 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
         </div>
       )}
 
-      <div className="pt-3 pb-4 px-4" style={contentStyle}>
+      <div className="pt-4 pb-5 px-5" style={contentStyle}>
         {children}
       </div>
     </div>

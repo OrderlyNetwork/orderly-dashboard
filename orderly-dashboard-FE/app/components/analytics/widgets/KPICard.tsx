@@ -1,4 +1,6 @@
-import { FC, ReactNode } from 'react';
+import { CSSProperties, FC, ReactNode } from 'react';
+
+export type CardSize = 'lg' | 'md' | 'sm';
 
 export type KPICardProps = {
   label: string;
@@ -7,38 +9,72 @@ export type KPICardProps = {
   delta?: number;
   icon?: ReactNode;
   flat?: boolean;
+  bgColor?: string;
+  size?: CardSize;
+  cardStyle?: CSSProperties;
 };
 
-export const KPICard: FC<KPICardProps> = ({ label, value, subValue, delta, icon, flat }) => {
+type TextScheme = { label: string; value: string; sub: string };
+
+function scheme(bg: string): TextScheme {
+  const upper = bg.toUpperCase();
+  if (upper === '#E9DEFF') return { label: '#000000', value: '#000000', sub: '#000000' };
+  if (upper === '#9C75FF') return { label: '#000000', value: '#000000', sub: '#000000' };
+  return { label: '#9C75FF', value: '#ffffff', sub: '#9C75FF' };
+}
+
+const VALUE_SIZE: Record<CardSize, number> = { lg: 54, md: 40, sm: 30 };
+const LABEL_SIZE: Record<CardSize, number> = { lg: 13, md: 11, sm: 10 };
+const SUB_SIZE: Record<CardSize, number> = { lg: 14, md: 12, sm: 11 };
+const BADGE_SIZE: Record<CardSize, number> = { lg: 13, md: 12, sm: 11 };
+
+export const KPICard: FC<KPICardProps> = ({
+  label,
+  value,
+  subValue,
+  delta,
+  icon,
+  bgColor = '#6700CE',
+  size = 'md',
+  cardStyle
+}) => {
   const isPositive = delta !== undefined && delta >= 0;
-  const deltaColor = isPositive ? '#34d399' : '#f87171';
+  const { label: labelColor, value: valueColor, sub: subColor } = scheme(bgColor);
 
   return (
     <div
-      className={`flex flex-col gap-1.5 min-w-0 overflow-hidden transition-colors duration-200 ${flat ? 'rounded-[10px] py-[14px] px-4' : 'rounded-2xl py-5 px-6 backdrop-blur-md'}`}
-      style={{
-        background: flat ? 'rgba(255,255,255,0.03)' : 'rgba(20,15,35,.9)',
-        border: flat ? '1px solid rgba(156,117,255,0.08)' : '1px solid rgba(156,117,255,0.18)',
-        backdropFilter: flat ? 'none' : undefined
-      }}
+      className="flex flex-col rounded-xl px-5 py-5 min-w-0 overflow-hidden"
+      style={{ background: bgColor, border: 'none', ...cardStyle }}
     >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-[rgba(255,255,255,0.5)] uppercase tracking-[0.08em]">
+      {/* label anchored top-left */}
+      <div className="flex items-center justify-between shrink-0">
+        <span
+          className="font-semibold uppercase tracking-[0.1em]"
+          style={{ color: labelColor, fontSize: LABEL_SIZE[size] }}
+        >
           {label}
         </span>
-        {icon && <span className="text-[#9C75FF] opacity-80">{icon}</span>}
+        {icon && <span style={{ color: labelColor }}>{icon}</span>}
       </div>
 
-      <div className="flex items-baseline gap-[10px] min-w-0">
-        <span className="text-[26px] font-bold text-white leading-tight tracking-tight min-w-0 shrink">
+      {/* spacer pushes value to bottom */}
+      <div className="flex-1" />
+
+      {/* value row at bottom-left */}
+      <div className="flex items-end gap-3 min-w-0 flex-wrap">
+        <span
+          className="font-bold leading-none tracking-tight min-w-0 shrink"
+          style={{ color: valueColor, fontSize: VALUE_SIZE[size] }}
+        >
           {value}
         </span>
         {delta !== undefined && (
           <span
-            className="text-xs font-semibold rounded-md py-[2px] px-[7px] shrink-0 whitespace-nowrap"
+            className="font-semibold rounded-md py-1 px-2 shrink-0 whitespace-nowrap"
             style={{
-              color: deltaColor,
-              background: isPositive ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)'
+              fontSize: BADGE_SIZE[size],
+              color: isPositive ? '#000000' : '#ffffff',
+              background: isPositive ? '#1DF6B5' : '#FF6390'
             }}
           >
             {isPositive ? '+' : ''}
@@ -47,7 +83,14 @@ export const KPICard: FC<KPICardProps> = ({ label, value, subValue, delta, icon,
         )}
       </div>
 
-      {subValue && <span className="text-xs text-[rgba(255,255,255,0.4)]">{subValue}</span>}
+      {subValue && (
+        <span
+          className="font-medium mt-1.5 shrink-0"
+          style={{ color: subColor, fontSize: SUB_SIZE[size] }}
+        >
+          {subValue}
+        </span>
+      )}
     </div>
   );
 };

@@ -37,18 +37,15 @@ export const PeriodSelector: FC<{ period: Period; onChange: (p: Period) => void 
   period,
   onChange
 }) => (
-  <div
-    className="flex p-[3px] gap-[2px] rounded-lg"
-    style={{ background: 'rgba(156,117,255,0.06)', border: '1px solid rgba(156,117,255,0.15)' }}
-  >
+  <div className="flex gap-1 rounded-lg p-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
     {(['30D', '90D'] as Period[]).map((p) => (
       <button
         key={p}
         onClick={() => onChange(p)}
         className="px-3 py-1 rounded-md border-none cursor-pointer text-xs transition-all duration-150"
         style={{
-          background: period === p ? '#9C75FF' : 'transparent',
-          color: period === p ? '#fff' : 'rgba(255,255,255,0.45)',
+          background: period === p ? '#6700CE' : 'transparent',
+          color: period === p ? '#E9DEFF' : 'rgba(255,255,255,0.45)',
           fontWeight: period === p ? 600 : 400
         }}
       >
@@ -62,18 +59,15 @@ export const GranularitySelector: FC<{
   granularity: Granularity;
   onChange: (g: Granularity) => void;
 }> = ({ granularity, onChange }) => (
-  <div
-    className="flex p-[3px] gap-[2px] rounded-lg"
-    style={{ background: 'rgba(156,117,255,0.06)', border: '1px solid rgba(156,117,255,0.15)' }}
-  >
+  <div className="flex gap-1 rounded-lg p-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
     {(['weekly', 'monthly'] as Granularity[]).map((g) => (
       <button
         key={g}
         onClick={() => onChange(g)}
         className="px-3 py-1 rounded-md border-none cursor-pointer text-xs transition-all duration-150 capitalize"
         style={{
-          background: granularity === g ? '#9C75FF' : 'transparent',
-          color: granularity === g ? '#fff' : 'rgba(255,255,255,0.45)',
+          background: granularity === g ? '#6700CE' : 'transparent',
+          color: granularity === g ? '#E9DEFF' : 'rgba(255,255,255,0.45)',
           fontWeight: granularity === g ? 600 : 400
         }}
       >
@@ -83,6 +77,10 @@ export const GranularitySelector: FC<{
   </div>
 );
 
+function statTextScheme(_bg: string): { label: string; value: string; sub: string } {
+  return { label: 'rgba(0,0,0,0.55)', value: '#000000', sub: 'rgba(0,0,0,0.45)' };
+}
+
 export const StatCard: FC<{
   label: string;
   value: string;
@@ -90,29 +88,50 @@ export const StatCard: FC<{
   color?: string;
   selected?: boolean;
   onClick?: () => void;
-}> = ({ label, value, sub, color = '#9C75FF', selected, onClick }) => (
-  <div
-    role={onClick ? 'button' : undefined}
-    tabIndex={onClick ? 0 : undefined}
-    onClick={onClick}
-    onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
-    className="rounded-xl py-[14px] px-[18px]"
-    style={{
-      background: selected ? `${color}12` : 'rgba(20,15,35,.9)',
-      border: `1px solid ${selected ? `${color}66` : `${color}22`}`,
-      borderLeft: selected ? undefined : `3px solid ${color}`,
-      boxShadow: selected ? `0 0 12px ${color}22` : 'none',
-      cursor: onClick ? 'pointer' : undefined,
-      transition: 'background .15s, border-color .15s, box-shadow .15s'
-    }}
-  >
-    <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.38)] uppercase tracking-[0.08em] mb-1.5">
-      {label}
+}> = ({ label, value, sub, color = '#9C75FF', selected, onClick }) => {
+  const { label: labelColor, value: valueColor, sub: subColor } = statTextScheme(color);
+  return (
+    <div
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
+      className="rounded-xl py-[14px] px-[18px] flex flex-col min-w-0"
+      style={{
+        background: color,
+        opacity: selected ? 1 : 0.6,
+        transform: selected ? 'scale(1)' : 'scale(0.97)',
+        cursor: onClick ? 'pointer' : undefined,
+        transition: 'opacity .15s, transform .15s'
+      }}
+      onMouseEnter={onClick && !selected ? (e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.opacity = '0.8';
+        el.style.transform = 'scale(0.99)';
+      } : undefined}
+      onMouseLeave={onClick && !selected ? (e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.opacity = '0.6';
+        el.style.transform = 'scale(0.97)';
+      } : undefined}
+    >
+      <div
+        className="text-[10px] font-semibold uppercase tracking-[0.08em] mb-1.5"
+        style={{ color: labelColor }}
+      >
+        {label}
+      </div>
+      <div className="text-xl font-bold" style={{ color: valueColor }}>
+        {value}
+      </div>
+      {sub && (
+        <div className="text-[11px] mt-1" style={{ color: subColor }}>
+          {sub}
+        </div>
+      )}
     </div>
-    <div className="text-xl font-bold text-white">{value}</div>
-    {sub && <div className="text-[11px] mt-1 text-[rgba(255,255,255,0.3)]">{sub}</div>}
-  </div>
-);
+  );
+};
 
 export const Skeleton: FC<{ height?: number }> = ({ height = 40 }) => (
   <div className="rounded-lg" style={{ height, background: 'rgba(156,117,255,0.07)' }} />
