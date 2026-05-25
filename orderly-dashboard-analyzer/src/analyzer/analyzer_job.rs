@@ -207,7 +207,8 @@ pub async fn parse_and_analyzer(
                         trades,
                     } => {
                         let trade_id =
-                            analyzer_perp_trade(trades, block_num, context, tx.clone()).await;
+                            analyzer_perp_trade(trades, block_num, context, tx.clone(), block_hour)
+                                .await;
                         latest_perp_trade_id = max(latest_perp_trade_id, trade_id);
                     }
                     TradingEventInnerData::SettlementResult {

@@ -22,10 +22,9 @@ pub struct TokensResponse {
 
 pub async fn get_all_tokens() -> anyhow::Result<TokensResponse> {
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
-    let results: Vec<TokenEntry> = diesel::sql_query(
-        "SELECT token, token_hash FROM collateral_info ORDER BY token ASC",
-    )
-    .get_results::<TokenEntry>(&mut conn)
-    .await?;
+    let results: Vec<TokenEntry> =
+        diesel::sql_query("SELECT token, token_hash FROM collateral_info ORDER BY token ASC")
+            .get_results::<TokenEntry>(&mut conn)
+            .await?;
     Ok(TokensResponse { rows: results })
 }
