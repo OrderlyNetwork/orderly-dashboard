@@ -347,7 +347,14 @@ mod tests {
             iso_margin_asset_hash: None,
         };
         let block_number = 1000000;
-        analyzer_perp_trade(vec![new_trade], block_number, &mut context, None).await;
+        analyzer_perp_trade(
+            vec![new_trade],
+            block_number,
+            &mut context,
+            None,
+            block_hour,
+        )
+        .await;
         let alice_eth = context.get_user_perp_cache(&alice_eth_perp_key);
         println!(
             "after trade_id 15: alice_eth.holding: {:?}, alice_eth.cost_position: {}",
