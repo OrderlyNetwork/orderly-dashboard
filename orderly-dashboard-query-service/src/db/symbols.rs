@@ -22,10 +22,9 @@ pub struct SymbolsResponse {
 
 pub async fn get_all_symbols() -> anyhow::Result<SymbolsResponse> {
     let mut conn = POOL.get().await.expect(DB_CONN_ERR_MSG);
-    let results: Vec<SymbolEntry> = diesel::sql_query(
-        "SELECT symbol, symbol_hash FROM market_info ORDER BY symbol ASC",
-    )
-    .get_results::<SymbolEntry>(&mut conn)
-    .await?;
+    let results: Vec<SymbolEntry> =
+        diesel::sql_query("SELECT symbol, symbol_hash FROM market_info ORDER BY symbol ASC")
+            .get_results::<SymbolEntry>(&mut conn)
+            .await?;
     Ok(SymbolsResponse { rows: results })
 }

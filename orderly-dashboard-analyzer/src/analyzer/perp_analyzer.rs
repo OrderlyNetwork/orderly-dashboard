@@ -21,6 +21,7 @@ pub async fn analyzer_perp_trade(
     pulled_block_height: i64,
     context: &mut AnalyzeContext,
     tx: Option<tokio::sync::mpsc::Sender<String>>,
+    block_hour: NaiveDateTime,
 ) -> i64 {
     if trades.is_empty() {
         return 0;
@@ -42,7 +43,7 @@ pub async fn analyzer_perp_trade(
         let notional: BigDecimal = perp_trade.notional.parse().unwrap();
         let fixed_notional = notional.div(get_cost_position_prec());
         let quoted_diff = -fixed_notional.clone();
-        let trade_hour = convert_block_hour(perp_trade.timestamp as i64);
+        let trade_hour = block_hour;
 
         // hourly_orderly
         let hour_orderly_perp_key = HourlyOrderlyPerpKey {
@@ -305,7 +306,8 @@ mod tests {
             },
         ];
         let block_number = 1000000;
-        analyzer_perp_trade(trades, block_number, &mut context, None).await;
+        let block_hour = convert_block_hour(block_time);
+        analyzer_perp_trade(trades, block_number, &mut context, None, block_hour).await;
         {
             let alice_eth = context.get_user_perp_cache(&alice_eth_perp_key);
             println!(
