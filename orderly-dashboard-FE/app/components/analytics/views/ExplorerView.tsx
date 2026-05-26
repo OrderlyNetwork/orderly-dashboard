@@ -29,7 +29,7 @@ export const ExplorerView: FC = () => {
             </svg>
           </div>
           <div>
-            <h1 className="m-0 text-[22px] font-bold text-white">Explorer</h1>
+            <h1 className="m-0 text-[22px] font-bold text-white">Search</h1>
             <p className="m-0 text-[13px] text-[rgba(255,255,255,0.45)]">
               Search wallets and accounts to view detailed trading history
             </p>

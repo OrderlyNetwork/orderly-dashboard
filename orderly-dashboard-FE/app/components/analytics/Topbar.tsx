@@ -5,7 +5,7 @@ import type { NavId } from '~/components/analytics/Sidebar';
 const NAV_LABELS: Record<NavId, string> = {
   dashboards: 'Dashboards',
   leaderboard: 'Leaderboard',
-  explorer: 'Explorer'
+  explorer: 'Search'
 };
 
 const NAV_SUBTITLES: Record<NavId, string> = {

@@ -63,7 +63,7 @@ const NAV_ITEMS: {
   {
     id: 'explorer',
     path: '/explorer',
-    label: 'Explorer',
+    label: 'Search',
     color: '#34D399',
     bgAlpha: 'rgba(52,211,153,0.15)',
     icon: (
