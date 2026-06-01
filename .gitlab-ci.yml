@@ -164,16 +164,19 @@ build_query-service:
 container-image-scan-analyzer:
   extends: .container-image-scan-base
   variables:
+    SERVICE_NAME: orderly-dashboard-analyzer
     IMAGE_NAME: orderly-dashboard-analyzer
 
 container-image-scan-indexer:
   extends: .container-image-scan-base
   variables:
+    SERVICE_NAME: orderly-dashboard-indexer
     IMAGE_NAME: orderly-dashboard-indexer
 
 container-image-scan-query-service:
   extends: .container-image-scan-base
   variables:
+    SERVICE_NAME: orderly-dashboard-query-service
     IMAGE_NAME: orderly-dashboard-query-service
 
 deploy_aliyun_dev:
