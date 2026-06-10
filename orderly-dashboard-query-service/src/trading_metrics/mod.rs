@@ -515,7 +515,7 @@ pub async fn deposit_gas_fee(param: web::Query<DailyRequest>) -> Result<impl Res
 
 #[get("/daily_orderly_token")] // <- define path parameters
 pub async fn get_daily_orderly_token(param: web::Query<DailyRequest>) -> Result<impl Responder> {
-    tracing::debug!(target: TRADING_METRICS, "daily_orderly_token from day: {}, end_day: {}", param.from_day, param.end_day);
+    tracing::info!(target: TRADING_METRICS, "daily_orderly_token from day: {}, end_day: {}", param.from_day, param.end_day);
     let (from_time, end_time) = param.parse_day();
     Ok(write_response(get_daily_token(from_time, end_time).await))
 }
@@ -555,7 +555,7 @@ example: {\"from_day\": \"2025-07-12\", \"end_day\": \"2025-07-17\" }
 )]
 #[get("/daily_trading_fee")] // <- define path parameters
 pub async fn daily_trading_fee(param: web::Query<DailyRequest>) -> Result<impl Responder> {
-    tracing::debug!(target: TRADING_METRICS, "daily_trading_fee from day: {}, end_day: {}", param.from_day, param.end_day);
+    tracing::info!(target: TRADING_METRICS, "daily_trading_fee from day: {}, end_day: {}", param.from_day, param.end_day);
     let (from_time, end_time) = param.parse_day();
     Ok(write_response(
         get_daily_trading_fee(from_time, end_time).await,
@@ -564,25 +564,25 @@ pub async fn daily_trading_fee(param: web::Query<DailyRequest>) -> Result<impl R
 
 #[get("/average_trading_count")]
 pub async fn average_trading_count() -> Result<impl Responder> {
-    tracing::debug!(target: TRADING_METRICS, "average_trading_count request");
+    tracing::info!(target: TRADING_METRICS, "average_trading_count request");
     Ok(write_response(get_average("trading_count").await))
 }
 
 #[get("/average_trading_fee")]
 pub async fn average_trading_fee() -> Result<impl Responder> {
-    tracing::debug!(target: TRADING_METRICS, "average_trading_fee request");
+    tracing::info!(target: TRADING_METRICS, "average_trading_fee request");
     Ok(write_response(get_average("trading_fee").await))
 }
 
 #[get("/average_trading_volume")]
 pub async fn average_trading_volume() -> Result<impl Responder> {
-    tracing::debug!(target: TRADING_METRICS, "average_trading_volume request");
+    tracing::info!(target: TRADING_METRICS, "average_trading_volume request");
     Ok(write_response(get_average("trading_volume").await))
 }
 
 #[get("/average_opening_count")]
 pub async fn average_opening_count() -> Result<impl Responder> {
-    tracing::debug!(target: TRADING_METRICS, "average_opening_count request");
+    tracing::info!(target: TRADING_METRICS, "average_opening_count request");
     Ok(write_response(get_average("opening_count").await))
 }
 
@@ -602,17 +602,25 @@ example: {\"days\": 1, \"size\": 10}
 #[get("/ranking/trading_volume")]
 pub async fn get_trading_volume_rank(param: web::Query<VolumeRankingRequest>) -> HttpResponse {
     tracing::info!(target: TRADING_METRICS, "/ranking/trading_volume request, days: {}, size: {}", param.days, param.size);
+    if param.size > 100 {
+        tracing::warn!(target: TRADING_METRICS, "/ranking/trading_volume request, size over limit 100");
+        return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number over limit 100");
+    }
+    if param.days > 180 {
+        tracing::warn!(target: TRADING_METRICS, "/ranking/trading_volume request, days over limit 180");
+        return write_failed_response(DAYS_RAGE_OVER_LIMIT, "days over limit 180");
+    }
     write_response(get_daily_trading_volume_ranking(param.to_hour(), param.size as i64).await)
 }
 
 #[get("/ranking/perp_holding")]
-pub async fn get_perp_holding_rank(
-    param: web::Query<PerpHoldingRankingRequest>,
-) -> Result<impl Responder> {
+pub async fn get_perp_holding_rank(param: web::Query<PerpHoldingRankingRequest>) -> HttpResponse {
     tracing::info!(target: TRADING_METRICS, "/ranking/perp_holding request, days: {}, size: {}", param.symbol, param.size);
-    Ok(write_response(
-        get_user_perp_holding_ranking(param.symbol.clone(), param.size as i64).await,
-    ))
+    if param.size > 100 {
+        tracing::warn!(target: TRADING_METRICS, "/ranking/perp_holding request, size over limit 100");
+        return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number over limit 100");
+    }
+    write_response(get_user_perp_holding_ranking(param.symbol.clone(), param.size as i64).await)
 }
 
 /// Get Pnl Ranking recent days information
@@ -631,7 +639,15 @@ example2: {\"days\": 3, \"size\": 10} \n
 )]
 #[get("/ranking/recent_days_perp_pnl")]
 pub async fn get_perp_recent_days_pnl_rank(param: web::Query<PnlRankingRequest>) -> HttpResponse {
-    tracing::info!(target: TRADING_METRICS, "/ranking/pnl, days: {}, size: {}", param.days, param.size);
+    tracing::info!(target: TRADING_METRICS, "/ranking/recent_days_perp_pnl, days: {}, size: {}", param.days, param.size);
+    if param.size > 100 {
+        tracing::warn!(target: TRADING_METRICS, "/ranking/recent_days_perp_pnl request, size over limit 100");
+        return write_failed_response(QUERY_OVER_LIMIT_ERR, "query number over limit 100");
+    }
+    if param.days > 180 {
+        tracing::warn!(target: TRADING_METRICS, "/ranking/recent_days_perp_pnl request, days over limit 180");
+        return write_failed_response(DAYS_RAGE_OVER_LIMIT, "days over limit 180");
+    }
     write_response(
         get_pnl_ranking(
             param.to_hour(),
