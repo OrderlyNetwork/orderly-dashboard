@@ -1,7 +1,7 @@
 use std::cmp::max;
 
 use bigdecimal::BigDecimal;
-use chrono::{NaiveDateTime, Timelike};
+use chrono::NaiveDateTime;
 use std::ops::Div;
 
 use orderly_dashboard_indexer::formats_external::trading_events::{MarginMode, Trade};
@@ -198,12 +198,6 @@ pub async fn analyzer_perp_trade(
 
     tracing::info!(target:PERP_ANALYZER,"handle trade length: {}, max_perp_trade_id: {}", trade_len, max_perp_trade_id);
     return max_perp_trade_id;
-}
-
-#[allow(deprecated)]
-fn convert_block_hour(block_timestamp: i64) -> NaiveDateTime {
-    let date_time = NaiveDateTime::from_timestamp_opt(block_timestamp / 1000, 0).unwrap();
-    return date_time.with_second(0).unwrap().with_minute(0).unwrap();
 }
 
 #[cfg(test)]
