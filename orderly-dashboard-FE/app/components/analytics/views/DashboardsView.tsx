@@ -40,7 +40,9 @@ export const DashboardsView: FC<Props> = ({ data }) => {
   const { mainRows, tvlChains, tvlTotal } = data;
 
   const [volPeriod, setVolPeriod] = useState<Period>('30D');
+  const [tvlTokenPeriod, setTvlTokenPeriod] = useState<Period>('30D');
   const [overviewGran, setOverviewGran] = useState<Granularity>('weekly');
+  const [dexSearch, setDexSearch] = useState('');
 
   const tvlSubtitle = `Total: ${fmtCompact(tvlTotal)}`;
 
@@ -90,8 +92,26 @@ export const DashboardsView: FC<Props> = ({ data }) => {
         <FeesStatsWidget data={data} />
       </WidgetWrapper>
 
-      <WidgetWrapper widgetId="dex-users" title="Users by DEX">
-        <DexUsersWidget />
+      <WidgetWrapper
+        widgetId="dex-users"
+        title="Users by DEX"
+        controls={
+          <input
+            type="text"
+            value={dexSearch}
+            onChange={(e) => setDexSearch(e.target.value)}
+            placeholder="Search broker…"
+            className="rounded text-xs px-2.5 py-1 outline-none"
+            style={{
+              width: 140,
+              background: '#130E1D',
+              border: 'none',
+              color: '#ffffff',
+            }}
+          />
+        }
+      >
+        <DexUsersWidget search={dexSearch} onSearchChange={setDexSearch} />
       </WidgetWrapper>
 
       <div>
@@ -213,8 +233,15 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             widgetId="tvl-by-token"
             title="TVL by Token"
             subtitle="daily TVL breakdown per token"
+            controls={
+              <PeriodSelector
+                period={tvlTokenPeriod}
+                onChange={setTvlTokenPeriod}
+                options={['7D', '30D', '90D']}
+              />
+            }
           >
-            <TvlByTokenWidget />
+            <TvlByTokenWidget period={tvlTokenPeriod} />
           </WidgetWrapper>
         </div>
       </div>

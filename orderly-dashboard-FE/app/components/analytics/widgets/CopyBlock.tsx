@@ -6,6 +6,7 @@ type CopyBlockProps = {
 
 export const CopyBlock = ({ widgetId }: CopyBlockProps) => {
   const [copied, setCopied] = useState(false);
+  const [copyHovered, setCopyHovered] = useState(false);
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://dashboard.orderly.network';
   const iframeCode = `<iframe src="${origin}/widget/${widgetId}?embed=true" width="800" height="400" frameborder="0"></iframe>`;
@@ -32,19 +33,22 @@ export const CopyBlock = ({ widgetId }: CopyBlockProps) => {
         </span>
         <button
           onClick={handleCopy}
+          onMouseEnter={() => setCopyHovered(true)}
+          onMouseLeave={() => setCopyHovered(false)}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            background: copied ? 'rgba(52,211,153,0.15)' : 'rgba(156,117,255,0.1)',
-            border: `1px solid ${copied ? 'rgba(52,211,153,0.3)' : 'rgba(156,117,255,0.25)'}`,
-            borderRadius: 6,
-            color: copied ? '#34d399' : '#9C75FF',
+            background: copied ? 'rgba(52,211,153,0.15)' : copyHovered ? 'rgba(255,255,255,0.1)' : 'transparent',
+            border: `1px solid ${copied ? 'rgba(52,211,153,0.6)' : 'rgba(255,255,255,0.6)'}`,
+            borderRadius: 999,
+            color: copied ? '#00dea3' : '#fff',
             fontSize: 12,
             fontWeight: 600,
-            padding: '4px 10px',
+            padding: '6px 14px',
             cursor: 'pointer',
-            transition: 'all 0.15s'
+            transition: 'all 0.15s',
+            transform: copyHovered && !copied ? 'translateY(-1px)' : 'none'
           }}
         >
           {copied ? (
@@ -86,7 +90,7 @@ export const CopyBlock = ({ widgetId }: CopyBlockProps) => {
       <pre
         style={{
           background: 'rgba(20,15,35,0.9)',
-          border: '1px solid rgba(156,117,255,0.15)',
+          border: 'none',
           borderRadius: 10,
           padding: '14px 18px',
           fontSize: 13,

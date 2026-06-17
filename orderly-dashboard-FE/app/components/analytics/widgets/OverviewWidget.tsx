@@ -46,7 +46,7 @@ const METRICS: {
   {
     key: 'avg_active_user',
     label: () => 'Avg Active Users / day',
-    color: '#34d399',
+    color: '#00dea3',
     fmt: fmtNum
   },
   {
@@ -66,25 +66,35 @@ const METRICS: {
 const periodLabel = (g: Granularity, row: OverviewPeriod) =>
   g === 'weekly' ? weekLabel(row.week_start_date) : monthLabel(row.month_start_date);
 
-const periodSub = (g: Granularity, row: OverviewPeriod) =>
-  g === 'weekly'
-    ? `week of ${weekLabel(row.week_start_date)}`
-    : row.month_start_date
-      ? monthLabel(row.month_start_date)
-      : undefined;
 
 export const OverviewWidget: FC<{ granularity?: Granularity }> = ({ granularity = 'weekly' }) => {
   const { data, isLoading, error } = useMetricsOverview();
   const chartRef = useRef<ChartJS<'bar'>>(null);
   useChartReady(chartRef);
 
-  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('avg_trading_volume');
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('avg_new_user');
 
   const rows = useMemo(
     () => (granularity === 'weekly' ? (data?.weekly ?? []) : (data?.monthly ?? [])),
     [data, granularity]
   );
-  const latest = rows[rows.length - 1];
+
+  // Use last complete period (skip partial current period detected by day count)
+  const latest = useMemo(() => {
+    const [startKey, endKey] =
+      granularity === 'weekly'
+        ? (['week_start_date', 'week_end_date'] as const)
+        : (['month_start_date', 'month_end_date'] as const);
+    const minDays = granularity === 'weekly' ? 6 : 20;
+    const complete = rows.filter((r) => {
+      const s = r[startKey];
+      const e = r[endKey];
+      if (!s || !e) return false;
+      const diff = (new Date(e).getTime() - new Date(s).getTime()) / 86400000;
+      return diff >= minDays;
+    });
+    return complete.length > 0 ? complete[complete.length - 1] : rows[rows.length - 1];
+  }, [rows, granularity]);
   const active = METRICS.find((m) => m.key === selectedMetric)!;
 
   const chartData: ChartData<'bar'> = {
@@ -93,7 +103,7 @@ export const OverviewWidget: FC<{ granularity?: Granularity }> = ({ granularity 
       {
         label: active.label(granularity),
         data: rows.map((r) => r[active.key] ?? 0),
-        backgroundColor: `${active.color}8C`,
+        backgroundColor: `${active.color}CC`,
         borderRadius: 3,
         borderSkipped: false
       }
@@ -129,17 +139,28 @@ export const OverviewWidget: FC<{ granularity?: Granularity }> = ({ granularity 
 
   if (isLoading)
     return (
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: 12
-        }}
-      >
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} height={76} />
-        ))}
-      </div>
+      <>
+        <div className="grid grid-cols-2 gap-2 mb-5 xl:hidden">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              style={{ height: 70, borderRadius: 12, background: 'rgba(156,117,255,0.10)' }}
+            />
+          ))}
+        </div>
+        <div
+          className="hidden xl:flex gap-1.5"
+          style={{ marginBottom: 20 }}
+        >
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex-1"
+              style={{ height: 50, borderRadius: 9999, background: 'rgba(156,117,255,0.10)' }}
+            />
+          ))}
+        </div>
+      </>
     );
   if (error)
     return (
@@ -150,13 +171,25 @@ export const OverviewWidget: FC<{ granularity?: Granularity }> = ({ granularity 
 
   return (
     <>
+      {/* Mobile + Tablet: 2×2 grid */}
+      <div className="grid grid-cols-2 gap-2 mb-5 xl:hidden">
+        {METRICS.map((m) => (
+          <StatCard
+            key={m.key}
+            label={m.label(granularity)}
+            value={m.fmt(latest?.[m.key])}
+            color={m.color}
+            selected={selectedMetric === m.key}
+            onClick={() => setSelectedMetric(m.key)}
+            pill
+          />
+        ))}
+      </div>
+
+      {/* Desktop: horizontal strip */}
       <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: 12,
-          marginBottom: 20
-        }}
+        className="hidden xl:flex gap-1.5"
+        style={{ marginBottom: 20 }}
       >
         {METRICS.map((m) => (
           <StatCard
@@ -164,9 +197,10 @@ export const OverviewWidget: FC<{ granularity?: Granularity }> = ({ granularity 
             label={m.label(granularity)}
             value={m.fmt(latest?.[m.key])}
             color={m.color}
-            sub={periodSub(granularity, latest)}
             selected={selectedMetric === m.key}
             onClick={() => setSelectedMetric(m.key)}
+            pill
+            inStrip
           />
         ))}
       </div>

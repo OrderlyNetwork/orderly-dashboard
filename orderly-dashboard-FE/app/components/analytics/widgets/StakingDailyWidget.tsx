@@ -43,7 +43,7 @@ export const StakingDailyWidget: FC = () => {
       {
         label: 'Daily Burned ORDER',
         data: rows.map((r) => r.daily_burned_order ?? 0),
-        borderColor: '#f87171',
+        borderColor: '#FF6390',
         backgroundColor: 'rgba(248,113,113,0.1)',
         fill: true,
         tension: 0.3,

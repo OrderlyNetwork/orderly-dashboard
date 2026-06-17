@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from '@remix-run/react';
+import { Outlet, useLocation, useNavigation } from '@remix-run/react';
 import { useCallback, useState, type FC } from 'react';
 
 import { MobileSidebarDrawer, Sidebar, type NavId } from '~/components/analytics/Sidebar';
@@ -20,8 +20,13 @@ function getActiveNav(pathname: string): NavId {
 
 export const DashboardLayout: FC = () => {
   const location = useLocation();
-  const activeNav = getActiveNav(location.pathname);
+  const navigation = useNavigation();
   const isMobile = useIsMobile(768);
+
+  const pendingPathname =
+    navigation.state === 'loading' ? navigation.location?.pathname : undefined;
+  const activeNav = getActiveNav(pendingPathname ?? location.pathname);
+  const isNavigating = navigation.state === 'loading';
 
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -53,8 +58,34 @@ export const DashboardLayout: FC = () => {
         />
 
         <div
-          className={`flex-1 overflow-y-auto min-h-0 ${isMobile ? 'mt-14 p-4' : 'mt-16 py-7 px-8'}`}
+          className={`flex-1 overflow-y-auto min-h-0 relative ${isMobile ? 'mt-14 py-4 px-1' : 'mt-16 py-7 px-8'}`}
         >
+          {isNavigating && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 50,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(10,0,16,0.55)',
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  border: '3px solid rgba(156,117,255,0.2)',
+                  borderTopColor: '#9C75FF',
+                  animation: 'spin 0.7s linear infinite',
+                }}
+              />
+              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            </div>
+          )}
           <Outlet />
         </div>
       </div>

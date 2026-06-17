@@ -11,6 +11,9 @@
     },
     "routeIdToServerBundleId": {
       "routes/address_.$address": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/widget.$widgetId": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/leaderboard": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/explorer": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/address": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/_index": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/search": "nodejs-eyJydW50aW1lIjoibm9kZWpzIn0"
@@ -26,6 +29,33 @@
         "file": "app/routes/address_.$address.tsx",
         "id": "routes/address_.$address",
         "path": "address/:address",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/widget.$widgetId": {
+        "file": "app/routes/widget.$widgetId.tsx",
+        "id": "routes/widget.$widgetId",
+        "path": "widget/:widgetId",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/leaderboard": {
+        "file": "app/routes/leaderboard.tsx",
+        "id": "routes/leaderboard",
+        "path": "leaderboard",
+        "parentId": "root",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/explorer": {
+        "file": "app/routes/explorer.tsx",
+        "id": "routes/explorer",
+        "path": "explorer",
         "parentId": "root",
         "config": {
           "runtime": "nodejs"
@@ -85,6 +115,24 @@
         "file": "routes/address_.$address.tsx",
         "id": "routes/address_.$address",
         "path": "address/:address",
+        "parentId": "root"
+      },
+      "routes/widget.$widgetId": {
+        "file": "routes/widget.$widgetId.tsx",
+        "id": "routes/widget.$widgetId",
+        "path": "widget/:widgetId",
+        "parentId": "root"
+      },
+      "routes/leaderboard": {
+        "file": "routes/leaderboard.tsx",
+        "id": "routes/leaderboard",
+        "path": "leaderboard",
+        "parentId": "root"
+      },
+      "routes/explorer": {
+        "file": "routes/explorer.tsx",
+        "id": "routes/explorer",
+        "path": "explorer",
         "parentId": "root"
       },
       "routes/address": {

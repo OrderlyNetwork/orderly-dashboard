@@ -41,8 +41,8 @@ const NAV_ITEMS: {
     id: 'leaderboard',
     path: '/leaderboard',
     label: 'Leaderboard',
-    color: '#FB923C',
-    bgAlpha: 'rgba(251,146,60,0.15)',
+    color: '#9C75FF',
+    bgAlpha: 'rgba(156,117,255,0.15)',
     icon: (
       <svg
         width="16"
@@ -193,7 +193,7 @@ function SidebarContent({ activeNav, onNavigate }: SidebarProps & { onNavigate?:
       </div>
 
       <nav className="flex-1 py-3 px-[10px] overflow-y-auto">
-        <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.25)] tracking-widest uppercase px-[10px] pb-2">
+        <div className="text-xs font-semibold text-[rgba(255,255,255,0.25)] tracking-widest uppercase px-[10px] pb-2">
           Navigation
         </div>
         {renderNavItems(activeNav, onNavigate)}

@@ -283,10 +283,15 @@ export const useBrokerDaily = () =>
 export const useFundFlowsByBroker = () =>
   useFetch<FundFlowBrokerResponse>('/orderly/api/v1/dashboard/fund-flows/by-broker');
 
-export const useTokenTvl = () =>
-  useFetch<SymbolDailyResponse>(
-    '/orderly/api/v1/dashboard/orderly/by-symbol/daily?symbol_type=token'
+export const useTokenTvl = (days = 30) => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - days);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  return useFetch<SymbolDailyResponse>(
+    `/orderly/api/v1/dashboard/orderly/by-symbol/daily?symbol_type=token&start_date=${fmt(start)}&end_date=${fmt(end)}`
   );
+};
 
 export const useFundingRates = () =>
   useFetch<FundingRatesResponse>('/orderly/api/v1/dashboard/orderly/funding-rates');

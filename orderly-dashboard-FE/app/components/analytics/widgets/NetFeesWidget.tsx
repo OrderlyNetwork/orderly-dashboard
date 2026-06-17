@@ -39,9 +39,8 @@ export const NetFeesWidget: FC<{ rows: MainDailyRow[] }> = ({ rows }) => {
         type: 'bar' as const,
         label: 'Net Fees',
         data: sliced.map((r) => r.daily_revenue_usd),
-        backgroundColor: 'rgba(156,117,255,0.5)',
-        borderColor: '#9C75FF',
-        borderWidth: 1,
+        backgroundColor: 'rgba(156,117,255,0.8)',
+        borderWidth: 0,
         borderRadius: 3,
         yAxisID: 'yNet',
         order: 2
@@ -52,7 +51,7 @@ export const NetFeesWidget: FC<{ rows: MainDailyRow[] }> = ({ rows }) => {
         data: sliced.map((r) => r.cumulative_revenue_usd),
         fill: false,
         backgroundColor: 'rgba(52,211,153,0.12)',
-        borderColor: '#34d399',
+        borderColor: '#00dea3',
         borderWidth: 2,
         pointRadius: 0,
         tension: 0.35,
@@ -120,7 +119,7 @@ export const NetFeesWidget: FC<{ rows: MainDailyRow[] }> = ({ rows }) => {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 200 }}>
+    <div style={{ position: 'relative', width: '100%', height: 220, overflow: 'hidden' }}>
       <Line ref={chartRef} data={data as ChartData<'line'>} options={options} />
     </div>
   );

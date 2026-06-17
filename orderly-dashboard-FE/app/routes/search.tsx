@@ -1,3 +1,4 @@
+import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { Link, useSearchParams } from '@remix-run/react';
 import { FC } from 'react';
 import { match } from 'ts-pattern';
@@ -54,9 +55,17 @@ export const Search: FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
+      {/* Back Button */}
+      <Link
+        to="/explorer"
+        className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200 no-underline"
+      >
+        <ArrowLeftIcon width="16" height="16" />
+        <span className="text-sm">Back</span>
+      </Link>
       {/* Header Section */}
       <div className="text-center space-y-4">
-        <div className="card max-w-2xl mx-auto p-6">
+        <div className="max-w-2xl mx-auto p-6">
           <h2 className="text-2xl font-bold mb-2 break-all" style={{ color: '#D4B2FF' }}>
             {address}
           </h2>
@@ -89,7 +98,7 @@ export const Search: FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {addressData.map((data) => {
               const searchParams = new URLSearchParams();
               searchParams.set('broker_id', data.broker_id);
@@ -110,9 +119,9 @@ export const Search: FC = () => {
                       return `/address/${data.address}?${searchParams.toString()}`;
                     }
                   })()}
-                  className="no-underline text-white hover:text-white group"
+                  className="no-underline text-white"
                 >
-                  <div className="card hover:scale-105 transition-all duration-300 cursor-pointer">
+                  <div className="card cursor-pointer">
                     <div className="space-y-4">
                       {/* Broker Info */}
                       <div className="space-y-2">
@@ -169,7 +178,7 @@ export const Search: FC = () => {
 
                       {/* View Details Button */}
                       <div className="pt-2">
-                        <div className="btn btn-primary w-full text-center group-hover:scale-105 transition-transform duration-200">
+                        <div className="btn btn-primary no-glow w-full text-center">
                           View Details
                         </div>
                       </div>

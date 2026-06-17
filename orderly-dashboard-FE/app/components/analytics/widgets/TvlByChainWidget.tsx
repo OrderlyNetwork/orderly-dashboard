@@ -59,7 +59,10 @@ export const TvlByChainWidget: FC<{
   };
 
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+      <div style={{ position: 'relative', height: 200 }}>
+        <Doughnut ref={chartRef} data={data} options={options} />
+      </div>
       <DatasetChips
         items={chips}
         onToggle={(i) =>
@@ -71,9 +74,6 @@ export const TvlByChainWidget: FC<{
           })
         }
       />
-      <div style={{ position: 'relative', height: 240 }}>
-        <Doughnut ref={chartRef} data={data} options={options} />
-      </div>
     </div>
   );
 };

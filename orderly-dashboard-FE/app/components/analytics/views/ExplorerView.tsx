@@ -39,14 +39,14 @@ export const ExplorerView: FC = () => {
 
       <div className="rounded-2xl p-5 py-8 mb-8 md:px-9" style={{ background: '#6700CE' }}>
         <h3 className="m-0 mb-2 text-lg font-bold text-white">Explore Trading Data</h3>
-        <p className="m-0 mb-5 text-sm text-[rgba(255,255,255,0.8)] leading-relaxed">
+        <p className="m-0 mb-5 text-sm text-[rgba(255,255,255,0.8)] leading-relaxed max-w-2xl">
           Search for wallet addresses or account IDs to view detailed trading information including
           executed trades, deposits &amp; withdrawals, liquidations, and performance metrics.
         </p>
 
-        <div className="flex gap-5 mb-5 flex-wrap">
+        <div className="flex gap-5 mb-5 flex-wrap justify-center">
           <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-[#34D399]" />
+            <div className="w-2 h-2 rounded-full bg-[#00dea3]" />
             <span className="text-[13px] font-semibold text-white">EVM Addresses</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -59,113 +59,9 @@ export const ExplorerView: FC = () => {
           </div>
         </div>
 
-        <SearchInput />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            icon: (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-                <polyline points="16 7 22 7 22 13" />
-              </svg>
-            ),
-            color: '#34D399',
-            bg: 'rgba(52,211,153,0.1)',
-            border: 'rgba(52,211,153,0.2)',
-            title: 'Trade History',
-            desc: 'View all executed perp trades with timestamps, prices, and fees'
-          },
-          {
-            icon: (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-            ),
-            color: '#FBBF24',
-            bg: 'rgba(251,191,36,0.1)',
-            border: 'rgba(251,191,36,0.2)',
-            title: 'Deposits & Withdrawals',
-            desc: 'Track on-chain deposit and withdrawal events across all supported chains'
-          },
-          {
-            icon: (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            ),
-            color: '#F87171',
-            bg: 'rgba(248,113,113,0.1)',
-            border: 'rgba(248,113,113,0.2)',
-            title: 'Liquidations',
-            desc: 'See liquidation events and the positions that were closed forcefully'
-          },
-          {
-            icon: (
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            ),
-            color: '#9C75FF',
-            bg: 'rgba(156,117,255,0.1)',
-            border: 'rgba(156,117,255,0.2)',
-            title: 'Performance Metrics',
-            desc: 'Realized PnL, volume totals, and fee breakdown over any date range'
-          }
-        ].map((card) => (
-          <div
-            key={card.title}
-            className="rounded-xl py-4 px-[18px]"
-            style={{ border: `1px solid ${card.border}`, background: card.bg }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <span style={{ color: card.color }}>{card.icon}</span>
-              <span className="text-[13px] font-semibold text-white">{card.title}</span>
-            </div>
-            <p className="m-0 text-xs text-[rgba(255,255,255,0.45)] leading-relaxed">{card.desc}</p>
-          </div>
-        ))}
+        <div className="w-full max-w-md">
+          <SearchInput />
+        </div>
       </div>
     </div>
   );

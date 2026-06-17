@@ -157,12 +157,12 @@
   --color-gray-900: #0a0a0a;
 
   /* Status Colors */
-  --color-success: #10b981;
-  --color-success-light: #34d399;
-  --color-success-dark: #047857;
-  --color-error: #ef4444;
-  --color-error-light: #f87171;
-  --color-error-dark: #dc2626;
+  --color-success: #00dea3;
+  --color-success-light: #00dea3;
+  --color-success-dark: #00dea3;
+  --color-error: #FF6390;
+  --color-error-light: #FF6390;
+  --color-error-dark: #FF6390;
   --color-warning: #f59e0b;
   --color-warning-light: #fbbf24;
   --color-warning-dark: #d97706;
@@ -236,6 +236,7 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+  font-feature-settings: 'ss02' 1, 'ss03' 1, 'ss05' 1;
 }
 
 html {
@@ -247,8 +248,7 @@ html {
   font-feature-settings:
     'ss02' 1,
     'ss03' 1,
-    'ss05' 1,
-    'ss06' 1;
+    'ss05' 1;
 }
 
 body {
@@ -277,8 +277,7 @@ body {
     'case' 1,
     'ss02' 1,
     'ss03' 1,
-    'ss05' 1,
-    'ss06' 1;
+    'ss05' 1;
   color: #d4b2ff;
 }
 
@@ -302,8 +301,7 @@ h6 {
   font-feature-settings:
     'ss02' 1,
     'ss03' 1,
-    'ss05' 1,
-    'ss06' 1;
+    'ss05' 1;
 }
 
 h1 {
@@ -410,7 +408,6 @@ select option {
     'ss02' 1,
     'ss03' 1,
     'ss05' 1,
-    'ss06' 1,
     'liga' 0;
   border: none;
   border-radius: var(--radius-lg); /* 24px */
@@ -428,9 +425,12 @@ select option {
 }
 
 .btn-primary:hover {
-  background: #7a00ef;
-  transform: translateY(-1px);
-  box-shadow: 0 12px 40px rgba(103, 0, 206, 0.4);
+  opacity: 0.9;
+}
+
+.btn-primary.no-glow,
+.btn-primary.no-glow:hover {
+  box-shadow: none;
 }
 
 /* Secondary: white outline */
@@ -486,8 +486,8 @@ select option {
 
 /* Cards — Orderly design system */
 .card {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border-primary);
+  background: #130E1D;
+  border: none;
   border-radius: var(--radius-xl); /* 30px */
   padding: var(--spacing-8);
   backdrop-filter: blur(20px);
@@ -497,7 +497,15 @@ select option {
 
 .card:hover {
   box-shadow: var(--shadow-xl);
-  border-color: rgba(156, 117, 255, 0.3);
+}
+
+.card-dialog {
+  border: none !important;
+  transition: none !important;
+}
+.card-dialog:hover {
+  border: none !important;
+  box-shadow: var(--shadow-lg) !important;
 }
 
 /* Purple feature card variants */
@@ -732,7 +740,7 @@ select option {
   gap: 16px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .dash-grid-lg {
     grid-template-columns: 1fr;
   }
@@ -740,7 +748,74 @@ select option {
 
 @media (max-width: 500px) {
   .dash-grid-sm {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
+}
+
+/* Scrollbar for dataset chips overflow container */
+.chips-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.chips-scrollbar::-webkit-scrollbar-track {
+  background: #130E1D;
+  border-radius: 4px;
+}
+.chips-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 117, 255, 0.25);
+  border-radius: 4px;
+}
+.chips-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 117, 255, 0.45);
+}
+
+/* Subtle scrollbar for analytics tables */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s;
+}
+.thin-scrollbar:hover {
+  scrollbar-color: rgba(156, 117, 255, 0.25) transparent;
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.thin-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(156, 117, 255, 0.25);
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 117, 255, 0.45);
+}
+
+/* 4-column KPI grid — stays 4 cols until it becomes too narrow, then jumps to 2 */
+.kpi-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .kpi-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.kpi-card {
+  container-type: inline-size;
+}
+
+.lb-input:focus {
+  outline: none;
+  border: 1px solid #6700CE !important;
+  box-shadow: none;
 }

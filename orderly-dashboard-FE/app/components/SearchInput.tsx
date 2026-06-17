@@ -1,4 +1,3 @@
-import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { useLocation, useNavigate, useNavigation, useSearchParams } from '@remix-run/react';
 import { FC, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
@@ -19,6 +18,7 @@ export const SearchInput: FC = () => {
     .with('sol', () => base64UrlSafeDecode(rawAddress ?? ''))
     .exhaustive();
   const [search, setSearch] = useState(address ?? '');
+  const [focused, setFocused] = useState(false);
   const location = useLocation();
   const [[searchValue, pathname]] = useDebounce([search, location.pathname], 250);
   const navigate = useNavigate();
@@ -52,14 +52,25 @@ export const SearchInput: FC = () => {
   }, [state, location.pathname, setSearch]);
 
   return (
-    <div className="relative w-full sm:w-80 group">
-      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 group-focus-within:text-primary-light transition-colors duration-200" />
+    <div
+      className="relative w-full transition-all duration-200"
+      style={{
+        borderRadius: '0.75rem',
+        border: focused ? '1px solid #6700CE' : '1px solid transparent',
+      }}
+    >
+      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)">
+          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+        </svg>
       </div>
       <input
-        className="w-full pl-12 pr-4 py-3 bg-bg-secondary border border-border-primary rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 backdrop-blur-md"
+        className="w-full pl-12 pr-4 py-3 rounded-xl border-0 outline-none ring-0 text-white placeholder-gray-400 transition-all duration-200"
+        style={{ background: '#221E30', boxShadow: 'none' }}
         type="text"
         placeholder="Search wallet or account ID..."
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         onChange={(event) => {
           setSearch(event.target.value);
         }}

@@ -4,7 +4,7 @@ import { fmtCompact, fmtDeltaPct } from '../shared/formatters';
 
 import { KPICard } from './KPICard';
 
-import { useIsMobile } from '~/hooks/useMediaQuery';
+import { useIsMobile, useMediaQuery } from '~/hooks/useMediaQuery';
 import type { DashboardData } from '~/types/dashboard';
 
 type Props = { data: DashboardData };
@@ -12,6 +12,9 @@ type Props = { data: DashboardData };
 export const AnalystKPIWidget: FC<Props> = ({ data }) => {
   const { mainRows, marketRows, tvlTotal } = data;
   const isMobile = useIsMobile(768);
+  const isTablet = useMediaQuery('(min-width: 768px) and (max-width: 1279px)');
+  const isWide = useMediaQuery('(min-width: 1600px)');
+  const isDesktop = !isMobile && !isTablet && !isWide; // 1280–1599px
 
   const todayVol = mainRows[0]?.taker_volume_usd ?? 0;
   const yestVol = mainRows[1]?.taker_volume_usd ?? 0;
@@ -26,10 +29,21 @@ export const AnalystKPIWidget: FC<Props> = ({ data }) => {
   const activeBuilders = mainRows[0]?.active_builders_count ?? 0;
   const cumulativeNetFees = mainRows[0]?.cumulative_revenue_usd ?? 0;
 
-  const cols = isMobile ? 2 : 3;
-  const rowH = isMobile ? 95 : 115;
+  const cols = isMobile ? 2 : isWide ? 9 : isTablet ? 3 : 4;
+  const rowH = isMobile ? 110 : isWide ? 125 : 115;
 
-  // Desktop layout (3 cols, 5 rows):
+  // Wide layout (9 cols, 2 rows):
+  //  col:  1        2       3       4         5        6       7         8       9
+  //  r1:   DayVol──────────────── Accounts  30DVol──────── Builders  CumVol──────
+  //  r2:   Markets  TVL    CumDEX  Accounts  NetFees──────── Builders  CumVol──────
+  //
+  // Desktop layout (4 cols, 3 rows):  1280–1599px
+  //  col:  1            2            3          4
+  //  r1:   DayVol ─────────────    Builders   Accounts
+  //  r2:   CumDEX←     TVL        NetFees     Markets
+  //  r3:   CumDEX←     30DVol     CumVol ─────────
+  //
+  // Tablet layout (3 cols, 5 rows):  768–1279px
   //  col:  1            2            3
   //  r1:   DayVol ──── DayVol       Accounts
   //  r2:   DayVol ──── DayVol       Markets
@@ -48,23 +62,24 @@ export const AnalystKPIWidget: FC<Props> = ({ data }) => {
   //  r7:   CumVol ───────────────
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: rowH, gap: 10, maxWidth: 1080, margin: '0 auto' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: rowH, gap: 10 }}>
 
-      {/* Day Volume: col 1-2 × row 1-2 on desktop; full-width single row on mobile */}
+      {/* Day Volume: spans 2 rows on tablet → wrapBadge there */}
       <KPICard
-        size={isMobile ? 'md' : 'lg'}
+        size={isMobile ? 'md' : isWide ? 'md' : isDesktop ? 'md' : 'lg'}
         bgColor="#6700CE"
         label="Day Volume"
         value={fmtCompact(todayVol)}
         delta={fmtDeltaPct(todayVol, yestVol)}
         subValue="vs yesterday"
+        wrapBadge={isTablet}
         cardStyle={{
-          gridColumn: isMobile ? 'span 2' : '1 / span 2',
-          gridRow: isMobile ? '1' : '1 / span 2'
+          gridColumn: isMobile ? 'span 2' : isWide ? '1 / span 3' : '1 / span 2',
+          gridRow: isMobile ? '1' : isWide ? '1' : isTablet ? '1 / span 2' : '1'
         }}
       />
 
-      {/* 30D Volume: col 2 × row 3-4 on desktop; full-width row 4 on mobile */}
+      {/* 30D Volume: spans 2 rows on tablet → wrapBadge there */}
       <KPICard
         size={isMobile ? 'sm' : 'md'}
         bgColor="#3F0086"
@@ -72,15 +87,23 @@ export const AnalystKPIWidget: FC<Props> = ({ data }) => {
         value={fmtCompact(vol30d)}
         delta={fmtDeltaPct(vol30d, vol30dPrev)}
         subValue="rolling"
-        cardStyle={{
-          gridColumn: isMobile ? 'span 2' : '2 / span 1',
-          gridRow: isMobile ? '4' : '3 / span 2'
-        }}
+        wrapBadge={isTablet}
+        cardStyle={
+          isMobile
+            ? { gridColumn: 'span 2', gridRow: '4' }
+            : isWide
+              ? { gridColumn: '5 / span 2', gridRow: '1' }
+              : isTablet
+                ? { gridColumn: '2 / span 1', gridRow: '3 / span 2' }
+                : isDesktop
+                  ? { gridColumn: '2', gridRow: '3' }
+                  : undefined
+        }
       />
 
-      {/* Total Accounts: tall narrow card on left on mobile (rows 2-3) */}
+      {/* Total Accounts: tall on wide + mobile → wrapBadge */}
       <KPICard
-        size="sm"
+        size={isWide ? 'lg' : isMobile ? 'lg' : 'sm'}
         bgColor="#E9DEFF"
         label="Total Accounts"
         value={
@@ -89,54 +112,88 @@ export const AnalystKPIWidget: FC<Props> = ({ data }) => {
             : totalAccounts.toLocaleString()
         }
         delta={fmtDeltaPct(totalAccounts, prevWeekAccounts)}
-        cardStyle={isMobile ? { gridColumn: '1', gridRow: '2 / span 2' } : undefined}
+        wrapBadge={isWide || isMobile}
+        cardStyle={
+          isMobile
+            ? { gridColumn: '1', gridRow: '2 / span 2' }
+            : isWide
+              ? { gridColumn: '7', gridRow: '1 / span 2' }
+              : undefined
+        }
       />
-      {/* Open Markets: auto-fills col 2 row 2 on mobile */}
+      {/* Open Markets: desktop→ r2c2 */}
       <KPICard
-        size="sm"
+        size={isWide ? 'lg' : isMobile ? 'lg' : 'sm'}
         bgColor="#3F0086"
         label="Open Markets"
         value={`${latestMarkets}`}
         delta={fmtDeltaPct(latestMarkets, prevMarkets)}
+        cardStyle={isDesktop ? { gridColumn: '4', gridRow: '2' } : undefined}
       />
-      {/* Active Builders: auto-fills col 2 row 3 on mobile */}
+      {/* Active Builders: wide→ tall; desktop→ r3c2 */}
       <KPICard
-        size="sm"
+        size={isWide ? 'xl' : isMobile ? 'lg' : 'sm'}
         bgColor="#9C75FF"
         label="Active Builders"
         value={`${activeBuilders}`}
-        subValue={`Fees: ${fmtCompact(builderFees)}`}
+        subValue={isMobile ? undefined : `Fees: ${fmtCompact(builderFees)}`}
+        wrapBadge={isWide}
+        cardStyle={
+          isWide
+            ? { gridColumn: '4', gridRow: '1 / span 2' }
+            : isDesktop
+              ? { gridColumn: '3', gridRow: '1' }
+              : undefined
+        }
       />
-      {/* Total TVL: auto-fills col 1 row 5 on mobile */}
+      {/* Total TVL: desktop→ r2c2 */}
       <KPICard
-        size="sm"
+        size={isWide ? 'lg' : isMobile ? 'md' : 'sm'}
         bgColor="#9C75FF"
         label="Total TVL"
         value={fmtCompact(tvlTotal)}
+        cardStyle={isDesktop ? { gridColumn: '2', gridRow: '2' } : undefined}
       />
-      {/* Cum. DEX Fees: auto-fills col 1 row 6 on mobile */}
+      {/* Cum. DEX Fees: desktop→ r2-3 c1 */}
       <KPICard
-        size="sm"
+        size={isWide ? 'lg' : isDesktop ? 'lg' : isMobile ? 'md' : 'sm'}
         bgColor="#E9DEFF"
         label="Cum. DEX Fees"
         value={fmtCompact(builderFees)}
+        cardStyle={isDesktop ? { gridColumn: '1', gridRow: '2 / span 2' } : undefined}
       />
-      {/* Cum. Net Fees: tall narrow card on right on mobile (rows 5-6) */}
+      {/* Cum. Net Fees: mobile→ tall; wide→ r2; desktop→ r2c3 */}
       <KPICard
-        size="sm"
+        size={isWide ? 'md' : isMobile ? 'lg' : 'sm'}
         bgColor="#6700CE"
         label="Cum. Orderly Net Fees"
         value={fmtCompact(cumulativeNetFees)}
-        cardStyle={isMobile ? { gridColumn: '2', gridRow: '5 / span 2' } : undefined}
+        wrapBadge={isMobile}
+        cardStyle={
+          isMobile
+            ? { gridColumn: '2', gridRow: '5 / span 2' }
+            : isWide
+              ? { gridColumn: '5 / span 2', gridRow: '2' }
+              : isDesktop
+                ? { gridColumn: '3', gridRow: '2' }
+                : undefined
+        }
       />
 
-      {/* Cumulative Volume: full-width footer row */}
+      {/* Cumulative Volume: tall on wide → wrapBadge */}
       <KPICard
-        size="sm"
+        size={isWide ? 'lg' : isDesktop ? 'md' : 'sm'}
         bgColor="#9C75FF"
         label="Cumulative Volume"
         value={fmtCompact(cumVol)}
-        cardStyle={{ gridColumn: `span ${cols}` }}
+        wrapBadge={isWide}
+        cardStyle={
+          isWide
+            ? { gridColumn: '8 / span 2', gridRow: '1 / span 2' }
+            : isDesktop
+              ? { gridColumn: '3 / span 2', gridRow: '3' }
+              : { gridColumn: `span ${cols}` }
+        }
       />
     </div>
   );
