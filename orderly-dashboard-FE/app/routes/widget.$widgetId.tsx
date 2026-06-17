@@ -80,8 +80,7 @@ const WIDGET_META: Record<
     hasPeriodControl: true
   },
   'tvl-chain': {
-    title: 'TVL by Chain',
-    height: 260
+    title: 'TVL by Chain'
   },
   'net-fees': {
     title: 'Net Fees',
@@ -201,13 +200,15 @@ export default function WidgetRoute() {
         width: 140,
         background: '#130E1D',
         border: '1px solid rgba(156,117,255,0.18)',
-        color: '#ffffff',
+        color: '#ffffff'
       }}
     />
   );
 
-  const controls = widgetId === 'dex-users' ? dexSearchInput
-    : meta.hasPeriodControl ? (
+  const controls =
+    widgetId === 'dex-users' ? (
+      dexSearchInput
+    ) : meta.hasPeriodControl ? (
       <PeriodSelector period={volPeriod} onChange={setVolPeriod} />
     ) : meta.hasGranularityControl ? (
       <GranularitySelector granularity={overviewGran} onChange={setOverviewGran} />
