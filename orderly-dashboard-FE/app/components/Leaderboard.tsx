@@ -1,11 +1,5 @@
 import { DatePicker } from '@mantine/dates';
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  DoubleArrowLeftIcon,
-  DoubleArrowRightIcon,
-  MixerHorizontalIcon
-} from '@radix-ui/react-icons';
+import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import { Button, Popover, Table, Tooltip } from '@radix-ui/themes';
 import { Link } from '@remix-run/react';
 import {
@@ -19,7 +13,7 @@ import {
   useReactTable
 } from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import { useMemo, useState, useEffect, FC, useCallback, ReactNode } from 'react';
+import { useMemo, useState, useEffect, FC, useCallback } from 'react';
 
 import { Spinner } from '~/components';
 import { useBrokers } from '~/hooks';
@@ -78,7 +72,7 @@ const defaultVisibility = {
 
 export const Leaderboard: FC = () => {
   const [queryParams, setQueryParams] = useState<LeaderboardParams>({
-    start_date: dayjs().subtract(30, 'days').format('YYYY-MM-DD'),
+    start_date: dayjs().subtract(6, 'days').format('YYYY-MM-DD'),
     end_date: dayjs().format('YYYY-MM-DD'),
     page: 1,
     size: 20,
@@ -287,7 +281,7 @@ export const Leaderboard: FC = () => {
         accessorKey: 'realized_pnl',
         header: 'Realized PnL',
         cell: ({ row }) => (
-          <span className={row.original.realized_pnl >= 0 ? 'text-green-400' : 'text-red-400'}>
+          <span style={{ color: row.original.realized_pnl >= 0 ? '#00dea3' : '#FF6390' }}>
             {formatNumberShort(row.original.realized_pnl)}
           </span>
         ),
@@ -459,97 +453,101 @@ export const Leaderboard: FC = () => {
     );
   }
 
-  const renderPagination = (leftSlot?: ReactNode) => (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-bg-primary rounded-xl border border-border-primary">
-      <div className="flex items-center gap-2">
-        {leftSlot}
-        <button
-          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => handleInputChange('page', 1)}
-          disabled={!displayData || displayData.meta.current_page <= 1}
-        >
-          <DoubleArrowLeftIcon className="h-4 w-4" />
-        </button>
-        <button
-          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => handleInputChange('page', (displayData?.meta.current_page || 1) - 1)}
-          disabled={!displayData || displayData.meta.current_page <= 1}
-        >
-          <ChevronLeftIcon className="h-4 w-4" />
-        </button>
-        <button
-          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => handleInputChange('page', (displayData?.meta.current_page || 1) + 1)}
-          disabled={
-            !displayData ||
-            displayData.meta.current_page >=
-              Math.ceil((displayData?.meta.total || 0) / (displayData?.meta.records_per_page || 1))
-          }
-        >
-          <ChevronRightIcon className="h-4 w-4" />
-        </button>
-        <button
-          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() =>
-            handleInputChange(
-              'page',
-              Math.ceil((displayData?.meta.total || 0) / (displayData?.meta.records_per_page || 1))
-            )
-          }
-          disabled={
-            !displayData ||
-            displayData.meta.current_page >=
-              Math.ceil((displayData?.meta.total || 0) / (displayData?.meta.records_per_page || 1))
-          }
-        >
-          <DoubleArrowRightIcon className="h-4 w-4" />
-        </button>
-      </div>
+  const renderPagination = () => {
+    const totalPages = displayData
+      ? Math.ceil(displayData.meta.total / displayData.meta.records_per_page)
+      : 1;
+    const currentPage = displayData?.meta.current_page || 1;
+    const isPrevDisabled = !displayData || currentPage <= 1;
+    const isNextDisabled = !displayData || currentPage >= totalPages;
 
-      <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 text-sm">
-        <span className="flex items-center gap-2 text-gray-300">
-          <span>Page</span>
-          <strong className="text-white">
-            {displayData?.meta.current_page || 1} of{' '}
-            {displayData
-              ? Math.ceil(displayData.meta.total / displayData.meta.records_per_page)
-              : 1}
-          </strong>
-        </span>
+    const windowSize = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(windowSize / 2));
+    let endPage = Math.min(totalPages, startPage + windowSize - 1);
+    if (endPage - startPage + 1 < windowSize) {
+      startPage = Math.max(1, endPage - windowSize + 1);
+    }
+    const pages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 
-        <div className="flex items-center gap-2">
-          <span className="text-gray-300">Go to:</span>
+    return (
+      <div
+        className="flex flex-row items-center justify-center gap-2 p-4 rounded-xl"
+        style={{ background: '#130E1D' }}
+      >
+        {!isPrevDisabled && (
+          <button
+            onClick={() => handleInputChange('page', currentPage - 1)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.55)',
+              cursor: 'pointer',
+              fontSize: 18,
+              padding: '0 4px',
+              lineHeight: 1,
+            }}
+          >
+            {'<'}
+          </button>
+        )}
+
+        {pages.map((page) => (
+          <button
+            key={page}
+            onClick={() => handleInputChange('page', page)}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: page === currentPage ? '#6700CE' : '#221E30',
+              color: '#ffffff',
+              border: 'none',
+              cursor: page === currentPage ? 'default' : 'pointer',
+              fontSize: 15,
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {page}
+          </button>
+        ))}
+
+        {!isNextDisabled && (
+          <button
+            onClick={() => handleInputChange('page', currentPage + 1)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.55)',
+              cursor: 'pointer',
+              fontSize: 18,
+              padding: '0 4px',
+              lineHeight: 1,
+            }}
+          >
+            {'>'}
+          </button>
+        )}
+
+        <div className="flex items-center gap-2" style={{ marginLeft: 12 }}>
+          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13 }}>Go to</span>
           <input
             type="number"
-            defaultValue={displayData?.meta.current_page || 1}
+            defaultValue={currentPage}
             onChange={(e) => {
               const page = e.target.value ? Number(e.target.value) : 1;
               handleInputChange('page', page);
             }}
-            className="w-16 px-2 py-1 text-center"
+            className="lb-input w-14 px-2 py-1 text-center text-sm"
+            style={{ background: '#221E30', border: 'none' }}
             min="1"
           />
         </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-gray-300">Show:</span>
-          <select
-            value={displayData?.meta.records_per_page || 20}
-            onChange={(e) => {
-              handleInputChange('size', Number(e.target.value));
-            }}
-            className="px-2 py-1"
-          >
-            {[10, 20, 30, 40, 50].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                {pageSize}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-4 sm:space-y-8 animate-fade-in flex flex-col align-center">
@@ -561,7 +559,7 @@ export const Leaderboard: FC = () => {
         </p>
       </div>
 
-      <div className="card w-full space-y-4 sm:space-y-6">
+      <div className="card w-full space-y-4 sm:space-y-6" style={{ background: '#130E1D', border: 'none' }}>
         {/* Filters Section */}
         <div className="space-y-4 sm:space-y-6 w-full">
           {/* Date Range */}
@@ -569,7 +567,7 @@ export const Leaderboard: FC = () => {
             <span className="text-sm font-medium text-white" role="heading" aria-level={3}>
               Date Range
             </span>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap items-center">
               {[
                 { label: '7D', days: 7 },
                 { label: '30D', days: 30 },
@@ -587,9 +585,11 @@ export const Leaderboard: FC = () => {
                     style={{
                       padding: '4px 14px',
                       fontSize: '0.8rem',
-                      background: isActive ? 'var(--color-purple)' : 'rgba(255,255,255,0.07)',
-                      color: isActive ? '#fff' : 'rgba(255,255,255,0.6)',
-                      border: isActive ? 'none' : '1px solid rgba(255,255,255,0.12)'
+                      fontWeight: 500,
+                      fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1",
+                      background: isActive ? 'var(--color-purple)' : '#221E30',
+                      color: '#fff',
+                      border: 'none'
                     }}
                     onClick={() => handleDateChange([presetStart, presetEnd])}
                   >
@@ -597,13 +597,19 @@ export const Leaderboard: FC = () => {
                   </button>
                 );
               })}
-            </div>
-            <Popover.Root>
+              <Popover.Root>
               <Popover.Trigger>
                 <button
                   type="button"
-                  className="btn btn-secondary flex items-center gap-2 text-sm"
-                  style={{ padding: '4px 14px' }}
+                  className="btn flex items-center gap-2 text-sm"
+                  style={{
+                    padding: '4px 14px',
+                    border: 'none',
+                    fontWeight: 500,
+                    background: '#221E30',
+                    color: '#fff',
+                    fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1"
+                  }}
                 >
                   {dateRange[0] && dateRange[1]
                     ? `${dayjs(dateRange[0]).format('MMM D, YYYY')} → ${dayjs(dateRange[1]).format('MMM D, YYYY')}`
@@ -638,6 +644,7 @@ export const Leaderboard: FC = () => {
                 />
               </Popover.Content>
             </Popover.Root>
+            </div>
           </div>
 
           {/* Aggregate By */}
@@ -654,7 +661,8 @@ export const Leaderboard: FC = () => {
                   value as 'address' | 'address_per_builder' | 'date' | 'account' | ''
                 );
               }}
-              className="w-full"
+              className="lb-input w-full"
+              style={{ background: '#221E30', border: 'none' }}
             >
               <option value="">No aggregation</option>
               <option value="address">Address (Sum across all builders)</option>
@@ -676,7 +684,8 @@ export const Leaderboard: FC = () => {
                 id="broker-id"
                 value={queryParams.broker_id || ''}
                 onChange={(e) => handleInputChange('broker_id', e.target.value)}
-                className="w-full"
+                className="lb-input w-full"
+                style={{ background: '#221E30', border: 'none' }}
               >
                 <option value="">All brokers</option>
                 {brokers?.map((broker) => (
@@ -698,7 +707,8 @@ export const Leaderboard: FC = () => {
                 onChange={(e) => {
                   handleAddressChange(e.target.value);
                 }}
-                className="w-full"
+                className="lb-input w-full"
+                style={{ background: '#221E30', border: 'none' }}
               />
             </div>
           </div>
@@ -712,10 +722,10 @@ export const Leaderboard: FC = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {renderPagination(
+              <div className="flex justify-end px-1">
                 <Popover.Root>
                   <Popover.Trigger className="w-auto">
-                    <Button variant="soft" className="btn btn-secondary p-2">
+                    <Button variant="soft" className="btn" style={{ background: '#221E30', border: 'none', width: 36, height: 36, padding: 0 }}>
                       <MixerHorizontalIcon width="16" height="16" />
                     </Button>
                   </Popover.Trigger>
@@ -765,7 +775,7 @@ export const Leaderboard: FC = () => {
                     </div>
                   </Popover.Content>
                 </Popover.Root>
-              )}
+              </div>
 
               <div className="w-full overflow-x-auto relative">
                 {isLoading && (

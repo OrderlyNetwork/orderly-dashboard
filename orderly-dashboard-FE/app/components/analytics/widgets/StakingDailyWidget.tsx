@@ -43,7 +43,7 @@ export const StakingDailyWidget: FC = () => {
       {
         label: 'Daily Burned ORDER',
         data: rows.map((r) => r.daily_burned_order ?? 0),
-        borderColor: '#f87171',
+        borderColor: '#FF6390',
         backgroundColor: 'rgba(248,113,113,0.1)',
         fill: true,
         tension: 0.3,
@@ -53,6 +53,24 @@ export const StakingDailyWidget: FC = () => {
       }
     ]
   };
+
+  const netStaked = rows.map((r) => r.net_staked_order ?? 0);
+  const dailyBurned = rows.map((r) => r.daily_burned_order ?? 0);
+  const netMin = Math.min(...netStaked);
+  const netMax = Math.max(...netStaked);
+  const burnedMax = Math.max(...dailyBurned);
+
+  const yPad = Math.max(Math.abs(netMax - netMin) * 0.1, 1);
+  const yMin = netMin < 0 ? netMin - yPad : 0;
+  const yMax = Math.max(netMax + yPad, 0);
+  const y1Pad = Math.max(burnedMax * 0.1, 1);
+  const y1Max = Math.max(burnedMax + y1Pad, 0);
+  let y1Min = 0;
+
+  const zeroPos = yMin < 0 ? (0 - yMin) / (yMax - yMin) : 0;
+  if (zeroPos > 0) {
+    y1Min = (zeroPos * y1Max) / (zeroPos - 1);
+  }
 
   const options: ChartOptions<'line'> = {
     ...baseLineOpts,
@@ -70,6 +88,8 @@ export const StakingDailyWidget: FC = () => {
       y: {
         ...baseLineOpts.scales?.y,
         position: 'left',
+        min: yMin,
+        max: yMax,
         ticks: {
           color: 'rgba(156,117,255,0.5)',
           font: { size: 10 },
@@ -79,6 +99,8 @@ export const StakingDailyWidget: FC = () => {
       y1: {
         ...baseLineOpts.scales?.y,
         position: 'right',
+        min: y1Min,
+        max: y1Max,
         grid: { drawOnChartArea: false },
         ticks: {
           color: 'rgba(248,113,113,0.5)',

@@ -1,7 +1,7 @@
-import { CopyIcon, DownloadIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, CopyIcon, DownloadIcon } from '@radix-ui/react-icons';
 import { Button, IconButton } from '@radix-ui/themes';
 import { LoaderFunctionArgs } from '@remix-run/node';
-import { json, useLoaderData, useSearchParams, useNavigate } from '@remix-run/react';
+import { json, Link, useLoaderData, useSearchParams, useNavigate } from '@remix-run/react';
 import dayjs from 'dayjs';
 import { FC, useMemo, useState, useEffect, useCallback } from 'react';
 import useSWR from 'swr';
@@ -292,7 +292,26 @@ export const Address: FC = () => {
   } = useRenderColumns(eventsParams, eventType, setEventType, aggregateTrades, handleSymbolFilter);
 
   if (error) {
-    return error.message ?? '';
+    const errBackUrl = (() => {
+      if (address.chain_namespace === 'sol') {
+        return `/search?q=${base64UrlSafeEncode(address.address)}&chain_namespace=sol`;
+      }
+      return `/search?q=${address.address}`;
+    })();
+    return (
+      <div className="flex flex-col items-center gap-6 py-16">
+        <div className="text-gray-400 text-sm">
+          {error.message || 'Failed to fetch'}
+        </div>
+        <Link
+          to={errBackUrl}
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200 no-underline"
+        >
+          <ArrowLeftIcon width="16" height="16" />
+          <span className="text-sm">Back to search results</span>
+        </Link>
+      </div>
+    );
   }
 
   if (accountsData?.rows && accountsData.rows.length === 0) {
@@ -323,8 +342,25 @@ export const Address: FC = () => {
     return <Spinner size="2.5rem" />;
   }
 
+  const backUrl = (() => {
+    if (address.chain_namespace === 'sol') {
+      return `/search?q=${base64UrlSafeEncode(address.address)}&chain_namespace=sol`;
+    }
+    return `/search?q=${address.address}`;
+  })();
+
   return (
     <div className="space-y-8 animate-fade-in flex flex-col items-center">
+      {/* Back Button */}
+      <div className="w-full max-w-2xl">
+        <Link
+          to={backUrl}
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200 no-underline"
+        >
+          <ArrowLeftIcon width="16" height="16" />
+          <span className="text-sm">Back to search results</span>
+        </Link>
+      </div>
       {/* Header Section */}
       <div className="card p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-2xl">
         <div className="space-y-3 sm:space-y-4">

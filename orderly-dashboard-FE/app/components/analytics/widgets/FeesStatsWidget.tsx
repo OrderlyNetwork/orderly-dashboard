@@ -1,31 +1,11 @@
 import { FC } from 'react';
 
+import { StatCard } from '../shared/primitives';
 import { fmtCompact } from '../shared/formatters';
 
 import type { DashboardData } from '~/types/dashboard';
 
 type Props = { data: DashboardData };
-
-const StatPill: FC<{ label: string; value: string; color?: string }> = ({
-  label,
-  value,
-  color = '#34d399'
-}) => (
-  <div
-    className="rounded-[10px] py-[14px] px-4"
-    style={{
-      background: 'rgba(255,255,255,0.03)',
-      border: `1px solid color-mix(in srgb, ${color} 12%, transparent)`
-    }}
-  >
-    <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.38)] uppercase tracking-[0.08em] mb-2">
-      {label}
-    </div>
-    <div className="text-lg font-bold" style={{ color }}>
-      {value}
-    </div>
-  </div>
-);
 
 export const FeesStatsWidget: FC<Props> = ({ data }) => {
   const { mainRows } = data;
@@ -38,14 +18,15 @@ export const FeesStatsWidget: FC<Props> = ({ data }) => {
 
   return (
     <div className="dash-grid-sm">
-      <StatPill label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#34d399" />
-      <StatPill label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#34d399" />
-      <StatPill label="Total Net Fees" value={fmtCompact(cumFees)} color="#9C75FF" />
-      <StatPill label="Builder Fees (total)" value={fmtCompact(builderFees)} color="#f59e0b" />
-      <StatPill
+      <StatCard label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#00dea3" selected />
+      <StatCard label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#00dea3" selected />
+      <StatCard label="Total Net Fees" value={fmtCompact(cumFees)} color="#9C75FF" selected />
+      <StatCard label="Builder Fees (total)" value={fmtCompact(builderFees)} color="#f59e0b" selected />
+      <StatCard
         label="Rolling Avg Daily Fee"
-        value={`${fmtCompact(rollingAvgFee)}/day`}
+        value={fmtCompact(rollingAvgFee)}
         color="#9C75FF"
+        selected
       />
     </div>
   );

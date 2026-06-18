@@ -1,8 +1,5 @@
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ClipboardCopyIcon,
-  DoubleArrowLeftIcon,
   MixerHorizontalIcon,
   MagnifyingGlassIcon,
   Cross2Icon
@@ -333,7 +330,7 @@ export const Positions: FC<PositionsProps> = ({
         header: 'Holding',
         cell: ({ row }) => (
           <span
-            className={parseFloat(row.original.holding) >= 0 ? 'text-green-400' : 'text-red-400'}
+            style={{ color: parseFloat(row.original.holding) >= 0 ? '#00dea3' : '#FF6390' }}
           >
             {formatNumber(row.original.holding, row.original.symbol_hash)}
           </span>
@@ -355,9 +352,7 @@ export const Positions: FC<PositionsProps> = ({
         ) as unknown as string,
         cell: ({ row }) => (
           <span
-            className={
-              parseFloat(row.original.total_realized_pnl) >= 0 ? 'text-green-400' : 'text-red-400'
-            }
+            style={{ color: parseFloat(row.original.total_realized_pnl) >= 0 ? '#00dea3' : '#FF6390' }}
           >
             {formatNumberShort(row.original.total_realized_pnl)}
           </span>
@@ -369,9 +364,7 @@ export const Positions: FC<PositionsProps> = ({
         header: 'Unrealized PnL',
         cell: ({ row }) => (
           <span
-            className={
-              parseFloat(row.original.un_realized_pnl) >= 0 ? 'text-green-400' : 'text-red-400'
-            }
+            style={{ color: parseFloat(row.original.un_realized_pnl) >= 0 ? '#00dea3' : '#FF6390' }}
           >
             {formatNumberShort(row.original.un_realized_pnl)}
           </span>
@@ -458,59 +451,94 @@ export const Positions: FC<PositionsProps> = ({
     );
   }
 
-  const renderPagination = () => (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-bg-primary rounded-xl border border-border-primary">
-      <div className="flex items-center gap-2">
-        <button
-          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => handlePageChange(0)}
-          disabled={!filteredData || (queryParams.offset || 0) <= 0}
-        >
-          <DoubleArrowLeftIcon className="h-4 w-4" />
-        </button>
-        <button
-          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() =>
-            handlePageChange(Math.max(0, (queryParams.offset || 0) - (queryParams.limit || 30)))
-          }
-          disabled={!filteredData || (queryParams.offset || 0) <= 0}
-        >
-          <ChevronLeftIcon className="h-4 w-4" />
-        </button>
-        <button
-          className="btn btn-secondary p-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => handlePageChange((queryParams.offset || 0) + (queryParams.limit || 30))}
-          disabled={!filteredData || !hasMoreData}
-        >
-          <ChevronRightIcon className="h-4 w-4" />
-        </button>
-      </div>
+  const renderPagination = () => {
+    const limit = queryParams.limit || 30;
+    const isPrevDisabled = !filteredData || (queryParams.offset || 0) <= 0;
+    const isNextDisabled = !filteredData || !hasMoreData;
 
-      <div className="flex flex-row flex-wrap items-center gap-2 sm:gap-4 text-sm">
-        <span className="flex items-center gap-2 text-gray-300">
-          <span>Page</span>
-          <strong className="text-white">{currentPage}</strong>
-        </span>
+    const endPage = currentPage + (hasMoreData ? 2 : 0);
+    const startPage = Math.max(1, endPage - 4);
+    const pages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 
-        <div className="flex items-center gap-2">
-          <span className="text-gray-300">Show:</span>
-          <select
-            value={queryParams.limit || 30}
-            onChange={(e) => {
-              handleInputChange('limit', Number(e.target.value));
+    return (
+      <div
+        className="flex flex-row items-center justify-center gap-2 p-4 rounded-xl"
+        style={{ background: '#130E1D' }}
+      >
+        {!isPrevDisabled && (
+          <button
+            onClick={() => handlePageChange((currentPage - 2) * limit)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.55)',
+              cursor: 'pointer',
+              fontSize: 18,
+              padding: '0 4px',
+              lineHeight: 1,
             }}
-            className="px-2 py-1"
           >
-            {[10, 20, 30].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                {pageSize}
-              </option>
-            ))}
-          </select>
+            {'<'}
+          </button>
+        )}
+
+        {pages.map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange((page - 1) * limit)}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: page === currentPage ? '#6700CE' : '#221E30',
+              color: '#ffffff',
+              border: 'none',
+              cursor: page === currentPage ? 'default' : 'pointer',
+              fontSize: 15,
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {page}
+          </button>
+        ))}
+
+        {!isNextDisabled && (
+          <button
+            onClick={() => handlePageChange(currentPage * limit)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.55)',
+              cursor: 'pointer',
+              fontSize: 18,
+              padding: '0 4px',
+              lineHeight: 1,
+            }}
+          >
+            {'>'}
+          </button>
+        )}
+
+        <div className="flex items-center gap-2" style={{ marginLeft: 12 }}>
+          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13 }}>Go to</span>
+          <input
+            type="number"
+            defaultValue={currentPage}
+            onChange={(e) => {
+              const page = e.target.value ? Number(e.target.value) : 1;
+              handlePageChange((page - 1) * limit);
+            }}
+            className="lb-input w-14 px-2 py-1 text-center text-sm"
+            style={{ background: '#221E30', border: 'none' }}
+            min="1"
+          />
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-4 sm:space-y-8 animate-fade-in flex flex-col align-center">
@@ -526,7 +554,7 @@ export const Positions: FC<PositionsProps> = ({
         </div>
       )}
 
-      <div className="card w-full space-y-4 sm:space-y-6">
+      <div className="card w-full space-y-4 sm:space-y-6" style={{ background: '#130E1D', border: 'none' }}>
         {/* Filters Section */}
         {!hideFilters && (
           <div className="space-y-4 sm:space-y-6 w-full">
@@ -540,7 +568,8 @@ export const Positions: FC<PositionsProps> = ({
                   id="broker-id"
                   value={queryParams.broker_id || ''}
                   onChange={(e) => handleInputChange('broker_id', e.target.value)}
-                  className="w-full"
+                  className="lb-input w-full"
+                  style={{ background: '#221E30', border: 'none' }}
                 >
                   <option value="">All brokers</option>
                   {brokers?.map((broker) => (
@@ -558,7 +587,8 @@ export const Positions: FC<PositionsProps> = ({
                   id="symbol-input"
                   value={queryParams.symbol || ''}
                   onChange={(e) => handleInputChange('symbol', e.target.value)}
-                  className="w-full"
+                  className="lb-input w-full"
+                  style={{ background: '#221E30', border: 'none' }}
                 >
                   <option value="">All symbols</option>
                   {symbols?.map((symbol) => {
@@ -583,7 +613,8 @@ export const Positions: FC<PositionsProps> = ({
                     placeholder="Enter EVM/Solana address or Account ID"
                     value={addressInput}
                     onChange={(e) => handleAddressChange(e.target.value)}
-                    className="w-full pr-10"
+                    className="lb-input w-full pr-10"
+                    style={{ background: '#221E30', border: 'none' }}
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     {addressLoading && <Spinner size="1rem" />}
@@ -603,7 +634,8 @@ export const Positions: FC<PositionsProps> = ({
                       type="text"
                       value={accountIdInput}
                       readOnly
-                      className="flex-1 bg-bg-secondary text-gray-300 cursor-not-allowed"
+                      className="lb-input flex-1 text-gray-300 cursor-not-allowed"
+                      style={{ background: '#221E30', border: 'none' }}
                     />
                     <button
                       onClick={() => handleAccountIdChange('')}
@@ -626,7 +658,8 @@ export const Positions: FC<PositionsProps> = ({
                   onChange={(e) => {
                     handleAccountIdChange(e.target.value);
                   }}
-                  className="w-full"
+                  className="lb-input w-full"
+                  style={{ background: '#221E30', border: 'none' }}
                 />
               </div>
             </div>
@@ -736,8 +769,6 @@ export const Positions: FC<PositionsProps> = ({
                       </Popover.Content>
                     </Popover.Root>
                   </div>
-
-                  {renderPagination()}
 
                   <div className="w-full overflow-x-auto relative">
                     {isLoading && (

@@ -14,6 +14,8 @@ const DISTRIBUTOR_HEADERS = [
   'Total Revenue'
 ];
 
+const FS: React.CSSProperties = { fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1" };
+
 export const DistributorsWidget: FC = () => {
   const { data: stats, isLoading: sLoad, error: sErr } = useDistributorStats();
 
@@ -24,7 +26,10 @@ export const DistributorsWidget: FC = () => {
     : [];
 
   return (
-    <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+    <div
+      className="overflow-x-auto max-h-[300px] overflow-y-auto chips-scrollbar"
+      style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(156,117,255,0.25) #130E1D' }}
+    >
       {sLoad ? (
         <div className="p-5">
           <Skeleton height={120} />
@@ -34,7 +39,7 @@ export const DistributorsWidget: FC = () => {
           <Empty msg={sErr ? 'Failed to load' : 'No data'} />
         </div>
       ) : (
-        <table className="w-full border-collapse text-xs">
+        <table className="w-full border-collapse text-[15px]" style={{ fontFamily: "'Atyp BL Text', 'Atyp BL', sans-serif", fontWeight: 400, fontVariantNumeric: 'normal', fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1" }}>
           <thead>
             <tr>
               {DISTRIBUTOR_HEADERS.map((h, idx) => (
@@ -42,9 +47,10 @@ export const DistributorsWidget: FC = () => {
                   key={h}
                   style={
                     idx === 0
-                      ? TH_STICKY
+                      ? { ...TH_STICKY, ...FS }
                       : {
                           ...TH_STICKY,
+                          ...FS,
                           left: undefined,
                           zIndex: 2
                         }
@@ -58,9 +64,9 @@ export const DistributorsWidget: FC = () => {
           <tbody>
             {distributors.map((d, i) => (
               <tr key={i}>
-                <td style={TD}>
+                <td style={{ ...TD, ...FS }}>
                   <span
-                    className="py-[2px] px-2 rounded-md text-[11px]"
+                    className="py-[2px] px-2 rounded-md text-xs"
                     style={{
                       background:
                         d['Fee Tier'] === 'PLATINUM'
@@ -72,15 +78,15 @@ export const DistributorsWidget: FC = () => {
                     {d['Fee Tier'] ?? '—'}
                   </span>
                 </td>
-                <td style={{ ...TD, color: '#fff' }}>{fmtNum(d['Number of Invitees'])}</td>
-                <td style={{ ...TD, color: '#34d399' }}>
+                <td style={{ ...TD, ...FS, color: '#fff' }}>{fmtNum(d['Number of Invitees'])}</td>
+                <td style={{ ...TD, ...FS, color: '#00dea3' }}>
                   {fmtNum(d['Number of Graduated Invitees'])}
                 </td>
-                <td style={{ ...TD, color: '#60a5fa' }}>{fmtUsd(d['30D Invitee Volume'])}</td>
-                <td style={{ ...TD, color: '#f59e0b', fontWeight: 600 }}>
+                <td style={{ ...TD, ...FS, color: '#fff' }}>{fmtUsd(d['30D Invitee Volume'])}</td>
+                <td style={{ ...TD, ...FS, color: '#fff' }}>
                   {fmtUsd(d['30D Revenue Share'])}
                 </td>
-                <td style={{ ...TD, color: 'rgba(255,255,255,0.6)' }}>
+                <td style={{ ...TD, ...FS, color: '#D9AB52' }}>
                   {fmtUsd(d['Total Revenue Share'])}
                 </td>
               </tr>

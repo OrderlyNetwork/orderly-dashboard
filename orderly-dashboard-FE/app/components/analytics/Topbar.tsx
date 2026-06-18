@@ -56,7 +56,7 @@ export const Topbar: FC<TopbarProps> = ({ activeNav, isMobile, onMenuToggle }) =
               {NAV_LABELS[activeNav] ?? 'Dashboard'}
             </h1>
             {!isMobile && (
-              <span className="text-xs text-[rgba(255,255,255,0.4)] font-normal">
+              <span className="text-[13px] text-[rgba(255,255,255,0.4)] font-normal">
                 {NAV_SUBTITLES[activeNav] ?? ''}
               </span>
             )}

@@ -43,7 +43,7 @@ export const StakeUsersWidget: FC = () => {
         data: rows.map((r) => r.avg_active_stakers ?? 0),
         fill: true,
         backgroundColor: 'rgba(52,211,153,0.1)',
-        borderColor: '#34d399',
+        borderColor: '#00dea3',
         borderWidth: 2,
         pointRadius: 3,
         tension: 0.3

@@ -80,8 +80,7 @@ const WIDGET_META: Record<
     hasPeriodControl: true
   },
   'tvl-chain': {
-    title: 'TVL by Chain',
-    height: 260
+    title: 'TVL by Chain'
   },
   'net-fees': {
     title: 'Net Fees',
@@ -160,6 +159,7 @@ export default function WidgetRoute() {
   const { widgetId } = loaderData;
   const [volPeriod, setVolPeriod] = useState<Period>('30D');
   const [overviewGran, setOverviewGran] = useState<Granularity>('weekly');
+  const [dexSearch, setDexSearch] = useState('');
   const { data: stakeVsSupplyData } = useStakeVsSupply();
 
   const meta = WIDGET_META[widgetId];
@@ -189,11 +189,30 @@ export default function WidgetRoute() {
     return meta.subtitle;
   })();
 
-  const controls = meta.hasPeriodControl ? (
-    <PeriodSelector period={volPeriod} onChange={setVolPeriod} />
-  ) : meta.hasGranularityControl ? (
-    <GranularitySelector granularity={overviewGran} onChange={setOverviewGran} />
-  ) : undefined;
+  const dexSearchInput = (
+    <input
+      type="text"
+      value={dexSearch}
+      onChange={(e) => setDexSearch(e.target.value)}
+      placeholder="Search broker…"
+      className="rounded text-xs px-2.5 py-1 outline-none"
+      style={{
+        width: 140,
+        background: '#130E1D',
+        border: '1px solid rgba(156,117,255,0.18)',
+        color: '#ffffff'
+      }}
+    />
+  );
+
+  const controls =
+    widgetId === 'dex-users' ? (
+      dexSearchInput
+    ) : meta.hasPeriodControl ? (
+      <PeriodSelector period={volPeriod} onChange={setVolPeriod} />
+    ) : meta.hasGranularityControl ? (
+      <GranularitySelector granularity={overviewGran} onChange={setOverviewGran} />
+    ) : undefined;
 
   let widgetContent: React.ReactNode;
 
@@ -213,7 +232,7 @@ export default function WidgetRoute() {
       widgetContent = <OverviewWidget granularity={overviewGran} />;
       break;
     case 'dex-users':
-      widgetContent = <DexUsersWidget />;
+      widgetContent = <DexUsersWidget search={dexSearch} onSearchChange={setDexSearch} />;
       break;
     case 'volume-segments':
       widgetContent = <VolumeSegmentsWidget />;

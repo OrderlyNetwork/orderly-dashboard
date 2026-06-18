@@ -41,8 +41,8 @@ const NAV_ITEMS: {
     id: 'leaderboard',
     path: '/leaderboard',
     label: 'Leaderboard',
-    color: '#FB923C',
-    bgAlpha: 'rgba(251,146,60,0.15)',
+    color: '#9C75FF',
+    bgAlpha: 'rgba(156,117,255,0.15)',
     icon: (
       <svg
         width="16"
@@ -150,17 +150,14 @@ function renderNavItems(activeNav: NavId, onNavigate?: () => void) {
         onClick={onNavigate}
         className="flex items-center gap-[10px] w-full py-2 px-[10px] rounded-[10px] text-[13px] mb-[2px] no-underline transition-all duration-150 cursor-pointer text-left"
         style={{
-          background: isActive
-            ? `linear-gradient(90deg, ${item.bgAlpha} 0%, rgba(0,0,0,0) 100%)`
-            : 'transparent',
-          color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
-          fontWeight: isActive ? 600 : 400,
-          borderLeft: isActive ? `2px solid ${item.color}` : '2px solid transparent'
+          background: isActive ? '#6700CE' : 'transparent',
+          color: isActive ? '#E9DEFF' : 'rgba(255,255,255,0.45)',
+          fontWeight: isActive ? 600 : 400
         }}
         onMouseEnter={(e) => {
           if (!isActive) {
-            (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
-            (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)';
+            (e.currentTarget as HTMLElement).style.background = 'rgba(103,0,206,0.2)';
+            (e.currentTarget as HTMLElement).style.color = '#9C75FF';
           }
         }}
         onMouseLeave={(e) => {
@@ -173,20 +170,13 @@ function renderNavItems(activeNav: NavId, onNavigate?: () => void) {
         <span
           className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-150"
           style={{
-            background: isActive ? item.bgAlpha : 'rgba(255,255,255,0.05)',
-            color: isActive ? item.color : 'rgba(255,255,255,0.35)',
-            border: isActive ? `1px solid ${item.color}40` : '1px solid rgba(255,255,255,0.06)'
+            background: isActive ? '#3F0086' : 'rgba(255,255,255,0.05)',
+            color: isActive ? '#9C75FF' : 'rgba(255,255,255,0.35)'
           }}
         >
           {item.icon}
         </span>
         <span className="whitespace-nowrap overflow-hidden text-ellipsis">{item.label}</span>
-        {isActive && (
-          <span
-            className="ml-auto w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ background: item.color, boxShadow: `0 0 6px ${item.color}` }}
-          />
-        )}
       </Link>
     );
   });
@@ -203,7 +193,7 @@ function SidebarContent({ activeNav, onNavigate }: SidebarProps & { onNavigate?:
       </div>
 
       <nav className="flex-1 py-3 px-[10px] overflow-y-auto">
-        <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.25)] tracking-widest uppercase px-[10px] pb-2">
+        <div className="text-xs font-semibold text-[rgba(255,255,255,0.25)] tracking-widest uppercase px-[10px] pb-2">
           Navigation
         </div>
         {renderNavItems(activeNav, onNavigate)}

@@ -22,7 +22,7 @@ import {
   useChartReady
 } from '../shared/chartConfig';
 import { fmtUsd, labelFromDate } from '../shared/formatters';
-import { DatasetChips, Empty, Skeleton } from '../shared/primitives';
+import { type Period, DatasetChips, Empty, Skeleton } from '../shared/primitives';
 
 import { useTokenTvl } from '~/hooks/useOrderlyMetrics';
 
@@ -36,8 +36,10 @@ ChartJS.register(
   Tooltip
 );
 
-export const TvlByTokenWidget: FC = () => {
-  const { data, isLoading, error } = useTokenTvl();
+const PERIOD_DAYS: Record<Period, number> = { '7D': 7, '30D': 30, '90D': 90 };
+
+export const TvlByTokenWidget: FC<{ period?: Period }> = ({ period = '30D' }) => {
+  const { data, isLoading, error } = useTokenTvl(PERIOD_DAYS[period]);
   const chartRef = useRef<ChartJS<'bar'>>(null);
   useChartReady(chartRef);
   const rows = data?.rows ?? [];
