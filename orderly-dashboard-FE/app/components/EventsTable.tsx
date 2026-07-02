@@ -148,6 +148,23 @@ export const EventsTable: FC<EventsTableProps> = ({
     externalSymbolFilter !== undefined ? externalSymbolFilter : internalSymbolFilter;
   const setSymbolFilter = setExternalSymbolFilter || setInternalSymbolFilter;
 
+  const handleDateChange = (value: [string | null, string | null]) => {
+    if (!value[0] || !value[1]) {
+      setDateRange(value);
+      return;
+    }
+    const MAX_SPAN_DAYS = 30;
+    let start = dayjs(value[0]);
+    let end = dayjs(value[1]);
+    if (start.isAfter(end)) {
+      [start, end] = [end, start];
+    }
+    if (end.diff(start, 'day') > MAX_SPAN_DAYS) {
+      end = start.add(MAX_SPAN_DAYS, 'day');
+    }
+    setDateRange([start.format('YYYY-MM-DD'), end.format('YYYY-MM-DD')]);
+  };
+
   const symbols = useSymbols();
   const allSymbols = useAllSymbols();
 
@@ -359,9 +376,12 @@ export const EventsTable: FC<EventsTableProps> = ({
                         })()
                       : dayjs().format('YYYY-MM-DD')
                 }
-                onChange={(value) => {
-                  setDateRange(value);
-                }}
+                minDate={
+                  dateRange[0] && !dateRange[1]
+                    ? dayjs(dateRange[0]).subtract(30, 'day').format('YYYY-MM-DD')
+                    : undefined
+                }
+                onChange={handleDateChange}
                 highlightToday={true}
               />
             </div>
