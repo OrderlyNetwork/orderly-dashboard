@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
 import { fmtNum, fmtUsd } from '../shared/formatters';
-import { Empty, Skeleton, TD, TH_STICKY } from '../shared/primitives';
+import { Empty, TableSkeleton, TD, TH_STICKY } from '../shared/primitives';
 
 import { useDistributorStats } from '~/hooks/useOrderlyMetrics';
 
@@ -32,14 +32,22 @@ export const DistributorsWidget: FC = () => {
     >
       {sLoad ? (
         <div className="p-5">
-          <Skeleton height={120} />
+          <TableSkeleton height={120} />
         </div>
       ) : sErr || distributors.length === 0 ? (
         <div className="p-6">
           <Empty msg={sErr ? 'Failed to load' : 'No data'} />
         </div>
       ) : (
-        <table className="w-full border-collapse text-[15px]" style={{ fontFamily: "'Atyp BL Text', 'Atyp BL', sans-serif", fontWeight: 400, fontVariantNumeric: 'normal', fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1" }}>
+        <table
+          className="w-full border-collapse text-[15px]"
+          style={{
+            fontFamily: "'Atyp BL Text', 'Atyp BL', sans-serif",
+            fontWeight: 400,
+            fontVariantNumeric: 'normal',
+            fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1"
+          }}
+        >
           <thead>
             <tr>
               {DISTRIBUTOR_HEADERS.map((h, idx) => (
@@ -83,9 +91,7 @@ export const DistributorsWidget: FC = () => {
                   {fmtNum(d['Number of Graduated Invitees'])}
                 </td>
                 <td style={{ ...TD, ...FS, color: '#fff' }}>{fmtUsd(d['30D Invitee Volume'])}</td>
-                <td style={{ ...TD, ...FS, color: '#fff' }}>
-                  {fmtUsd(d['30D Revenue Share'])}
-                </td>
+                <td style={{ ...TD, ...FS, color: '#fff' }}>{fmtUsd(d['30D Revenue Share'])}</td>
                 <td style={{ ...TD, ...FS, color: '#D9AB52' }}>
                   {fmtUsd(d['Total Revenue Share'])}
                 </td>

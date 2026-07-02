@@ -22,7 +22,13 @@ import {
   useChartReady
 } from '../shared/chartConfig';
 import { fmtUsd, labelFromDate } from '../shared/formatters';
-import { type Period, DatasetChips, Empty, Skeleton } from '../shared/primitives';
+import {
+  BarChartSkeleton,
+  DatasetChips,
+  Empty,
+  PERIOD_DAYS,
+  type Period
+} from '../shared/primitives';
 
 import { useTokenTvl } from '~/hooks/useOrderlyMetrics';
 
@@ -35,8 +41,6 @@ ChartJS.register(
   Filler,
   Tooltip
 );
-
-const PERIOD_DAYS: Record<Period, number> = { '7D': 7, '30D': 30, '90D': 90 };
 
 export const TvlByTokenWidget: FC<{ period?: Period }> = ({ period = '30D' }) => {
   const { data, isLoading, error } = useTokenTvl(PERIOD_DAYS[period]);
@@ -115,7 +119,7 @@ export const TvlByTokenWidget: FC<{ period?: Period }> = ({ period = '30D' }) =>
   return (
     <>
       {isLoading ? (
-        <Skeleton height={236} />
+        <BarChartSkeleton height={236} />
       ) : error || dates.length === 0 ? (
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (

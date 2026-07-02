@@ -4,6 +4,8 @@ export type Period = '7D' | '30D' | '90D';
 
 export type Granularity = 'weekly' | 'monthly';
 
+export const PERIOD_DAYS: Record<Period, number> = { '7D': 7, '30D': 30, '90D': 90 };
+
 export const Panel: FC<{
   title: string;
   subtitle?: string;
@@ -20,7 +22,15 @@ export const Panel: FC<{
       style={{ borderBottomColor: 'rgba(156,117,255,0.08)' }}
     >
       <div>
-        <div className="text-lg font-semibold text-white" style={{ fontFamily: "'Atyp BL Text', sans-serif", fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1" }}>{title}</div>
+        <div
+          className="text-lg font-semibold text-white"
+          style={{
+            fontFamily: "'Atyp BL Text', sans-serif",
+            fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1"
+          }}
+        >
+          {title}
+        </div>
         {subtitle && (
           <div className="text-[13px] mt-0.5 text-[rgba(255,255,255,0.35)]">{subtitle}</div>
         )}
@@ -61,7 +71,12 @@ export const GranularitySelector: FC<{
   onChange: (g: Granularity) => void;
 }> = ({ granularity, onChange }) => (
   <div className="flex gap-1 rounded-lg p-1" style={{ background: '#130E1D' }}>
-    {([['weekly', '7D'], ['monthly', '30D']] as [Granularity, string][]).map(([g, label]) => (
+    {(
+      [
+        ['weekly', '7D'],
+        ['monthly', '30D']
+      ] as [Granularity, string][]
+    ).map(([g, label]) => (
       <button
         key={g}
         onClick={() => onChange(g)}
@@ -78,8 +93,8 @@ export const GranularitySelector: FC<{
   </div>
 );
 
-function statTextScheme(_bg: string): { label: string; value: string; sub: string } {
-  return { label: 'rgba(0,0,0,0.55)', value: '#000000', sub: 'rgba(0,0,0,0.45)' };
+function statTextScheme(): { label: string; value: string } {
+  return { label: 'rgba(0,0,0,0.55)', value: '#000000' };
 }
 
 export const StatCard: FC<{
@@ -91,8 +106,8 @@ export const StatCard: FC<{
   onClick?: () => void;
   inStrip?: boolean;
   pill?: boolean;
-}> = ({ label, value, sub, color = '#9C75FF', selected, onClick, inStrip, pill }) => {
-  const { label: labelColor, value: valueColor, sub: subColor } = statTextScheme(color);
+}> = ({ label, value, color = '#9C75FF', selected, onClick, inStrip, pill }) => {
+  const { label: labelColor, value: valueColor } = statTextScheme();
 
   if (inStrip) {
     return (
@@ -108,14 +123,22 @@ export const StatCard: FC<{
           paddingTop: 20,
           paddingBottom: 20,
           cursor: onClick ? 'pointer' : undefined,
-          transition: 'opacity .15s',
+          transition: 'opacity .15s'
         }}
-        onMouseEnter={onClick && !selected ? (e) => {
-          (e.currentTarget as HTMLElement).style.opacity = '0.9';
-        } : undefined}
-        onMouseLeave={onClick && !selected ? (e) => {
-          (e.currentTarget as HTMLElement).style.opacity = '1';
-        } : undefined}
+        onMouseEnter={
+          onClick && !selected
+            ? (e) => {
+                (e.currentTarget as HTMLElement).style.opacity = '0.9';
+              }
+            : undefined
+        }
+        onMouseLeave={
+          onClick && !selected
+            ? (e) => {
+                (e.currentTarget as HTMLElement).style.opacity = '1';
+              }
+            : undefined
+        }
       >
         {/* left: label */}
         <div
@@ -150,22 +173,39 @@ export const StatCard: FC<{
         background: selected ? color : '#221E30',
         transform: selected ? 'scale(1)' : 'scale(0.97)',
         cursor: onClick ? 'pointer' : undefined,
-        transition: 'background .15s, transform .15s',
+        transition: 'background .15s, transform .15s'
       }}
-      onMouseEnter={onClick && !selected ? (e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'scale(0.99)';
-      } : undefined}
-      onMouseLeave={onClick && !selected ? (e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'scale(0.97)';
-      } : undefined}
+      onMouseEnter={
+        onClick && !selected
+          ? (e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(0.99)';
+            }
+          : undefined
+      }
+      onMouseLeave={
+        onClick && !selected
+          ? (e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(0.97)';
+            }
+          : undefined
+      }
     >
       <div
         className="font-semibold uppercase tracking-[0.08em] mb-0.5 whitespace-nowrap"
-        style={{ color: selected ? labelColor : 'rgba(255,255,255,0.45)', fontSize: 'clamp(8px, 2.8cqw, 11px)' }}
+        style={{
+          color: selected ? labelColor : 'rgba(255,255,255,0.45)',
+          fontSize: 'clamp(8px, 2.8cqw, 11px)'
+        }}
       >
         {label}
       </div>
-      <div className="font-bold" style={{ color: selected ? valueColor : 'rgba(255,255,255,0.85)', fontSize: 'clamp(22px, 13cqw, 48px)' }}>
+      <div
+        className="font-bold"
+        style={{
+          color: selected ? valueColor : 'rgba(255,255,255,0.85)',
+          fontSize: 'clamp(22px, 13cqw, 48px)'
+        }}
+      >
         {value}
       </div>
     </div>
@@ -173,7 +213,92 @@ export const StatCard: FC<{
 };
 
 export const Skeleton: FC<{ height?: number }> = ({ height = 40 }) => (
-  <div className="rounded-lg" style={{ height, background: 'rgba(156,117,255,0.07)' }} />
+  <div
+    className="skeleton-shimmer rounded-lg"
+    style={{ height, background: 'rgba(156,117,255,0.07)' }}
+  />
+);
+
+/** Placeholder that mimics a stacked/grouped bar chart with a legend chip row. */
+export const BarChartSkeleton: FC<{ height?: number; bars?: number }> = ({
+  height = 236,
+  bars = 14
+}) => (
+  <div className="flex flex-col" style={{ height }} aria-hidden>
+    <div className="flex gap-1.5 mb-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="skeleton-shimmer rounded-full"
+          style={{ width: 54, height: 18, background: 'rgba(156,117,255,0.08)' }}
+        />
+      ))}
+    </div>
+    <div className="flex items-end gap-1.5 flex-1">
+      {Array.from({ length: bars }).map((_, i) => {
+        const pct = 30 + Math.abs(Math.sin(i * 1.3)) * 55;
+        return (
+          <div
+            key={i}
+            className="skeleton-shimmer flex-1 rounded-t"
+            style={{ height: `${pct}%`, background: 'rgba(156,117,255,0.10)' }}
+          />
+        );
+      })}
+    </div>
+  </div>
+);
+
+/** Placeholder that mimics a line/area chart. */
+export const LineChartSkeleton: FC<{ height?: number }> = ({ height = 236 }) => (
+  <div className="relative" style={{ height }} aria-hidden>
+    <svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="sk-line-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="rgba(156,117,255,0.14)" />
+          <stop offset="100%" stopColor="rgba(156,117,255,0)" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M0,72 C12,60 20,48 30,52 C42,57 50,30 62,34 C74,38 82,18 100,24 L100,100 L0,100 Z"
+        fill="url(#sk-line-fill)"
+      />
+      <path
+        className="skeleton-shimmer"
+        d="M0,72 C12,60 20,48 30,52 C42,57 50,30 62,34 C74,38 82,18 100,24"
+        fill="none"
+        stroke="rgba(156,117,255,0.30)"
+        strokeWidth="1.5"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  </div>
+);
+
+/** Placeholder that mimics a table. */
+export const TableSkeleton: FC<{ rows?: number; height?: number }> = ({ rows = 6, height }) => (
+  <div className="flex flex-col" style={{ height }} aria-hidden>
+    {Array.from({ length: rows }).map((_, i) => (
+      <div
+        key={i}
+        className="skeleton-shimmer flex items-center gap-4"
+        style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+      >
+        <div
+          className="skeleton-shimmer rounded-md"
+          style={{ width: '24%', height: 12, background: 'rgba(156,117,255,0.08)' }}
+        />
+        <div
+          className="skeleton-shimmer rounded-md"
+          style={{ width: '18%', height: 12, background: 'rgba(156,117,255,0.08)' }}
+        />
+        <div
+          className="skeleton-shimmer rounded-md"
+          style={{ width: '20%', height: 12, background: 'rgba(156,117,255,0.08)' }}
+        />
+      </div>
+    ))}
+  </div>
 );
 
 export const Empty: FC<{ msg: string }> = ({ msg }) => (
@@ -226,11 +351,9 @@ export const DatasetChips: FC<{
 
   const displayItems = useMemo(() => {
     let result = items.map((item, i) => ({ ...item, originalIndex: i }));
-    if (search) result = result.filter((item) =>
-      item.label.toLowerCase().includes(search.toLowerCase())
-    );
-    if (sortOrder === 'az')
-      result = [...result].sort((a, b) => a.label.localeCompare(b.label));
+    if (search)
+      result = result.filter((item) => item.label.toLowerCase().includes(search.toLowerCase()));
+    if (sortOrder === 'az') result = [...result].sort((a, b) => a.label.localeCompare(b.label));
     return result;
   }, [items, search, sortOrder]);
 
@@ -283,7 +406,7 @@ export const DatasetChips: FC<{
               width: 110,
               background: '#130E1D',
               border: 'none',
-              color: '#ffffff',
+              color: '#ffffff'
             }}
           />
         )}

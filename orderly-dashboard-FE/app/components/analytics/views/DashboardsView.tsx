@@ -43,6 +43,10 @@ export const DashboardsView: FC<Props> = ({ data }) => {
   const [tvlTokenPeriod, setTvlTokenPeriod] = useState<Period>('30D');
   const [overviewGran, setOverviewGran] = useState<Granularity>('weekly');
   const [dexSearch, setDexSearch] = useState('');
+  const [builderVolPeriod, setBuilderVolPeriod] = useState<Period>('30D');
+  const [builderTradersPeriod, setBuilderTradersPeriod] = useState<Period>('30D');
+  const [builderRevPeriod, setBuilderRevPeriod] = useState<Period>('30D');
+  const [netFlowBuilderPeriod, setNetFlowBuilderPeriod] = useState<Period>('30D');
 
   const tvlSubtitle = `Total: ${fmtCompact(tvlTotal)}`;
 
@@ -74,7 +78,13 @@ export const DashboardsView: FC<Props> = ({ data }) => {
         widgetId="volume"
         title="Trading Volume — Daily"
         height={260}
-        controls={<PeriodSelector period={volPeriod} onChange={setVolPeriod} />}
+        controls={
+          <PeriodSelector
+            period={volPeriod}
+            onChange={setVolPeriod}
+            options={['7D', '30D', '90D']}
+          />
+        }
       >
         <VolumeChartWidget rows={mainRows} period={volPeriod} />
       </WidgetWrapper>
@@ -106,7 +116,7 @@ export const DashboardsView: FC<Props> = ({ data }) => {
               width: 140,
               background: '#130E1D',
               border: 'none',
-              color: '#ffffff',
+              color: '#ffffff'
             }}
           />
         }
@@ -201,15 +211,29 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             widgetId="builder-volume"
             title="Builder Volume"
             subtitle="daily trading volume breakdown per builder"
+            controls={
+              <PeriodSelector
+                period={builderVolPeriod}
+                onChange={setBuilderVolPeriod}
+                options={['7D', '30D', '90D']}
+              />
+            }
           >
-            <BuilderVolumeWidget />
+            <BuilderVolumeWidget period={builderVolPeriod} />
           </WidgetWrapper>
           <WidgetWrapper
             widgetId="builder-active-traders"
             title="Daily Active Traders"
             subtitle="daily active trader breakdown per builder"
+            controls={
+              <PeriodSelector
+                period={builderTradersPeriod}
+                onChange={setBuilderTradersPeriod}
+                options={['7D', '30D', '90D']}
+              />
+            }
           >
-            <BuilderActiveTradersWidget />
+            <BuilderActiveTradersWidget period={builderTradersPeriod} />
           </WidgetWrapper>
         </div>
         <div className="dash-grid-lg" style={{ marginTop: 20 }}>
@@ -217,15 +241,29 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             widgetId="builder-revenue"
             title="Builder Revenue"
             subtitle="daily revenue breakdown per builder"
+            controls={
+              <PeriodSelector
+                period={builderRevPeriod}
+                onChange={setBuilderRevPeriod}
+                options={['7D', '30D', '90D']}
+              />
+            }
           >
-            <BuilderRevenueWidget />
+            <BuilderRevenueWidget period={builderRevPeriod} />
           </WidgetWrapper>
           <WidgetWrapper
             widgetId="net-flow-by-builder"
             title="Net Flow by Builder"
             subtitle="daily net flow breakdown per builder"
+            controls={
+              <PeriodSelector
+                period={netFlowBuilderPeriod}
+                onChange={setNetFlowBuilderPeriod}
+                options={['7D', '30D', '90D']}
+              />
+            }
           >
-            <NetFlowByBuilderWidget />
+            <NetFlowByBuilderWidget period={netFlowBuilderPeriod} />
           </WidgetWrapper>
         </div>
         <div style={{ marginTop: 20 }}>

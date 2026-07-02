@@ -15,7 +15,7 @@ import { Line } from 'react-chartjs-2';
 
 import { baseLineOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtNum, fmtPctOfSupply, weekLabel } from '../shared/formatters';
-import { Empty, Skeleton } from '../shared/primitives';
+import { Empty, LineChartSkeleton } from '../shared/primitives';
 
 import { useStakeVsSupply } from '~/hooks/useOrderlyMetrics';
 
@@ -96,7 +96,7 @@ export const StakeVsSupplyWidget: FC = () => {
   return (
     <>
       {isLoading ? (
-        <Skeleton height={196} />
+        <LineChartSkeleton height={196} />
       ) : error || rows.length === 0 ? (
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (

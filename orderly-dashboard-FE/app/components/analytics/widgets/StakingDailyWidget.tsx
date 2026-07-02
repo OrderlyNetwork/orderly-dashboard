@@ -14,7 +14,7 @@ import { Line } from 'react-chartjs-2';
 
 import { baseLineOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtNum, labelFromDate } from '../shared/formatters';
-import { Empty, Skeleton } from '../shared/primitives';
+import { Empty, LineChartSkeleton } from '../shared/primitives';
 
 import { useStakingDaily } from '~/hooks/useOrderlyMetrics';
 
@@ -111,7 +111,7 @@ export const StakingDailyWidget: FC = () => {
     }
   };
 
-  if (isLoading) return <Skeleton height={236} />;
+  if (isLoading) return <LineChartSkeleton height={236} />;
   if (error || rows.length === 0) return <Empty msg={error ? 'Failed to load' : 'No data'} />;
 
   return (

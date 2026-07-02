@@ -24,7 +24,7 @@ import {
   useChartReady
 } from '../shared/chartConfig';
 import { fmtUsd, labelFromDate } from '../shared/formatters';
-import { DatasetChips, Empty, Skeleton } from '../shared/primitives';
+import { BarChartSkeleton, DatasetChips, Empty } from '../shared/primitives';
 
 import { useFundFlowsByChain } from '~/hooks/useOrderlyMetrics';
 
@@ -116,7 +116,7 @@ export const FundFlowsByChainWidget: FC = () => {
     }
   };
 
-  if (isLoading) return <Skeleton height={236} />;
+  if (isLoading) return <BarChartSkeleton height={236} />;
   if (error || dates.length === 0) return <Empty msg={error ? 'Failed to load' : 'No data'} />;
 
   return (
