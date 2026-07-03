@@ -1,6 +1,5 @@
-import { useState } from 'react';
-
 import { Dialog } from '@radix-ui/themes';
+import { useState } from 'react';
 
 import { CopyBlock } from './CopyBlock';
 
@@ -21,7 +20,10 @@ export const WidgetShareDialog = ({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content className="card card-dialog max-w-2xl w-[calc(100vw-2rem)] sm:w-[95vw] max-h-[90vh] mx-auto flex flex-col overflow-hidden" style={{ paddingTop: '3rem' }}>
+      <Dialog.Content
+        className="card card-dialog max-w-2xl w-[calc(100vw-2rem)] sm:w-[95vw] max-h-[90vh] mx-auto flex flex-col overflow-hidden"
+        style={{ paddingTop: '3rem' }}
+      >
         <Dialog.Title
           className="text-lg sm:text-xl font-semibold mb-4 flex-shrink-0"
           style={{ color: '#ffffff' }}

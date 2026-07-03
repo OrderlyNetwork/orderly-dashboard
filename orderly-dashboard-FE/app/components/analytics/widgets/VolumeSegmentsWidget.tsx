@@ -15,7 +15,7 @@ import { Bar } from 'react-chartjs-2';
 
 import { CHART_COLORS, baseBarOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtUsd, weekLabel } from '../shared/formatters';
-import { DatasetChips, Empty, Skeleton } from '../shared/primitives';
+import { BarChartSkeleton, DatasetChips, Empty } from '../shared/primitives';
 
 import { useVolumeSegments } from '~/hooks/useOrderlyMetrics';
 
@@ -95,7 +95,7 @@ export const VolumeSegmentsWidget: FC = () => {
   return (
     <>
       {isLoading ? (
-        <Skeleton height={236} />
+        <BarChartSkeleton height={236} />
       ) : error || weeks.length === 0 ? (
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (

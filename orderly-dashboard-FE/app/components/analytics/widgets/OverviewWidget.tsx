@@ -15,7 +15,7 @@ import { Bar } from 'react-chartjs-2';
 
 import { baseBarOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtNum, fmtUsd, monthLabel, weekLabel } from '../shared/formatters';
-import { Empty, Skeleton, StatCard, type Granularity } from '../shared/primitives';
+import { Empty, StatCard, type Granularity } from '../shared/primitives';
 
 import { useMetricsOverview, type OverviewPeriod } from '~/hooks/useOrderlyMetrics';
 
@@ -65,7 +65,6 @@ const METRICS: {
 
 const periodLabel = (g: Granularity, row: OverviewPeriod) =>
   g === 'weekly' ? weekLabel(row.week_start_date) : monthLabel(row.month_start_date);
-
 
 export const OverviewWidget: FC<{ granularity?: Granularity }> = ({ granularity = 'weekly' }) => {
   const { data, isLoading, error } = useMetricsOverview();
@@ -148,10 +147,7 @@ export const OverviewWidget: FC<{ granularity?: Granularity }> = ({ granularity 
             />
           ))}
         </div>
-        <div
-          className="hidden xl:flex gap-1.5"
-          style={{ marginBottom: 20 }}
-        >
+        <div className="hidden xl:flex gap-1.5" style={{ marginBottom: 20 }}>
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
@@ -187,10 +183,7 @@ export const OverviewWidget: FC<{ granularity?: Granularity }> = ({ granularity 
       </div>
 
       {/* Desktop: horizontal strip */}
-      <div
-        className="hidden xl:flex gap-1.5"
-        style={{ marginBottom: 20 }}
-      >
+      <div className="hidden xl:flex gap-1.5" style={{ marginBottom: 20 }}>
         {METRICS.map((m) => (
           <StatCard
             key={m.key}

@@ -118,15 +118,28 @@ export const Leaderboard: FC = () => {
   const emptySorting = useMemo(() => [], []);
 
   const handleDateChange = (value: [string | null, string | null]) => {
-    setDateRange(value);
-    if (value[0] && value[1]) {
-      setQueryParams((prev) => ({
-        ...prev,
-        start_date: value[0]!,
-        end_date: value[1]!,
-        page: 1
-      }));
+    if (!value[0] || !value[1]) {
+      setDateRange(value);
+      return;
     }
+    const MAX_SPAN_DAYS = 89;
+    let start = dayjs(value[0]);
+    let end = dayjs(value[1]);
+    if (start.isAfter(end)) {
+      [start, end] = [end, start];
+    }
+    if (end.diff(start, 'day') > MAX_SPAN_DAYS) {
+      end = start.add(MAX_SPAN_DAYS, 'day');
+    }
+    const startStr = start.format('YYYY-MM-DD');
+    const endStr = end.format('YYYY-MM-DD');
+    setDateRange([startStr, endStr]);
+    setQueryParams((prev) => ({
+      ...prev,
+      start_date: startStr,
+      end_date: endStr,
+      page: 1
+    }));
   };
 
   const handleInputChange = useCallback(
@@ -463,7 +476,7 @@ export const Leaderboard: FC = () => {
 
     const windowSize = 5;
     let startPage = Math.max(1, currentPage - Math.floor(windowSize / 2));
-    let endPage = Math.min(totalPages, startPage + windowSize - 1);
+    const endPage = Math.min(totalPages, startPage + windowSize - 1);
     if (endPage - startPage + 1 < windowSize) {
       startPage = Math.max(1, endPage - windowSize + 1);
     }
@@ -484,7 +497,7 @@ export const Leaderboard: FC = () => {
               cursor: 'pointer',
               fontSize: 18,
               padding: '0 4px',
-              lineHeight: 1,
+              lineHeight: 1
             }}
           >
             {'<'}
@@ -507,7 +520,7 @@ export const Leaderboard: FC = () => {
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'center'
             }}
           >
             {page}
@@ -524,7 +537,7 @@ export const Leaderboard: FC = () => {
               cursor: 'pointer',
               fontSize: 18,
               padding: '0 4px',
-              lineHeight: 1,
+              lineHeight: 1
             }}
           >
             {'>'}
@@ -559,7 +572,10 @@ export const Leaderboard: FC = () => {
         </p>
       </div>
 
-      <div className="card w-full space-y-4 sm:space-y-6" style={{ background: '#130E1D', border: 'none' }}>
+      <div
+        className="card w-full space-y-4 sm:space-y-6"
+        style={{ background: '#130E1D', border: 'none' }}
+      >
         {/* Filters Section */}
         <div className="space-y-4 sm:space-y-6 w-full">
           {/* Date Range */}
@@ -598,52 +614,57 @@ export const Leaderboard: FC = () => {
                 );
               })}
               <Popover.Root>
-              <Popover.Trigger>
-                <button
-                  type="button"
-                  className="btn flex items-center gap-2 text-sm"
-                  style={{
-                    padding: '4px 14px',
-                    border: 'none',
-                    fontWeight: 500,
-                    background: '#221E30',
-                    color: '#fff',
-                    fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1"
-                  }}
+                <Popover.Trigger>
+                  <button
+                    type="button"
+                    className="btn flex items-center gap-2 text-sm"
+                    style={{
+                      padding: '4px 14px',
+                      border: 'none',
+                      fontWeight: 500,
+                      background: '#221E30',
+                      color: '#fff',
+                      fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1, 'ss06' 1"
+                    }}
+                  >
+                    {dateRange[0] && dateRange[1]
+                      ? `${dayjs(dateRange[0]).format('MMM D, YYYY')} → ${dayjs(dateRange[1]).format('MMM D, YYYY')}`
+                      : 'Select date range'}
+                  </button>
+                </Popover.Trigger>
+                <Popover.Content
+                  width="auto"
+                  className="card"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
                 >
-                  {dateRange[0] && dateRange[1]
-                    ? `${dayjs(dateRange[0]).format('MMM D, YYYY')} → ${dayjs(dateRange[1]).format('MMM D, YYYY')}`
-                    : 'Select date range'}
-                </button>
-              </Popover.Trigger>
-              <Popover.Content
-                width="auto"
-                className="card"
-                onOpenAutoFocus={(e) => e.preventDefault()}
-              >
-                <DatePicker
-                  type="range"
-                  value={dateRange}
-                  maxLevel="year"
-                  allowSingleDateInRange={true}
-                  maxDate={
-                    dateRange[0] && dateRange[1]
-                      ? dayjs().format('YYYY-MM-DD')
-                      : dateRange[0]
-                        ? (() => {
-                            const today = dayjs();
-                            const maxRangeDate = dayjs(dateRange[0]).add(89, 'day');
-                            return today.isBefore(maxRangeDate)
-                              ? today.format('YYYY-MM-DD')
-                              : maxRangeDate.format('YYYY-MM-DD');
-                          })()
-                        : dayjs().format('YYYY-MM-DD')
-                  }
-                  onChange={handleDateChange}
-                  highlightToday={true}
-                />
-              </Popover.Content>
-            </Popover.Root>
+                  <DatePicker
+                    type="range"
+                    value={dateRange}
+                    maxLevel="year"
+                    allowSingleDateInRange={true}
+                    maxDate={
+                      dateRange[0] && dateRange[1]
+                        ? dayjs().format('YYYY-MM-DD')
+                        : dateRange[0]
+                          ? (() => {
+                              const today = dayjs();
+                              const maxRangeDate = dayjs(dateRange[0]).add(89, 'day');
+                              return today.isBefore(maxRangeDate)
+                                ? today.format('YYYY-MM-DD')
+                                : maxRangeDate.format('YYYY-MM-DD');
+                            })()
+                          : dayjs().format('YYYY-MM-DD')
+                    }
+                    minDate={
+                      dateRange[0] && !dateRange[1]
+                        ? dayjs(dateRange[0]).subtract(89, 'day').format('YYYY-MM-DD')
+                        : undefined
+                    }
+                    onChange={handleDateChange}
+                    highlightToday={true}
+                  />
+                </Popover.Content>
+              </Popover.Root>
             </div>
           </div>
 
@@ -725,7 +746,17 @@ export const Leaderboard: FC = () => {
               <div className="flex justify-end px-1">
                 <Popover.Root>
                   <Popover.Trigger className="w-auto">
-                    <Button variant="soft" className="btn" style={{ background: '#221E30', border: 'none', width: 36, height: 36, padding: 0 }}>
+                    <Button
+                      variant="soft"
+                      className="btn"
+                      style={{
+                        background: '#221E30',
+                        border: 'none',
+                        width: 36,
+                        height: 36,
+                        padding: 0
+                      }}
+                    >
                       <MixerHorizontalIcon width="16" height="16" />
                     </Button>
                   </Popover.Trigger>

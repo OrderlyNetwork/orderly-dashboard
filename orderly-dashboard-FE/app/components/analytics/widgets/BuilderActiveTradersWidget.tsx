@@ -23,7 +23,13 @@ import {
   useChartReady
 } from '../shared/chartConfig';
 import { fmtNum, labelFromDate } from '../shared/formatters';
-import { DatasetChips, Empty, Skeleton } from '../shared/primitives';
+import {
+  BarChartSkeleton,
+  DatasetChips,
+  Empty,
+  PERIOD_DAYS,
+  type Period
+} from '../shared/primitives';
 
 import { useBrokerDaily } from '~/hooks/useOrderlyMetrics';
 
@@ -37,8 +43,8 @@ ChartJS.register(
   Tooltip
 );
 
-export const BuilderActiveTradersWidget: FC = () => {
-  const { data, isLoading, error } = useBrokerDaily();
+export const BuilderActiveTradersWidget: FC<{ period?: Period }> = ({ period = '30D' }) => {
+  const { data, isLoading, error } = useBrokerDaily(PERIOD_DAYS[period]);
   const chartRef = useRef<ChartJS<'bar'>>(null);
   useChartReady(chartRef);
   const rows = data?.rows ?? [];
@@ -116,7 +122,7 @@ export const BuilderActiveTradersWidget: FC = () => {
   return (
     <>
       {isLoading ? (
-        <Skeleton height={236} />
+        <BarChartSkeleton height={236} />
       ) : error || dates.length === 0 ? (
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (

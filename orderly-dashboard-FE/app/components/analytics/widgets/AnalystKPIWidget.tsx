@@ -62,8 +62,14 @@ export const AnalystKPIWidget: FC<Props> = ({ data }) => {
   //  r7:   CumVol ───────────────
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gridAutoRows: rowH, gap: 10 }}>
-
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gridAutoRows: rowH,
+        gap: 10
+      }}
+    >
       {/* Day Volume: spans 2 rows on tablet → wrapBadge there */}
       <KPICard
         size={isMobile ? 'md' : isWide ? 'md' : isDesktop ? 'md' : 'lg'}

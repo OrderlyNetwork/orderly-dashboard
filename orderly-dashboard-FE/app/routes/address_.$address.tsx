@@ -300,9 +300,7 @@ export const Address: FC = () => {
     })();
     return (
       <div className="flex flex-col items-center gap-6 py-16">
-        <div className="text-gray-400 text-sm">
-          {error.message || 'Failed to fetch'}
-        </div>
+        <div className="text-gray-400 text-sm">{error.message || 'Failed to fetch'}</div>
         <Link
           to={errBackUrl}
           className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200 no-underline"

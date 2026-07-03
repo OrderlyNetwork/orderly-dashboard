@@ -21,6 +21,7 @@ import { DistributorsWidget } from '~/components/analytics/widgets/DistributorsW
 import { FeesStatsWidget } from '~/components/analytics/widgets/FeesStatsWidget';
 import { FundFlowsByChainWidget } from '~/components/analytics/widgets/FundFlowsByChainWidget';
 import { FundingRatesWidget } from '~/components/analytics/widgets/FundingRatesWidget';
+import { LiquidationHeatmapWidget } from '~/components/analytics/widgets/LiquidationHeatmapWidget';
 import { LiquidationsBySymbolWidget } from '~/components/analytics/widgets/LiquidationsBySymbolWidget';
 import { NetFeesWidget } from '~/components/analytics/widgets/NetFeesWidget';
 import { NetFlowByBuilderWidget } from '~/components/analytics/widgets/NetFlowByBuilderWidget';
@@ -149,6 +150,10 @@ const WIDGET_META: Record<
   'liquidations-by-symbol': {
     title: 'Liquidations by Symbol',
     subtitle: 'daily liquidation notional per symbol'
+  },
+  'liquidation-heatmap': {
+    title: 'Liquidation Heatmap',
+    subtitle: 'open-position notional at each estimated liquidation price level (per symbol)'
   }
 };
 
@@ -287,6 +292,9 @@ export default function WidgetRoute() {
       break;
     case 'liquidations-by-symbol':
       widgetContent = <LiquidationsBySymbolWidget />;
+      break;
+    case 'liquidation-heatmap':
+      widgetContent = <LiquidationHeatmapWidget />;
       break;
     default:
       widgetContent = null;

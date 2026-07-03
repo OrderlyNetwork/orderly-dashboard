@@ -70,7 +70,7 @@ export const DashboardLayout: FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: 'rgba(10,0,16,0.55)',
-                backdropFilter: 'blur(4px)',
+                backdropFilter: 'blur(4px)'
               }}
             >
               <div
@@ -80,7 +80,7 @@ export const DashboardLayout: FC = () => {
                   borderRadius: '50%',
                   border: '3px solid rgba(156,117,255,0.2)',
                   borderTopColor: '#9C75FF',
-                  animation: 'spin 0.7s linear infinite',
+                  animation: 'spin 0.7s linear infinite'
                 }}
               />
               <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>

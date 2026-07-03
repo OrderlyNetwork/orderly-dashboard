@@ -39,7 +39,11 @@ export const CopyBlock = ({ widgetId }: CopyBlockProps) => {
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            background: copied ? 'rgba(52,211,153,0.15)' : copyHovered ? 'rgba(255,255,255,0.1)' : 'transparent',
+            background: copied
+              ? 'rgba(52,211,153,0.15)'
+              : copyHovered
+                ? 'rgba(255,255,255,0.1)'
+                : 'transparent',
             border: `1px solid ${copied ? 'rgba(52,211,153,0.6)' : 'rgba(255,255,255,0.6)'}`,
             borderRadius: 999,
             color: copied ? '#00dea3' : '#fff',

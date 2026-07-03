@@ -56,7 +56,7 @@ export const SearchInput: FC = () => {
       className="relative w-full transition-all duration-200"
       style={{
         borderRadius: '0.75rem',
-        border: focused ? '1px solid #6700CE' : '1px solid transparent',
+        border: focused ? '1px solid #6700CE' : '1px solid transparent'
       }}
     >
       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">

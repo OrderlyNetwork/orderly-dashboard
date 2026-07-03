@@ -15,7 +15,7 @@ import { Line } from 'react-chartjs-2';
 
 import { baseLineOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtWhole, weekLabel } from '../shared/formatters';
-import { Empty, Skeleton } from '../shared/primitives';
+import { Empty, LineChartSkeleton } from '../shared/primitives';
 
 import { useStakeUsers } from '~/hooks/useOrderlyMetrics';
 
@@ -75,7 +75,7 @@ export const StakeUsersWidget: FC = () => {
   return (
     <>
       {isLoading ? (
-        <Skeleton height={196} />
+        <LineChartSkeleton height={196} />
       ) : error || rows.length === 0 ? (
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (

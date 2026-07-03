@@ -1,7 +1,7 @@
 import { FC } from 'react';
 
-import { StatCard } from '../shared/primitives';
 import { fmtCompact } from '../shared/formatters';
+import { StatCard } from '../shared/primitives';
 
 import type { DashboardData } from '~/types/dashboard';
 
@@ -21,7 +21,12 @@ export const FeesStatsWidget: FC<Props> = ({ data }) => {
       <StatCard label="Net Fees (24h)" value={fmtCompact(dailyFees)} color="#00dea3" selected />
       <StatCard label="Net Fees (30D)" value={fmtCompact(fees30d)} color="#00dea3" selected />
       <StatCard label="Total Net Fees" value={fmtCompact(cumFees)} color="#9C75FF" selected />
-      <StatCard label="Builder Fees (total)" value={fmtCompact(builderFees)} color="#f59e0b" selected />
+      <StatCard
+        label="Builder Fees (total)"
+        value={fmtCompact(builderFees)}
+        color="#f59e0b"
+        selected
+      />
       <StatCard
         label="Rolling Avg Daily Fee"
         value={fmtCompact(rollingAvgFee)}

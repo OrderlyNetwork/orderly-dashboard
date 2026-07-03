@@ -15,7 +15,7 @@ import { FC, useMemo, useRef, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
 import { baseTooltipOpts, chartColor, tooltipTopN, useChartReady } from '../shared/chartConfig';
-import { DatasetChips, Empty, Skeleton } from '../shared/primitives';
+import { DatasetChips, Empty, LineChartSkeleton } from '../shared/primitives';
 
 import { useFundingRates, useSymbolWeekly } from '~/hooks/useOrderlyMetrics';
 
@@ -143,7 +143,7 @@ export const FundingRatesWidget: FC = () => {
     }
   };
 
-  if (frLoading) return <Skeleton height={236} />;
+  if (frLoading) return <LineChartSkeleton height={236} />;
   if (frError || !rows?.length) return <Empty msg={frError ? 'Failed to load' : 'No data'} />;
 
   return (

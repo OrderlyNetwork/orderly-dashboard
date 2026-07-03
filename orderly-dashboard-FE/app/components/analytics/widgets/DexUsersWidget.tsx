@@ -1,32 +1,38 @@
 import { FC, useState } from 'react';
 
 import { fmtNum, fmtPct } from '../shared/formatters';
-import { Empty, Skeleton, TD, TH_STICKY, tdSticky } from '../shared/primitives';
+import { Empty, TableSkeleton, TD, TH_STICKY, tdSticky } from '../shared/primitives';
 
 import { useDexUsers } from '~/hooks/useOrderlyMetrics';
 
-type SortKey = 'name' | 'dau' | 'dau_dod_pct' | 'wau' | 'wau_wow_pct' | 'mau' | 'mau_mom_pct' | 'total_users' | 'new_users_30d';
+type SortKey =
+  | 'name'
+  | 'dau'
+  | 'dau_dod_pct'
+  | 'wau'
+  | 'wau_wow_pct'
+  | 'mau'
+  | 'mau_mom_pct'
+  | 'total_users'
+  | 'new_users_30d';
 
 const COLUMNS: { label: string; key: SortKey }[] = [
-  { label: 'Broker',   key: 'name' },
-  { label: 'DAU',      key: 'dau' },
-  { label: 'DoD%',     key: 'dau_dod_pct' },
-  { label: 'WAU',      key: 'wau' },
-  { label: 'WoW%',     key: 'wau_wow_pct' },
-  { label: 'MAU',      key: 'mau' },
-  { label: 'MoM%',     key: 'mau_mom_pct' },
-  { label: 'Total',    key: 'total_users' },
-  { label: 'New 30d',  key: 'new_users_30d' },
+  { label: 'Broker', key: 'name' },
+  { label: 'DAU', key: 'dau' },
+  { label: 'DoD%', key: 'dau_dod_pct' },
+  { label: 'WAU', key: 'wau' },
+  { label: 'WoW%', key: 'wau_wow_pct' },
+  { label: 'MAU', key: 'mau' },
+  { label: 'MoM%', key: 'mau_mom_pct' },
+  { label: 'Total', key: 'total_users' },
+  { label: 'New 30d', key: 'new_users_30d' }
 ];
 
 export const DexUsersWidget: FC<{
   search?: string;
   onSearchChange?: (s: string) => void;
-}> = ({ search: searchProp, onSearchChange }) => {
+}> = ({ search = '' }) => {
   const { data, isLoading, error } = useDexUsers();
-  const [internalSearch, setInternalSearch] = useState('');
-  const search = searchProp !== undefined ? searchProp : internalSearch;
-  const handleSearchChange = onSearchChange ?? setInternalSearch;
   const [sortKey, setSortKey] = useState<SortKey>('total_users');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -40,12 +46,14 @@ export const DexUsersWidget: FC<{
     })
     .slice()
     .sort((a, b) => {
-      const av = sortKey === 'name'
-        ? (a.broker_name ?? a.broker_id ?? '')
-        : ((a as Record<string, unknown>)[sortKey] as number ?? 0);
-      const bv = sortKey === 'name'
-        ? (b.broker_name ?? b.broker_id ?? '')
-        : ((b as Record<string, unknown>)[sortKey] as number ?? 0);
+      const av =
+        sortKey === 'name'
+          ? (a.broker_name ?? a.broker_id ?? '')
+          : (((a as Record<string, unknown>)[sortKey] as number) ?? 0);
+      const bv =
+        sortKey === 'name'
+          ? (b.broker_name ?? b.broker_id ?? '')
+          : (((b as Record<string, unknown>)[sortKey] as number) ?? 0);
       if (av < bv) return sortDir === 'asc' ? -1 : 1;
       if (av > bv) return sortDir === 'asc' ? 1 : -1;
       return 0;
@@ -53,7 +61,10 @@ export const DexUsersWidget: FC<{
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    else { setSortKey(key); setSortDir('desc'); }
+    else {
+      setSortKey(key);
+      setSortDir('desc');
+    }
   };
 
   return (
@@ -61,7 +72,7 @@ export const DexUsersWidget: FC<{
       <div className="overflow-x-auto max-h-[320px] overflow-y-auto thin-scrollbar">
         {isLoading ? (
           <div className="p-5">
-            <Skeleton height={160} />
+            <TableSkeleton height={160} />
           </div>
         ) : error ? (
           <div className="p-6">
@@ -83,7 +94,7 @@ export const DexUsersWidget: FC<{
                       ...(idx === 0 ? TH_STICKY : { ...TH_STICKY, left: undefined, zIndex: 2 }),
                       cursor: 'pointer',
                       userSelect: 'none',
-                      color: sortKey === key ? '#9C75FF' : 'rgba(255,255,255,0.3)',
+                      color: sortKey === key ? '#9C75FF' : 'rgba(255,255,255,0.3)'
                     }}
                   >
                     {label}

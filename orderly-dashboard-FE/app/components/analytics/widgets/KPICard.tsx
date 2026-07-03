@@ -44,7 +44,7 @@ export const KPICard: FC<KPICardProps> = ({
   bgColor = '#6700CE',
   size = 'md',
   cardStyle,
-  wrapBadge = false,
+  wrapBadge = false
 }) => {
   const isPositive = delta !== undefined && delta >= 0;
   const { label: labelColor, value: valueColor, sub: subColor } = scheme(bgColor);

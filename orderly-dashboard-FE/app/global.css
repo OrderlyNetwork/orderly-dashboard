@@ -160,9 +160,9 @@
   --color-success: #00dea3;
   --color-success-light: #00dea3;
   --color-success-dark: #00dea3;
-  --color-error: #FF6390;
-  --color-error-light: #FF6390;
-  --color-error-dark: #FF6390;
+  --color-error: #ff6390;
+  --color-error-light: #ff6390;
+  --color-error-dark: #ff6390;
   --color-warning: #f59e0b;
   --color-warning-light: #fbbf24;
   --color-warning-dark: #d97706;
@@ -236,7 +236,10 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  font-feature-settings: 'ss02' 1, 'ss03' 1, 'ss05' 1;
+  font-feature-settings:
+    'ss02' 1,
+    'ss03' 1,
+    'ss05' 1;
 }
 
 html {
@@ -486,7 +489,7 @@ select option {
 
 /* Cards — Orderly design system */
 .card {
-  background: #130E1D;
+  background: #130e1d;
   border: none;
   border-radius: var(--radius-xl); /* 30px */
   padding: var(--spacing-8);
@@ -608,6 +611,29 @@ select option {
   100% {
     transform: rotate(360deg);
   }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Skeleton sheen — a moving diagonal highlight over a translucent base. */
+.skeleton-shimmer {
+  position: relative;
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(156, 117, 255, 0.16) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.6s ease-in-out infinite;
 }
 
 @keyframes gradient-border {
@@ -758,7 +784,7 @@ select option {
   width: 4px;
 }
 .chips-scrollbar::-webkit-scrollbar-track {
-  background: #130E1D;
+  background: #130e1d;
   border-radius: 4px;
 }
 .chips-scrollbar::-webkit-scrollbar-thumb {
@@ -816,6 +842,6 @@ select option {
 
 .lb-input:focus {
   outline: none;
-  border: 1px solid #6700CE !important;
+  border: 1px solid #6700ce !important;
   box-shadow: none;
 }

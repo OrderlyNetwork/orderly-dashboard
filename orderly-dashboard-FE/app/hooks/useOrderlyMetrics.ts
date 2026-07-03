@@ -248,6 +248,15 @@ export type SymbolWeeklyResponse = { rows: SymbolWeeklyRow[] };
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
+/** Build `start_date=YYYY-MM-DD&end_date=YYYY-MM-DD` for the last `days` days. */
+function dateRangeQuery(days: number): string {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - days);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  return `start_date=${fmt(start)}&end_date=${fmt(end)}`;
+}
+
 export const useDataSummary = () => useFetch<DataSummary>('/orderly/api/v1/data/summary');
 
 export const useBrokerLiquidationFees = () =>
@@ -275,23 +284,20 @@ export const useStakeVsSupply = () =>
 export const useOmnivaultTvl = () =>
   useFetch<OmnivaultTvl>('/orderly/api/v1/metrics/omnivault-tvl');
 
-export const useBrokerDaily = () =>
+export const useBrokerDaily = (days = 30) =>
   useFetch<BrokerDailyResponse>(
-    '/orderly/api/v1/dashboard/orderly/by-broker?exclude_zero_volume=true'
+    `/orderly/api/v1/dashboard/orderly/by-broker?exclude_zero_volume=true&${dateRangeQuery(days)}`
   );
 
-export const useFundFlowsByBroker = () =>
-  useFetch<FundFlowBrokerResponse>('/orderly/api/v1/dashboard/fund-flows/by-broker');
-
-export const useTokenTvl = (days = 30) => {
-  const end = new Date();
-  const start = new Date();
-  start.setDate(start.getDate() - days);
-  const fmt = (d: Date) => d.toISOString().slice(0, 10);
-  return useFetch<SymbolDailyResponse>(
-    `/orderly/api/v1/dashboard/orderly/by-symbol/daily?symbol_type=token&start_date=${fmt(start)}&end_date=${fmt(end)}`
+export const useFundFlowsByBroker = (days = 30) =>
+  useFetch<FundFlowBrokerResponse>(
+    `/orderly/api/v1/dashboard/fund-flows/by-broker?${dateRangeQuery(days)}`
   );
-};
+
+export const useTokenTvl = (days = 30) =>
+  useFetch<SymbolDailyResponse>(
+    `/orderly/api/v1/dashboard/orderly/by-symbol/daily?symbol_type=token&${dateRangeQuery(days)}`
+  );
 
 export const useFundingRates = () =>
   useFetch<FundingRatesResponse>('/orderly/api/v1/dashboard/orderly/funding-rates');

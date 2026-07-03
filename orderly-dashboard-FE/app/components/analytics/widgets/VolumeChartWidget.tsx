@@ -15,7 +15,7 @@ import { Bar } from 'react-chartjs-2';
 
 import { baseBarOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { fmtCompact, labelFromDate } from '../shared/formatters';
-import { type Period } from '../shared/primitives';
+import { PERIOD_DAYS, type Period } from '../shared/primitives';
 
 import type { MainDailyRow } from '~/types/dashboard';
 
@@ -35,7 +35,7 @@ export const VolumeChartWidget: FC<{ rows: MainDailyRow[]; period?: Period }> = 
 }) => {
   const chartRef = useRef<ChartJS<'bar'>>(null);
   useChartReady(chartRef);
-  const count = period === '30D' ? 30 : 90;
+  const count = PERIOD_DAYS[period];
   const reversed = [...rows.slice(0, count)].reverse();
   const data: ChartData<'bar'> = {
     labels: reversed.map((r) => labelFromDate(r.date)),

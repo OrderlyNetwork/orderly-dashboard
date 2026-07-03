@@ -94,7 +94,17 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
         >
           <div className="min-w-0">
-            {title && <div className="text-lg font-semibold text-white" style={{ fontFamily: "'Atyp BL Text', sans-serif", fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1" }}>{title}</div>}
+            {title && (
+              <div
+                className="text-lg font-semibold text-white"
+                style={{
+                  fontFamily: "'Atyp BL Text', sans-serif",
+                  fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1"
+                }}
+              >
+                {title}
+              </div>
+            )}
             {subtitle && (
               <div className="text-[13px] mt-0.5 text-[rgba(255,255,255,0.35)]">{subtitle}</div>
             )}

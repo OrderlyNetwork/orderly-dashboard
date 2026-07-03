@@ -15,7 +15,7 @@ import { Bar } from 'react-chartjs-2';
 
 import { CHART_COLORS, baseBarOpts, baseTooltipOpts, useChartReady } from '../shared/chartConfig';
 import { weekLabel } from '../shared/formatters';
-import { DatasetChips, Empty, Skeleton } from '../shared/primitives';
+import { BarChartSkeleton, DatasetChips, Empty } from '../shared/primitives';
 
 import { useOmnivaultTvl } from '~/hooks/useOrderlyMetrics';
 
@@ -93,7 +93,7 @@ export const OmnivaultTvlWidget: FC = () => {
   return (
     <>
       {isLoading ? (
-        <Skeleton height={236} />
+        <BarChartSkeleton height={236} />
       ) : error || weeks.length === 0 ? (
         <Empty msg={error ? 'Failed to load' : 'No data'} />
       ) : (

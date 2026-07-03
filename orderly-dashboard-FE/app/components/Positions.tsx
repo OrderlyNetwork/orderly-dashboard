@@ -329,9 +329,7 @@ export const Positions: FC<PositionsProps> = ({
         accessorKey: 'holding',
         header: 'Holding',
         cell: ({ row }) => (
-          <span
-            style={{ color: parseFloat(row.original.holding) >= 0 ? '#00dea3' : '#FF6390' }}
-          >
+          <span style={{ color: parseFloat(row.original.holding) >= 0 ? '#00dea3' : '#FF6390' }}>
             {formatNumber(row.original.holding, row.original.symbol_hash)}
           </span>
         ),
@@ -352,7 +350,9 @@ export const Positions: FC<PositionsProps> = ({
         ) as unknown as string,
         cell: ({ row }) => (
           <span
-            style={{ color: parseFloat(row.original.total_realized_pnl) >= 0 ? '#00dea3' : '#FF6390' }}
+            style={{
+              color: parseFloat(row.original.total_realized_pnl) >= 0 ? '#00dea3' : '#FF6390'
+            }}
           >
             {formatNumberShort(row.original.total_realized_pnl)}
           </span>
@@ -475,7 +475,7 @@ export const Positions: FC<PositionsProps> = ({
               cursor: 'pointer',
               fontSize: 18,
               padding: '0 4px',
-              lineHeight: 1,
+              lineHeight: 1
             }}
           >
             {'<'}
@@ -498,7 +498,7 @@ export const Positions: FC<PositionsProps> = ({
               fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'center'
             }}
           >
             {page}
@@ -515,7 +515,7 @@ export const Positions: FC<PositionsProps> = ({
               cursor: 'pointer',
               fontSize: 18,
               padding: '0 4px',
-              lineHeight: 1,
+              lineHeight: 1
             }}
           >
             {'>'}
@@ -554,7 +554,10 @@ export const Positions: FC<PositionsProps> = ({
         </div>
       )}
 
-      <div className="card w-full space-y-4 sm:space-y-6" style={{ background: '#130E1D', border: 'none' }}>
+      <div
+        className="card w-full space-y-4 sm:space-y-6"
+        style={{ background: '#130E1D', border: 'none' }}
+      >
         {/* Filters Section */}
         {!hideFilters && (
           <div className="space-y-4 sm:space-y-6 w-full">
