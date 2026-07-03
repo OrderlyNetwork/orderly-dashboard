@@ -17,6 +17,7 @@ import { DistributorsWidget } from '../widgets/DistributorsWidget';
 import { FeesStatsWidget } from '../widgets/FeesStatsWidget';
 import { FundFlowsByChainWidget } from '../widgets/FundFlowsByChainWidget';
 import { FundingRatesWidget } from '../widgets/FundingRatesWidget';
+import { LiquidationHeatmapWidget } from '../widgets/LiquidationHeatmapWidget';
 import { LiquidationsBySymbolWidget } from '../widgets/LiquidationsBySymbolWidget';
 import { NetFeesWidget } from '../widgets/NetFeesWidget';
 import { NetFlowByBuilderWidget } from '../widgets/NetFlowByBuilderWidget';
@@ -161,6 +162,14 @@ export const DashboardsView: FC<Props> = ({ data }) => {
           </WidgetWrapper>
         </div>
       </div>
+
+      <WidgetWrapper
+        widgetId="liquidation-heatmap"
+        title="Liquidation Heatmap"
+        subtitle="open-position notional at each estimated liquidation price level (per symbol)"
+      >
+        <LiquidationHeatmapWidget />
+      </WidgetWrapper>
 
       <div>
         <SectionHeading>Staking</SectionHeading>
