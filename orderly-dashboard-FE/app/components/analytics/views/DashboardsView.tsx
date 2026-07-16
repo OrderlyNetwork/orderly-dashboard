@@ -19,6 +19,7 @@ import { FundFlowsByChainWidget } from '../widgets/FundFlowsByChainWidget';
 import { FundingRatesWidget } from '../widgets/FundingRatesWidget';
 import { LiquidationHeatmapWidget } from '../widgets/LiquidationHeatmapWidget';
 import { LiquidationsBySymbolWidget } from '../widgets/LiquidationsBySymbolWidget';
+import { MarketShareWidget } from '../widgets/MarketShareWidget';
 import { NetFeesWidget } from '../widgets/NetFeesWidget';
 import { NetFlowByBuilderWidget } from '../widgets/NetFlowByBuilderWidget';
 import { OmnivaultTvlWidget } from '../widgets/OmnivaultTvlWidget';
@@ -88,6 +89,15 @@ export const DashboardsView: FC<Props> = ({ data }) => {
         }
       >
         <VolumeChartWidget rows={mainRows} period={volPeriod} />
+      </WidgetWrapper>
+
+      <WidgetWrapper
+        widgetId="market-share"
+        title="DEX Perps Market Share"
+        subtitle="Orderly vs other DEX protocols by 24h volume"
+        autoHeight
+      >
+        <MarketShareWidget />
       </WidgetWrapper>
 
       <div className="dash-grid-lg">

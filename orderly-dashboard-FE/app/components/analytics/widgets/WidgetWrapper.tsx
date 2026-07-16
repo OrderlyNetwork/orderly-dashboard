@@ -8,6 +8,7 @@ type WidgetWrapperProps = {
   subtitle?: string;
   controls?: ReactNode;
   height?: number;
+  autoHeight?: boolean;
   hideLink?: boolean;
   children: ReactNode;
 };
@@ -37,6 +38,7 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
   subtitle,
   controls,
   height,
+  autoHeight,
   hideLink,
   children
 }) => {
@@ -76,7 +78,9 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
 
   const contentStyle = height
     ? { height, overflow: 'hidden' as const }
-    : { flex: '1 1 0%', minHeight: 0 };
+    : autoHeight
+      ? {}
+      : { flex: '1 1 0%', minHeight: 0 };
 
   return (
     <div
