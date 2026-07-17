@@ -39,3 +39,37 @@ export type PositionEntry = {
 export type PositionsResponse = {
   rows: PositionEntry[];
 };
+
+export type WhaleEntry = {
+  address: string;
+  broker_id: string;
+  total_notional: string;
+  pnl_24h: string;
+  pnl_7d: string;
+  pnl_30d: string;
+  volume_24h: string;
+  volume_7d: string;
+  volume_30d: string;
+  trade_count_24h: number;
+  win_rate_24h: number | null;
+  win_rate_7d: number | null;
+  win_rate_30d: number | null;
+  avg_trade_size: string | null;
+  position_count: number;
+};
+
+export type WhaleLeaderboardResponse = {
+  rows: WhaleEntry[];
+  next_cursor: string | null;
+  last_updated_time: number;
+};
+
+export type WhaleSortOption =
+  | 'notional'
+  | 'volume_24h'
+  | 'volume_7d'
+  | 'volume_30d'
+  | 'pnl_24h'
+  | 'pnl_7d'
+  | 'pnl_30d'
+  | 'trade_count_24h';
