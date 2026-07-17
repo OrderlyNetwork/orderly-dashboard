@@ -10,6 +10,16 @@ type Envelope<T> = {
   ts?: number;
 };
 
+async function fetchPublicGet<T>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const json = (await res.json()) as Envelope<T>;
+  if (!json.success) {
+    throw new Error(json.code || json.message || `API error (${res.status})`);
+  }
+  return json.data;
+}
+
 async function postPublicInfo<T>(
   baseUrl: string,
   type: string,
@@ -62,7 +72,7 @@ export type PlatformPositionsResponse = {
 export function usePlatformPositions(symbol: string, minNotional: number) {
   const { evmApiUrl } = useAppState();
   return useSWR<PlatformPositionsResponse>(
-    symbol ? ['platformPositions', evmApiUrl, symbol, minNotional] : null,
+    symbol && evmApiUrl ? ['platformPositions', evmApiUrl, symbol, minNotional] : null,
     () =>
       postPublicInfo<PlatformPositionsResponse>(evmApiUrl, 'platformPositions', {
         symbol,
@@ -83,6 +93,7 @@ export function usePlatformPositions(symbol: string, minNotional: number) {
 export type MarketSummaryMarket = {
   symbol: string;
   mark_price: string;
+  index_price?: string;
   '24h_open': string;
   '24h_close': string;
   '24h_high': string;
@@ -90,6 +101,15 @@ export type MarketSummaryMarket = {
   '24h_volume': string;
   '24h_amount': string;
   open_interest: string;
+  last_funding_rate?: string;
+  est_funding_rate?: string | null;
+  next_funding_time?: number;
+  bid_price?: string;
+  ask_price?: string;
+  max_leverage?: string;
+  min_notional?: string;
+  quote_tick?: string;
+  base_tick?: string;
 };
 
 export type MarketSummaryResponse = {
@@ -104,8 +124,111 @@ export type MarketSummaryResponse = {
 export function useMarketSummary() {
   const { evmApiUrl } = useAppState();
   return useSWR<MarketSummaryResponse>(
-    ['marketSummary', evmApiUrl],
+    evmApiUrl ? ['marketSummary', evmApiUrl] : null,
     () => postPublicInfo<MarketSummaryResponse>(evmApiUrl, 'marketSummary', {}),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
+      refreshInterval: 60000
+    }
+  );
+}
+
+// ── futuresMarket ────────────────────────────────────────────────────────────
+
+export type FuturesMarketRow = {
+  symbol: string;
+  display_symbol_name: string;
+  broker_id: string | null;
+  status: string;
+  index_price: number;
+  mark_price: number;
+  sum_unitary_funding: number;
+  est_funding_rate: number;
+  last_funding_rate: number;
+  next_funding_time: number;
+  open_interest: number;
+  is_pretge: boolean;
+  '24h_open': number;
+  '24h_close': number;
+  '24h_high': number;
+  '24h_low': number;
+  '24h_volume': number;
+  '24h_amount': number;
+};
+
+export type FuturesMarketResponse = {
+  rows: FuturesMarketRow[];
+};
+
+export function useFuturesMarket() {
+  const { evmApiUrl } = useAppState();
+  return useSWR<FuturesMarketResponse>(
+    evmApiUrl ? ['futuresMarket', evmApiUrl] : null,
+    () => fetchPublicGet<FuturesMarketResponse>(`${evmApiUrl}/v1/public/futures_market`),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
+      refreshInterval: 60000
+    }
+  );
+}
+
+// ── priceChanges ─────────────────────────────────────────────────────────────
+
+export type PriceChangeRow = {
+  symbol: string;
+  last_price: number;
+  '5m': number | null;
+  '30m': number | null;
+  '1h': number | null;
+  '4h': number | null;
+  '24h': number | null;
+  '3d': number | null;
+  '7d': number | null;
+  '30d': number | null;
+};
+
+export type PriceChangesResponse = {
+  rows: PriceChangeRow[];
+};
+
+export function usePriceChanges() {
+  const { evmApiUrl } = useAppState();
+  return useSWR<PriceChangesResponse>(
+    evmApiUrl ? ['priceChanges', evmApiUrl] : null,
+    () => fetchPublicGet<PriceChangesResponse>(`${evmApiUrl}/v1/public/market_info/price_changes`),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
+      refreshInterval: 60000
+    }
+  );
+}
+
+// ── tradersOpenInterests ─────────────────────────────────────────────────────
+
+export type TradersOIRow = {
+  symbol: string;
+  long_oi: number;
+  short_oi: number;
+};
+
+export type TradersOpenInterestsResponse = {
+  rows: TradersOIRow[];
+};
+
+export function useTradersOpenInterests() {
+  const { evmApiUrl } = useAppState();
+  return useSWR<TradersOpenInterestsResponse>(
+    evmApiUrl ? ['tradersOpenInterests', evmApiUrl] : null,
+    () =>
+      fetchPublicGet<TradersOpenInterestsResponse>(
+        `${evmApiUrl}/v1/public/market_info/traders_open_interests`
+      ),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -166,7 +289,7 @@ export type TopAddressesParams = {
 export function useTopAddresses(params: TopAddressesParams = {}) {
   const { evmApiUrl } = useAppState();
   return useSWR<TopAddressesResponse>(
-    ['topAddresses', evmApiUrl, params],
+    evmApiUrl ? ['topAddresses', evmApiUrl, params] : null,
     () =>
       postPublicInfo<TopAddressesResponse>(evmApiUrl, 'topAddresses', {
         symbol: params.symbol || undefined,
@@ -242,7 +365,7 @@ export type WhaleContextParams = {
 export function useWhaleContext(params: WhaleContextParams) {
   const { evmApiUrl } = useAppState();
   return useSWR<WhaleContextResponse>(
-    params.address ? ['whaleContext', evmApiUrl, params] : null,
+    params.address && evmApiUrl ? ['whaleContext', evmApiUrl, params] : null,
     () =>
       postPublicInfo<WhaleContextResponse>(evmApiUrl, 'whaleContext', {
         address: params.address,

@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from 'react';
 
 import orderlyLogo from '~/assets/orderly.svg';
 
-export type NavId = 'dashboards' | 'leaderboard' | 'explorer';
+export type NavId = 'dashboards' | 'markets' | 'leaderboard' | 'explorer';
 
 const NAV_ITEMS: {
   id: NavId;
@@ -34,6 +34,28 @@ const NAV_ITEMS: {
         <rect x="14" y="3" width="7" height="7" rx="1" />
         <rect x="3" y="14" width="7" height="7" rx="1" />
         <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    )
+  },
+  {
+    id: 'markets',
+    path: '/markets',
+    label: 'Markets',
+    color: '#60A5FA',
+    bgAlpha: 'rgba(96,165,250,0.15)',
+    icon: (
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+        <polyline points="16 7 22 7 22 13" />
       </svg>
     )
   },

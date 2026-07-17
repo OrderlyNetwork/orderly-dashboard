@@ -7,6 +7,7 @@ import { useIsMobile } from '~/hooks/useMediaQuery';
 
 const PATH_TO_NAV: Record<string, NavId> = {
   '/': 'dashboards',
+  '/markets': 'markets',
   '/leaderboard': 'leaderboard',
   '/explorer': 'explorer'
 };

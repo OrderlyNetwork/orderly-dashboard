@@ -64,6 +64,20 @@ export function fmtDeltaPct(current: number, previous: number): number | undefin
   return ((current - previous) / Math.abs(previous)) * 100;
 }
 
+export function fmtBps(n: number | undefined | null): string {
+  if (n == null || isNaN(n)) return '—';
+  const pct = n * 100;
+  return `${pct > 0 ? '+' : ''}${pct.toFixed(4)}%`;
+}
+
+export function fmtPrice(n: number | undefined | null): string {
+  if (n == null || isNaN(n)) return '—';
+  if (n >= 1000) return wholeFmt.format(n);
+  if (n >= 1) return new Intl.NumberFormat('en', { maximumFractionDigits: 2 }).format(n);
+  if (n >= 0.01) return new Intl.NumberFormat('en', { maximumFractionDigits: 4 }).format(n);
+  return new Intl.NumberFormat('en', { maximumFractionDigits: 8 }).format(n);
+}
+
 export function labelFromDate(dateStr: string): string {
   return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(
     new Date(dateStr)
