@@ -16,6 +16,7 @@ import {
   EventsTable,
   BrokerSelectionModal,
   PnLStats,
+  PortfolioChart,
   TaxExportModal
 } from '~/components';
 import { ChainAddress, EventsParams, UIEventType, toBackendEventType } from '~/hooks';
@@ -29,14 +30,16 @@ export const Address: FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const initialTab = searchParams.get('tab') as 'events' | 'positions' | null;
-  const [activeTab, setActiveTab] = useState<'events' | 'positions'>(
-    initialTab === 'events' || initialTab === 'positions' ? initialTab : 'events'
+  const initialTab = searchParams.get('tab') as 'events' | 'positions' | 'portfolio' | null;
+  const [activeTab, setActiveTab] = useState<'events' | 'positions' | 'portfolio'>(
+    initialTab === 'events' || initialTab === 'positions' || initialTab === 'portfolio'
+      ? initialTab
+      : 'events'
   );
 
   useEffect(() => {
-    const currentTab = searchParams.get('tab') as 'events' | 'positions' | null;
-    if (currentTab === 'events' || currentTab === 'positions') {
+    const currentTab = searchParams.get('tab') as 'events' | 'positions' | 'portfolio' | null;
+    if (currentTab === 'events' || currentTab === 'positions' || currentTab === 'portfolio') {
       setActiveTab(currentTab);
     } else {
       setActiveTab('events');
@@ -112,7 +115,7 @@ export const Address: FC = () => {
   const broker_id = searchParams.get('broker_id');
   const user_id = searchParams.get('user_id');
 
-  const handleTabChange = (newTab: 'events' | 'positions') => {
+  const handleTabChange = (newTab: 'events' | 'positions' | 'portfolio') => {
     const newSearchParams = new URLSearchParams(searchParams);
     if (newTab === 'events') {
       newSearchParams.delete('tab');
@@ -537,8 +540,10 @@ export const Address: FC = () => {
           symbolFilter={symbolFilter}
           setSymbolFilter={setSymbolFilter}
         />
-      ) : (
+      ) : activeTab === 'positions' ? (
         <AddressPositions />
+      ) : (
+        <PortfolioChart address={address.address} brokerId={broker_id} accountId={accountId} />
       )}
 
       {/* Broker Selection Modal */}

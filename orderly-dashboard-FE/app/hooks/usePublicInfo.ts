@@ -365,7 +365,7 @@ export type WhaleContextParams = {
 export function useWhaleContext(params: WhaleContextParams) {
   const { evmApiUrl } = useAppState();
   return useSWR<WhaleContextResponse>(
-    params.address && evmApiUrl ? ['whaleContext', evmApiUrl, params] : null,
+    params.address ? ['whaleContext', evmApiUrl, params] : null,
     () =>
       postPublicInfo<WhaleContextResponse>(evmApiUrl, 'whaleContext', {
         address: params.address,
@@ -377,6 +377,55 @@ export function useWhaleContext(params: WhaleContextParams) {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
       dedupingInterval: 5000,
+      refreshInterval: 0
+    }
+  );
+}
+
+// ── portfolio (Account Equity Curve) ───────────────────────────────────────
+
+export type PortfolioRow = {
+  account_value: string;
+  cumulative_pnl: string;
+  timestamp: number;
+};
+
+export type PortfolioResponse = {
+  rows: PortfolioRow[];
+  next_cursor: string | null;
+};
+
+export type PortfolioParams = {
+  address: string;
+  broker_id?: string;
+  account_id?: string;
+  start_time?: number;
+  end_time?: number;
+  limit?: number;
+};
+
+/**
+ * Daily account-value time series with cumulative PnL. Weight 5.
+ * UTC-day-aligned snapshots, up to 365 days.
+ */
+export function usePortfolio(params: PortfolioParams) {
+  const { evmApiUrl } = useAppState();
+  return useSWR<PortfolioResponse>(
+    params.address ? ['portfolio', evmApiUrl, params] : null,
+    () =>
+      postPublicInfo<PortfolioResponse>(evmApiUrl, 'portfolio', {
+        address: params.address,
+        broker_id: params.broker_id || undefined,
+        account_id: params.account_id || undefined,
+        interval: '1d',
+        start_time: params.start_time || undefined,
+        end_time: params.end_time || undefined,
+        limit: params.limit || 90
+      }),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
       refreshInterval: 0
     }
   );
