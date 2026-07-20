@@ -88,6 +88,55 @@ export function usePlatformPositions(symbol: string, minNotional: number) {
   );
 }
 
+// ── symbolInfo (includes base_imr for max leverage calculation) ──────────────
+
+export type SymbolInfoResponse = {
+  symbol: string;
+  quote_min: number;
+  quote_max: number;
+  quote_tick: number;
+  base_min: number;
+  base_max: number;
+  base_tick: number;
+  min_notional: number;
+  price_range: number;
+  price_scope: number;
+  std_liquidation_fee: number;
+  liquidator_fee: number;
+  claim_insurance_fund_discount: number;
+  funding_period: number;
+  cap_funding: number;
+  floor_funding: number;
+  cap_ir: number;
+  floor_ir: number;
+  interest_rate: number;
+  imr_factor: number;
+  created_time: number;
+  updated_time: number;
+  base_mmr: number;
+  base_imr: number;
+  liquidation_tier: number;
+  global_max_oi_cap: number;
+};
+
+/**
+ * Get symbol info including base_imr (initial margin rate).
+ * Max leverage = 1 / base_imr
+ */
+export function useSymbolInfo(symbol: string) {
+  const { evmApiUrl } = useAppState();
+  return useSWR<SymbolInfoResponse>(
+    symbol && evmApiUrl ? ['symbolInfo', evmApiUrl, symbol] : null,
+    () => fetchPublicGet<SymbolInfoResponse>(`${evmApiUrl}/v1/public/info/${symbol}`),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
+      refreshInterval: 60000
+    }
+  );
+}
+
 // ── marketSummary ─────────────────────────────────────────────────────────────
 
 export type MarketSummaryMarket = {
@@ -167,6 +216,43 @@ export function useFuturesMarket() {
   return useSWR<FuturesMarketResponse>(
     evmApiUrl ? ['futuresMarket', evmApiUrl] : null,
     () => fetchPublicGet<FuturesMarketResponse>(`${evmApiUrl}/v1/public/futures_market`),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
+      refreshInterval: 60000
+    }
+  );
+}
+
+// ── futuresSymbol (single symbol market info) ────────────────────────────────
+
+export type FuturesSymbolResponse = {
+  symbol: string;
+  display_symbol_name: string;
+  broker_id: string | null;
+  status: string;
+  index_price: number;
+  mark_price: number;
+  sum_unitary_funding: number;
+  est_funding_rate: number;
+  last_funding_rate: number;
+  next_funding_time: number;
+  open_interest: number;
+  is_pretge: boolean;
+  '24h_open': number;
+  '24h_close': number;
+  '24h_high': number;
+  '24h_low': number;
+  '24h_volume': number;
+  '24h_amount': number;
+};
+
+export function useFuturesSymbol(symbol: string) {
+  const { evmApiUrl } = useAppState();
+  return useSWR<FuturesSymbolResponse>(
+    symbol && evmApiUrl ? ['futuresSymbol', evmApiUrl, symbol] : null,
+    () => fetchPublicGet<FuturesSymbolResponse>(`${evmApiUrl}/v1/public/futures/${symbol}`),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -378,6 +464,90 @@ export function useWhaleContext(params: WhaleContextParams) {
       shouldRetryOnError: false,
       dedupingInterval: 5000,
       refreshInterval: 0
+    }
+  );
+}
+
+// ── marketDetail (Composite single-symbol bundle) ────────────────────────────
+
+export type OrderbookLevel = {
+  price: string;
+  quantity: string;
+};
+
+export type MarketTrade = {
+  symbol: string;
+  side: 'BUY' | 'SELL';
+  executed_price: string;
+  executed_quantity: string;
+  address: string;
+  account_id: string;
+  broker_id: string;
+  executed_timestamp: number;
+};
+
+export type FundingRateEntry = {
+  funding_rate: string;
+  mark_price: string;
+  funding_rate_timestamp: number;
+};
+
+export type Candle = {
+  open: string;
+  high: string;
+  low: string;
+  close: string;
+  volume: string;
+  timestamp: number;
+};
+
+export type MarketDetailResponse = {
+  symbol: string;
+  market_info?: MarketSummaryMarket;
+  orderbook?: {
+    asks: OrderbookLevel[];
+    bids: OrderbookLevel[];
+    ts?: number;
+  };
+  recent_trades?: MarketTrade[];
+  funding_history?: FundingRateEntry[];
+  candles?: Candle[];
+};
+
+export type MarketDetailParams = {
+  symbol: string;
+  include?: string[];
+  orderbook_levels?: number;
+  recent_trades_limit?: number;
+  funding_history_limit?: number;
+  candles_interval?: string;
+  candles_limit?: number;
+};
+
+/**
+ * Composite single-symbol bundle: market info, orderbook, recent trades,
+ * funding history, and candles in one call. Weight 2.
+ */
+export function useMarketDetail(symbol: string, candlesInterval: string = '1h') {
+  const { evmApiUrl } = useAppState();
+  return useSWR<MarketDetailResponse>(
+    symbol && evmApiUrl ? ['marketDetail', evmApiUrl, symbol, candlesInterval] : null,
+    () =>
+      postPublicInfo<MarketDetailResponse>(evmApiUrl, 'marketDetail', {
+        symbol,
+        include: ['market_info', 'orderbook', 'recent_trades', 'funding_history', 'candles'],
+        orderbook_levels: 50,
+        recent_trades_limit: 50,
+        funding_history_limit: 100,
+        candles_interval: candlesInterval,
+        candles_limit: 168
+      }),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 10000,
+      refreshInterval: 15000,
+      keepPreviousData: true
     }
   );
 }
