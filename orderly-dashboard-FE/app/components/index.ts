@@ -1,3 +1,4 @@
+export * from './AddressPositions';
 export * from './BrokerSelectionModal';
 export * from './EventsTable';
 export * from './Leaderboard';

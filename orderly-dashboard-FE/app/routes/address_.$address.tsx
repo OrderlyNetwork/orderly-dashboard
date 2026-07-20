@@ -12,7 +12,7 @@ import { useRenderColumns } from './address';
 import { useAppState } from '~/App';
 import {
   Spinner,
-  Positions,
+  AddressPositions,
   EventsTable,
   BrokerSelectionModal,
   PnLStats,
@@ -241,7 +241,7 @@ export const Address: FC = () => {
 
   const accountId = selectedAccount?.account_id;
 
-  const AddressPositions = () => {
+  const renderAddressPositions = () => {
     if (!accountId) {
       return (
         <div className="flex justify-center py-12">
@@ -254,16 +254,13 @@ export const Address: FC = () => {
       <>
         <h2 className="text-2xl font-bold text-white mb-2 mx-2 md:mx-4">Positions</h2>
         <p className="text-gray-300 mb-6 mx-2 md:mx-4 max-w-2xl">
-          Current positions for this account. Shows current position data for each symbol, including
-          closed positions. Realized PnL is aggregated across all historical positions for each
-          symbol. Currently only supports sorting by holding value. Date information not yet
-          available. Note: Sub-accounts are not yet supported.
+          Current open positions for this account. Pulled live from the Orderly Public Info API (
+          <code className="font-mono text-xs">accountState</code>).
         </p>
-        <Positions
+        <AddressPositions
+          address={address.address}
+          brokerId={broker_id ?? undefined}
           accountId={accountId}
-          hideFilters={true}
-          hideTitle={true}
-          hideQuickActions={true}
         />
       </>
     );
@@ -541,7 +538,7 @@ export const Address: FC = () => {
           setSymbolFilter={setSymbolFilter}
         />
       ) : activeTab === 'positions' ? (
-        <AddressPositions />
+        renderAddressPositions()
       ) : (
         <PortfolioChart address={address.address} brokerId={broker_id} accountId={accountId} />
       )}

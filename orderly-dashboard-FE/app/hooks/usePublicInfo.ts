@@ -600,3 +600,70 @@ export function usePortfolio(params: PortfolioParams) {
     }
   );
 }
+
+// ── accountState (Address open positions + account snapshot) ────────────────
+
+export type AccountStatePosition = {
+  symbol: string;
+  side: 'LONG' | 'SHORT';
+  position_qty: string;
+  notional: string | null;
+  average_open_price: string | null;
+  mark_price: string | null;
+  unrealized_pnl: string | null;
+  unsettled_pnl: string | null;
+  pnl_24_h: string | null;
+  imr: string | null;
+  mmr: string | null;
+  est_liq_price: string | null;
+  leverage: number | null;
+  margin_mode: string | null;
+  opened_at: number | null;
+  updated_at: number | null;
+};
+
+export type AccountStateResponse = {
+  address: string;
+  broker_id: string;
+  account_id: string;
+  account_type: string;
+  account_value: string | null;
+  total_collateral_value: string;
+  free_collateral: string | null;
+  margin_ratio: string | null;
+  initial_margin_ratio: string | null;
+  maintenance_margin_ratio: string | null;
+  total_unrealized_pnl: string | null;
+  total_unsettled_pnl: string | null;
+  total_pnl_24_h: string | null;
+  positions: AccountStatePosition[];
+};
+
+export type AccountStateParams = {
+  address: string;
+  broker_id?: string;
+  account_id?: string;
+};
+
+/**
+ * Account snapshot: collateral, margin metrics, PnL, and open positions.
+ * Weight 5. Only returns OPEN positions (holding ≠ 0).
+ */
+export function useAccountState(params: AccountStateParams) {
+  const { evmApiUrl } = useAppState();
+  return useSWR<AccountStateResponse>(
+    params.address ? ['accountState', evmApiUrl, params] : null,
+    () =>
+      postPublicInfo<AccountStateResponse>(evmApiUrl, 'accountState', {
+        address: params.address,
+        broker_id: params.broker_id || undefined,
+        account_id: params.account_id || undefined
+      }),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 5000,
+      refreshInterval: 15000
+    }
+  );
+}
