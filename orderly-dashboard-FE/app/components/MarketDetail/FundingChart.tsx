@@ -14,18 +14,29 @@ import { Line } from 'react-chartjs-2';
 
 import { useChartReady } from '~/components/analytics/shared/chartConfig';
 import { LineChartSkeleton } from '~/components/analytics/shared/primitives';
+import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
+import { useIsEmbed } from '~/hooks/useIsEmbed';
 import type { FundingRateEntry } from '~/hooks/usePublicInfo';
 import { formatPriceByTick } from '~/utils/format';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
 export type FundingChartProps = {
+  symbol?: string;
   fundingHistory?: FundingRateEntry[];
   isLoading?: boolean;
   quoteTick?: number | null;
 };
 
-export const FundingChart: FC<FundingChartProps> = ({ fundingHistory, isLoading, quoteTick }) => {
+const baseToken = (symbol?: string) => (symbol ? (symbol.split('_')[1] ?? symbol) : '');
+
+export const FundingChart: FC<FundingChartProps> = ({
+  symbol,
+  fundingHistory,
+  isLoading,
+  quoteTick
+}) => {
+  const isEmbed = useIsEmbed();
   const chartRef = useRef<ChartJS<'line'> | null>(null);
   useChartReady(chartRef);
 
@@ -105,6 +116,9 @@ export const FundingChart: FC<FundingChartProps> = ({ fundingHistory, isLoading,
     [fundingHistory, quoteTick]
   );
 
+  const suffix = symbol && isEmbed ? ` — ${baseToken(symbol)}-PERP` : '';
+  const title = `Funding Rate History${suffix}`;
+
   return (
     <div
       className="rounded-2xl overflow-hidden"
@@ -115,12 +129,25 @@ export const FundingChart: FC<FundingChartProps> = ({ fundingHistory, isLoading,
         style={{ borderBottomColor: 'rgba(156,117,255,0.08)' }}
       >
         <div>
-          <div className="text-lg font-semibold text-white">Funding Rate History</div>
+          <div
+            className="text-lg font-semibold text-white"
+            style={{
+              fontFamily: "'Atyp BL Text', sans-serif",
+              fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1"
+            }}
+          >
+            {title}
+          </div>
           <div className="text-[13px] mt-0.5 text-[rgba(255,255,255,0.35)]">
             8-hour funding rate epochs
           </div>
         </div>
-        <div className="text-xs text-gray-500">{fundingHistory?.length ?? 0} epochs</div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">{fundingHistory?.length ?? 0} epochs</span>
+          {symbol && (
+            <WidgetShareButton widgetId="market-funding-chart" title={title} symbol={symbol} />
+          )}
+        </div>
       </div>
       <div className="px-4 pt-3 pb-4" style={{ height: 280 }}>
         {isLoading && !fundingHistory ? (

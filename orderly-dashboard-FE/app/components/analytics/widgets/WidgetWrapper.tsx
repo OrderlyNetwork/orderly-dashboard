@@ -1,36 +1,18 @@
-import { FC, ReactNode, useState } from 'react';
+import { FC, ReactNode } from 'react';
 
-import { WidgetShareDialog } from './WidgetShareDialog';
+import { WidgetShareButton } from './WidgetShareButton';
 
 type WidgetWrapperProps = {
   widgetId: string;
   title?: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   controls?: ReactNode;
   height?: number;
   autoHeight?: boolean;
   hideLink?: boolean;
+  symbol?: string;
   children: ReactNode;
 };
-
-const ShareIcon = () => (
-  <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="18" cy="5" r="3" />
-    <circle cx="6" cy="12" r="3" />
-    <circle cx="18" cy="19" r="3" />
-    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-  </svg>
-);
 
 export const WidgetWrapper: FC<WidgetWrapperProps> = ({
   widgetId,
@@ -40,40 +22,12 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
   height,
   autoHeight,
   hideLink,
+  symbol,
   children
 }) => {
-  const [shareOpen, setShareOpen] = useState(false);
   const showHeader = title || controls || !hideLink;
   const linkEl = !hideLink ? (
-    <>
-      <button
-        onClick={() => setShareOpen(true)}
-        title="Share widget"
-        className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-all duration-150 text-[rgba(255,255,255,0.3)] cursor-pointer outline-none focus:outline-none"
-        style={{
-          background: '#221E30',
-          border: 'none'
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.background = '#2e2840';
-          el.style.color = '#9C75FF';
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLElement;
-          el.style.background = '#221E30';
-          el.style.color = 'rgba(255,255,255,0.3)';
-        }}
-      >
-        <ShareIcon />
-      </button>
-      <WidgetShareDialog
-        open={shareOpen}
-        onOpenChange={setShareOpen}
-        widgetId={widgetId}
-        title={title}
-      />
-    </>
+    <WidgetShareButton widgetId={widgetId} title={title} symbol={symbol} />
   ) : null;
 
   const contentStyle = height
@@ -84,12 +38,14 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
 
   return (
     <div
-      className=""
+      className="rounded-2xl"
       style={{
         display: 'flex',
         flexDirection: 'column',
         minWidth: 0,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        background: 'rgba(20,15,35,.9)',
+        border: '1px solid rgba(156,117,255,0.15)'
       }}
     >
       {showHeader && (

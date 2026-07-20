@@ -12,6 +12,8 @@ import { FC, useEffect, useMemo, useRef } from 'react';
 import { Chart } from 'react-chartjs-2';
 
 import { LineChartSkeleton } from '~/components/analytics/shared/primitives';
+import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
+import { useIsEmbed } from '~/hooks/useIsEmbed';
 import type { Candle } from '~/hooks/usePublicInfo';
 import { formatPriceByTick } from '~/utils/format';
 
@@ -31,6 +33,8 @@ const INTERVAL_LABELS: Record<string, string> = {
   '1d': '1D'
 };
 
+const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
+
 export type PriceChartClientProps = {
   symbol: string;
   candles?: Candle[];
@@ -48,6 +52,7 @@ export const PriceChartClient: FC<PriceChartClientProps> = ({
   onIntervalChange,
   quoteTick
 }) => {
+  const isEmbed = useIsEmbed();
   const chartRef = useRef<ChartJS<'candlestick'> | null>(null);
 
   useEffect(() => {
@@ -158,26 +163,41 @@ export const PriceChartClient: FC<PriceChartClientProps> = ({
         style={{ borderBottomColor: 'rgba(156,117,255,0.08)' }}
       >
         <div>
-          <div className="text-lg font-semibold text-white">Price Chart</div>
+          <div
+            className="text-lg font-semibold text-white"
+            style={{
+              fontFamily: "'Atyp BL Text', sans-serif",
+              fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1"
+            }}
+          >
+            Price Chart{isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}
+          </div>
           <div className="text-[13px] mt-0.5 text-[rgba(255,255,255,0.35)]">
             OHLCV candles for {symbol}
           </div>
         </div>
-        <div className="flex gap-1 rounded-lg p-1" style={{ background: '#130E1D' }}>
-          {Object.entries(INTERVAL_LABELS).map(([iv, label]) => (
-            <button
-              key={iv}
-              onClick={() => onIntervalChange(iv)}
-              className="px-3 py-1 rounded-md border-none cursor-pointer text-[13px] transition-all duration-150"
-              style={{
-                background: interval === iv ? '#6700CE' : 'transparent',
-                color: interval === iv ? '#E9DEFF' : 'rgba(255,255,255,0.45)',
-                fontWeight: interval === iv ? 600 : 400
-              }}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 rounded-lg p-1" style={{ background: '#130E1D' }}>
+            {Object.entries(INTERVAL_LABELS).map(([iv, label]) => (
+              <button
+                key={iv}
+                onClick={() => onIntervalChange(iv)}
+                className="px-3 py-1 rounded-md border-none cursor-pointer text-[13px] transition-all duration-150"
+                style={{
+                  background: interval === iv ? '#6700CE' : 'transparent',
+                  color: interval === iv ? '#E9DEFF' : 'rgba(255,255,255,0.45)',
+                  fontWeight: interval === iv ? 600 : 400
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <WidgetShareButton
+            widgetId="market-price-chart"
+            title={`Price Chart${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`}
+            symbol={symbol}
+          />
         </div>
       </div>
       <div className="px-4 pt-3 pb-4 relative" style={{ height: 420 }}>

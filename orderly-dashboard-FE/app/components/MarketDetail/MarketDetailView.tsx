@@ -99,12 +99,14 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start">
         {' '}
         <OrderbookPanel
+          symbol={symbol}
           orderbook={data?.orderbook}
           marketInfo={data?.market_info}
           symbolInfo={symbolInfoData}
           isLoading={isLoading && !data}
         />
         <RecentTrades
+          symbol={symbol}
           trades={data?.recent_trades}
           isLoading={isLoading && !data}
           quoteTick={quoteTick}
@@ -113,6 +115,7 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
 
       {/* Funding History */}
       <FundingChart
+        symbol={symbol}
         fundingHistory={data?.funding_history}
         isLoading={isLoading && !data}
         quoteTick={quoteTick}

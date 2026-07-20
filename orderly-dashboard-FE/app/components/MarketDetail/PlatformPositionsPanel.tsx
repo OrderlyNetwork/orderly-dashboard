@@ -1,10 +1,11 @@
-import { Link } from '@remix-run/react';
 import { FC, useMemo } from 'react';
 
 import { fmtUsd } from '~/components/analytics/shared/formatters';
 import { TableSkeleton, Empty } from '~/components/analytics/shared/primitives';
+import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
+import { useIsEmbed } from '~/hooks/useIsEmbed';
 import { usePlatformPositions, useTradersOpenInterests } from '~/hooks/usePublicInfo';
-import { base64UrlSafeEncode } from '~/util';
+import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 import { formatPriceByTick } from '~/utils/format';
 
 export type PlatformPositionsPanelProps = {
@@ -12,7 +13,10 @@ export type PlatformPositionsPanelProps = {
   quoteTick?: number | null;
 };
 
+const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
+
 export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol, quoteTick }) => {
+  const isEmbed = useIsEmbed();
   const { data, isLoading } = usePlatformPositions(symbol, 0);
   const { data: oiData } = useTradersOpenInterests();
 
@@ -40,6 +44,8 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
     return { longTotal, shortTotal, longPct, topPositions };
   }, [data, oiData, symbol]);
 
+  const title = `Open Positions${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`;
+
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col"
@@ -54,12 +60,23 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
         style={{ borderBottomColor: 'rgba(156,117,255,0.08)' }}
       >
         <div>
-          <div className="text-lg font-semibold text-white">Open Positions</div>
+          <div
+            className="text-lg font-semibold text-white"
+            style={{
+              fontFamily: "'Atyp BL Text', sans-serif",
+              fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1"
+            }}
+          >
+            {title}
+          </div>
           <div className="text-[13px] mt-0.5 text-[rgba(255,255,255,0.35)]">
             Platform-wide positions for this symbol
           </div>
         </div>
-        <div className="text-xs text-gray-500">{data?.total_positions ?? 0} positions</div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">{data?.total_positions ?? 0} positions</span>
+          <WidgetShareButton widgetId="market-platform-positions" title={title} symbol={symbol} />
+        </div>
       </div>
 
       {/* Long/Short ratio bar — uses traders_open_interests (excludes MM) */}
@@ -139,16 +156,18 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
                   >
                     <td className="py-2 px-4">
                       {pos.address ? (
-                        <Link
-                          to={`/address/${
+                        <a
+                          href={`${DASHBOARD_ORIGIN}/address/${
                             pos.address.match(/^[0-9a-zA-Z]{43,44}$/)
                               ? base64UrlSafeEncode(pos.address)
                               : pos.address
                           }${pos.broker_id ? `?broker_id=${pos.broker_id}` : ''}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-xs font-mono text-[#D4B2FF] hover:text-white transition-colors no-underline"
                         >
                           {pos.address.slice(0, 6)}...{pos.address.slice(-4)}
-                        </Link>
+                        </a>
                       ) : (
                         <span className="text-xs text-gray-500">—</span>
                       )}

@@ -8,13 +8,15 @@ type WidgetShareDialogProps = {
   onOpenChange: (open: boolean) => void;
   widgetId: string;
   title?: string;
+  symbol?: string;
 };
 
 export const WidgetShareDialog = ({
   open,
   onOpenChange,
   widgetId,
-  title
+  title,
+  symbol
 }: WidgetShareDialogProps) => {
   const [closeHovered, setCloseHovered] = useState(false);
 
@@ -45,7 +47,7 @@ export const WidgetShareDialog = ({
           layout.
         </p>
 
-        <CopyBlock widgetId={widgetId} />
+        <CopyBlock widgetId={widgetId} symbol={symbol} />
 
         <div className="flex justify-end gap-2 mt-6 flex-shrink-0">
           <button

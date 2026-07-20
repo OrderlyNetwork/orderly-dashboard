@@ -1,30 +1,46 @@
-import { Link } from '@remix-run/react';
 import dayjs from 'dayjs';
 import { FC } from 'react';
 
 import { TableSkeleton } from '~/components/analytics/shared/primitives';
+import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
+import { useIsEmbed } from '~/hooks/useIsEmbed';
 import type { MarketTrade } from '~/hooks/usePublicInfo';
-import { base64UrlSafeEncode } from '~/util';
+import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 import { formatPriceByTick } from '~/utils/format';
 
 export type RecentTradesProps = {
+  symbol?: string;
   trades?: MarketTrade[];
   isLoading?: boolean;
   quoteTick?: number | null;
+  standalone?: boolean;
 };
 
 const thBase = 'py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0';
 const thStyle = { background: 'rgba(20,15,35,.95)' };
 
-export const RecentTrades: FC<RecentTradesProps> = ({ trades, isLoading, quoteTick }) => {
+const baseToken = (symbol?: string) => (symbol ? (symbol.split('_')[1] ?? symbol) : '');
+
+export const RecentTrades: FC<RecentTradesProps> = ({
+  symbol,
+  trades,
+  isLoading,
+  quoteTick,
+  standalone
+}) => {
+  const isEmbed = useIsEmbed();
+  const suffix = symbol && isEmbed ? ` — ${baseToken(symbol)}-PERP` : '';
+  const title = `Recent Trades${suffix}`;
+
   return (
     /* Outer wrapper: grid item that stretches to row height (matches orderbook).
-       On mobile it's natural height; on desktop it stretches + becomes relative. */
-    <div className="lg:self-stretch lg:relative lg:min-h-0">
-      {/* Inner panel: on desktop, absolutely fills the wrapper so its content
-          doesn't inflate the grid row. On mobile, normal flow. */}
+       On mobile it's natural height; on desktop it stretches + becomes relative.
+       Skipped in standalone mode (no grid context -> absolute would collapse). */
+    <div className={standalone ? '' : 'lg:self-stretch lg:relative lg:min-h-0'}>
       <div
-        className="flex flex-col rounded-2xl overflow-hidden lg:absolute lg:inset-0"
+        className={`flex flex-col rounded-2xl overflow-hidden ${
+          standalone ? '' : 'lg:absolute lg:inset-0'
+        }`}
         style={{
           background: 'rgba(20,15,35,.9)',
           border: '1px solid rgba(156,117,255,0.15)'
@@ -36,12 +52,25 @@ export const RecentTrades: FC<RecentTradesProps> = ({ trades, isLoading, quoteTi
           style={{ borderBottomColor: 'rgba(156,117,255,0.08)' }}
         >
           <div>
-            <div className="text-lg font-semibold text-white">Recent Trades</div>
+            <div
+              className="text-lg font-semibold text-white"
+              style={{
+                fontFamily: "'Atyp BL Text', sans-serif",
+                fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1"
+              }}
+            >
+              {title}
+            </div>
             <div className="text-[13px] mt-0.5 text-[rgba(255,255,255,0.35)]">
               Latest taker-side trades
             </div>
           </div>
-          <div className="text-xs text-gray-500">{trades?.length ?? 0} trades</div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">{trades?.length ?? 0} trades</span>
+            {symbol && (
+              <WidgetShareButton widgetId="market-recent-trades" title={title} symbol={symbol} />
+            )}
+          </div>
         </div>
 
         {/* Scrollable table area */}
@@ -99,16 +128,18 @@ export const RecentTrades: FC<RecentTradesProps> = ({ trades, isLoading, quoteTi
                       </span>
                     </td>
                     <td className="py-2 px-4 text-right">
-                      <Link
-                        to={`/address/${
+                      <a
+                        href={`${DASHBOARD_ORIGIN}/address/${
                           trade.address.match(/^[0-9a-zA-Z]{43,44}$/)
                             ? base64UrlSafeEncode(trade.address)
                             : trade.address
                         }?broker_id=${trade.broker_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-xs font-mono text-[#D4B2FF] hover:text-white transition-colors no-underline"
                       >
                         {trade.address.slice(0, 6)}...{trade.address.slice(-4)}
-                      </Link>
+                      </a>
                     </td>
                   </tr>
                 ))}

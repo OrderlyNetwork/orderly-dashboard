@@ -2,14 +2,16 @@ import { useState } from 'react';
 
 type CopyBlockProps = {
   widgetId: string;
+  symbol?: string;
 };
 
-export const CopyBlock = ({ widgetId }: CopyBlockProps) => {
+export const CopyBlock = ({ widgetId, symbol }: CopyBlockProps) => {
   const [copied, setCopied] = useState(false);
   const [copyHovered, setCopyHovered] = useState(false);
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://dashboard.orderly.network';
-  const iframeCode = `<iframe src="${origin}/widget/${widgetId}?embed=true" width="800" height="400" frameborder="0"></iframe>`;
+  const symbolQuery = symbol ? `&symbol=${encodeURIComponent(symbol)}` : '';
+  const iframeCode = `<iframe src="${origin}/widget/${widgetId}?embed=true${symbolQuery}" width="800" height="400" frameborder="0"></iframe>`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(iframeCode).then(() => {

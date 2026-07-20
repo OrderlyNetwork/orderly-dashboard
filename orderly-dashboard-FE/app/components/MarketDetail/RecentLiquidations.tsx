@@ -1,11 +1,12 @@
-import { Link } from '@remix-run/react';
 import dayjs from 'dayjs';
 import { FC } from 'react';
 
 import { fmtUsd } from '~/components/analytics/shared/formatters';
 import { TableSkeleton } from '~/components/analytics/shared/primitives';
+import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
+import { useIsEmbed } from '~/hooks/useIsEmbed';
 import { useLiquidations, useMarketSummary } from '~/hooks/usePublicInfo';
-import { base64UrlSafeEncode } from '~/util';
+import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 import { formatPriceByTick } from '~/utils/format';
 
 export type RecentLiquidationsProps = {
@@ -15,7 +16,10 @@ export type RecentLiquidationsProps = {
 const thBase = 'py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0';
 const thStyle = { background: 'rgba(20,15,35,.95)' };
 
+const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
+
 export const RecentLiquidations: FC<RecentLiquidationsProps> = ({ symbol }) => {
+  const isEmbed = useIsEmbed();
   const { data, isLoading } = useLiquidations(symbol, 100);
   const { data: marketSummary } = useMarketSummary();
 
@@ -26,6 +30,7 @@ export const RecentLiquidations: FC<RecentLiquidationsProps> = ({ symbol }) => {
   })();
 
   const rows = (data?.rows ?? []).filter((liq) => parseFloat(liq.position_qty) > 0).slice(0, 50);
+  const title = `Recent Liquidations${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`;
 
   return (
     <div
@@ -37,12 +42,23 @@ export const RecentLiquidations: FC<RecentLiquidationsProps> = ({ symbol }) => {
         style={{ borderBottomColor: 'rgba(156,117,255,0.08)' }}
       >
         <div>
-          <div className="text-lg font-semibold text-white">Recent Liquidations</div>
+          <div
+            className="text-lg font-semibold text-white"
+            style={{
+              fontFamily: "'Atyp BL Text', sans-serif",
+              fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1"
+            }}
+          >
+            {title}
+          </div>
           <div className="text-[13px] mt-0.5 text-[rgba(255,255,255,0.35)]">
             Latest liquidation events for this market
           </div>
         </div>
-        <div className="text-xs text-gray-500">{rows.length} events</div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">{rows.length} events</span>
+          <WidgetShareButton widgetId="market-recent-liquidations" title={title} symbol={symbol} />
+        </div>
       </div>
 
       <div className="overflow-auto flex-1 min-h-0 max-h-[440px]">
@@ -113,12 +129,14 @@ export const RecentLiquidations: FC<RecentLiquidationsProps> = ({ symbol }) => {
                     </td>
                     <td className="py-2 px-4 text-right">
                       {liq.address && traderHref ? (
-                        <Link
-                          to={traderHref}
+                        <a
+                          href={`${DASHBOARD_ORIGIN}${traderHref}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-xs font-mono text-[#D4B2FF] hover:text-white transition-colors no-underline"
                         >
                           {liq.address.slice(0, 6)}...{liq.address.slice(-4)}
-                        </Link>
+                        </a>
                       ) : (
                         <span className="text-xs text-gray-600">—</span>
                       )}

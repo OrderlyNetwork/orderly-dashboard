@@ -1,10 +1,11 @@
-import { Link } from '@remix-run/react';
 import { FC, useState } from 'react';
 
 import { fmtUsd } from '~/components/analytics/shared/formatters';
 import { TableSkeleton, Empty } from '~/components/analytics/shared/primitives';
+import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
+import { useIsEmbed } from '~/hooks/useIsEmbed';
 import { useTopAddresses, type TopAddressesSortOption } from '~/hooks/usePublicInfo';
-import { base64UrlSafeEncode } from '~/util';
+import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 
 export type TopTradersPanelProps = {
   symbol: string;
@@ -17,7 +18,10 @@ const SORT_OPTIONS: { value: TopAddressesSortOption; label: string }[] = [
   { value: 'volume_24h', label: 'Vol 24h' }
 ];
 
+const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
+
 export const TopTradersPanel: FC<TopTradersPanelProps> = ({ symbol }) => {
+  const isEmbed = useIsEmbed();
   const [sortBy, setSortBy] = useState<TopAddressesSortOption>('notional');
 
   const { data, isLoading } = useTopAddresses({
@@ -31,6 +35,8 @@ export const TopTradersPanel: FC<TopTradersPanelProps> = ({ symbol }) => {
   const thClass =
     'py-2 px-3 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0';
   const thStyle = { background: 'rgba(20,15,35,.95)' };
+
+  const title = `Top Traders${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`;
 
   return (
     <div
@@ -46,26 +52,37 @@ export const TopTradersPanel: FC<TopTradersPanelProps> = ({ symbol }) => {
         style={{ borderBottomColor: 'rgba(156,117,255,0.08)' }}
       >
         <div>
-          <div className="text-lg font-semibold text-white">Top Traders</div>
+          <div
+            className="text-lg font-semibold text-white"
+            style={{
+              fontFamily: "'Atyp BL Text', sans-serif",
+              fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1"
+            }}
+          >
+            {title}
+          </div>
           <div className="text-[13px] mt-0.5 text-[rgba(255,255,255,0.35)]">
             Leading traders for this symbol
           </div>
         </div>
-        <div className="flex gap-1 rounded-lg p-1" style={{ background: '#130E1D' }}>
-          {SORT_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setSortBy(opt.value)}
-              className="px-2.5 py-1 rounded-md border-none cursor-pointer text-xs transition-all duration-150"
-              style={{
-                background: sortBy === opt.value ? '#6700CE' : 'transparent',
-                color: sortBy === opt.value ? '#E9DEFF' : 'rgba(255,255,255,0.45)',
-                fontWeight: sortBy === opt.value ? 600 : 400
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 rounded-lg p-1" style={{ background: '#130E1D' }}>
+            {SORT_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSortBy(opt.value)}
+                className="px-2.5 py-1 rounded-md border-none cursor-pointer text-xs transition-all duration-150"
+                style={{
+                  background: sortBy === opt.value ? '#6700CE' : 'transparent',
+                  color: sortBy === opt.value ? '#E9DEFF' : 'rgba(255,255,255,0.45)',
+                  fontWeight: sortBy === opt.value ? 600 : 400
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <WidgetShareButton widgetId="market-top-traders" title={title} symbol={symbol} />
         </div>
       </div>
 
@@ -120,16 +137,18 @@ export const TopTradersPanel: FC<TopTradersPanelProps> = ({ symbol }) => {
                   >
                     <td className="py-2.5 px-3 text-xs text-gray-500">{i + 1}</td>
                     <td className="py-2.5 px-3">
-                      <Link
-                        to={`/address/${
+                      <a
+                        href={`${DASHBOARD_ORIGIN}/address/${
                           row.address.match(/^[0-9a-zA-Z]{43,44}$/)
                             ? base64UrlSafeEncode(row.address)
                             : row.address
                         }?broker_id=${row.broker_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-xs font-mono text-[#D4B2FF] hover:text-white transition-colors no-underline"
                       >
                         {row.address.slice(0, 6)}...{row.address.slice(-4)}
-                      </Link>
+                      </a>
                     </td>
                     <td className="py-2.5 px-3 text-right text-xs font-mono text-white">
                       {fmtUsd(notional)}
