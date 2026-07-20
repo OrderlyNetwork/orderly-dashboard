@@ -1,7 +1,8 @@
 import { Table } from '@radix-ui/themes';
+import { useNavigate } from '@remix-run/react';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import { FC, useMemo } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
 import { Spinner } from '~/components';
 import { getMaxFractionDigits, useSymbols } from '~/hooks';
@@ -17,7 +18,21 @@ interface AddressPositionsProps {
 const POSITIVE_COLOR = '#00dea3';
 const NEGATIVE_COLOR = '#FF6390';
 
+const formatBaseToken = (symbol: string) => {
+  const parts = symbol.split('_');
+  return parts.length >= 2 ? parts[1] : symbol;
+};
+
 export const AddressPositions: FC<AddressPositionsProps> = ({ address, brokerId, accountId }) => {
+  const navigate = useNavigate();
+
+  const handleRowClick = useCallback(
+    (symbol: string) => {
+      navigate(`/markets/${formatBaseToken(symbol)}`);
+    },
+    [navigate]
+  );
+
   const { data, error, isLoading } = useAccountState({
     address,
     broker_id: brokerId,
@@ -69,11 +84,6 @@ export const AddressPositions: FC<AddressPositionsProps> = ({ address, brokerId,
       }).format(numValue);
     };
   }, []);
-
-  const formatBaseToken = (symbol: string) => {
-    const parts = symbol.split('_');
-    return parts.length >= 2 ? parts[1] : symbol;
-  };
 
   const formatOpenedAt = (ts: number | null) => {
     if (ts === null) return '-';
@@ -249,7 +259,8 @@ export const AddressPositions: FC<AddressPositionsProps> = ({ address, brokerId,
                   {table.getRowModel().rows.map((row, index) => (
                     <Table.Row
                       key={row.id}
-                      className={`border-b border-border-primary hover:bg-bg-tertiary transition-colors duration-150 ${
+                      onClick={() => handleRowClick(row.original.symbol)}
+                      className={`border-b border-border-primary hover:bg-[rgba(156,117,255,0.12)] transition-colors duration-150 cursor-pointer ${
                         index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
                       }`}
                     >
