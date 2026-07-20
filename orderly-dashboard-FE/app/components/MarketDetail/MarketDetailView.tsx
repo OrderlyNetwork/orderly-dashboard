@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons';
 import { Link } from '@remix-run/react';
-import { FC, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 
 import { FundingChart } from './FundingChart';
 import { LiquidationHeatmapPanel } from './LiquidationHeatmapPanel';
@@ -12,7 +12,12 @@ import { RecentTrades } from './RecentTrades';
 import { TopTradersPanel } from './TopTradersPanel';
 
 import { Spinner } from '~/components';
-import { useMarketDetail, useFuturesSymbol, useSymbolInfo } from '~/hooks/usePublicInfo';
+import {
+  useMarketDetail,
+  useMarketSummary,
+  useFuturesSymbol,
+  useSymbolInfo
+} from '~/hooks/usePublicInfo';
 
 export type MarketDetailViewProps = {
   symbol: string;
@@ -24,6 +29,13 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
   const { data, error, isLoading } = useMarketDetail(symbol, candlesInterval);
   const { data: futuresData } = useFuturesSymbol(symbol);
   const { data: symbolInfoData } = useSymbolInfo(symbol);
+  const { data: marketSummary } = useMarketSummary();
+
+  const quoteTick = useMemo(() => {
+    const tick = marketSummary?.markets.find((m) => m.symbol === symbol)?.quote_tick;
+    const parsed = tick != null ? parseFloat(tick) : NaN;
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [marketSummary, symbol]);
 
   if (error) {
     return (
@@ -79,6 +91,7 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
         isLoading={isLoading}
         interval={candlesInterval}
         onIntervalChange={setCandlesInterval}
+        quoteTick={quoteTick}
       />
 
       {/* Orderbook + Recent Trades side-by-side (stacked on mobile) */}
@@ -90,11 +103,19 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
           symbolInfo={symbolInfoData}
           isLoading={isLoading && !data}
         />
-        <RecentTrades trades={data?.recent_trades} isLoading={isLoading && !data} />
+        <RecentTrades
+          trades={data?.recent_trades}
+          isLoading={isLoading && !data}
+          quoteTick={quoteTick}
+        />
       </div>
 
       {/* Funding History */}
-      <FundingChart fundingHistory={data?.funding_history} isLoading={isLoading && !data} />
+      <FundingChart
+        fundingHistory={data?.funding_history}
+        isLoading={isLoading && !data}
+        quoteTick={quoteTick}
+      />
 
       {/* Liquidation Heatmap */}
       <LiquidationHeatmapPanel symbol={symbol} />
@@ -102,7 +123,7 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
       {/* Top Traders + Platform Positions side-by-side (stacked on mobile) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <TopTradersPanel symbol={symbol} />
-        <PlatformPositionsPanel symbol={symbol} />
+        <PlatformPositionsPanel symbol={symbol} quoteTick={quoteTick} />
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 import { FC } from 'react';
 
-import { fmtBps, fmtPrice, fmtUsd } from '~/components/analytics/shared/formatters';
+import { fmtBps, fmtUsd } from '~/components/analytics/shared/formatters';
 import type {
   MarketSummaryMarket,
   FuturesSymbolResponse,
   SymbolInfoResponse
 } from '~/hooks/usePublicInfo';
+import { formatPriceByTick } from '~/utils/format';
 
 export type MarketHeaderProps = {
   symbol: string;
@@ -44,6 +45,10 @@ export const MarketHeader: FC<MarketHeaderProps> = ({
   // Max leverage = 1 / base_imr
   const maxLeverageFromImr = symbolInfo?.base_imr ? Math.round(1 / symbolInfo.base_imr) : null;
 
+  const quoteTick = marketInfo?.quote_tick
+    ? parseFloat(marketInfo.quote_tick)
+    : (symbolInfo?.quote_tick ?? null);
+
   // Prefer futuresInfo 24h_amount (same source as markets page, reliable),
   // fall back to calculated volume from marketDetail
   const finalVolume24h =
@@ -73,7 +78,7 @@ export const MarketHeader: FC<MarketHeaderProps> = ({
           {markPrice != null && (
             <div className="sm:ml-auto flex items-baseline gap-2">
               <span className="text-2xl sm:text-3xl font-bold text-white">
-                ${fmtPrice(markPrice)}
+                ${formatPriceByTick(markPrice, quoteTick)}
               </span>
               {change24h != null && (
                 <span className="text-lg font-semibold" style={{ color: changeColor }}>
@@ -87,8 +92,14 @@ export const MarketHeader: FC<MarketHeaderProps> = ({
 
         {/* Metrics grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <MetricCard label="24h High" value={high24h != null ? `$${fmtPrice(high24h)}` : '—'} />
-          <MetricCard label="24h Low" value={low24h != null ? `$${fmtPrice(low24h)}` : '—'} />
+          <MetricCard
+            label="24h High"
+            value={high24h != null ? `$${formatPriceByTick(high24h, quoteTick)}` : '-'}
+          />
+          <MetricCard
+            label="24h Low"
+            value={low24h != null ? `$${formatPriceByTick(low24h, quoteTick)}` : '-'}
+          />
           <MetricCard label="24h Volume" value={fmtUsd(finalVolume24h)} />
           <MetricCard label="Open Interest" value={fmtUsd(openInterest)} />
           <MetricCard

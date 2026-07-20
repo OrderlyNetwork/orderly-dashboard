@@ -1,16 +1,18 @@
 import { Link } from '@remix-run/react';
 import { FC, useMemo } from 'react';
 
-import { fmtUsd, fmtPrice } from '~/components/analytics/shared/formatters';
+import { fmtUsd } from '~/components/analytics/shared/formatters';
 import { TableSkeleton, Empty } from '~/components/analytics/shared/primitives';
 import { usePlatformPositions, useTradersOpenInterests } from '~/hooks/usePublicInfo';
 import { base64UrlSafeEncode } from '~/util';
+import { formatPriceByTick } from '~/utils/format';
 
 export type PlatformPositionsPanelProps = {
   symbol: string;
+  quoteTick?: number | null;
 };
 
-export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol }) => {
+export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol, quoteTick }) => {
   const { data, isLoading } = usePlatformPositions(symbol, 0);
   const { data: oiData } = useTradersOpenInterests();
 
@@ -163,7 +165,7 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
                       {fmtUsd(notional)}
                     </td>
                     <td className="py-2 px-4 text-right text-xs font-mono text-gray-300">
-                      {fmtPrice(entryPrice)}
+                      {formatPriceByTick(entryPrice, quoteTick)}
                     </td>
                     <td
                       className="py-2 px-4 text-right text-xs font-mono"

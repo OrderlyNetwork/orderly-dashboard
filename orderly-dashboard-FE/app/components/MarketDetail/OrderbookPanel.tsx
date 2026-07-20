@@ -6,6 +6,7 @@ import type {
   OrderbookLevel,
   SymbolInfoResponse
 } from '~/hooks/usePublicInfo';
+import { formatPriceByTick, tickToDecimals } from '~/utils/format';
 
 export type OrderbookPanelProps = {
   orderbook?: {
@@ -19,25 +20,6 @@ export type OrderbookPanelProps = {
 };
 
 const LEVEL_COUNT = 12;
-
-/** Derive decimal places from a tick size (e.g. 0.1 → 1, 0.001 → 3, 1e-8 → 8) */
-function tickToDecimals(tick: number): number {
-  if (tick >= 1) return 0;
-  const str = String(tick);
-  if (str.includes('e-')) {
-    return parseInt(str.split('e-')[1], 10);
-  }
-  const dot = str.indexOf('.');
-  return dot === -1 ? 0 : str.length - dot - 1;
-}
-
-/** Format price with fixed tick-based precision */
-function fmtPrice(n: number, decimals: number): string {
-  return n.toLocaleString('en', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
-  });
-}
 
 /** Format quantity — compact for large numbers, tick precision for small */
 function fmtQty(n: number, maxDecimals: number): string {
@@ -65,7 +47,6 @@ export const OrderbookPanel: FC<OrderbookPanelProps> = ({
   const baseTick = marketInfo?.base_tick
     ? parseFloat(marketInfo.base_tick)
     : (symbolInfo?.base_tick ?? null);
-  const priceDecimals = quoteTick != null ? tickToDecimals(quoteTick) : 8;
   const qtyDecimals = baseTick != null ? tickToDecimals(baseTick) : 6;
 
   const { asks, bids, spread, midPrice, maxTotal } = useMemo(() => {
@@ -120,10 +101,14 @@ export const OrderbookPanel: FC<OrderbookPanelProps> = ({
             {spread != null && midPrice != null ? (
               <>
                 Spread:{' '}
-                <span className="text-white font-medium">${fmtPrice(spread, priceDecimals)}</span>
+                <span className="text-white font-medium">
+                  ${formatPriceByTick(spread, quoteTick)}
+                </span>
                 {' · '}
                 Mid:{' '}
-                <span className="text-white font-medium">${fmtPrice(midPrice, priceDecimals)}</span>
+                <span className="text-white font-medium">
+                  ${formatPriceByTick(midPrice, quoteTick)}
+                </span>
               </>
             ) : (
               'Orderbook depth'
@@ -157,7 +142,7 @@ export const OrderbookPanel: FC<OrderbookPanelProps> = ({
                   total={level.total}
                   maxTotal={maxTotal}
                   side="ask"
-                  priceDecimals={priceDecimals}
+                  quoteTick={quoteTick}
                   qtyDecimals={qtyDecimals}
                 />
               ))}
@@ -173,7 +158,7 @@ export const OrderbookPanel: FC<OrderbookPanelProps> = ({
             >
               <span className="text-xs text-gray-500">Mark Price</span>
               <span className="text-sm font-semibold text-white">
-                {markPrice != null ? `$${fmtPrice(markPrice, priceDecimals)}` : '—'}
+                {markPrice != null ? `$${formatPriceByTick(markPrice, quoteTick)}` : '-'}
               </span>
             </div>
 
@@ -187,7 +172,7 @@ export const OrderbookPanel: FC<OrderbookPanelProps> = ({
                   total={level.total}
                   maxTotal={maxTotal}
                   side="bid"
-                  priceDecimals={priceDecimals}
+                  quoteTick={quoteTick}
                   qtyDecimals={qtyDecimals}
                 />
               ))}
@@ -209,9 +194,9 @@ const OrderbookRow: FC<{
   total: number;
   maxTotal: number;
   side: 'bid' | 'ask';
-  priceDecimals: number;
+  quoteTick: number | null;
   qtyDecimals: number;
-}> = ({ price, quantity, total, maxTotal, side, priceDecimals, qtyDecimals }) => {
+}> = ({ price, quantity, total, maxTotal, side, quoteTick, qtyDecimals }) => {
   const pct = Math.min((total / maxTotal) * 100, 100);
   const isAsk = side === 'ask';
 
@@ -229,7 +214,7 @@ const OrderbookRow: FC<{
         className="relative z-10 w-[90px] text-left text-xs font-mono"
         style={{ color: isAsk ? '#FF6390' : '#00dea3' }}
       >
-        {fmtPrice(parseFloat(price), priceDecimals)}
+        {formatPriceByTick(parseFloat(price), quoteTick)}
       </span>
       <span className="relative z-10 flex-1 text-right text-xs font-mono text-gray-400">
         {fmtQty(parseFloat(quantity), qtyDecimals)}

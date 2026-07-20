@@ -6,6 +6,7 @@ import { useAppState } from '~/App';
 export type PerpSymbol = {
   symbol: string;
   base_tick: number;
+  quote_tick: number;
 };
 
 export type AllSymbol = {
@@ -65,6 +66,11 @@ export function getSymbolBaseTick(name: string, symbols: PerpSymbol[] | undefine
   return (
     symbols?.find(({ symbol }) => keccak256(encoder.encode(symbol)) === name)?.base_tick ?? 0.01
   );
+}
+
+export function getSymbolQuoteTick(name: string | undefined, symbols: PerpSymbol[] | undefined) {
+  if (!name) return undefined;
+  return symbols?.find(({ symbol }) => keccak256(encoder.encode(symbol)) === name)?.quote_tick;
 }
 
 export function getMaxFractionDigits(baseTick: number): number {

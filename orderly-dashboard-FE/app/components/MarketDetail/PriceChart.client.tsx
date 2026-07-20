@@ -11,9 +11,9 @@ import 'chartjs-adapter-date-fns';
 import { FC, useEffect, useMemo, useRef } from 'react';
 import { Chart } from 'react-chartjs-2';
 
-import { fmtPrice } from '~/components/analytics/shared/formatters';
 import { LineChartSkeleton } from '~/components/analytics/shared/primitives';
 import type { Candle } from '~/hooks/usePublicInfo';
+import { formatPriceByTick } from '~/utils/format';
 
 ChartJS.register(
   CategoryScale,
@@ -37,6 +37,7 @@ export type PriceChartClientProps = {
   isLoading?: boolean;
   interval: string;
   onIntervalChange: (interval: string) => void;
+  quoteTick?: number | null;
 };
 
 export const PriceChartClient: FC<PriceChartClientProps> = ({
@@ -44,7 +45,8 @@ export const PriceChartClient: FC<PriceChartClientProps> = ({
   candles,
   isLoading,
   interval,
-  onIntervalChange
+  onIntervalChange,
+  quoteTick
 }) => {
   const chartRef = useRef<ChartJS<'candlestick'> | null>(null);
 
@@ -105,10 +107,10 @@ export const PriceChartClient: FC<PriceChartClientProps> = ({
               const raw = ctx.raw as { o: number; h: number; l: number; c: number } | undefined;
               if (!raw) return '';
               return [
-                `O: ${fmtPrice(raw.o)}`,
-                `H: ${fmtPrice(raw.h)}`,
-                `L: ${fmtPrice(raw.l)}`,
-                `C: ${fmtPrice(raw.c)}`
+                `O: ${formatPriceByTick(raw.o, quoteTick)}`,
+                `H: ${formatPriceByTick(raw.h, quoteTick)}`,
+                `L: ${formatPriceByTick(raw.l, quoteTick)}`,
+                `C: ${formatPriceByTick(raw.c, quoteTick)}`
               ];
             }
           }
@@ -138,12 +140,12 @@ export const PriceChartClient: FC<PriceChartClientProps> = ({
           ticks: {
             color: 'rgba(255,255,255,0.3)',
             font: { size: 10 },
-            callback: (val) => fmtPrice(Number(val))
+            callback: (val) => formatPriceByTick(Number(val), quoteTick)
           }
         }
       }
     }),
-    [interval]
+    [interval, quoteTick]
   );
 
   return (

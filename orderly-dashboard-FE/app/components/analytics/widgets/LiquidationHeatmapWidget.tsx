@@ -4,7 +4,8 @@ import { fmtCompact } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
 import { useSymbolWeekly } from '~/hooks/useOrderlyMetrics';
-import { usePlatformPositions, type PlatformPosition } from '~/hooks/usePublicInfo';
+import { usePlatformPositions, useSymbolInfo, type PlatformPosition } from '~/hooks/usePublicInfo';
+import { formatPriceByTick } from '~/utils/format';
 
 const NUM_BINS = 48;
 // Keep only liquidation prices within this factor of the mark price in both
@@ -127,13 +128,6 @@ function computeHeatmap(rows: PlatformPosition[]): Heatmap {
   };
 }
 
-function fmtPrice(p: number): string {
-  if (!Number.isFinite(p)) return '—';
-  if (p >= 1000) return p.toLocaleString('en', { maximumFractionDigits: 0 });
-  if (p >= 1) return p.toFixed(2);
-  return p.toFixed(4);
-}
-
 function fmtAgo(ts: number | null): string {
   if (!ts) return '';
   const s = Math.round((Date.now() - ts) / 1000);
@@ -192,6 +186,10 @@ export const LiquidationHeatmapWidget: FC<{ symbol?: string }> = ({ symbol: fixe
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
   const { data, isLoading, error, mutate } = usePlatformPositions(symbol, 1000);
+  const { data: symbolInfo } = useSymbolInfo(symbol);
+  const quoteTick = symbolInfo?.quote_tick ?? null;
+
+  const fmtPrice = (p: number) => formatPriceByTick(p, quoteTick);
 
   useEffect(() => {
     if (data) setLastUpdated(Date.now());

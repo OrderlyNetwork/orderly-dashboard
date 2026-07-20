@@ -1,14 +1,25 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
-import { fmtCompact, fmtPrice } from '../shared/formatters';
+import { fmtCompact } from '../shared/formatters';
 import { Empty, Skeleton, StatCard, TD, TH } from '../shared/primitives';
 
 import { useInsuranceFund } from '~/hooks/useInsuranceFund';
+import { useMarketSummary } from '~/hooks/usePublicInfo';
+import { formatPriceByTick } from '~/utils/format';
 
 const prettySymbol = (s: string): string => s.replace('PERP_', '').replace('_USDC', '');
 
 export const InsuranceFundWidget: FC = () => {
   const { data, isLoading, error } = useInsuranceFund();
+  const { data: marketSummary } = useMarketSummary();
+
+  const quoteTickFor = useMemo(() => {
+    return (symbol: string): number | null => {
+      const tick = marketSummary?.markets.find((m) => m.symbol === symbol)?.quote_tick;
+      const parsed = tick != null ? parseFloat(tick) : NaN;
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+  }, [marketSummary]);
 
   if (isLoading) return <Skeleton height={120} />;
   if (error || !data) return <Empty msg={error ? 'Failed to load' : 'No data'} />;
@@ -56,8 +67,12 @@ export const InsuranceFundWidget: FC = () => {
                   <tr key={p.symbol}>
                     <td style={TD}>{prettySymbol(p.symbol)}</td>
                     <td style={{ ...TD, textAlign: 'right' }}>{p.position_qty}</td>
-                    <td style={{ ...TD, textAlign: 'right' }}>{fmtPrice(p.mark_price)}</td>
-                    <td style={{ ...TD, textAlign: 'right' }}>{fmtPrice(p.average_open_price)}</td>
+                    <td style={{ ...TD, textAlign: 'right' }}>
+                      {formatPriceByTick(p.mark_price, quoteTickFor(p.symbol))}
+                    </td>
+                    <td style={{ ...TD, textAlign: 'right' }}>
+                      {formatPriceByTick(p.average_open_price, quoteTickFor(p.symbol))}
+                    </td>
                     <td
                       style={{
                         ...TD,

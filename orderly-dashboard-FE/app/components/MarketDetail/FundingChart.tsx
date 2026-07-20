@@ -13,18 +13,19 @@ import { FC, useMemo, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 
 import { useChartReady } from '~/components/analytics/shared/chartConfig';
-import { fmtPrice } from '~/components/analytics/shared/formatters';
 import { LineChartSkeleton } from '~/components/analytics/shared/primitives';
 import type { FundingRateEntry } from '~/hooks/usePublicInfo';
+import { formatPriceByTick } from '~/utils/format';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
 export type FundingChartProps = {
   fundingHistory?: FundingRateEntry[];
   isLoading?: boolean;
+  quoteTick?: number | null;
 };
 
-export const FundingChart: FC<FundingChartProps> = ({ fundingHistory, isLoading }) => {
+export const FundingChart: FC<FundingChartProps> = ({ fundingHistory, isLoading, quoteTick }) => {
   const chartRef = useRef<ChartJS<'line'> | null>(null);
   useChartReady(chartRef);
 
@@ -76,7 +77,7 @@ export const FundingChart: FC<FundingChartProps> = ({ fundingHistory, isLoading 
               );
               const entry = sorted[ctx.dataIndex];
               if (!entry) return '';
-              return `Mark Price: $${fmtPrice(parseFloat(entry.mark_price))}`;
+              return `Mark Price: $${formatPriceByTick(parseFloat(entry.mark_price), quoteTick)}`;
             }
           }
         }
@@ -101,7 +102,7 @@ export const FundingChart: FC<FundingChartProps> = ({ fundingHistory, isLoading 
         }
       }
     }),
-    [fundingHistory]
+    [fundingHistory, quoteTick]
   );
 
   return (

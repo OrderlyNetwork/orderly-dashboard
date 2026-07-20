@@ -14,6 +14,7 @@ export type PriceChartProps = {
   isLoading?: boolean;
   interval: string;
   onIntervalChange: (interval: string) => void;
+  quoteTick?: number | null;
 };
 
 export const PriceChart: FC<PriceChartProps> = (props) => {

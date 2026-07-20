@@ -12,8 +12,14 @@ import {
 import { useMemo, useState, FC, useCallback } from 'react';
 
 import { Spinner } from '~/components';
-import { fmtBps, fmtPrice, fmtPct, fmtUsd } from '~/components/analytics/shared/formatters';
-import { usePriceChanges, useTradersOpenInterests, useFuturesMarket } from '~/hooks/usePublicInfo';
+import { fmtBps, fmtPct, fmtUsd } from '~/components/analytics/shared/formatters';
+import {
+  useMarketSummary,
+  usePriceChanges,
+  useTradersOpenInterests,
+  useFuturesMarket
+} from '~/hooks/usePublicInfo';
+import { formatPriceByTick } from '~/utils/format';
 
 type MarketRow = {
   symbol: string;
@@ -66,6 +72,15 @@ export const Markets: FC = () => {
   const { data: priceData, isLoading: priceLoading } = usePriceChanges();
   const { data: oiData, isLoading: oiLoading } = useTradersOpenInterests();
   const { data: futuresData, isLoading: futuresLoading } = useFuturesMarket();
+  const { data: marketSummary } = useMarketSummary();
+
+  const quoteTickFor = useMemo(() => {
+    return (symbol: string): number | null => {
+      const tick = marketSummary?.markets.find((m) => m.symbol === symbol)?.quote_tick;
+      const parsed = tick != null ? parseFloat(tick) : NaN;
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+  }, [marketSummary]);
 
   const isLoading = priceLoading || oiLoading || futuresLoading;
 
@@ -168,7 +183,9 @@ export const Markets: FC = () => {
         accessorKey: 'markPrice',
         header: 'Mark Price',
         cell: ({ row }) => (
-          <span className="font-mono text-sm text-white">{fmtPrice(row.original.markPrice)}</span>
+          <span className="font-mono text-sm text-white">
+            {formatPriceByTick(row.original.markPrice, quoteTickFor(row.original.symbol))}
+          </span>
         )
       },
       {
@@ -296,7 +313,7 @@ export const Markets: FC = () => {
         }
       }
     ],
-    []
+    [quoteTickFor]
   );
 
   const table = useReactTable<MarketRow>({

@@ -14,6 +14,7 @@ import {
   UIEventType,
   EventsParams,
   getSymbolName,
+  getSymbolQuoteTick,
   getTokenName,
   useEvents,
   useSymbols,
@@ -21,6 +22,12 @@ import {
   useAllSymbols,
   useAllTokens
 } from '~/hooks';
+import { formatPriceByTick } from '~/utils/format';
+
+function getSymbolHash(row: EventTableData, group: string): string | undefined {
+  return (row as unknown as Record<string, { symbol_hash?: string } | undefined>)[group]
+    ?.symbol_hash;
+}
 
 export function useRenderColumns(
   query: EventsParams | null,
@@ -440,10 +447,10 @@ export function useRenderColumns(
             cell: (info) => {
               const value = info.getValue();
               if (value == null) return '';
-              // FIXME why API returns as 8 decimals?
-              return new FixedNumber(value, 8).format({
-                maximumFractionDigits: 2
-              });
+              return formatPriceByTick(
+                value,
+                getSymbolQuoteTick(getSymbolHash(info.row.original, 'trade'), symbols)
+              );
             }
           }),
           columnHelper.accessor('trade.fee', {
@@ -569,10 +576,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXMe why 8 decimals?
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'settlement'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('settlement.settled_amount', {
@@ -687,10 +694,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXMe why 8 decimals?
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'liquidation'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('liquidation.position_qty_transfer', {
@@ -748,9 +755,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'liquidationv2'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('liquidationv2.fee', {
@@ -992,9 +1000,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'settlementv3'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('settlementv3.settled_amount', {
@@ -1060,9 +1069,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'liquidationv3'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('liquidationv3.fee', {

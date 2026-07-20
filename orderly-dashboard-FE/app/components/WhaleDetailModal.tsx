@@ -1,10 +1,11 @@
 import { Dialog, Table } from '@radix-ui/themes';
 import dayjs from 'dayjs';
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import { Spinner } from '.';
 
-import { useWhaleContext } from '~/hooks/usePublicInfo';
+import { useMarketSummary, useWhaleContext } from '~/hooks/usePublicInfo';
+import { formatPriceByTick } from '~/utils/format';
 
 interface WhaleDetailModalProps {
   open: boolean;
@@ -24,6 +25,15 @@ export const WhaleDetailModal: FC<WhaleDetailModalProps> = ({
     broker_id: brokerId,
     recent_trades_limit: 20
   });
+  const { data: marketSummary } = useMarketSummary();
+
+  const quoteTickFor = useMemo(() => {
+    return (symbol: string): number | null => {
+      const tick = marketSummary?.markets.find((m) => m.symbol === symbol)?.quote_tick;
+      const parsed = tick != null ? parseFloat(tick) : NaN;
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+  }, [marketSummary]);
 
   const formatNumber = (value: string | number | null | undefined) => {
     if (value === null || value === undefined) return '-';
@@ -149,8 +159,12 @@ export const WhaleDetailModal: FC<WhaleDetailModalProps> = ({
                           </Table.Cell>
                           <Table.Cell>{parseFloat(pos.position_qty).toFixed(4)}</Table.Cell>
                           <Table.Cell>{formatNumber(pos.notional)}</Table.Cell>
-                          <Table.Cell>{formatNumber(pos.average_open_price)}</Table.Cell>
-                          <Table.Cell>{formatNumber(pos.mark_price)}</Table.Cell>
+                          <Table.Cell>
+                            {formatPriceByTick(pos.average_open_price, quoteTickFor(pos.symbol))}
+                          </Table.Cell>
+                          <Table.Cell>
+                            {formatPriceByTick(pos.mark_price, quoteTickFor(pos.symbol))}
+                          </Table.Cell>
                           <Table.Cell>
                             <span
                               style={{
@@ -161,7 +175,9 @@ export const WhaleDetailModal: FC<WhaleDetailModalProps> = ({
                             </span>
                           </Table.Cell>
                           <Table.Cell>
-                            {pos.est_liq_price ? formatNumber(pos.est_liq_price) : '-'}
+                            {pos.est_liq_price
+                              ? formatPriceByTick(pos.est_liq_price, quoteTickFor(pos.symbol))
+                              : '-'}
                           </Table.Cell>
                         </Table.Row>
                       ))}
@@ -209,7 +225,9 @@ export const WhaleDetailModal: FC<WhaleDetailModalProps> = ({
                               {trade.side}
                             </span>
                           </Table.Cell>
-                          <Table.Cell>{formatNumber(trade.executed_price)}</Table.Cell>
+                          <Table.Cell>
+                            {formatPriceByTick(trade.executed_price, quoteTickFor(trade.symbol))}
+                          </Table.Cell>
                           <Table.Cell>{parseFloat(trade.executed_quantity).toFixed(4)}</Table.Cell>
                           <Table.Cell className="text-gray-400">
                             {formatNumber(trade.fee)} {trade.fee_asset}

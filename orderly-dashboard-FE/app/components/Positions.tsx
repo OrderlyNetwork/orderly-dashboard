@@ -23,12 +23,14 @@ import {
   useAllSymbols,
   getSymbolName,
   getSymbolBaseTick,
+  getSymbolQuoteTick,
   getMaxFractionDigits,
   useSearchAddress
 } from '~/hooks';
 import { usePositions, PositionsParams } from '~/hooks/usePositions';
 import { PositionEntry, PositionsResponse } from '~/types/leaderboard';
 import { base64UrlSafeEncode } from '~/util';
+import { formatPriceByTick } from '~/utils/format';
 
 const defaultVisibility = {
   account_id: false,
@@ -374,19 +376,31 @@ export const Positions: FC<PositionsProps> = ({
       {
         accessorKey: 'index_price',
         header: 'Index Price',
-        cell: ({ row }) => formatNumber(row.original.index_price, undefined, 10),
+        cell: ({ row }) =>
+          formatPriceByTick(
+            row.original.index_price,
+            getSymbolQuoteTick(row.original.symbol_hash, symbols)
+          ),
         enableSorting: false
       },
       {
         accessorKey: 'mark_price',
         header: 'Mark Price',
-        cell: ({ row }) => formatNumber(row.original.mark_price, undefined, 10),
+        cell: ({ row }) =>
+          formatPriceByTick(
+            row.original.mark_price,
+            getSymbolQuoteTick(row.original.symbol_hash, symbols)
+          ),
         enableSorting: false
       },
       {
         accessorKey: 'average_entry_price',
         header: 'Avg Entry Price',
-        cell: ({ row }) => formatNumber(row.original.average_entry_price, undefined, 10),
+        cell: ({ row }) =>
+          formatPriceByTick(
+            row.original.average_entry_price,
+            getSymbolQuoteTick(row.original.symbol_hash, symbols)
+          ),
         enableSorting: false
       },
       {
@@ -414,7 +428,8 @@ export const Positions: FC<PositionsProps> = ({
       handleAccountIdChange,
       formatSymbol,
       handleInputChange,
-      formatNumber
+      formatNumber,
+      symbols
     ]
   );
 

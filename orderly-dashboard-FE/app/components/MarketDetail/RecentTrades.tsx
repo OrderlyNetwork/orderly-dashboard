@@ -2,20 +2,21 @@ import { Link } from '@remix-run/react';
 import dayjs from 'dayjs';
 import { FC } from 'react';
 
-import { fmtPrice } from '~/components/analytics/shared/formatters';
 import { TableSkeleton } from '~/components/analytics/shared/primitives';
 import type { MarketTrade } from '~/hooks/usePublicInfo';
 import { base64UrlSafeEncode } from '~/util';
+import { formatPriceByTick } from '~/utils/format';
 
 export type RecentTradesProps = {
   trades?: MarketTrade[];
   isLoading?: boolean;
+  quoteTick?: number | null;
 };
 
 const thBase = 'py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0';
 const thStyle = { background: 'rgba(20,15,35,.95)' };
 
-export const RecentTrades: FC<RecentTradesProps> = ({ trades, isLoading }) => {
+export const RecentTrades: FC<RecentTradesProps> = ({ trades, isLoading, quoteTick }) => {
   return (
     /* Outer wrapper: grid item that stretches to row height (matches orderbook).
        On mobile it's natural height; on desktop it stretches + becomes relative. */
@@ -80,7 +81,7 @@ export const RecentTrades: FC<RecentTradesProps> = ({ trades, isLoading }) => {
                       {dayjs(trade.executed_timestamp).format('HH:mm:ss')}
                     </td>
                     <td className="py-2 px-4 text-right text-xs font-mono text-white">
-                      {fmtPrice(parseFloat(trade.executed_price))}
+                      {formatPriceByTick(trade.executed_price, quoteTick)}
                     </td>
                     <td className="py-2 px-4 text-right text-xs font-mono text-gray-300">
                       {parseFloat(trade.executed_quantity)}
