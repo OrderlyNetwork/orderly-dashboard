@@ -1,0 +1,4 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["orderly-dashboard-FE/AGENTS.md"]
+}
