@@ -8,6 +8,7 @@ import { MarketHeader } from './MarketHeader';
 import { OrderbookPanel } from './OrderbookPanel';
 import { PlatformPositionsPanel } from './PlatformPositionsPanel';
 import { PriceChart } from './PriceChart';
+import { RecentLiquidations } from './RecentLiquidations';
 import { RecentTrades } from './RecentTrades';
 import { TopTradersPanel } from './TopTradersPanel';
 
@@ -119,6 +120,9 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
 
       {/* Liquidation Heatmap */}
       <LiquidationHeatmapPanel symbol={symbol} />
+
+      {/* Recent Liquidations */}
+      <RecentLiquidations symbol={symbol} />
 
       {/* Top Traders + Platform Positions side-by-side (stacked on mobile) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

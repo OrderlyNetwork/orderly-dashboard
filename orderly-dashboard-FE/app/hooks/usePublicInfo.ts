@@ -667,3 +667,45 @@ export function useAccountState(params: AccountStateParams) {
     }
   );
 }
+
+// ── liquidations (Recent Liquidation Events) ────────────────────────────────
+
+export type Liquidation = {
+  symbol: string;
+  side: 'LONG' | 'SHORT';
+  position_qty: string;
+  notional: string;
+  mark_price: string;
+  est_liq_price: string;
+  address: string | null;
+  account_id: string | null;
+  broker_id: string | null;
+  timestamp: number;
+};
+
+export type LiquidationsResponse = {
+  rows: Liquidation[];
+  next_cursor: string | null;
+};
+
+/**
+ * Recent liquidation events for a symbol. Weight 2 per call. Polled at 60s
+ * with dedup to respect the anonymous per-IP quota pool.
+ */
+export function useLiquidations(symbol: string, limit: number = 50) {
+  const { evmApiUrl } = useAppState();
+  return useSWR<LiquidationsResponse>(
+    symbol && evmApiUrl ? ['liquidations', evmApiUrl, symbol, limit] : null,
+    () =>
+      postPublicInfo<LiquidationsResponse>(evmApiUrl, 'liquidations', {
+        symbol,
+        limit
+      }),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
+      refreshInterval: 60000
+    }
+  );
+}
