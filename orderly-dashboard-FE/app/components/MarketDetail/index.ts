@@ -4,5 +4,6 @@ export * from './PriceChart';
 export * from './OrderbookPanel';
 export * from './RecentTrades';
 export * from './FundingChart';
+export * from './LiquidationHeatmapPanel';
 export * from './TopTradersPanel';
 export * from './PlatformPositionsPanel';

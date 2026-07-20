@@ -155,7 +155,10 @@ const selectStyle: React.CSSProperties = {
   cursor: 'pointer'
 };
 
-export const LiquidationHeatmapWidget: FC = () => {
+const SymbolDropdown: FC<{ value: string; onChange: (s: string) => void }> = ({
+  value,
+  onChange
+}) => {
   const { data: volData } = useSymbolWeekly();
   const symbolOptions = useMemo(() => {
     const totals = new Map<string, number>();
@@ -171,7 +174,20 @@ export const LiquidationHeatmapWidget: FC = () => {
         label: `${sym.replace('PERP_', '').replace('_USDC', '')} · ${fmtCompact(vol)}`
       }));
   }, [volData]);
-  const [symbol, setSymbol] = useState('PERP_BTC_USDC');
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)} style={selectStyle}>
+      {symbolOptions.map((o) => (
+        <option key={o.symbol} value={o.symbol}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+export const LiquidationHeatmapWidget: FC<{ symbol?: string }> = ({ symbol: fixedSymbol }) => {
+  const [selectedSymbol, setSelectedSymbol] = useState('PERP_BTC_USDC');
+  const symbol = fixedSymbol ?? selectedSymbol;
   const [hovered, setHovered] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
@@ -221,13 +237,7 @@ export const LiquidationHeatmapWidget: FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* controls */}
       <div className="flex items-center gap-2 flex-wrap">
-        <select value={symbol} onChange={(e) => setSymbol(e.target.value)} style={selectStyle}>
-          {symbolOptions.map((o) => (
-            <option key={o.symbol} value={o.symbol}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        {!fixedSymbol && <SymbolDropdown value={selectedSymbol} onChange={setSelectedSymbol} />}
 
         <button
           onClick={() => mutate()}

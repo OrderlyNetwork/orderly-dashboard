@@ -3,6 +3,7 @@ import { Link } from '@remix-run/react';
 import { FC, useState } from 'react';
 
 import { FundingChart } from './FundingChart';
+import { LiquidationHeatmapPanel } from './LiquidationHeatmapPanel';
 import { MarketHeader } from './MarketHeader';
 import { OrderbookPanel } from './OrderbookPanel';
 import { PlatformPositionsPanel } from './PlatformPositionsPanel';
@@ -94,6 +95,9 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
 
       {/* Funding History */}
       <FundingChart fundingHistory={data?.funding_history} isLoading={isLoading && !data} />
+
+      {/* Liquidation Heatmap */}
+      <LiquidationHeatmapPanel symbol={symbol} />
 
       {/* Top Traders + Platform Positions side-by-side (stacked on mobile) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
