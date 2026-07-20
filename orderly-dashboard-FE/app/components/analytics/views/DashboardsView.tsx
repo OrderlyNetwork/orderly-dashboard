@@ -17,6 +17,7 @@ import { DistributorsWidget } from '../widgets/DistributorsWidget';
 import { FeesStatsWidget } from '../widgets/FeesStatsWidget';
 import { FundFlowsByChainWidget } from '../widgets/FundFlowsByChainWidget';
 import { FundingRatesWidget } from '../widgets/FundingRatesWidget';
+import { InsuranceFundWidget } from '../widgets/InsuranceFundWidget';
 import { LiquidationHeatmapWidget } from '../widgets/LiquidationHeatmapWidget';
 import { LiquidationsBySymbolWidget } from '../widgets/LiquidationsBySymbolWidget';
 import { MarketShareWidget } from '../widgets/MarketShareWidget';
@@ -169,6 +170,15 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             subtitle="latest 8h funding rate per symbol"
           >
             <FundingRatesWidget />
+          </WidgetWrapper>
+        </div>
+        <div style={{ marginTop: 20 }}>
+          <WidgetWrapper
+            widgetId="insurance-fund"
+            title="Insurance Fund"
+            subtitle="fund balance, collateral & open positions"
+          >
+            <InsuranceFundWidget />
           </WidgetWrapper>
         </div>
       </div>

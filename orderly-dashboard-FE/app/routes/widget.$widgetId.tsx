@@ -21,6 +21,7 @@ import { DistributorsWidget } from '~/components/analytics/widgets/DistributorsW
 import { FeesStatsWidget } from '~/components/analytics/widgets/FeesStatsWidget';
 import { FundFlowsByChainWidget } from '~/components/analytics/widgets/FundFlowsByChainWidget';
 import { FundingRatesWidget } from '~/components/analytics/widgets/FundingRatesWidget';
+import { InsuranceFundWidget } from '~/components/analytics/widgets/InsuranceFundWidget';
 import { LiquidationHeatmapWidget } from '~/components/analytics/widgets/LiquidationHeatmapWidget';
 import { LiquidationsBySymbolWidget } from '~/components/analytics/widgets/LiquidationsBySymbolWidget';
 import { NetFeesWidget } from '~/components/analytics/widgets/NetFeesWidget';
@@ -154,6 +155,10 @@ const WIDGET_META: Record<
   'liquidation-heatmap': {
     title: 'Liquidation Heatmap',
     subtitle: 'open-position notional at each estimated liquidation price level (per symbol)'
+  },
+  'insurance-fund': {
+    title: 'Insurance Fund',
+    subtitle: 'fund balance, collateral & open positions'
   }
 };
 
@@ -295,6 +300,9 @@ export default function WidgetRoute() {
       break;
     case 'liquidation-heatmap':
       widgetContent = <LiquidationHeatmapWidget />;
+      break;
+    case 'insurance-fund':
+      widgetContent = <InsuranceFundWidget />;
       break;
     default:
       widgetContent = null;
