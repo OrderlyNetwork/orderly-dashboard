@@ -125,7 +125,7 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
       <RecentLiquidations symbol={symbol} />
 
       {/* Top Traders + Platform Positions side-by-side (stacked on mobile) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start">
         <TopTradersPanel symbol={symbol} />
         <PlatformPositionsPanel symbol={symbol} quoteTick={quoteTick} />
       </div>

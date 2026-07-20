@@ -43,7 +43,11 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col"
-      style={{ background: 'rgba(20,15,35,.9)', border: '1px solid rgba(156,117,255,0.15)' }}
+      style={{
+        background: 'rgba(20,15,35,.9)',
+        border: '1px solid rgba(156,117,255,0.15)',
+        maxHeight: 600
+      }}
     >
       <div
         className="flex items-center justify-between border-b px-5 py-4"

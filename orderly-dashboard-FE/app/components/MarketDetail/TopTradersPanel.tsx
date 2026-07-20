@@ -35,7 +35,11 @@ export const TopTradersPanel: FC<TopTradersPanelProps> = ({ symbol }) => {
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col"
-      style={{ background: 'rgba(20,15,35,.9)', border: '1px solid rgba(156,117,255,0.15)' }}
+      style={{
+        background: 'rgba(20,15,35,.9)',
+        border: '1px solid rgba(156,117,255,0.15)',
+        maxHeight: 600
+      }}
     >
       <div
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b px-5 py-4 gap-3"

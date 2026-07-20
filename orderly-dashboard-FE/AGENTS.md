@@ -61,11 +61,11 @@ Path alias: `~/*` → `app/*`.
 
 `vite.config.ts` sets `envPrefix: ['VITE_', 'DATA_API_']`.
 
-| Var | Used via | Set in | Purpose |
-|---|---|---|---|
+| Var                 | Used via                        | Set in                                    | Purpose                        |
+| ------------------- | ------------------------------- | ----------------------------------------- | ------------------------------ |
 | `QUERY_SERVICE_URL` | `useAppState().queryServiceUrl` | `.env` → `root.tsx` loader → `AppContext` | Dashboard Query Service (Rust) |
-| `EVM_API_URL` | `useAppState().evmApiUrl` | `.env` → `root.tsx` loader → `AppContext` | Orderly EVM REST API |
-| `DATA_API_URL` | `import.meta.env.DATA_API_URL` | `.env` (Vite inlines at build) | Orderly Data API (analytics) |
+| `EVM_API_URL`       | `useAppState().evmApiUrl`       | `.env` → `root.tsx` loader → `AppContext` | Orderly EVM REST API           |
+| `DATA_API_URL`      | `import.meta.env.DATA_API_URL`  | `.env` (Vite inlines at build)            | Orderly Data API (analytics)   |
 
 Defaults point to mainnet (`api-evm.orderly.network`, `orderly-dashboard-query-service.orderly.network`,
 `data-api.orderly.network`); testnet values are commented in `.env`.
@@ -80,6 +80,7 @@ hooks always unwrap `.data` and throw on `success === false`.
 Public Orderly perp-trading API. No auth.
 
 REST endpoints used:
+
 - `GET /v1/public/info` — list perp symbols (`useSymbols`)
 - `GET /v1/public/info/{symbol}` — symbol info incl. `base_imr` (max leverage = `1/base_imr`)
 - `GET /v1/public/futures/{symbol}` and `/v1/public/futures_market` — market snapshot
@@ -99,6 +100,7 @@ Public Info endpoint `POST /v1/public/query` (body: `{ type, ...params }`) — s
 ### 2. Dashboard Query Service (`QUERY_SERVICE_URL`, e.g. `https://orderly-dashboard-query-service.orderly.network`)
 
 Project's own Rust service. Indexed on-chain events and rankings.
+
 - `POST /events_v2` — historical trading events for an `account_id`. Body: `{ account_id, event_type?, from_time?, to_time?, trading_event_next_cursor? }`.
   Response events come in **v1 / v2 / v3 variants** (`LiquidationResult{,V2,V3}`, `AdlResult{,V2,V3}`, `SettlementResult{,V3}`, `MarginTransferV3`). `useEvents.ts` flattens these with `ts-pattern` `.exhaustive()`. `event_type` ∈ `TRANSACTION | PERPTRADE | SETTLEMENT | LIQUIDATION | ADL | MARGINTRANSFER`. Time range is capped at 31 days (`MAX_TIME_RANGE_SECONDS`).
 - `GET /ranking/positions` — open-positions leaderboard (`usePositions`)
@@ -107,6 +109,7 @@ Project's own Rust service. Indexed on-chain events and rankings.
 ### 3. Orderly Data API (`DATA_API_URL`, e.g. `https://data-api.orderly.network`)
 
 Separate analytics service. Read directly via `import.meta.env.DATA_API_URL` (not `AppContext`).
+
 - `/orderly/api/v1/dashboard/orderly/{main, tvl-by-chain, by-symbol/{daily,weekly}, funding-rates}`
 - `/orderly/api/v1/dashboard/{fund-flows/{by-broker,by-chain}, staking/daily}`
 - `/orderly/api/v1/metrics/{dex-users, overview, volume-segments, stake-users, stake-vs-supply, omnivault-tvl}`
@@ -116,16 +119,16 @@ Canonical hooks: `app/hooks/useOrderlyMetrics.ts` and SSR helpers in `app/utils/
 
 ## Routes
 
-| Path | File | Notes |
-|---|---|---|
-| `/` | `routes/_index.tsx` | Dashboards. SSR-loader fetches 90-day data via `data-api.ts`. |
-| `/markets` | `routes/markets.tsx` | Markets table (`Markets.tsx`). |
-| `/markets/:symbol` | `routes/markets_.$symbol.tsx` | `:symbol` is the **base token** (e.g. `BTC`), resolved client-side to full `PERP_BTC_USDC` via `useSymbols`. |
-| `/leaderboard` | `routes/leaderboard.tsx` | Tabs: trading / positions / whales. |
-| `/explorer` | `routes/explorer.tsx` | Address/account-ID search. |
-| `/search?q=...&chain_namespace={evm|sol}` | `routes/search.tsx` | Lists all broker accounts for an address. |
-| `/address/:address` | `routes/address_.$address.tsx` | Events / Positions tabs + Tax Export + Portfolio chart. |
-| `/widget/:widgetId` | `routes/widget.$widgetId.tsx` | Single embeddable widget. `WIDGET_META` registry at line ~69. Supports `?embed=true` for chrome-less render. |
+| Path                                | File                           | Notes                                                                                                        |
+| ----------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `/`                                 | `routes/_index.tsx`            | Dashboards. SSR-loader fetches 90-day data via `data-api.ts`.                                                |
+| `/markets`                          | `routes/markets.tsx`           | Markets table (`Markets.tsx`).                                                                               |
+| `/markets/:symbol`                  | `routes/markets_.$symbol.tsx`  | `:symbol` is the **base token** (e.g. `BTC`), resolved client-side to full `PERP_BTC_USDC` via `useSymbols`. |
+| `/leaderboard`                      | `routes/leaderboard.tsx`       | Tabs: trading / positions / whales.                                                                          |
+| `/explorer`                         | `routes/explorer.tsx`          | Address/account-ID search.                                                                                   |
+| `/search?q=...&chain_namespace={evm | sol}`                          | `routes/search.tsx`                                                                                          | Lists all broker accounts for an address. |
+| `/address/:address`                 | `routes/address_.$address.tsx` | Events / Positions tabs + Tax Export + Portfolio chart.                                                      |
+| `/widget/:widgetId`                 | `routes/widget.$widgetId.tsx`  | Single embeddable widget. `WIDGET_META` registry at line ~69. Supports `?embed=true` for chrome-less render. |
 
 `App.tsx` switches layout: if path starts with `/widget` AND `?embed=true`, only the `<Outlet />` renders (no Sidebar/Topbar).
 
