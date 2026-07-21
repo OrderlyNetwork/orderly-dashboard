@@ -40,6 +40,7 @@ import { OverviewWidget } from '~/components/analytics/widgets/OverviewWidget';
 import { StakeUsersWidget } from '~/components/analytics/widgets/StakeUsersWidget';
 import { StakeVsSupplyWidget } from '~/components/analytics/widgets/StakeVsSupplyWidget';
 import { StakingDailyWidget } from '~/components/analytics/widgets/StakingDailyWidget';
+import { TopFlowsWidget } from '~/components/analytics/widgets/TopFlowsWidget';
 import { TvlByChainWidget } from '~/components/analytics/widgets/TvlByChainWidget';
 import { TvlByTokenWidget } from '~/components/analytics/widgets/TvlByTokenWidget';
 import { VolumeChartWidget } from '~/components/analytics/widgets/VolumeChartWidget';
@@ -146,6 +147,10 @@ const WIDGET_META: Record<
   'tvl-by-token': {
     title: 'TVL by Token',
     subtitle: 'daily TVL breakdown per token'
+  },
+  'top-flows': {
+    title: 'Top Flows',
+    subtitle: 'top accounts by deposit / withdrawal notional per token'
   },
   leaderboard: { title: 'Leaderboard' },
   positions: { title: 'Positions' },
@@ -417,6 +422,18 @@ export default function WidgetRoute() {
       break;
     case 'tvl-by-token':
       widgetContent = <TvlByTokenWidget />;
+      break;
+    case 'top-flows':
+      widgetContent = (
+        <TopFlowsWidget
+          initialToken={searchParams.get('token') ?? undefined}
+          initialDirection={searchParams.get('direction') === 'withdraw' ? 'withdraw' : 'deposit'}
+          initialDays={(() => {
+            const d = parseInt(searchParams.get('days') ?? '', 10);
+            return [1, 7, 30].includes(d) ? d : undefined;
+          })()}
+        />
+      );
       break;
     case 'fees-stats':
       widgetContent = <FeesStatsWidget data={fullData} />;

@@ -40,6 +40,14 @@ export type PositionsResponse = {
   rows: PositionEntry[];
 };
 
+export type FlowsRankEntry = {
+  account_id: string;
+  token_hash: string;
+  amount: string;
+};
+
+export type FlowsRankResponse = FlowsRankEntry[];
+
 export type WhaleEntry = {
   address: string;
   broker_id: string;

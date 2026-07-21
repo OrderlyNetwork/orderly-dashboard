@@ -29,6 +29,8 @@ import { OverviewWidget } from '../widgets/OverviewWidget';
 import { StakeUsersWidget } from '../widgets/StakeUsersWidget';
 import { StakeVsSupplyWidget } from '../widgets/StakeVsSupplyWidget';
 import { StakingDailyWidget } from '../widgets/StakingDailyWidget';
+// TopFlowsWidget import commented out — see usage block below for details.
+// import { TopFlowsWidget } from '../widgets/TopFlowsWidget';
 import { TvlByChainWidget } from '../widgets/TvlByChainWidget';
 import { TvlByTokenWidget } from '../widgets/TvlByTokenWidget';
 import { VolumeChartWidget } from '../widgets/VolumeChartWidget';
@@ -305,6 +307,14 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             <NetFlowByBuilderWidget period={netFlowBuilderPeriod} />
           </WidgetWrapper>
         </div>
+        {/*
+          Top Flows widget temporarily disabled (2026-07-21).
+          The /ranking/deposit and /ranking/withdraw query-service endpoints
+          currently return byte-identical data — the direction toggle has no
+          effect. Re-enable this block (and the TopFlowsWidget import above)
+          once the backend distinguishes the two.
+          See app/hooks/useFlowsRank.ts.
+        */}
         <div style={{ marginTop: 20 }}>
           <WidgetWrapper
             widgetId="tvl-by-token"
@@ -320,6 +330,15 @@ export const DashboardsView: FC<Props> = ({ data }) => {
           >
             <TvlByTokenWidget period={tvlTokenPeriod} />
           </WidgetWrapper>
+          {/*
+          <WidgetWrapper
+            widgetId="top-flows"
+            title="Top Flows"
+            subtitle="top accounts by deposit / withdrawal notional per token"
+          >
+            <TopFlowsWidget />
+          </WidgetWrapper>
+          */}
         </div>
       </div>
     </div>
