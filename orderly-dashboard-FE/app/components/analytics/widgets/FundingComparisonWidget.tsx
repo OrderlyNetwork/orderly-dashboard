@@ -108,7 +108,7 @@ const thTop: React.CSSProperties = {
   position: 'sticky',
   top: 0,
   zIndex: 2,
-  background: 'rgba(20,15,35,.97)'
+  background: '#140F1D'
 };
 
 const orderlyHeaderStyle: React.CSSProperties = {
@@ -117,7 +117,7 @@ const orderlyHeaderStyle: React.CSSProperties = {
   top: 0,
   zIndex: 4,
   color: '#E9DEFF',
-  background: 'rgba(103,0,206,0.45)',
+  background: '#4c0099',
   borderLeft: '1px solid rgba(156,117,255,0.4)',
   borderRight: '1px solid rgba(156,117,255,0.4)'
 };
