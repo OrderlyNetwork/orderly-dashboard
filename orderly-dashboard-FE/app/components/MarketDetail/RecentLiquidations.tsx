@@ -1,13 +1,13 @@
 import dayjs from 'dayjs';
 import { FC } from 'react';
 
+import { AddressLink } from '~/components/analytics/shared/AddressLink';
 import { fmtUsd } from '~/components/analytics/shared/formatters';
 import { TableSkeleton } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
 import { useLiquidations, useMarketSummary } from '~/hooks/usePublicInfo';
 import { getBaseToken } from '~/hooks/useSymbols';
-import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 import { formatPriceByTick } from '~/utils/format';
 
 export type RecentLiquidationsProps = {
@@ -94,13 +94,6 @@ export const RecentLiquidations: FC<RecentLiquidationsProps> = ({ symbol }) => {
                 const isLong = liq.side === 'LONG';
                 const color = isLong ? '#FF6390' : '#00dea3';
                 const bg = isLong ? 'rgba(255,99,144,0.15)' : 'rgba(0,222,163,0.15)';
-                const traderHref =
-                  liq.address &&
-                  `/address/${
-                    liq.address.match(/^[0-9a-zA-Z]{43,44}$/)
-                      ? base64UrlSafeEncode(liq.address)
-                      : liq.address
-                  }${liq.broker_id ? `?broker_id=${liq.broker_id}` : ''}`;
                 return (
                   <tr
                     key={`${liq.timestamp}-${i}`}
@@ -127,15 +120,14 @@ export const RecentLiquidations: FC<RecentLiquidationsProps> = ({ symbol }) => {
                       {fmtUsd(parseFloat(liq.notional))}
                     </td>
                     <td className="py-2 px-4 text-right">
-                      {liq.address && traderHref ? (
-                        <a
-                          href={`${DASHBOARD_ORIGIN}${traderHref}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      {liq.address ? (
+                        <AddressLink
+                          address={liq.address}
+                          brokerId={liq.broker_id}
                           className="text-xs font-mono text-[#D4B2FF] hover:text-white transition-colors no-underline"
                         >
                           {liq.address.slice(0, 6)}...{liq.address.slice(-4)}
-                        </a>
+                        </AddressLink>
                       ) : (
                         <span className="text-xs text-gray-600">—</span>
                       )}

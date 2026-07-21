@@ -1,12 +1,12 @@
 import { FC, useState } from 'react';
 
+import { AddressLink } from '~/components/analytics/shared/AddressLink';
 import { fmtUsd } from '~/components/analytics/shared/formatters';
 import { TableSkeleton, Empty } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
 import { useTopAddresses, type TopAddressesSortOption } from '~/hooks/usePublicInfo';
 import { getBaseToken } from '~/hooks/useSymbols';
-import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 
 export type TopTradersPanelProps = {
   symbol: string;
@@ -136,18 +136,13 @@ export const TopTradersPanel: FC<TopTradersPanelProps> = ({ symbol }) => {
                   >
                     <td className="py-2.5 px-3 text-xs text-gray-500">{i + 1}</td>
                     <td className="py-2.5 px-3">
-                      <a
-                        href={`${DASHBOARD_ORIGIN}/address/${
-                          row.address.match(/^[0-9a-zA-Z]{43,44}$/)
-                            ? base64UrlSafeEncode(row.address)
-                            : row.address
-                        }?broker_id=${row.broker_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <AddressLink
+                        address={row.address}
+                        brokerId={row.broker_id}
                         className="text-xs font-mono text-[#D4B2FF] hover:text-white transition-colors no-underline"
                       >
                         {row.address.slice(0, 6)}...{row.address.slice(-4)}
-                      </a>
+                      </AddressLink>
                     </td>
                     <td className="py-2.5 px-3 text-right text-xs font-mono text-white">
                       {fmtUsd(notional)}

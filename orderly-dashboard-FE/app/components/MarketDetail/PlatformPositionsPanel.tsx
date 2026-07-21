@@ -1,12 +1,13 @@
-import { FC, useMemo } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { FC, useMemo, useRef } from 'react';
 
+import { AddressLink } from '~/components/analytics/shared/AddressLink';
 import { fmtUsd } from '~/components/analytics/shared/formatters';
 import { TableSkeleton, Empty } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
 import { usePlatformPositions } from '~/hooks/usePublicInfo';
 import { getBaseToken } from '~/hooks/useSymbols';
-import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 import { formatPriceByTick } from '~/utils/format';
 
 export type PlatformPositionsPanelProps = {
@@ -14,29 +15,52 @@ export type PlatformPositionsPanelProps = {
   quoteTick?: number | null;
 };
 
+const ROW_HEIGHT = 36;
+
 export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol, quoteTick }) => {
   const isEmbed = useIsEmbed();
   const { data, isLoading } = usePlatformPositions(symbol, 0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { longTotal, shortTotal, longPct, topPositions } = useMemo(() => {
-    // Use the platformPositions totals (USD) — consistent with the rows shown
-    // below and correct for both canonical and permissionless markets.
-    // (traders_open_interests long_oi/short_oi are in BASE TOKEN units and
-    // exclude market makers, which previously produced misleading USD output.)
-    const longTotal = data ? Math.abs(parseFloat(data.total_long_notional || '0')) : 0;
-    const shortTotal = data ? Math.abs(parseFloat(data.total_short_notional || '0')) : 0;
+  const { longTotal, shortTotal, longPct, rows, visibleCount } = useMemo(() => {
+    // Exclude Orderly market-maker rows, then sort by notional descending and
+    // take the top 100. Both the L/S ratio and the table are derived from this
+    // filtered set so they agree, and `notional` is already in USD.
+    const filtered = (data?.rows || []).filter((row) => row.broker_id !== 'orderly');
+    const rows = [...filtered]
+      .sort((a, b) => parseFloat(b.notional || '0') - parseFloat(a.notional || '0'))
+      .slice(0, 100);
+
+    const longTotal = filtered
+      .filter((r) => r.side === 'LONG')
+      .reduce((sum, r) => sum + Math.abs(parseFloat(r.notional || '0')), 0);
+    const shortTotal = filtered
+      .filter((r) => r.side === 'SHORT')
+      .reduce((sum, r) => sum + Math.abs(parseFloat(r.notional || '0')), 0);
     const total = longTotal + shortTotal;
     const longPct = total > 0 ? (longTotal / total) * 100 : 50;
 
-    // Sort by notional value descending, take top 15
-    const topPositions = [...(data?.rows || [])]
-      .sort((a, b) => parseFloat(b.notional || '0') - parseFloat(a.notional || '0'))
-      .slice(0, 15);
-
-    return { longTotal, shortTotal, longPct, topPositions };
+    return { longTotal, shortTotal, longPct, rows, visibleCount: filtered.length };
   }, [data]);
 
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 10
+  });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+  const totalSize = rowVirtualizer.getTotalSize();
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
+  const paddingBottom =
+    virtualItems.length > 0 ? totalSize - virtualItems[virtualItems.length - 1].end : 0;
+
   const title = `Open Positions${isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : ''}`;
+
+  const thClass =
+    'py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0 z-10';
+  const thStyle = { background: 'rgba(20,15,35,.95)' };
 
   return (
     <div
@@ -66,12 +90,12 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">{data?.total_positions ?? 0} positions</span>
+          <span className="text-xs text-gray-500">{visibleCount} positions</span>
           <WidgetShareButton widgetId="market-platform-positions" title={title} symbol={symbol} />
         </div>
       </div>
 
-      {/* Long/Short ratio bar — uses traders_open_interests (excludes MM) */}
+      {/* Long/Short ratio bar — derived from MM-filtered platformPositions rows */}
       <div className="px-5 pt-4 pb-3">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs font-medium" style={{ color: '#00dea3' }}>
@@ -93,73 +117,59 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
         </div>
       </div>
 
-      {/* Top positions table */}
-      <div className="overflow-auto flex-1" style={{ minHeight: 0 }}>
-        {isLoading && topPositions.length === 0 ? (
+      {/* Virtualized positions table */}
+      <div ref={scrollRef} className="overflow-auto flex-1" style={{ minHeight: 0 }}>
+        {isLoading && rows.length === 0 ? (
           <div className="px-4 py-4">
             <TableSkeleton rows={8} />
           </div>
-        ) : topPositions.length > 0 ? (
+        ) : rows.length > 0 ? (
           <table className="w-full">
             <thead>
               <tr>
-                <th
-                  className="text-left py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0"
-                  style={{ background: 'rgba(20,15,35,.95)' }}
-                >
+                <th className={`text-left ${thClass}`} style={thStyle}>
                   Address
                 </th>
-                <th
-                  className="text-center py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0"
-                  style={{ background: 'rgba(20,15,35,.95)' }}
-                >
+                <th className={`text-center ${thClass}`} style={thStyle}>
                   Side
                 </th>
-                <th
-                  className="text-right py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0"
-                  style={{ background: 'rgba(20,15,35,.95)' }}
-                >
+                <th className={`text-right ${thClass}`} style={thStyle}>
                   Notional
                 </th>
-                <th
-                  className="text-right py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0"
-                  style={{ background: 'rgba(20,15,35,.95)' }}
-                >
+                <th className={`text-right ${thClass}`} style={thStyle}>
                   Entry Price
                 </th>
-                <th
-                  className="text-right py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0"
-                  style={{ background: 'rgba(20,15,35,.95)' }}
-                >
+                <th className={`text-right ${thClass}`} style={thStyle}>
                   Unrealized PnL
                 </th>
               </tr>
             </thead>
             <tbody>
-              {topPositions.map((pos, i) => {
+              {paddingTop > 0 && (
+                <tr style={{ height: paddingTop }}>
+                  <td colSpan={5} style={{ padding: 0 }} />
+                </tr>
+              )}
+              {virtualItems.map((virtualRow) => {
+                const pos = rows[virtualRow.index];
                 const notional = parseFloat(pos.notional || '0');
                 const upnl = parseFloat(pos.unrealized_pnl || '0');
                 const entryPrice = parseFloat(pos.average_open_price || '0');
 
                 return (
                   <tr
-                    key={`${pos.address}-${pos.account_id}-${i}`}
+                    key={`${pos.address}-${pos.account_id}-${virtualRow.index}`}
                     className="border-b border-border-primary hover:bg-bg-tertiary transition-colors"
                   >
                     <td className="py-2 px-4">
                       {pos.address ? (
-                        <a
-                          href={`${DASHBOARD_ORIGIN}/address/${
-                            pos.address.match(/^[0-9a-zA-Z]{43,44}$/)
-                              ? base64UrlSafeEncode(pos.address)
-                              : pos.address
-                          }${pos.broker_id ? `?broker_id=${pos.broker_id}` : ''}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <AddressLink
+                          address={pos.address}
+                          brokerId={pos.broker_id}
                           className="text-xs font-mono text-[#D4B2FF] hover:text-white transition-colors no-underline"
                         >
                           {pos.address.slice(0, 6)}...{pos.address.slice(-4)}
-                        </a>
+                        </AddressLink>
                       ) : (
                         <span className="text-xs text-gray-500">—</span>
                       )}
@@ -191,6 +201,11 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
                   </tr>
                 );
               })}
+              {paddingBottom > 0 && (
+                <tr style={{ height: paddingBottom }}>
+                  <td colSpan={5} style={{ padding: 0 }} />
+                </tr>
+              )}
             </tbody>
           </table>
         ) : (

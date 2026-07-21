@@ -1,12 +1,12 @@
 import dayjs from 'dayjs';
 import { FC } from 'react';
 
+import { AddressLink } from '~/components/analytics/shared/AddressLink';
 import { TableSkeleton } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
 import type { MarketTrade } from '~/hooks/usePublicInfo';
 import { getBaseToken } from '~/hooks/useSymbols';
-import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 import { formatPriceByTick } from '~/utils/format';
 
 export type RecentTradesProps = {
@@ -127,18 +127,13 @@ export const RecentTrades: FC<RecentTradesProps> = ({
                       </span>
                     </td>
                     <td className="py-2 px-4 text-right">
-                      <a
-                        href={`${DASHBOARD_ORIGIN}/address/${
-                          trade.address.match(/^[0-9a-zA-Z]{43,44}$/)
-                            ? base64UrlSafeEncode(trade.address)
-                            : trade.address
-                        }?broker_id=${trade.broker_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <AddressLink
+                        address={trade.address}
+                        brokerId={trade.broker_id}
                         className="text-xs font-mono text-[#D4B2FF] hover:text-white transition-colors no-underline"
                       >
                         {trade.address.slice(0, 6)}...{trade.address.slice(-4)}
-                      </a>
+                      </AddressLink>
                     </td>
                   </tr>
                 ))}
