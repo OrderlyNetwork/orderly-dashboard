@@ -3,6 +3,7 @@ import { Link } from '@remix-run/react';
 import { FC, useMemo, useState } from 'react';
 
 import { FundingChart } from './FundingChart';
+import { FundingComparisonPanel } from './FundingComparisonPanel';
 import { LiquidationHeatmapPanel } from './LiquidationHeatmapPanel';
 import { MarketHeader } from './MarketHeader';
 import { OrderbookPanel } from './OrderbookPanel';
@@ -120,6 +121,9 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
         isLoading={isLoading && !data}
         quoteTick={quoteTick}
       />
+
+      {/* Cross-exchange Funding Comparison */}
+      <FundingComparisonPanel symbol={symbol} />
 
       {/* Liquidation Heatmap */}
       <LiquidationHeatmapPanel symbol={symbol} />

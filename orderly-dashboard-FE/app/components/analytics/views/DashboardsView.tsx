@@ -16,6 +16,7 @@ import { DexUsersWidget } from '../widgets/DexUsersWidget';
 import { DistributorsWidget } from '../widgets/DistributorsWidget';
 import { FeesStatsWidget } from '../widgets/FeesStatsWidget';
 import { FundFlowsByChainWidget } from '../widgets/FundFlowsByChainWidget';
+import { FundingComparisonWidget } from '../widgets/FundingComparisonWidget';
 import { FundingRatesWidget } from '../widgets/FundingRatesWidget';
 import { InsuranceFundWidget } from '../widgets/InsuranceFundWidget';
 import { LiquidationHeatmapWidget } from '../widgets/LiquidationHeatmapWidget';
@@ -170,6 +171,15 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             subtitle="latest 8h funding rate per symbol"
           >
             <FundingRatesWidget />
+          </WidgetWrapper>
+        </div>
+        <div style={{ marginTop: 20 }}>
+          <WidgetWrapper
+            widgetId="funding-comparison"
+            title="Funding Rate Comparison"
+            subtitle="Orderly vs other venues — latest + 1d / 7d / 30d averages"
+          >
+            <FundingComparisonWidget />
           </WidgetWrapper>
         </div>
         <div style={{ marginTop: 20 }}>

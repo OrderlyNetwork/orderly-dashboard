@@ -1,6 +1,5 @@
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import { Button, Popover, Table, Tooltip } from '@radix-ui/themes';
-import { useNavigate } from '@remix-run/react';
 import {
   ColumnDef,
   flexRender,
@@ -9,7 +8,7 @@ import {
   SortingState,
   useReactTable
 } from '@tanstack/react-table';
-import { useMemo, useState, FC, useCallback } from 'react';
+import { useMemo, useState, FC } from 'react';
 
 import { Spinner } from '~/components';
 import { fmtBps, fmtPct, fmtUsd } from '~/components/analytics/shared/formatters';
@@ -58,16 +57,8 @@ function computeChange(current: number, previous: number | null): number | null 
 }
 
 export const Markets: FC = () => {
-  const navigate = useNavigate();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'volume24h', desc: true }]);
   const [searchFilter, setSearchFilter] = useState('');
-
-  const handleRowClick = useCallback(
-    (baseToken: string) => {
-      navigate(`/markets/${baseToken}`);
-    },
-    [navigate]
-  );
 
   const { data: priceData, isLoading: priceLoading } = usePriceChanges();
   const { data: oiData, isLoading: oiLoading } = useTradersOpenInterests();
@@ -438,14 +429,25 @@ export const Markets: FC = () => {
               {table.getRowModel().rows.map((row, index) => (
                 <Table.Row
                   key={row.id}
-                  onClick={() => handleRowClick(row.original.baseToken)}
+                  style={{ position: 'relative' }}
                   className={`border-b border-border-primary hover:bg-[rgba(156,117,255,0.12)] transition-colors duration-150 cursor-pointer ${
                     index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
                   }`}
                 >
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map((cell, cellIndex) => (
                     <Table.Cell key={cell.id} className="align-middle py-2.5 px-3">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {cellIndex === 0 ? (
+                        <>
+                          <a
+                            href={`/markets/${row.original.baseToken}`}
+                            aria-label={`${row.original.baseToken} market`}
+                            style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+                          />
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </>
+                      ) : (
+                        flexRender(cell.column.columnDef.cell, cell.getContext())
+                      )}
                     </Table.Cell>
                   ))}
                 </Table.Row>

@@ -27,6 +27,7 @@ import { DexUsersWidget } from '~/components/analytics/widgets/DexUsersWidget';
 import { DistributorsWidget } from '~/components/analytics/widgets/DistributorsWidget';
 import { FeesStatsWidget } from '~/components/analytics/widgets/FeesStatsWidget';
 import { FundFlowsByChainWidget } from '~/components/analytics/widgets/FundFlowsByChainWidget';
+import { FundingComparisonWidget } from '~/components/analytics/widgets/FundingComparisonWidget';
 import { FundingRatesWidget } from '~/components/analytics/widgets/FundingRatesWidget';
 import { InsuranceFundWidget } from '~/components/analytics/widgets/InsuranceFundWidget';
 import { LiquidationHeatmapWidget } from '~/components/analytics/widgets/LiquidationHeatmapWidget';
@@ -149,6 +150,10 @@ const WIDGET_META: Record<
   leaderboard: { title: 'Leaderboard' },
   positions: { title: 'Positions' },
   'kpi-analyst': { title: 'Key Metrics' },
+  'funding-comparison': {
+    title: 'Funding Rate Comparison',
+    subtitle: 'Orderly vs other venues — latest + 1d / 7d / 30d averages'
+  },
   'funding-rates': {
     title: 'Funding Rates',
     subtitle: 'latest 8h funding rate per symbol'
@@ -424,6 +429,9 @@ export default function WidgetRoute() {
       break;
     case 'kpi-analyst':
       widgetContent = <AnalystKPIWidget data={fullData} />;
+      break;
+    case 'funding-comparison':
+      widgetContent = <FundingComparisonWidget symbol={symbol || undefined} />;
       break;
     case 'funding-rates':
       widgetContent = <FundingRatesWidget />;

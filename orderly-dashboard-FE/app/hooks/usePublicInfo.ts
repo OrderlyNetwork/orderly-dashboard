@@ -709,3 +709,45 @@ export function useLiquidations(symbol: string, limit: number = 50) {
     }
   );
 }
+
+// ── fundingComparison (Cross-exchange funding rate snapshot) ─────────────────
+
+export type FundingComparisonExchange = {
+  name: string;
+  last: string;
+  '1d': string;
+  '7d': string;
+  '30d': string;
+};
+
+export type FundingComparisonRow = {
+  symbol: string;
+  next_funding_time: number;
+  exchanges: FundingComparisonExchange[];
+};
+
+export type FundingComparisonResponse = {
+  rows: FundingComparisonRow[];
+};
+
+/**
+ * Cross-exchange funding rate comparison: last value plus 1d / 7d / 30d
+ * averages per symbol. Weight 2 per call. Polled at 60s with dedup to
+ * respect the anonymous per-IP quota pool. Omit `symbol` for all symbols.
+ */
+export function useFundingComparison(symbol?: string) {
+  const { evmApiUrl } = useAppState();
+  return useSWR<FundingComparisonResponse>(
+    evmApiUrl ? ['fundingComparison', evmApiUrl, symbol ?? null] : null,
+    () =>
+      postPublicInfo<FundingComparisonResponse>(evmApiUrl, 'fundingComparison', {
+        ...(symbol ? { symbol } : {})
+      }),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      dedupingInterval: 60000,
+      refreshInterval: 60000
+    }
+  );
+}
