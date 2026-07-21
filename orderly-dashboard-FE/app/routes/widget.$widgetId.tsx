@@ -31,6 +31,7 @@ import { FundingRatesWidget } from '~/components/analytics/widgets/FundingRatesW
 import { InsuranceFundWidget } from '~/components/analytics/widgets/InsuranceFundWidget';
 import { LiquidationHeatmapWidget } from '~/components/analytics/widgets/LiquidationHeatmapWidget';
 import { LiquidationsBySymbolWidget } from '~/components/analytics/widgets/LiquidationsBySymbolWidget';
+import { MarketShareWidget } from '~/components/analytics/widgets/MarketShareWidget';
 import { NetFeesWidget } from '~/components/analytics/widgets/NetFeesWidget';
 import { NetFlowByBuilderWidget } from '~/components/analytics/widgets/NetFlowByBuilderWidget';
 import { OmnivaultTvlWidget } from '~/components/analytics/widgets/OmnivaultTvlWidget';
@@ -99,6 +100,10 @@ const WIDGET_META: Record<
   },
   overview: { title: 'Protocol Overview', hasGranularityControl: true },
   'dex-users': { title: 'Users by DEX' },
+  'market-share': {
+    title: 'DEX Perps Market Share',
+    subtitle: 'Orderly vs other DEX protocols by 24h volume'
+  },
   'volume-segments': {
     title: 'Volume Segments',
     subtitle: 'weekly by segment (2B / 2C / MM)',
@@ -200,7 +205,7 @@ const WIDGET_META: Record<
   }
 };
 
-const isMarketWidget = (id: string) => id.startsWith('market-');
+const isMarketWidget = (id: string) => id.startsWith('market-') && id !== 'market-share';
 
 const MarketWidgetContent: FC<{ widgetId: string; symbol: string }> = ({ widgetId, symbol }) => {
   const [candlesInterval, setCandlesInterval] = useState('1h');
@@ -374,6 +379,9 @@ export default function WidgetRoute() {
       break;
     case 'dex-users':
       widgetContent = <DexUsersWidget search={dexSearch} onSearchChange={setDexSearch} />;
+      break;
+    case 'market-share':
+      widgetContent = <MarketShareWidget />;
       break;
     case 'volume-segments':
       widgetContent = <VolumeSegmentsWidget />;
