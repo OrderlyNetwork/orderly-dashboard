@@ -109,7 +109,7 @@ export const CHART_COLORS = [
   '#14b8a6'
 ];
 
-export const BROKER_BLACKLIST = new Set(['orderly']);
+export const BROKER_BLACKLIST = new Set(['orderly', 'ibx']);
 
 export function chartColor(index: number): string {
   return CHART_COLORS[index % CHART_COLORS.length];
