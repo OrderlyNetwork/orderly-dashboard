@@ -6,6 +6,7 @@ import { TableSkeleton } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
 import { useLiquidations, useMarketSummary } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 import { formatPriceByTick } from '~/utils/format';
 
@@ -15,8 +16,6 @@ export type RecentLiquidationsProps = {
 
 const thBase = 'py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0';
 const thStyle = { background: 'rgba(20,15,35,.95)' };
-
-const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
 
 export const RecentLiquidations: FC<RecentLiquidationsProps> = ({ symbol }) => {
   const isEmbed = useIsEmbed();
@@ -30,7 +29,7 @@ export const RecentLiquidations: FC<RecentLiquidationsProps> = ({ symbol }) => {
   })();
 
   const rows = (data?.rows ?? []).filter((liq) => parseFloat(liq.position_qty) > 0).slice(0, 50);
-  const title = `Recent Liquidations${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`;
+  const title = `Recent Liquidations${isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : ''}`;
 
   return (
     <div

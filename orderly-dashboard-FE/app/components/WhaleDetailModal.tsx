@@ -4,7 +4,9 @@ import { FC, useMemo } from 'react';
 
 import { Spinner } from '.';
 
+import { BrokerBadge } from '~/components/BrokerBadge';
 import { useMarketSummary, useWhaleContext } from '~/hooks/usePublicInfo';
+import { getBaseToken, getBroker } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
 
 interface WhaleDetailModalProps {
@@ -145,7 +147,10 @@ export const WhaleDetailModal: FC<WhaleDetailModalProps> = ({
                       {data.positions.map((pos, idx) => (
                         <Table.Row key={`${pos.symbol}-${idx}`}>
                           <Table.Cell className="text-white font-medium">
-                            {pos.symbol.replace('PERP_', '').replace('_USDC', '')}
+                            <span className="inline-flex items-center gap-1.5">
+                              {getBaseToken(pos.symbol)}
+                              <BrokerBadge broker={getBroker(pos.symbol)} />
+                            </span>
                           </Table.Cell>
                           <Table.Cell>
                             <span
@@ -213,7 +218,10 @@ export const WhaleDetailModal: FC<WhaleDetailModalProps> = ({
                             {dayjs(trade.executed_timestamp).format('MM/DD HH:mm:ss')}
                           </Table.Cell>
                           <Table.Cell className="text-white">
-                            {trade.symbol.replace('PERP_', '').replace('_USDC', '')}
+                            <span className="inline-flex items-center gap-1.5">
+                              {getBaseToken(trade.symbol)}
+                              <BrokerBadge broker={getBroker(trade.symbol)} />
+                            </span>
                           </Table.Cell>
                           <Table.Cell>
                             <span

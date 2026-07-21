@@ -5,6 +5,7 @@ import { TableSkeleton, Empty } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
 import { useTopAddresses, type TopAddressesSortOption } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 
 export type TopTradersPanelProps = {
@@ -17,8 +18,6 @@ const SORT_OPTIONS: { value: TopAddressesSortOption; label: string }[] = [
   { value: 'pnl_30d', label: 'PnL 30d' },
   { value: 'volume_24h', label: 'Vol 24h' }
 ];
-
-const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
 
 export const TopTradersPanel: FC<TopTradersPanelProps> = ({ symbol }) => {
   const isEmbed = useIsEmbed();
@@ -36,7 +35,7 @@ export const TopTradersPanel: FC<TopTradersPanelProps> = ({ symbol }) => {
     'py-2 px-3 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0';
   const thStyle = { background: 'rgba(20,15,35,.95)' };
 
-  const title = `Top Traders${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`;
+  const title = `Top Traders${isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : ''}`;
 
   return (
     <div

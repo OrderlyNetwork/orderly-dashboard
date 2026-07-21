@@ -15,6 +15,7 @@ import { LineChartSkeleton } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
 import type { Candle } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
 
 ChartJS.register(
@@ -32,8 +33,6 @@ const INTERVAL_LABELS: Record<string, string> = {
   '4h': '4H',
   '1d': '1D'
 };
-
-const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
 
 export type PriceChartClientProps = {
   symbol: string;
@@ -170,7 +169,7 @@ export const PriceChartClient: FC<PriceChartClientProps> = ({
               fontFeatureSettings: "'ss02' 1, 'ss03' 1, 'ss05' 1"
             }}
           >
-            Price Chart{isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}
+            Price Chart{isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : ''}
           </div>
           <div className="text-[13px] mt-0.5 text-[rgba(255,255,255,0.35)]">
             OHLCV candles for {symbol}
@@ -195,7 +194,7 @@ export const PriceChartClient: FC<PriceChartClientProps> = ({
           </div>
           <WidgetShareButton
             widgetId="market-price-chart"
-            title={`Price Chart${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`}
+            title={`Price Chart${isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : ''}`}
             symbol={symbol}
           />
         </div>

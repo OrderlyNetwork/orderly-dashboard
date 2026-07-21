@@ -12,6 +12,7 @@ import {
   type FundingComparisonExchange,
   type FundingComparisonRow
 } from '~/hooks/usePublicInfo';
+import { getBaseToken, getShortSlug } from '~/hooks/useSymbols';
 
 const WINDOWS = ['last', '1d', '7d', '30d'] as const;
 type Window = (typeof WINDOWS)[number];
@@ -27,7 +28,6 @@ const SCROLL_HEIGHT = 440;
 const ROW_HOVER_OVERLAY = 'inset 0 0 0 9999px rgba(156,117,255,0.12)';
 
 const isOrderly = (name: string) => name.toLowerCase() === ORDERLY;
-const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
 
 function rateOf(e: FundingComparisonExchange, w: Window): string | undefined {
   return w === 'last' ? e.last : e[w];
@@ -224,7 +224,7 @@ const MultiSymbolView: FC<{ rows: FundingComparisonRow[] }> = ({ rows }) => {
                 >
                   <td style={tdSticky(i)}>
                     <span style={{ color: '#fff' }} className={isHovered ? 'underline' : undefined}>
-                      {baseToken(r.symbol)}
+                      {getBaseToken(r.symbol)}
                     </span>
                   </td>
                   {exchanges.map((name, exIdx) => {
@@ -239,8 +239,8 @@ const MultiSymbolView: FC<{ rows: FundingComparisonRow[] }> = ({ rows }) => {
                       <td key={name} style={cellStyle(name, v, isHovered)}>
                         {exIdx === 0 && (
                           <a
-                            href={`/markets/${baseToken(r.symbol)}`}
-                            aria-label={`${baseToken(r.symbol)} market`}
+                            href={`/markets/${getShortSlug(r.symbol)}`}
+                            aria-label={`${getBaseToken(r.symbol)} market`}
                             style={{ position: 'absolute', inset: 0, zIndex: 1 }}
                           />
                         )}

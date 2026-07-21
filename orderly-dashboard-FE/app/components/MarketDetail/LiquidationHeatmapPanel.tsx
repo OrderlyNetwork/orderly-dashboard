@@ -4,16 +4,15 @@ import { LiquidationHeatmapWidget } from '../analytics/widgets/LiquidationHeatma
 import { WidgetShareButton } from '../analytics/widgets/WidgetShareButton';
 
 import { useIsEmbed } from '~/hooks/useIsEmbed';
+import { getBaseToken } from '~/hooks/useSymbols';
 
 export type LiquidationHeatmapPanelProps = {
   symbol: string;
 };
 
-const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
-
 export const LiquidationHeatmapPanel: FC<LiquidationHeatmapPanelProps> = ({ symbol }) => {
   const isEmbed = useIsEmbed();
-  const title = `Liquidation Heatmap${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`;
+  const title = `Liquidation Heatmap${isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : ''}`;
   return (
     <div
       className="rounded-2xl overflow-hidden"

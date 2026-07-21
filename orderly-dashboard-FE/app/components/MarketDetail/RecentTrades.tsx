@@ -5,6 +5,7 @@ import { TableSkeleton } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
 import type { MarketTrade } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 import { formatPriceByTick } from '~/utils/format';
 
@@ -19,8 +20,6 @@ export type RecentTradesProps = {
 const thBase = 'py-2 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider sticky top-0';
 const thStyle = { background: 'rgba(20,15,35,.95)' };
 
-const baseToken = (symbol?: string) => (symbol ? (symbol.split('_')[1] ?? symbol) : '');
-
 export const RecentTrades: FC<RecentTradesProps> = ({
   symbol,
   trades,
@@ -29,7 +28,7 @@ export const RecentTrades: FC<RecentTradesProps> = ({
   standalone
 }) => {
   const isEmbed = useIsEmbed();
-  const suffix = symbol && isEmbed ? ` — ${baseToken(symbol)}-PERP` : '';
+  const suffix = symbol && isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : '';
   const title = `Recent Trades${suffix}`;
 
   return (

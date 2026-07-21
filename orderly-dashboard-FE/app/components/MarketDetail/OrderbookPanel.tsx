@@ -8,6 +8,7 @@ import type {
   OrderbookLevel,
   SymbolInfoResponse
 } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 import { formatPriceByTick, tickToDecimals } from '~/utils/format';
 
 export type OrderbookPanelProps = {
@@ -23,8 +24,6 @@ export type OrderbookPanelProps = {
 };
 
 const LEVEL_COUNT = 12;
-
-const baseToken = (symbol?: string) => (symbol ? (symbol.split('_')[1] ?? symbol) : '');
 
 /** Format quantity — compact for large numbers, tick precision for small */
 function fmtQty(n: number, maxDecimals: number): string {
@@ -93,7 +92,7 @@ export const OrderbookPanel: FC<OrderbookPanelProps> = ({
 
   const headerClass = 'py-1.5 px-2 text-[10px] font-medium text-gray-600 uppercase tracking-wider';
 
-  const suffix = symbol && isEmbed ? ` — ${baseToken(symbol)}-PERP` : '';
+  const suffix = symbol && isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : '';
   const title = `Orderbook${suffix}`;
 
   return (

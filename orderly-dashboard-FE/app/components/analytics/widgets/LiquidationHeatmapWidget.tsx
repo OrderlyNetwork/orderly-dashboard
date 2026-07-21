@@ -5,6 +5,7 @@ import { Empty, Skeleton } from '../shared/primitives';
 
 import { useSymbolWeekly } from '~/hooks/useOrderlyMetrics';
 import { usePlatformPositions, useSymbolInfo, type PlatformPosition } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
 
 const NUM_BINS = 48;
@@ -165,7 +166,7 @@ const SymbolDropdown: FC<{ value: string; onChange: (s: string) => void }> = ({
       .sort((a, b) => b[1] - a[1])
       .map(([sym, vol]) => ({
         symbol: sym,
-        label: `${sym.replace('PERP_', '').replace('_USDC', '')} · ${fmtCompact(vol)}`
+        label: `${getBaseToken(sym)} · ${fmtCompact(vol)}`
       }));
   }, [volData]);
   return (

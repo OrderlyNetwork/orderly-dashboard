@@ -1,4 +1,4 @@
-import { MixerHorizontalIcon } from '@radix-ui/react-icons';
+import { ExternalLinkIcon, InfoCircledIcon, MixerHorizontalIcon } from '@radix-ui/react-icons';
 import { Button, Popover, Table, Tooltip } from '@radix-ui/themes';
 import {
   ColumnDef,
@@ -11,6 +11,7 @@ import {
 import { useMemo, useState, FC } from 'react';
 
 import { Spinner } from '~/components';
+import { BrokerBadge } from '~/components/BrokerBadge';
 import { fmtBps, fmtPct, fmtUsd } from '~/components/analytics/shared/formatters';
 import {
   useMarketSummary,
@@ -18,6 +19,7 @@ import {
   useTradersOpenInterests,
   useFuturesMarket
 } from '~/hooks/usePublicInfo';
+import { getBaseToken, getBroker, getShortSlug } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
 
 type MarketRow = {
@@ -128,12 +130,9 @@ export const Markets: FC = () => {
       const totalOI = longOI + shortOI;
       const longRatio = totalOI > 0 ? longOI / totalOI : null;
 
-      const parts = m.symbol.split('_');
-      const baseToken = parts.length >= 2 ? parts[1] : m.symbol;
-
       return {
         symbol: m.symbol,
-        baseToken,
+        baseToken: getBaseToken(m.symbol),
         markPrice,
         change1h,
         change4h,
@@ -164,8 +163,9 @@ export const Markets: FC = () => {
         accessorKey: 'symbol',
         header: 'Symbol',
         cell: ({ row }) => (
-          <span className="font-mono text-sm font-semibold text-white">
+          <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-white">
             {row.original.baseToken}
+            <BrokerBadge broker={getBroker(row.original.symbol)} />
           </span>
         ),
         sortingFn: 'alphanumeric'
@@ -328,6 +328,51 @@ export const Markets: FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
       <div className="card w-full space-y-4" style={{ background: '#130E1D', border: 'none' }}>
+        <div
+          className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-3 py-2 rounded-lg text-xs"
+          style={{
+            background: 'rgba(156,117,255,0.06)',
+            border: '1px solid rgba(156,117,255,0.15)'
+          }}
+        >
+          <span className="flex items-center gap-2 min-w-0">
+            <InfoCircledIcon width="14" height="14" style={{ color: '#9C75FF', flexShrink: 0 }} />
+            <span className="text-[rgba(255,255,255,0.7)] leading-tight">
+              Markets with a{' '}
+              <span
+                className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium leading-none align-middle"
+                style={{
+                  background: 'rgba(156,117,255,0.15)',
+                  color: '#D4B2FF',
+                  border: '1px solid rgba(156,117,255,0.25)'
+                }}
+              >
+                broker
+              </span>{' '}
+              badge are permissionless listings.
+            </span>
+          </span>
+          <span className="sm:ml-auto flex items-center gap-3 flex-wrap">
+            <a
+              href="https://dex.orderly.network/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 no-underline hover:underline"
+              style={{ color: '#D4B2FF' }}
+            >
+              Launch a market <ExternalLinkIcon width="10" height="10" />
+            </a>
+            <a
+              href="https://orderly.network/docs/introduction/trade-on-orderly/permissionless-listing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 no-underline hover:underline"
+              style={{ color: '#D4B2FF' }}
+            >
+              Docs <ExternalLinkIcon width="10" height="10" />
+            </a>
+          </span>
+        </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <input
@@ -439,7 +484,7 @@ export const Markets: FC = () => {
                       {cellIndex === 0 ? (
                         <>
                           <a
-                            href={`/markets/${row.original.baseToken}`}
+                            href={`/markets/${getShortSlug(row.original.symbol)}`}
                             aria-label={`${row.original.baseToken} market`}
                             style={{ position: 'absolute', inset: 0, zIndex: 1 }}
                           />

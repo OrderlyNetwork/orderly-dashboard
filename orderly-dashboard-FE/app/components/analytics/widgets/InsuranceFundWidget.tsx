@@ -3,11 +3,11 @@ import { FC, useMemo } from 'react';
 import { fmtCompact } from '../shared/formatters';
 import { Empty, Skeleton, StatCard, TD, TH } from '../shared/primitives';
 
+import { BrokerBadge } from '~/components/BrokerBadge';
 import { useInsuranceFund } from '~/hooks/useInsuranceFund';
 import { useMarketSummary } from '~/hooks/usePublicInfo';
+import { getBaseToken, getBroker } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
-
-const prettySymbol = (s: string): string => s.replace('PERP_', '').replace('_USDC', '');
 
 export const InsuranceFundWidget: FC = () => {
   const { data, isLoading, error } = useInsuranceFund();
@@ -65,7 +65,12 @@ export const InsuranceFundWidget: FC = () => {
                 const posPnlPositive = p.pnl_24_h >= 0;
                 return (
                   <tr key={p.symbol}>
-                    <td style={TD}>{prettySymbol(p.symbol)}</td>
+                    <td style={TD}>
+                      <span className="inline-flex items-center gap-1.5">
+                        {getBaseToken(p.symbol)}
+                        <BrokerBadge broker={getBroker(p.symbol)} />
+                      </span>
+                    </td>
                     <td style={{ ...TD, textAlign: 'right' }}>{p.position_qty}</td>
                     <td style={{ ...TD, textAlign: 'right' }}>
                       {formatPriceByTick(p.mark_price, quoteTickFor(p.symbol))}

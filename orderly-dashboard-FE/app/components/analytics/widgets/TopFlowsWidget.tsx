@@ -6,6 +6,7 @@ import { Empty, TableSkeleton, TH, TD } from '~/components/analytics/shared/prim
 import { useBrokers, useTokens } from '~/hooks';
 import { useDepositRank, useWithdrawRank, type FlowsDirection } from '~/hooks/useFlowsRank';
 import { useMarketSummary, type MarketSummaryMarket } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 
 const DAYS_OPTIONS = [
   { label: '1D', value: 1 },
@@ -35,10 +36,26 @@ const pillStyle = (active: boolean): React.CSSProperties => ({
 });
 
 function tokenToUsdPrice(token: string, markets: MarketSummaryMarket[]): number | null {
-  const candidates = [`PERP_${token}_USDC`];
-  if (token.startsWith('W') && token.length > 1) candidates.push(`PERP_${token.slice(1)}_USDC`);
-  for (const sym of candidates) {
-    const m = markets.find((x) => x.symbol === sym);
+  // Find the canonical (no-broker) variant first, then fall back to any
+  // broker-suffixed variant of the same base token. Wrapped tokens (e.g. WETH)
+  // also try the underlying symbol.
+  const candidateBases = [token];
+  if (token.startsWith('W') && token.length > 1) candidateBases.push(token.slice(1));
+
+  for (const base of candidateBases) {
+    const baseLower = base.toLowerCase();
+    let canonical: MarketSummaryMarket | undefined;
+    let brokered: MarketSummaryMarket | undefined;
+    for (const m of markets) {
+      if (getBaseToken(m.symbol).toLowerCase() !== baseLower) continue;
+      const isCanonical = m.symbol.split('_').length === 3;
+      if (isCanonical) {
+        canonical = m;
+        break;
+      }
+      if (!brokered) brokered = m;
+    }
+    const m = canonical ?? brokered;
     const p = m ? parseFloat(m.mark_price) : NaN;
     if (isFinite(p) && p > 0) return p;
   }

@@ -5,8 +5,10 @@ import dayjs from 'dayjs';
 import { FC, useCallback, useMemo } from 'react';
 
 import { Spinner } from '~/components';
+import { BrokerBadge } from '~/components/BrokerBadge';
 import { getMaxFractionDigits, useSymbols } from '~/hooks';
 import { useAccountState, useMarketSummary, AccountStatePosition } from '~/hooks/usePublicInfo';
+import { getBaseToken, getBroker, getShortSlug } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
 
 interface AddressPositionsProps {
@@ -18,17 +20,12 @@ interface AddressPositionsProps {
 const POSITIVE_COLOR = '#00dea3';
 const NEGATIVE_COLOR = '#FF6390';
 
-const formatBaseToken = (symbol: string) => {
-  const parts = symbol.split('_');
-  return parts.length >= 2 ? parts[1] : symbol;
-};
-
 export const AddressPositions: FC<AddressPositionsProps> = ({ address, brokerId, accountId }) => {
   const navigate = useNavigate();
 
   const handleRowClick = useCallback(
     (symbol: string) => {
-      navigate(`/markets/${formatBaseToken(symbol)}`);
+      navigate(`/markets/${getShortSlug(symbol)}`);
     },
     [navigate]
   );
@@ -96,7 +93,10 @@ export const AddressPositions: FC<AddressPositionsProps> = ({ address, brokerId,
         accessorKey: 'symbol',
         header: 'Symbol',
         cell: ({ row }) => (
-          <span className="font-mono text-sm">{formatBaseToken(row.original.symbol)}</span>
+          <span className="inline-flex items-center gap-1.5 font-mono text-sm">
+            {getBaseToken(row.original.symbol)}
+            <BrokerBadge broker={getBroker(row.original.symbol)} />
+          </span>
         ),
         enableSorting: false
       },

@@ -17,6 +17,7 @@ import { LineChartSkeleton } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
 import type { FundingRateEntry } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
@@ -27,8 +28,6 @@ export type FundingChartProps = {
   isLoading?: boolean;
   quoteTick?: number | null;
 };
-
-const baseToken = (symbol?: string) => (symbol ? (symbol.split('_')[1] ?? symbol) : '');
 
 export const FundingChart: FC<FundingChartProps> = ({
   symbol,
@@ -116,7 +115,7 @@ export const FundingChart: FC<FundingChartProps> = ({
     [fundingHistory, quoteTick]
   );
 
-  const suffix = symbol && isEmbed ? ` — ${baseToken(symbol)}-PERP` : '';
+  const suffix = symbol && isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : '';
   const title = `Funding Rate History${suffix}`;
 
   return (

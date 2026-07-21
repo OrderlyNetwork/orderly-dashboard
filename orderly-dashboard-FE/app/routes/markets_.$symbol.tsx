@@ -6,6 +6,7 @@ import { FC, useMemo } from 'react';
 import { Spinner } from '~/components';
 import { MarketDetailView } from '~/components/MarketDetail';
 import { useSymbols } from '~/hooks';
+import { getBaseToken, getBroker } from '~/hooks/useSymbols';
 
 export function loader({ params }: LoaderFunctionArgs) {
   return json({ symbol: params.symbol ?? '' });
@@ -15,16 +16,41 @@ export const MarketDetailRoute: FC = () => {
   const { symbol: rawSymbol } = useLoaderData<typeof loader>();
   const symbols = useSymbols();
 
-  const fullSymbol = useMemo(() => {
+  const resolved = useMemo(() => {
     if (!symbols) return null;
-    // rawSymbol is the friendly base token (e.g. "BTC")
-    // Find the matching full symbol (e.g. "PERP_BTC_USDC")
-    const match = symbols.find((s) => {
-      const parts = s.symbol.split('_');
-      const baseToken = parts.length >= 2 ? parts[1] : s.symbol;
-      return baseToken.toUpperCase() === rawSymbol.toUpperCase();
+    // rawSymbol is the URL slug: either `BTC` (canonical) or `BTC_mythos`
+    // (broker variant). Split off an optional broker suffix.
+    const slugParts = rawSymbol.split('_');
+    const baseFromSlug = slugParts[0];
+    const slugBroker = slugParts.length > 1 ? slugParts.slice(1).join('_') : null;
+
+    const baseMatches = symbols.filter((s) => {
+      const base = getBaseToken(s.symbol);
+      return base.toUpperCase() === baseFromSlug.toUpperCase();
     });
-    return match?.symbol ?? null;
+
+    if (baseMatches.length === 0) return null;
+
+    // If the slug includes a broker suffix, pin to that exact broker.
+    if (slugBroker) {
+      const withBroker = baseMatches.find(
+        (s) => (getBroker(s.symbol) ?? '').toLowerCase() === slugBroker.toLowerCase()
+      );
+      return withBroker ?? null;
+    }
+
+    // No broker in URL: prefer the canonical (no-broker) symbol.
+    const canonical = baseMatches.find((s) => getBroker(s.symbol) === null);
+    if (canonical) return canonical;
+
+    // No canonical exists — fall back to the first broker variant so the URL
+    // is still useful. Warn so the issue is discoverable.
+    if (baseMatches.length > 1) {
+      console.warn(
+        `[markets_.$symbol] /markets/${rawSymbol} matched ${baseMatches.length} brokered markets; falling back to first match. Use /markets/BASE_broker to disambiguate.`
+      );
+    }
+    return baseMatches[0];
   }, [symbols, rawSymbol]);
 
   if (!symbols) {
@@ -35,7 +61,7 @@ export const MarketDetailRoute: FC = () => {
     );
   }
 
-  if (!fullSymbol) {
+  if (!resolved) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
         <div className="text-xl font-semibold text-gray-300">Market Not Found</div>
@@ -56,7 +82,7 @@ export const MarketDetailRoute: FC = () => {
     );
   }
 
-  return <MarketDetailView symbol={fullSymbol} baseToken={rawSymbol} />;
+  return <MarketDetailView symbol={resolved.symbol} baseToken={getBaseToken(resolved.symbol)} />;
 };
 
 export default MarketDetailRoute;

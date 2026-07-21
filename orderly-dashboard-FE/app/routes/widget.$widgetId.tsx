@@ -48,6 +48,7 @@ import { VolumeSegmentsWidget } from '~/components/analytics/widgets/VolumeSegme
 import { WidgetWrapper } from '~/components/analytics/widgets/WidgetWrapper';
 import { useStakeVsSupply } from '~/hooks/useOrderlyMetrics';
 import { useMarketDetail, useMarketSummary, useSymbolInfo } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 import type { DashboardData } from '~/types/dashboard';
 import { fetchDashboardData } from '~/utils/data-api';
 
@@ -339,9 +340,7 @@ export default function WidgetRoute() {
 
   const titleSuffix = (() => {
     if (!symbol) return '';
-    const parts = symbol.split('_');
-    const base = parts.length >= 2 ? parts[1] : symbol;
-    return ` — ${base}-PERP`;
+    return ` — ${getBaseToken(symbol)}-PERP`;
   })();
   const titleWithSymbol = `${meta.title}${titleSuffix}`;
 

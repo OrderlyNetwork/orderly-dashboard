@@ -4,16 +4,15 @@ import { FundingComparisonWidget } from '../analytics/widgets/FundingComparisonW
 import { WidgetShareButton } from '../analytics/widgets/WidgetShareButton';
 
 import { useIsEmbed } from '~/hooks/useIsEmbed';
+import { getBaseToken } from '~/hooks/useSymbols';
 
 export type FundingComparisonPanelProps = {
   symbol: string;
 };
 
-const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
-
 export const FundingComparisonPanel: FC<FundingComparisonPanelProps> = ({ symbol }) => {
   const isEmbed = useIsEmbed();
-  const title = `Funding Rate Comparison${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`;
+  const title = `Funding Rate Comparison${isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : ''}`;
   return (
     <div
       className="rounded-2xl overflow-hidden"

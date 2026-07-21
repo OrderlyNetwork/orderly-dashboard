@@ -22,6 +22,7 @@ import {
   useAllSymbols,
   useAllTokens
 } from '~/hooks';
+import { getBaseToken } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
 
 function getSymbolHash(row: EventTableData, group: string): string | undefined {
@@ -387,8 +388,7 @@ export function useRenderColumns(
             enableSorting: false,
             cell: (info) => {
               const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-              const parts = symbol.split('_');
-              const baseToken = parts.length >= 2 ? parts[1] : symbol;
+              const baseToken = getBaseToken(symbol);
               return (
                 <div className="flex items-center gap-1">
                   <span className="font-mono text-sm">{baseToken}</span>
@@ -528,8 +528,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -620,8 +619,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -744,8 +742,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -833,8 +830,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -895,8 +891,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -952,8 +947,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -1058,8 +1052,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -1174,8 +1167,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -1282,8 +1274,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),

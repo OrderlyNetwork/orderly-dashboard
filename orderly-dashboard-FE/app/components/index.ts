@@ -1,4 +1,5 @@
 export * from './AddressPositions';
+export * from './BrokerBadge';
 export * from './BrokerSelectionModal';
 export * from './EventsTable';
 export * from './Leaderboard';

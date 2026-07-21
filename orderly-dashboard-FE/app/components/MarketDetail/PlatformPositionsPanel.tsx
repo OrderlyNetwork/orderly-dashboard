@@ -4,7 +4,8 @@ import { fmtUsd } from '~/components/analytics/shared/formatters';
 import { TableSkeleton, Empty } from '~/components/analytics/shared/primitives';
 import { WidgetShareButton } from '~/components/analytics/widgets/WidgetShareButton';
 import { useIsEmbed } from '~/hooks/useIsEmbed';
-import { usePlatformPositions, useTradersOpenInterests } from '~/hooks/usePublicInfo';
+import { usePlatformPositions } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
 import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
 import { formatPriceByTick } from '~/utils/format';
 
@@ -13,28 +14,19 @@ export type PlatformPositionsPanelProps = {
   quoteTick?: number | null;
 };
 
-const baseToken = (symbol: string) => symbol.split('_')[1] ?? symbol;
-
 export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol, quoteTick }) => {
   const isEmbed = useIsEmbed();
   const { data, isLoading } = usePlatformPositions(symbol, 0);
-  const { data: oiData } = useTradersOpenInterests();
 
   const { longTotal, shortTotal, longPct, topPositions } = useMemo(() => {
-    // Use traders_open_interests (excludes MM) for the ratio — matches markets page
-    let longTotal = 0;
-    let shortTotal = 0;
-    let longPct = 50;
-
-    if (oiData?.rows) {
-      const row = oiData.rows.find((r) => r.symbol === symbol);
-      if (row) {
-        longTotal = Math.abs(row.long_oi || 0);
-        shortTotal = Math.abs(row.short_oi || 0);
-        const total = longTotal + shortTotal;
-        longPct = total > 0 ? (longTotal / total) * 100 : 50;
-      }
-    }
+    // Use the platformPositions totals (USD) — consistent with the rows shown
+    // below and correct for both canonical and permissionless markets.
+    // (traders_open_interests long_oi/short_oi are in BASE TOKEN units and
+    // exclude market makers, which previously produced misleading USD output.)
+    const longTotal = data ? Math.abs(parseFloat(data.total_long_notional || '0')) : 0;
+    const shortTotal = data ? Math.abs(parseFloat(data.total_short_notional || '0')) : 0;
+    const total = longTotal + shortTotal;
+    const longPct = total > 0 ? (longTotal / total) * 100 : 50;
 
     // Sort by notional value descending, take top 15
     const topPositions = [...(data?.rows || [])]
@@ -42,9 +34,9 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
       .slice(0, 15);
 
     return { longTotal, shortTotal, longPct, topPositions };
-  }, [data, oiData, symbol]);
+  }, [data]);
 
-  const title = `Open Positions${isEmbed ? ` — ${baseToken(symbol)}-PERP` : ''}`;
+  const title = `Open Positions${isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : ''}`;
 
   return (
     <div
