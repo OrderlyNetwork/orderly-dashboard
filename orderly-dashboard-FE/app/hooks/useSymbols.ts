@@ -6,6 +6,7 @@ import { useAppState } from '~/App';
 export type PerpSymbol = {
   symbol: string;
   base_tick: number;
+  quote_tick: number;
 };
 
 export type AllSymbol = {
@@ -67,6 +68,11 @@ export function getSymbolBaseTick(name: string, symbols: PerpSymbol[] | undefine
   );
 }
 
+export function getSymbolQuoteTick(name: string | undefined, symbols: PerpSymbol[] | undefined) {
+  if (!name) return undefined;
+  return symbols?.find(({ symbol }) => keccak256(encoder.encode(symbol)) === name)?.quote_tick;
+}
+
 export function getMaxFractionDigits(baseTick: number): number {
   if (baseTick >= 1) return 0;
 
@@ -75,4 +81,58 @@ export function getMaxFractionDigits(baseTick: number): number {
   if (decimalIndex === -1) return 0;
 
   return baseTickStr.length - decimalIndex - 1;
+}
+
+export type ParsedPerpSymbol = {
+  prefix: string;
+  base: string;
+  quote: string;
+  broker: string | null;
+};
+
+/**
+ * Parse a perp symbol into its parts. Format: `PERP_{BASE}_{QUOTE}[_{BROKER}]`.
+ * For non-PERP strings or malformed input, returns the raw string as `base`
+ * with empty quote and null broker (so callers fall back gracefully).
+ */
+export function parsePerpSymbol(symbol: string | null | undefined): ParsedPerpSymbol {
+  if (!symbol) return { prefix: '', base: '', quote: '', broker: null };
+  const parts = symbol.split('_');
+  if (parts.length < 3 || parts[0] !== 'PERP') {
+    return { prefix: '', base: symbol, quote: '', broker: null };
+  }
+  return {
+    prefix: 'PERP',
+    base: parts[1],
+    quote: parts[2],
+    broker: parts.length >= 4 ? parts.slice(3).join('_') : null
+  };
+}
+
+/** Extract the BASE token (e.g. `BTC` for both `PERP_BTC_USDC` and `PERP_BTC_USDC_mythos`). */
+export function getBaseToken(symbol: string | null | undefined): string {
+  return parsePerpSymbol(symbol).base;
+}
+
+/** Extract the quote token (e.g. `USDC`). Empty string for malformed symbols. */
+export function getQuoteToken(symbol: string | null | undefined): string {
+  return parsePerpSymbol(symbol).quote;
+}
+
+/**
+ * Extract the broker suffix (e.g. `mythos`) for permissionless listings.
+ * Returns `null` for canonical markets.
+ */
+export function getBroker(symbol: string | null | undefined): string | null {
+  return parsePerpSymbol(symbol).broker;
+}
+
+/**
+ * URL slug for a market: `BASE` for canonical markets, `BASE_broker` for
+ * permissionless variants. Used in `/markets/...` paths.
+ */
+export function getShortSlug(symbol: string | null | undefined): string {
+  const { base, broker } = parsePerpSymbol(symbol);
+  if (!base) return '';
+  return broker ? `${base}_${broker}` : base;
 }

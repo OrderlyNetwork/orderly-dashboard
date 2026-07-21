@@ -1,9 +1,11 @@
-import { FC, useState } from 'react';
+import { useSearchParams } from '@remix-run/react';
+import { FC } from 'react';
 
 import { Leaderboard } from '~/components/Leaderboard';
 import { Positions } from '~/components/Positions';
+import { WhaleLeaderboard } from '~/components/WhaleLeaderboard';
 
-type Tab = 'trading' | 'positions';
+type Tab = 'trading' | 'positions' | 'whales';
 
 const TAB_CONFIG: {
   id: Tab;
@@ -56,21 +58,54 @@ const TAB_CONFIG: {
         <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
       </svg>
     )
+  },
+  {
+    id: 'whales',
+    label: 'Whale Tracker',
+    activeColor: '#34D399',
+    activeBg: 'rgba(52,211,153,0.15)',
+    activeBorder: 'rgba(52,211,153,0.4)',
+    icon: (
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M2 12c0 0 4-8 10-8s10 8 10 8-4 8-10 8-10-8-10-8z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    )
   }
 ];
 
 export const LeaderboardView: FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('trading');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab: Tab =
+    tabParam && ['trading', 'positions', 'whales'].includes(tabParam)
+      ? (tabParam as Tab)
+      : 'trading';
+
+  const handleTabChange = (tab: Tab) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('tab', tab);
+    setSearchParams(newParams, { replace: true });
+  };
 
   return (
     <div className="w-full">
-      <div className="flex gap-2 mb-5 justify-center">
+      <div className="flex gap-2 mb-5 justify-center flex-wrap">
         {TAB_CONFIG.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className="flex items-center gap-[7px] py-2 px-5 rounded-full text-[13px] font-semibold cursor-pointer transition-all duration-150"
               style={{
                 border: 'none',
@@ -85,7 +120,9 @@ export const LeaderboardView: FC = () => {
         })}
       </div>
 
-      {activeTab === 'trading' ? <Leaderboard /> : <Positions />}
+      {activeTab === 'trading' && <Leaderboard />}
+      {activeTab === 'positions' && <Positions />}
+      {activeTab === 'whales' && <WhaleLeaderboard />}
     </div>
   );
 };

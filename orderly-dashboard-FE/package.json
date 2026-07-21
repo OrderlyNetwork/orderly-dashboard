@@ -30,6 +30,7 @@
     "@tarnadas/fixed-number": "^0.1.1",
     "chart.js": "^4.5.1",
     "chartjs-adapter-date-fns": "^3.0.0",
+    "chartjs-chart-financial": "^0.2.1",
     "compression": "^1.7.4",
     "date-fns": "^4.2.1",
     "dayjs": "^1.11.11",

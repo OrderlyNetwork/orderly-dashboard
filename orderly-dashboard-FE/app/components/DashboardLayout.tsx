@@ -7,12 +7,14 @@ import { useIsMobile } from '~/hooks/useMediaQuery';
 
 const PATH_TO_NAV: Record<string, NavId> = {
   '/': 'dashboards',
+  '/markets': 'markets',
   '/leaderboard': 'leaderboard',
   '/explorer': 'explorer'
 };
 
 function getActiveNav(pathname: string): NavId {
   if (PATH_TO_NAV[pathname]) return PATH_TO_NAV[pathname];
+  if (pathname.startsWith('/markets')) return 'markets';
   if (pathname.startsWith('/search')) return 'explorer';
   if (pathname.startsWith('/address')) return 'explorer';
   return 'dashboards';

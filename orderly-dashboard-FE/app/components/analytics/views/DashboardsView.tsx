@@ -16,7 +16,9 @@ import { DexUsersWidget } from '../widgets/DexUsersWidget';
 import { DistributorsWidget } from '../widgets/DistributorsWidget';
 import { FeesStatsWidget } from '../widgets/FeesStatsWidget';
 import { FundFlowsByChainWidget } from '../widgets/FundFlowsByChainWidget';
+import { FundingComparisonWidget } from '../widgets/FundingComparisonWidget';
 import { FundingRatesWidget } from '../widgets/FundingRatesWidget';
+import { InsuranceFundWidget } from '../widgets/InsuranceFundWidget';
 import { LiquidationHeatmapWidget } from '../widgets/LiquidationHeatmapWidget';
 import { LiquidationsBySymbolWidget } from '../widgets/LiquidationsBySymbolWidget';
 import { MarketShareWidget } from '../widgets/MarketShareWidget';
@@ -27,6 +29,8 @@ import { OverviewWidget } from '../widgets/OverviewWidget';
 import { StakeUsersWidget } from '../widgets/StakeUsersWidget';
 import { StakeVsSupplyWidget } from '../widgets/StakeVsSupplyWidget';
 import { StakingDailyWidget } from '../widgets/StakingDailyWidget';
+// TopFlowsWidget import commented out — see usage block below for details.
+// import { TopFlowsWidget } from '../widgets/TopFlowsWidget';
 import { TvlByChainWidget } from '../widgets/TvlByChainWidget';
 import { TvlByTokenWidget } from '../widgets/TvlByTokenWidget';
 import { VolumeChartWidget } from '../widgets/VolumeChartWidget';
@@ -171,6 +175,24 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             <FundingRatesWidget />
           </WidgetWrapper>
         </div>
+        <div style={{ marginTop: 20 }}>
+          <WidgetWrapper
+            widgetId="funding-comparison"
+            title="Funding Rate Comparison"
+            subtitle="Orderly vs other venues — latest + 1d / 7d / 30d averages"
+          >
+            <FundingComparisonWidget />
+          </WidgetWrapper>
+        </div>
+        <div style={{ marginTop: 20 }}>
+          <WidgetWrapper
+            widgetId="insurance-fund"
+            title="Insurance Fund"
+            subtitle="fund balance, collateral & open positions"
+          >
+            <InsuranceFundWidget />
+          </WidgetWrapper>
+        </div>
       </div>
 
       <WidgetWrapper
@@ -285,6 +307,14 @@ export const DashboardsView: FC<Props> = ({ data }) => {
             <NetFlowByBuilderWidget period={netFlowBuilderPeriod} />
           </WidgetWrapper>
         </div>
+        {/*
+          Top Flows widget temporarily disabled (2026-07-21).
+          The /ranking/deposit and /ranking/withdraw query-service endpoints
+          currently return byte-identical data — the direction toggle has no
+          effect. Re-enable this block (and the TopFlowsWidget import above)
+          once the backend distinguishes the two.
+          See app/hooks/useFlowsRank.ts.
+        */}
         <div style={{ marginTop: 20 }}>
           <WidgetWrapper
             widgetId="tvl-by-token"
@@ -300,6 +330,15 @@ export const DashboardsView: FC<Props> = ({ data }) => {
           >
             <TvlByTokenWidget period={tvlTokenPeriod} />
           </WidgetWrapper>
+          {/*
+          <WidgetWrapper
+            widgetId="top-flows"
+            title="Top Flows"
+            subtitle="top accounts by deposit / withdrawal notional per token"
+          >
+            <TopFlowsWidget />
+          </WidgetWrapper>
+          */}
         </div>
       </div>
     </div>

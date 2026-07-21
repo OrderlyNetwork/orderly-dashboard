@@ -25,6 +25,7 @@ import { fmtUsd, labelFromDate } from '../shared/formatters';
 import { BarChartSkeleton, DatasetChips, Empty } from '../shared/primitives';
 
 import { usePerpLiquidations } from '~/hooks/useOrderlyMetrics';
+import { getBaseToken } from '~/hooks/useSymbols';
 
 ChartJS.register(
   CategoryScale,
@@ -64,7 +65,7 @@ export const LiquidationsBySymbolWidget: FC = () => {
   );
 
   const chips = ranked.map((key, i) => ({
-    label: key.replace('PERP_', '').replace('_USDC', ''),
+    label: getBaseToken(key),
     color: chartColor(i),
     visible: !hidden.has(key)
   }));
@@ -74,7 +75,7 @@ export const LiquidationsBySymbolWidget: FC = () => {
     datasets: chartKeys.map((key) => {
       const i = ranked.indexOf(key);
       return {
-        label: key.replace('PERP_', '').replace('_USDC', ''),
+        label: getBaseToken(key),
         data: dates.map((d) => dateMap.get(d)?.[key] ?? 0),
         backgroundColor: chartColor(i) + 'CC',
         borderRadius: 2,

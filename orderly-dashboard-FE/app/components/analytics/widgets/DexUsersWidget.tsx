@@ -28,13 +28,16 @@ const COLUMNS: { label: string; key: SortKey }[] = [
   { label: 'New 30d', key: 'new_users_30d' }
 ];
 
+const HOVER_BG = 'rgba(156,117,255,0.12)';
+
 export const DexUsersWidget: FC<{
   search?: string;
   onSearchChange?: (s: string) => void;
 }> = ({ search = '' }) => {
   const { data, isLoading, error } = useDexUsers();
-  const [sortKey, setSortKey] = useState<SortKey>('total_users');
+  const [sortKey, setSortKey] = useState<SortKey>('mau');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [hovered, setHovered] = useState<number | null>(null);
 
   const raw = data?.data ?? [];
 
@@ -108,27 +111,124 @@ export const DexUsersWidget: FC<{
               </tr>
             </thead>
             <tbody>
-              {brokers.map((b, i) => (
-                <tr key={i}>
-                  <td style={{ ...tdSticky(i), color: '#9C75FF', fontWeight: 600 }}>
-                    {b.broker_name ?? b.broker_id ?? '—'}
-                  </td>
-                  <td style={{ ...TD, color: '#fff' }}>{fmtNum(b.dau)}</td>
-                  <td style={{ ...TD, color: (b.dau_dod_pct ?? 0) >= 0 ? '#1DF6B5' : '#FF6390' }}>
-                    {fmtPct(b.dau_dod_pct)}
-                  </td>
-                  <td style={{ ...TD, color: '#fff' }}>{fmtNum(b.wau)}</td>
-                  <td style={{ ...TD, color: (b.wau_wow_pct ?? 0) >= 0 ? '#1DF6B5' : '#FF6390' }}>
-                    {fmtPct(b.wau_wow_pct)}
-                  </td>
-                  <td style={{ ...TD, color: '#fff' }}>{fmtNum(b.mau)}</td>
-                  <td style={{ ...TD, color: (b.mau_mom_pct ?? 0) >= 0 ? '#1DF6B5' : '#FF6390' }}>
-                    {fmtPct(b.mau_mom_pct)}
-                  </td>
-                  <td style={{ ...TD, color: 'rgba(255,255,255,0.7)' }}>{fmtNum(b.total_users)}</td>
-                  <td style={{ ...TD, color: '#C4A9FF' }}>{fmtNum(b.new_users_30d)}</td>
-                </tr>
-              ))}
+              {brokers.map((b, i) => {
+                const url = b.broker_id
+                  ? `https://dex.orderly.network/en/board/${b.broker_id}`
+                  : undefined;
+                const label = b.broker_name ?? b.broker_id ?? '—';
+                const isHovered = hovered === i;
+                const cellBg = isHovered ? HOVER_BG : undefined;
+                const stickyBg = isHovered ? HOVER_BG : tdSticky(i).background;
+                return (
+                  <tr
+                    key={b.broker_id ?? i}
+                    style={{ position: 'relative', cursor: url ? 'pointer' : 'default' }}
+                    onMouseEnter={() => setHovered(i)}
+                    onMouseLeave={() => setHovered(null)}
+                  >
+                    <td
+                      style={{
+                        ...tdSticky(i),
+                        background: stickyBg,
+                        transition: 'background-color 150ms',
+                        color: '#9C75FF',
+                        fontWeight: 600
+                      }}
+                    >
+                      {label}
+                    </td>
+                    <td
+                      style={{
+                        ...TD,
+                        background: cellBg,
+                        transition: 'background-color 150ms',
+                        color: '#fff'
+                      }}
+                    >
+                      {url && (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${label} board`}
+                          style={{ position: 'absolute', inset: 0, zIndex: 3 }}
+                        />
+                      )}
+                      {fmtNum(b.dau)}
+                    </td>
+                    <td
+                      style={{
+                        ...TD,
+                        background: cellBg,
+                        transition: 'background-color 150ms',
+                        color: (b.dau_dod_pct ?? 0) >= 0 ? '#1DF6B5' : '#FF6390'
+                      }}
+                    >
+                      {fmtPct(b.dau_dod_pct)}
+                    </td>
+                    <td
+                      style={{
+                        ...TD,
+                        background: cellBg,
+                        transition: 'background-color 150ms',
+                        color: '#fff'
+                      }}
+                    >
+                      {fmtNum(b.wau)}
+                    </td>
+                    <td
+                      style={{
+                        ...TD,
+                        background: cellBg,
+                        transition: 'background-color 150ms',
+                        color: (b.wau_wow_pct ?? 0) >= 0 ? '#1DF6B5' : '#FF6390'
+                      }}
+                    >
+                      {fmtPct(b.wau_wow_pct)}
+                    </td>
+                    <td
+                      style={{
+                        ...TD,
+                        background: cellBg,
+                        transition: 'background-color 150ms',
+                        color: '#fff'
+                      }}
+                    >
+                      {fmtNum(b.mau)}
+                    </td>
+                    <td
+                      style={{
+                        ...TD,
+                        background: cellBg,
+                        transition: 'background-color 150ms',
+                        color: (b.mau_mom_pct ?? 0) >= 0 ? '#1DF6B5' : '#FF6390'
+                      }}
+                    >
+                      {fmtPct(b.mau_mom_pct)}
+                    </td>
+                    <td
+                      style={{
+                        ...TD,
+                        background: cellBg,
+                        transition: 'background-color 150ms',
+                        color: 'rgba(255,255,255,0.7)'
+                      }}
+                    >
+                      {fmtNum(b.total_users)}
+                    </td>
+                    <td
+                      style={{
+                        ...TD,
+                        background: cellBg,
+                        transition: 'background-color 150ms',
+                        color: '#C4A9FF'
+                      }}
+                    >
+                      {fmtNum(b.new_users_30d)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

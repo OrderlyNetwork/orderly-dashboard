@@ -18,6 +18,7 @@ import { baseTooltipOpts, chartColor, tooltipTopN, useChartReady } from '../shar
 import { DatasetChips, Empty, LineChartSkeleton } from '../shared/primitives';
 
 import { useFundingRates, useSymbolWeekly } from '~/hooks/useOrderlyMetrics';
+import { getBaseToken } from '~/hooks/useSymbols';
 
 ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
@@ -67,7 +68,7 @@ export const FundingRatesWidget: FC = () => {
   );
 
   const chips = ranked.map((key, i) => ({
-    label: key.replace('PERP_', '').replace('_USDC', ''),
+    label: getBaseToken(key),
     color: chartColor(i),
     visible: !hidden.has(key)
   }));
@@ -76,7 +77,7 @@ export const FundingRatesWidget: FC = () => {
     datasets: chartKeys.map((key) => {
       const i = ranked.indexOf(key);
       return {
-        label: key.replace('PERP_', '').replace('_USDC', ''),
+        label: getBaseToken(key),
         data: seriesBySymbol.get(key) ?? [],
         borderColor: chartColor(i),
         backgroundColor: chartColor(i) + '20',

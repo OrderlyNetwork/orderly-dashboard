@@ -4,12 +4,14 @@ import type { NavId } from '~/components/analytics/Sidebar';
 
 const NAV_LABELS: Record<NavId, string> = {
   dashboards: 'Dashboards',
+  markets: 'Markets',
   leaderboard: 'Leaderboard',
   explorer: 'Search'
 };
 
 const NAV_SUBTITLES: Record<NavId, string> = {
   dashboards: 'Overview of key metrics and performance indicators',
+  markets: 'Real-time perpetual market data',
   leaderboard: 'Trading performance and open positions across the network',
   explorer: 'Search wallets and accounts for detailed trading history'
 };

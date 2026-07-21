@@ -302,6 +302,15 @@ export const useTokenTvl = (days = 30) =>
 export const useFundingRates = () =>
   useFetch<FundingRatesResponse>('/orderly/api/v1/dashboard/orderly/funding-rates');
 
+export const useFundingRatesRange = (days: number = 30) => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  const startDate = d.toISOString().slice(0, 10);
+  return useFetch<FundingRatesResponse>(
+    `/orderly/api/v1/dashboard/orderly/funding-rates?start_date=${startDate}`
+  );
+};
+
 export const useStakingDaily = () =>
   useFetch<StakingDailyResponse>('/orderly/api/v1/dashboard/staking/daily');
 

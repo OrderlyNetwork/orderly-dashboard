@@ -7,21 +7,10 @@ import { useAppState } from '~/App';
 import { types } from '~/types';
 
 export type EventType =
-  | 'TRANSACTION'
-  | 'PERPTRADE'
-  | 'SETTLEMENT'
-  | 'LIQUIDATION'
-  | 'ADL'
-  | 'MARGINTRANSFER';
+  'TRANSACTION' | 'PERPTRADE' | 'SETTLEMENT' | 'LIQUIDATION' | 'ADL' | 'MARGINTRANSFER';
 
 export type UIEventType =
-  | 'ALL'
-  | EventType
-  | 'LIQUIDATIONV2'
-  | 'LIQUIDATIONV3'
-  | 'ADLV2'
-  | 'ADLV3'
-  | 'SETTLEMENTV3';
+  'ALL' | EventType | 'LIQUIDATIONV2' | 'LIQUIDATIONV3' | 'ADLV2' | 'ADLV3' | 'SETTLEMENTV3';
 
 export function toBackendEventType(uiEventType: UIEventType): EventType | null {
   switch (uiEventType) {

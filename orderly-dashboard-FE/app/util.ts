@@ -9,3 +9,5 @@ export function base64UrlSafeDecode(input: string) {
   const padding = base64.length % 4 === 0 ? '' : '='.repeat(4 - (base64.length % 4));
   return atob(base64 + padding);
 }
+
+export const DASHBOARD_ORIGIN = 'https://dashboard.orderly.network';

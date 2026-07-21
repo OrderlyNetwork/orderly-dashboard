@@ -14,6 +14,7 @@ import {
   UIEventType,
   EventsParams,
   getSymbolName,
+  getSymbolQuoteTick,
   getTokenName,
   useEvents,
   useSymbols,
@@ -21,6 +22,13 @@ import {
   useAllSymbols,
   useAllTokens
 } from '~/hooks';
+import { getBaseToken } from '~/hooks/useSymbols';
+import { formatPriceByTick } from '~/utils/format';
+
+function getSymbolHash(row: EventTableData, group: string): string | undefined {
+  return (row as unknown as Record<string, { symbol_hash?: string } | undefined>)[group]
+    ?.symbol_hash;
+}
 
 export function useRenderColumns(
   query: EventsParams | null,
@@ -380,8 +388,7 @@ export function useRenderColumns(
             enableSorting: false,
             cell: (info) => {
               const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-              const parts = symbol.split('_');
-              const baseToken = parts.length >= 2 ? parts[1] : symbol;
+              const baseToken = getBaseToken(symbol);
               return (
                 <div className="flex items-center gap-1">
                   <span className="font-mono text-sm">{baseToken}</span>
@@ -440,10 +447,10 @@ export function useRenderColumns(
             cell: (info) => {
               const value = info.getValue();
               if (value == null) return '';
-              // FIXME why API returns as 8 decimals?
-              return new FixedNumber(value, 8).format({
-                maximumFractionDigits: 2
-              });
+              return formatPriceByTick(
+                value,
+                getSymbolQuoteTick(getSymbolHash(info.row.original, 'trade'), symbols)
+              );
             }
           }),
           columnHelper.accessor('trade.fee', {
@@ -521,8 +528,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -569,10 +575,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXMe why 8 decimals?
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'settlement'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('settlement.settled_amount', {
@@ -613,8 +619,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -687,10 +692,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  // FIXMe why 8 decimals?
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'liquidation'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('liquidation.position_qty_transfer', {
@@ -737,8 +742,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -748,9 +752,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'liquidationv2'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('liquidationv2.fee', {
@@ -825,8 +830,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -887,8 +891,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -944,8 +947,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -992,9 +994,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'settlementv3'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('settlementv3.settled_amount', {
@@ -1049,8 +1052,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -1060,9 +1062,10 @@ export function useRenderColumns(
                 cell: (info) => {
                   const value = info.getValue();
                   if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
+                  return formatPriceByTick(
+                    value,
+                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'liquidationv3'), symbols)
+                  );
                 }
               }),
               columnHelper.accessor('liquidationv3.fee', {
@@ -1164,8 +1167,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),
@@ -1272,8 +1274,7 @@ export function useRenderColumns(
                 enableSorting: false,
                 cell: (info) => {
                   const symbol = getSymbolName(info.getValue(), symbols, allSymbols);
-                  const parts = symbol.split('_');
-                  const baseToken = parts.length >= 2 ? parts[1] : symbol;
+                  const baseToken = getBaseToken(symbol);
                   return <span className="font-mono text-sm">{baseToken}</span>;
                 }
               }),

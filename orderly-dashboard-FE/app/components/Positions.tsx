@@ -23,12 +23,15 @@ import {
   useAllSymbols,
   getSymbolName,
   getSymbolBaseTick,
+  getSymbolQuoteTick,
   getMaxFractionDigits,
   useSearchAddress
 } from '~/hooks';
 import { usePositions, PositionsParams } from '~/hooks/usePositions';
+import { getBaseToken, getBroker } from '~/hooks/useSymbols';
 import { PositionEntry, PositionsResponse } from '~/types/leaderboard';
 import { base64UrlSafeEncode } from '~/util';
+import { formatPriceByTick } from '~/utils/format';
 
 const defaultVisibility = {
   account_id: false,
@@ -307,11 +310,23 @@ export const Positions: FC<PositionsProps> = ({
         header: 'Symbol',
         cell: ({ row }) => {
           const symbol = formatSymbol(row.original.symbol_hash) || row.original.symbol;
-          const parts = symbol.split('_');
-          const baseToken = parts.length >= 2 ? parts[1] : symbol;
+          const baseToken = getBaseToken(symbol);
+          const broker = getBroker(symbol);
           return (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <span className="font-mono text-sm">{baseToken}</span>
+              {broker && (
+                <span
+                  className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium leading-none"
+                  style={{
+                    background: 'rgba(156,117,255,0.15)',
+                    color: '#D4B2FF',
+                    border: '1px solid rgba(156,117,255,0.25)'
+                  }}
+                >
+                  {broker}
+                </span>
+              )}
               {!hideQuickActions && (
                 <Tooltip content="Filter by this symbol">
                   <MagnifyingGlassIcon
@@ -374,19 +389,31 @@ export const Positions: FC<PositionsProps> = ({
       {
         accessorKey: 'index_price',
         header: 'Index Price',
-        cell: ({ row }) => formatNumber(row.original.index_price, undefined, 10),
+        cell: ({ row }) =>
+          formatPriceByTick(
+            row.original.index_price,
+            getSymbolQuoteTick(row.original.symbol_hash, symbols)
+          ),
         enableSorting: false
       },
       {
         accessorKey: 'mark_price',
         header: 'Mark Price',
-        cell: ({ row }) => formatNumber(row.original.mark_price, undefined, 10),
+        cell: ({ row }) =>
+          formatPriceByTick(
+            row.original.mark_price,
+            getSymbolQuoteTick(row.original.symbol_hash, symbols)
+          ),
         enableSorting: false
       },
       {
         accessorKey: 'average_entry_price',
         header: 'Avg Entry Price',
-        cell: ({ row }) => formatNumber(row.original.average_entry_price, undefined, 10),
+        cell: ({ row }) =>
+          formatPriceByTick(
+            row.original.average_entry_price,
+            getSymbolQuoteTick(row.original.symbol_hash, symbols)
+          ),
         enableSorting: false
       },
       {
@@ -414,7 +441,8 @@ export const Positions: FC<PositionsProps> = ({
       handleAccountIdChange,
       formatSymbol,
       handleInputChange,
-      formatNumber
+      formatNumber,
+      symbols
     ]
   );
 
@@ -595,11 +623,11 @@ export const Positions: FC<PositionsProps> = ({
                 >
                   <option value="">All symbols</option>
                   {symbols?.map((symbol) => {
-                    const parts = symbol.symbol.split('_');
-                    const baseToken = parts.length >= 2 ? parts[1] : symbol.symbol;
+                    const baseToken = getBaseToken(symbol.symbol);
+                    const broker = getBroker(symbol.symbol);
                     return (
                       <option key={symbol.symbol} value={symbol.symbol}>
-                        {baseToken}
+                        {broker ? `${baseToken} · ${broker}` : baseToken}
                       </option>
                     );
                   })}

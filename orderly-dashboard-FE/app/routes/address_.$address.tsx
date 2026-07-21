@@ -12,10 +12,11 @@ import { useRenderColumns } from './address';
 import { useAppState } from '~/App';
 import {
   Spinner,
-  Positions,
+  AddressPositions,
   EventsTable,
   BrokerSelectionModal,
   PnLStats,
+  PortfolioChart,
   TaxExportModal
 } from '~/components';
 import { ChainAddress, EventsParams, UIEventType, toBackendEventType } from '~/hooks';
@@ -29,14 +30,16 @@ export const Address: FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const initialTab = searchParams.get('tab') as 'events' | 'positions' | null;
-  const [activeTab, setActiveTab] = useState<'events' | 'positions'>(
-    initialTab === 'events' || initialTab === 'positions' ? initialTab : 'events'
+  const initialTab = searchParams.get('tab') as 'events' | 'positions' | 'portfolio' | null;
+  const [activeTab, setActiveTab] = useState<'events' | 'positions' | 'portfolio'>(
+    initialTab === 'events' || initialTab === 'positions' || initialTab === 'portfolio'
+      ? initialTab
+      : 'events'
   );
 
   useEffect(() => {
-    const currentTab = searchParams.get('tab') as 'events' | 'positions' | null;
-    if (currentTab === 'events' || currentTab === 'positions') {
+    const currentTab = searchParams.get('tab') as 'events' | 'positions' | 'portfolio' | null;
+    if (currentTab === 'events' || currentTab === 'positions' || currentTab === 'portfolio') {
       setActiveTab(currentTab);
     } else {
       setActiveTab('events');
@@ -112,7 +115,7 @@ export const Address: FC = () => {
   const broker_id = searchParams.get('broker_id');
   const user_id = searchParams.get('user_id');
 
-  const handleTabChange = (newTab: 'events' | 'positions') => {
+  const handleTabChange = (newTab: 'events' | 'positions' | 'portfolio') => {
     const newSearchParams = new URLSearchParams(searchParams);
     if (newTab === 'events') {
       newSearchParams.delete('tab');
@@ -238,7 +241,7 @@ export const Address: FC = () => {
 
   const accountId = selectedAccount?.account_id;
 
-  const AddressPositions = () => {
+  const renderAddressPositions = () => {
     if (!accountId) {
       return (
         <div className="flex justify-center py-12">
@@ -251,16 +254,13 @@ export const Address: FC = () => {
       <>
         <h2 className="text-2xl font-bold text-white mb-2 mx-2 md:mx-4">Positions</h2>
         <p className="text-gray-300 mb-6 mx-2 md:mx-4 max-w-2xl">
-          Current positions for this account. Shows current position data for each symbol, including
-          closed positions. Realized PnL is aggregated across all historical positions for each
-          symbol. Currently only supports sorting by holding value. Date information not yet
-          available. Note: Sub-accounts are not yet supported.
+          Current open positions for this account. Pulled live from the Orderly Public Info API (
+          <code className="font-mono text-xs">accountState</code>).
         </p>
-        <Positions
+        <AddressPositions
+          address={address.address}
+          brokerId={broker_id ?? undefined}
           accountId={accountId}
-          hideFilters={true}
-          hideTitle={true}
-          hideQuickActions={true}
         />
       </>
     );
@@ -537,8 +537,10 @@ export const Address: FC = () => {
           symbolFilter={symbolFilter}
           setSymbolFilter={setSymbolFilter}
         />
+      ) : activeTab === 'positions' ? (
+        renderAddressPositions()
       ) : (
-        <AddressPositions />
+        <PortfolioChart address={address.address} brokerId={broker_id} accountId={accountId} />
       )}
 
       {/* Broker Selection Modal */}

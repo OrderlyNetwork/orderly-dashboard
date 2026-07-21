@@ -4,7 +4,9 @@ import { fmtCompact } from '../shared/formatters';
 import { Empty, Skeleton } from '../shared/primitives';
 
 import { useSymbolWeekly } from '~/hooks/useOrderlyMetrics';
-import { usePlatformPositions, type PlatformPosition } from '~/hooks/usePublicInfo';
+import { usePlatformPositions, useSymbolInfo, type PlatformPosition } from '~/hooks/usePublicInfo';
+import { getBaseToken } from '~/hooks/useSymbols';
+import { formatPriceByTick } from '~/utils/format';
 
 const NUM_BINS = 48;
 // Keep only liquidation prices within this factor of the mark price in both
@@ -127,13 +129,6 @@ function computeHeatmap(rows: PlatformPosition[]): Heatmap {
   };
 }
 
-function fmtPrice(p: number): string {
-  if (!Number.isFinite(p)) return '—';
-  if (p >= 1000) return p.toLocaleString('en', { maximumFractionDigits: 0 });
-  if (p >= 1) return p.toFixed(2);
-  return p.toFixed(4);
-}
-
 function fmtAgo(ts: number | null): string {
   if (!ts) return '';
   const s = Math.round((Date.now() - ts) / 1000);
@@ -155,7 +150,10 @@ const selectStyle: React.CSSProperties = {
   cursor: 'pointer'
 };
 
-export const LiquidationHeatmapWidget: FC = () => {
+const SymbolDropdown: FC<{ value: string; onChange: (s: string) => void }> = ({
+  value,
+  onChange
+}) => {
   const { data: volData } = useSymbolWeekly();
   const symbolOptions = useMemo(() => {
     const totals = new Map<string, number>();
@@ -168,14 +166,31 @@ export const LiquidationHeatmapWidget: FC = () => {
       .sort((a, b) => b[1] - a[1])
       .map(([sym, vol]) => ({
         symbol: sym,
-        label: `${sym.replace('PERP_', '').replace('_USDC', '')} · ${fmtCompact(vol)}`
+        label: `${getBaseToken(sym)} · ${fmtCompact(vol)}`
       }));
   }, [volData]);
-  const [symbol, setSymbol] = useState('PERP_BTC_USDC');
+  return (
+    <select value={value} onChange={(e) => onChange(e.target.value)} style={selectStyle}>
+      {symbolOptions.map((o) => (
+        <option key={o.symbol} value={o.symbol}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+export const LiquidationHeatmapWidget: FC<{ symbol?: string }> = ({ symbol: fixedSymbol }) => {
+  const [selectedSymbol, setSelectedSymbol] = useState('PERP_BTC_USDC');
+  const symbol = fixedSymbol ?? selectedSymbol;
   const [hovered, setHovered] = useState<number | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
   const { data, isLoading, error, mutate } = usePlatformPositions(symbol, 1000);
+  const { data: symbolInfo } = useSymbolInfo(symbol);
+  const quoteTick = symbolInfo?.quote_tick ?? null;
+
+  const fmtPrice = (p: number) => formatPriceByTick(p, quoteTick);
 
   useEffect(() => {
     if (data) setLastUpdated(Date.now());
@@ -221,13 +236,7 @@ export const LiquidationHeatmapWidget: FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* controls */}
       <div className="flex items-center gap-2 flex-wrap">
-        <select value={symbol} onChange={(e) => setSymbol(e.target.value)} style={selectStyle}>
-          {symbolOptions.map((o) => (
-            <option key={o.symbol} value={o.symbol}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        {!fixedSymbol && <SymbolDropdown value={selectedSymbol} onChange={setSelectedSymbol} />}
 
         <button
           onClick={() => mutate()}
