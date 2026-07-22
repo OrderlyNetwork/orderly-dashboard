@@ -748,7 +748,7 @@ pub async fn get_token_withdraw_rank(
         get_token_ranking(
             param.to_hour(),
             param.size as i64,
-            false,
+            true,
             cal_symbol_hash(&param.token),
         )
         .await,
