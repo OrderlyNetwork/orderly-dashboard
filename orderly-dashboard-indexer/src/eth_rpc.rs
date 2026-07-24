@@ -46,9 +46,7 @@ pub(crate) fn init_provider() -> Result<()> {
         unsafe { &COMMON_CONFIGS.get_unchecked().l2_config.rpc_url }.clone()
     };
     tracing::info!(target: ORDERLY_DASHBOARD_INDEXER, "rpc wrapped: {}", rpc[0..8].to_string() + "***" + &rpc[rpc.len() - 5..]);
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .build()?;
+    let client = reqwest::Client::builder().build()?;
     let http_client = Http::new_with_client(url::Url::parse(&rpc)?, client);
     let provider = Provider::new(http_client);
     PROVIDER.set(provider).ok();
