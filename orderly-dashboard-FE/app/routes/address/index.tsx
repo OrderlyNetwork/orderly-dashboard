@@ -2,7 +2,7 @@ import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { Button, Tooltip } from '@radix-ui/themes';
 import { GroupColumnDef, createColumnHelper } from '@tanstack/react-table';
 import { FixedNumber } from '@tarnadas/fixed-number';
-import { Dispatch, SetStateAction, useMemo } from 'react';
+import { Dispatch, SetStateAction, useCallback, useMemo } from 'react';
 import { P, match } from 'ts-pattern';
 
 import { Shortened } from './Shortened';
@@ -13,6 +13,8 @@ import {
   EventTableData,
   UIEventType,
   EventsParams,
+  getMaxFractionDigits,
+  getSymbolBaseTick,
   getSymbolName,
   getSymbolQuoteTick,
   getTokenName,
@@ -23,11 +25,15 @@ import {
   useAllTokens
 } from '~/hooks';
 import { getBaseToken } from '~/hooks/useSymbols';
-import { formatPriceByTick } from '~/utils/format';
+import { tickToDecimals } from '~/utils/format';
 
 function getSymbolHash(row: EventTableData, group: string): string | undefined {
-  return (row as unknown as Record<string, { symbol_hash?: string } | undefined>)[group]
+  const top = (row as unknown as Record<string, { symbol_hash?: string } | undefined>)[group]
     ?.symbol_hash;
+  if (top) return top;
+  const data = (row as unknown as { data?: Record<string, { symbol_hash?: string } | undefined> })
+    .data;
+  return data?.[group]?.symbol_hash;
 }
 
 export function useRenderColumns(
@@ -46,6 +52,40 @@ export function useRenderColumns(
   const symbols = useSymbols();
   const allSymbols = useAllSymbols();
   const allTokens = useAllTokens();
+
+  const formatEventsPrice = useCallback(
+    (value: string | null | undefined, symbolHash: string | undefined) => {
+      if (value == null || value === '') return '';
+      const tick = getSymbolQuoteTick(symbolHash, symbols);
+      const decimals = tick != null ? tickToDecimals(tick) : 8;
+      try {
+        return new FixedNumber(value, 8).format({
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals,
+          maximumSignificantDigits: undefined
+        });
+      } catch {
+        return '-';
+      }
+    },
+    [symbols]
+  );
+
+  const formatEventsQty = useCallback(
+    (value: string | null | undefined, symbolHash: string | undefined) => {
+      if (value == null || value === '') return '';
+      const maxDigits = getMaxFractionDigits(getSymbolBaseTick(symbolHash, symbols));
+      try {
+        return new FixedNumber(value, 8).format({
+          maximumFractionDigits: maxDigits,
+          maximumSignificantDigits: undefined
+        });
+      } catch {
+        return '-';
+      }
+    },
+    [symbols]
+  );
 
   const processedEvents = useMemo(() => {
     let result = events;
@@ -421,10 +461,14 @@ export function useRenderColumns(
               const value = info.getValue();
               if (value == null) return '';
               const res = new FixedNumber(value, 8);
+              const maxDigits = getMaxFractionDigits(
+                getSymbolBaseTick(getSymbolHash(info.row.original, 'trade'), symbols)
+              );
               return (
                 <span className={res.valueOf() > 0n ? 'color-green-3' : 'color-red-3'}>
                   {res.format({
-                    maximumFractionDigits: 2
+                    maximumFractionDigits: maxDigits,
+                    maximumSignificantDigits: undefined
                   })}
                 </span>
               );
@@ -444,14 +488,8 @@ export function useRenderColumns(
           columnHelper.accessor('trade.executed_price', {
             header: aggregateTrades ? 'Avg Executed Price' : 'Executed Price',
             enableSorting: false,
-            cell: (info) => {
-              const value = info.getValue();
-              if (value == null) return '';
-              return formatPriceByTick(
-                value,
-                getSymbolQuoteTick(getSymbolHash(info.row.original, 'trade'), symbols)
-              );
-            }
+            cell: (info) =>
+              formatEventsPrice(info.getValue(), getSymbolHash(info.row.original, 'trade'))
           }),
           columnHelper.accessor('trade.fee', {
             header: 'Fee',
@@ -572,14 +610,8 @@ export function useRenderColumns(
               columnHelper.accessor('settlement.mark_price', {
                 header: 'Mark Price',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return formatPriceByTick(
-                    value,
-                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'settlement'), symbols)
-                  );
-                }
+                cell: (info) =>
+                  formatEventsPrice(info.getValue(), getSymbolHash(info.row.original, 'settlement'))
               }),
               columnHelper.accessor('settlement.settled_amount', {
                 header: 'Settled Amount',
@@ -689,26 +721,17 @@ export function useRenderColumns(
               columnHelper.accessor('liquidation.mark_price', {
                 header: 'Mark Price',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return formatPriceByTick(
-                    value,
-                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'liquidation'), symbols)
-                  );
-                }
+                cell: (info) =>
+                  formatEventsPrice(
+                    info.getValue(),
+                    getSymbolHash(info.row.original, 'liquidation')
+                  )
               }),
               columnHelper.accessor('liquidation.position_qty_transfer', {
                 header: 'Position Qty Transfer',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  // FIXME how many decimals?
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
-                }
+                cell: (info) =>
+                  formatEventsQty(info.getValue(), getSymbolHash(info.row.original, 'liquidation'))
               }),
               columnHelper.accessor('liquidation.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
@@ -749,14 +772,11 @@ export function useRenderColumns(
               columnHelper.accessor('liquidationv2.mark_price', {
                 header: 'Mark Price',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return formatPriceByTick(
-                    value,
-                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'liquidationv2'), symbols)
-                  );
-                }
+                cell: (info) =>
+                  formatEventsPrice(
+                    info.getValue(),
+                    getSymbolHash(info.row.original, 'liquidationv2')
+                  )
               }),
               columnHelper.accessor('liquidationv2.fee', {
                 header: 'Fee',
@@ -789,14 +809,11 @@ export function useRenderColumns(
               columnHelper.accessor('liquidationv2.position_qty_transfer', {
                 header: 'Position Qty Transfer',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  // FIXME how many decimals?
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
-                }
+                cell: (info) =>
+                  formatEventsQty(
+                    info.getValue(),
+                    getSymbolHash(info.row.original, 'liquidationv2')
+                  )
               }),
               columnHelper.accessor('liquidationv2.account_id', {
                 header: 'Liquidated Account ID',
@@ -857,13 +874,8 @@ export function useRenderColumns(
               columnHelper.accessor('data.AdlResult.position_qty_transfer', {
                 header: 'Position Qty Transfer',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
-                }
+                cell: (info) =>
+                  formatEventsQty(info.getValue(), getSymbolHash(info.row.original, 'AdlResult'))
               }),
               columnHelper.accessor('data.AdlResult.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
@@ -913,13 +925,8 @@ export function useRenderColumns(
               columnHelper.accessor('data.AdlResultV2.position_qty_transfer', {
                 header: 'Position Qty Transfer',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
-                }
+                cell: (info) =>
+                  formatEventsQty(info.getValue(), getSymbolHash(info.row.original, 'AdlResultV2'))
               }),
               columnHelper.accessor('data.AdlResultV2.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
@@ -991,14 +998,11 @@ export function useRenderColumns(
               columnHelper.accessor('settlementv3.mark_price', {
                 header: 'Mark Price',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return formatPriceByTick(
-                    value,
-                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'settlementv3'), symbols)
-                  );
-                }
+                cell: (info) =>
+                  formatEventsPrice(
+                    info.getValue(),
+                    getSymbolHash(info.row.original, 'settlementv3')
+                  )
               }),
               columnHelper.accessor('settlementv3.settled_amount', {
                 header: 'Execution Settled Amount',
@@ -1059,14 +1063,11 @@ export function useRenderColumns(
               columnHelper.accessor('liquidationv3.mark_price', {
                 header: 'Mark Price',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return formatPriceByTick(
-                    value,
-                    getSymbolQuoteTick(getSymbolHash(info.row.original, 'liquidationv3'), symbols)
-                  );
-                }
+                cell: (info) =>
+                  formatEventsPrice(
+                    info.getValue(),
+                    getSymbolHash(info.row.original, 'liquidationv3')
+                  )
               }),
               columnHelper.accessor('liquidationv3.fee', {
                 header: 'Fee',
@@ -1098,13 +1099,11 @@ export function useRenderColumns(
               columnHelper.accessor('liquidationv3.position_qty_transfer', {
                 header: 'Position Qty Transfer',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
-                }
+                cell: (info) =>
+                  formatEventsQty(
+                    info.getValue(),
+                    getSymbolHash(info.row.original, 'liquidationv3')
+                  )
               }),
               columnHelper.accessor('liquidationv3.account_id', {
                 header: 'Liquidated Account ID',
@@ -1189,13 +1188,8 @@ export function useRenderColumns(
               columnHelper.accessor('data.AdlResultV3.position_qty_transfer', {
                 header: 'Position Qty Transfer',
                 enableSorting: false,
-                cell: (info) => {
-                  const value = info.getValue();
-                  if (value == null) return '';
-                  return new FixedNumber(value, 8).format({
-                    maximumFractionDigits: 2
-                  });
-                }
+                cell: (info) =>
+                  formatEventsQty(info.getValue(), getSymbolHash(info.row.original, 'AdlResultV3'))
               }),
               columnHelper.accessor('data.AdlResultV3.sum_unitary_fundings', {
                 header: 'Sum Uni. Funding',
@@ -1299,7 +1293,9 @@ export function useRenderColumns(
     aggregateTrades,
     symbols,
     allSymbols,
-    onSymbolFilter
+    onSymbolFilter,
+    formatEventsPrice,
+    formatEventsQty
   ]);
 
   return {

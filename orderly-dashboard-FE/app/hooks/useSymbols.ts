@@ -62,7 +62,8 @@ export function getSymbolName(
   return allSymbols?.find(({ symbol_hash }) => symbol_hash === name)?.symbol ?? '';
 }
 
-export function getSymbolBaseTick(name: string, symbols: PerpSymbol[] | undefined) {
+export function getSymbolBaseTick(name: string | undefined, symbols: PerpSymbol[] | undefined) {
+  if (!name) return 0.01;
   return (
     symbols?.find(({ symbol }) => keccak256(encoder.encode(symbol)) === name)?.base_tick ?? 0.01
   );
