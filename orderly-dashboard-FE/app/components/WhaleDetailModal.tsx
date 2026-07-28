@@ -8,6 +8,7 @@ import { BrokerBadge } from '~/components/BrokerBadge';
 import { useMarketSummary, useWhaleContext } from '~/hooks/usePublicInfo';
 import { getBaseToken, getBroker } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
+import { computeUnrealizedPnl } from '~/utils/pnl';
 
 interface WhaleDetailModalProps {
   open: boolean;
@@ -52,6 +53,11 @@ export const WhaleDetailModal: FC<WhaleDetailModalProps> = ({
   const formatAddress = (addr: string) => {
     return `${addr.substring(0, 8)}...${addr.substring(addr.length - 6)}`;
   };
+
+  const totalUnrealizedPnl = useMemo(
+    () => (data?.positions ?? []).reduce((sum, p) => sum + (computeUnrealizedPnl(p) ?? 0), 0),
+    [data?.positions]
+  );
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -99,11 +105,10 @@ export const WhaleDetailModal: FC<WhaleDetailModalProps> = ({
                     <div
                       className="text-sm font-semibold"
                       style={{
-                        color:
-                          parseFloat(data.account.total_unrealized_pnl) >= 0 ? '#00dea3' : '#FF6390'
+                        color: totalUnrealizedPnl >= 0 ? '#00dea3' : '#FF6390'
                       }}
                     >
-                      {formatNumber(data.account.total_unrealized_pnl)}
+                      {formatNumber(totalUnrealizedPnl)}
                     </div>
                   </div>
                   <div className="rounded-lg p-3" style={{ background: '#1A1525' }}>
@@ -171,13 +176,12 @@ export const WhaleDetailModal: FC<WhaleDetailModalProps> = ({
                             {formatPriceByTick(pos.mark_price, quoteTickFor(pos.symbol))}
                           </Table.Cell>
                           <Table.Cell>
-                            <span
-                              style={{
-                                color: parseFloat(pos.unrealized_pnl) >= 0 ? '#00dea3' : '#FF6390'
-                              }}
-                            >
-                              {formatNumber(pos.unrealized_pnl)}
-                            </span>
+                            {(() => {
+                              const pnl = computeUnrealizedPnl(pos);
+                              const color =
+                                pnl === null ? undefined : pnl >= 0 ? '#00dea3' : '#FF6390';
+                              return <span style={{ color }}>{formatNumber(pnl)}</span>;
+                            })()}
                           </Table.Cell>
                           <Table.Cell>
                             {pos.est_liq_price

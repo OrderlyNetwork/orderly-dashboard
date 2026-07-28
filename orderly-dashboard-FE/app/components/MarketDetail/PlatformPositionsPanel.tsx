@@ -9,6 +9,7 @@ import { useIsEmbed } from '~/hooks/useIsEmbed';
 import { usePlatformPositions } from '~/hooks/usePublicInfo';
 import { getBaseToken } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
+import { computeUnrealizedPnl } from '~/utils/pnl';
 
 export type PlatformPositionsPanelProps = {
   symbol: string;
@@ -153,7 +154,7 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
               {virtualItems.map((virtualRow) => {
                 const pos = rows[virtualRow.index];
                 const notional = parseFloat(pos.notional || '0');
-                const upnl = parseFloat(pos.unrealized_pnl || '0');
+                const upnl = computeUnrealizedPnl(pos) ?? 0;
                 const entryPrice = parseFloat(pos.average_open_price || '0');
 
                 return (

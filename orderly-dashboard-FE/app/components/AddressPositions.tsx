@@ -10,6 +10,7 @@ import { getMaxFractionDigits, useSymbols } from '~/hooks';
 import { useAccountState, useMarketSummary, AccountStatePosition } from '~/hooks/usePublicInfo';
 import { getBaseToken, getBroker, getShortSlug } from '~/hooks/useSymbols';
 import { formatPriceByTick } from '~/utils/format';
+import { computeUnrealizedPnl } from '~/utils/pnl';
 
 interface AddressPositionsProps {
   address: string;
@@ -153,15 +154,14 @@ export const AddressPositions: FC<AddressPositionsProps> = ({ address, brokerId,
         enableSorting: false
       },
       {
-        accessorKey: 'unrealized_pnl',
+        id: 'unrealized_pnl',
         header: 'Unrealized PnL',
         cell: ({ row }) => {
-          const value = row.original.unrealized_pnl;
-          if (value === null) return <span>-</span>;
-          const num = parseFloat(value);
+          const pnl = computeUnrealizedPnl(row.original);
+          if (pnl === null) return <span>-</span>;
           return (
-            <span style={{ color: num >= 0 ? POSITIVE_COLOR : NEGATIVE_COLOR }}>
-              {formatUsdCompact(value)}
+            <span style={{ color: pnl >= 0 ? POSITIVE_COLOR : NEGATIVE_COLOR }}>
+              {formatUsdCompact(pnl)}
             </span>
           );
         },
