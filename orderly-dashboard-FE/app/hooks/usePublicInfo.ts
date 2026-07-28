@@ -50,8 +50,6 @@ export type PlatformPosition = {
   average_open_price: string;
   mark_price: string;
   est_liq_price: string | null;
-  unrealized_pnl: string | null;
-  unsettled_pnl: string | null;
   leverage: number | null;
   margin_mode: string | null;
   opened_at: number | null;
@@ -400,7 +398,6 @@ export type WhaleAccount = {
   broker_id: string;
   holding: string;
   frozen: string;
-  total_unrealized_pnl: string;
   total_realized_pnl: string;
   margin_ratio: string | null;
   total_collateral: string;
@@ -415,7 +412,6 @@ export type WhalePosition = {
   average_open_price: string;
   mark_price: string;
   est_liq_price: string | null;
-  unrealized_pnl: string;
   leverage: number | null;
   margin_mode: string | null;
 };
@@ -610,8 +606,6 @@ export type AccountStatePosition = {
   notional: string | null;
   average_open_price: string | null;
   mark_price: string | null;
-  unrealized_pnl: string | null;
-  unsettled_pnl: string | null;
   pnl_24_h: string | null;
   imr: string | null;
   mmr: string | null;
@@ -633,8 +627,6 @@ export type AccountStateResponse = {
   margin_ratio: string | null;
   initial_margin_ratio: string | null;
   maintenance_margin_ratio: string | null;
-  total_unrealized_pnl: string | null;
-  total_unsettled_pnl: string | null;
   total_pnl_24_h: string | null;
   positions: AccountStatePosition[];
 };
