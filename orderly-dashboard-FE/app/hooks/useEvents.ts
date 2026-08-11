@@ -218,7 +218,7 @@ export function useEvents(query: EventsParams | null) {
   };
 }
 
-async function fetchEvents(
+export async function fetchEvents(
   query: EventsParams,
   queryServiceUrl: string
 ): Promise<{

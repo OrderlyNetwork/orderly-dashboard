@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import useSWR from 'swr';
 
 import { useAppState } from '~/App';
+import { fetchEvmGet } from '~/services/orderly';
 import { LeaderboardResponse } from '~/types/leaderboard';
 
 export type LeaderboardSortOption =
@@ -25,7 +26,7 @@ export type LeaderboardParams = {
 export function useLeaderboard(params: LeaderboardParams) {
   const { evmApiUrl } = useAppState();
 
-  const queryKey = useMemo(() => {
+  const qs = useMemo(() => {
     const searchParams = new URLSearchParams();
     searchParams.set('start_date', params.start_date);
     searchParams.set('end_date', params.end_date);
@@ -52,32 +53,19 @@ export function useLeaderboard(params: LeaderboardParams) {
       searchParams.set('aggregateBy', params.aggregateBy);
     }
 
-    return `${evmApiUrl}/v1/broker/leaderboard/daily?${searchParams.toString()}`;
-  }, [evmApiUrl, params]);
+    return searchParams.toString();
+  }, [params]);
 
-  const { data, error, isLoading, mutate } = useSWR<{
-    success: boolean;
-    data: LeaderboardResponse;
-    timestamp: number;
-  }>(
-    queryKey,
-    async (url: string) => {
-      const response = await fetch(url);
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.message || 'Failed to fetch leaderboard data');
-      }
-
-      return result;
-    },
+  const { data, error, isLoading, mutate } = useSWR<LeaderboardResponse>(
+    evmApiUrl ? ['leaderboard', evmApiUrl, qs] : null,
+    () => fetchEvmGet<LeaderboardResponse>(evmApiUrl, `/v1/broker/leaderboard/daily?${qs}`),
     {
       revalidateOnFocus: false
     }
   );
 
   return {
-    data: data?.data,
+    data,
     error,
     isLoading,
     mutate

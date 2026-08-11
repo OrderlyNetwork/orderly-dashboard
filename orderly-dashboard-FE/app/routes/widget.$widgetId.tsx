@@ -11,6 +11,7 @@ import { RecentLiquidations } from '~/components/MarketDetail/RecentLiquidations
 import { RecentTrades } from '~/components/MarketDetail/RecentTrades';
 import { TopTradersPanel } from '~/components/MarketDetail/TopTradersPanel';
 import { Positions } from '~/components/Positions';
+import { WebMcpRegistrar } from '~/components/WebMcpRegistrar';
 import { fmtPctOfSupply } from '~/components/analytics/shared/formatters';
 import {
   GranularitySelector,
@@ -492,6 +493,7 @@ export default function WidgetRoute() {
       return (
         <>
           {gridStyles}
+          <WebMcpRegistrar widgetId={widgetId} />
           <div
             style={{
               padding: 24,
@@ -551,6 +553,7 @@ export default function WidgetRoute() {
     return (
       <>
         {gridStyles}
+        <WebMcpRegistrar widgetId={widgetId} />
         <div
           style={{
             padding: 24,

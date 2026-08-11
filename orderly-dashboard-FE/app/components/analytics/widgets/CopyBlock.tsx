@@ -11,7 +11,7 @@ export const CopyBlock = ({ widgetId, symbol }: CopyBlockProps) => {
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'https://dashboard.orderly.network';
   const symbolQuery = symbol ? `&symbol=${encodeURIComponent(symbol)}` : '';
-  const iframeCode = `<iframe src="${origin}/widget/${widgetId}?embed=true${symbolQuery}" width="800" height="400" frameborder="0"></iframe>`;
+  const iframeCode = `<iframe src="${origin}/widget/${widgetId}?embed=true${symbolQuery}" width="800" height="400" frameborder="0" allow="tools"></iframe>`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(iframeCode).then(() => {

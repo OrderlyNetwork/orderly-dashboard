@@ -1,41 +1,7 @@
 import useSWR from 'swr';
 
 import { useAppState } from '~/App';
-
-type Envelope<T> = {
-  success: boolean;
-  data: T;
-  code?: string;
-  message?: string;
-  ts?: number;
-};
-
-async function fetchPublicGet<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  const json = (await res.json()) as Envelope<T>;
-  if (!json.success) {
-    throw new Error(json.code || json.message || `API error (${res.status})`);
-  }
-  return json.data;
-}
-
-async function postPublicInfo<T>(
-  baseUrl: string,
-  type: string,
-  params: Record<string, unknown>
-): Promise<T> {
-  const res = await fetch(`${baseUrl}/v1/public/query`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type, ...params })
-  });
-  const json = (await res.json()) as Envelope<T>;
-  if (!json.success) {
-    throw new Error(json.code || json.message || `Public Info API error (${res.status})`);
-  }
-  return json.data;
-}
+import { fetchEvmGet, fetchEvmQuery } from '~/services/orderly';
 
 // ── platformPositions ─────────────────────────────────────────────────────────
 
@@ -72,7 +38,7 @@ export function usePlatformPositions(symbol: string, minNotional: number) {
   return useSWR<PlatformPositionsResponse>(
     symbol && evmApiUrl ? ['platformPositions', evmApiUrl, symbol, minNotional] : null,
     () =>
-      postPublicInfo<PlatformPositionsResponse>(evmApiUrl, 'platformPositions', {
+      fetchEvmQuery<PlatformPositionsResponse>(evmApiUrl, 'platformPositions', {
         symbol,
         min_notional: String(minNotional),
         limit: 1000
@@ -125,7 +91,7 @@ export function useSymbolInfo(symbol: string) {
   const { evmApiUrl } = useAppState();
   return useSWR<SymbolInfoResponse>(
     symbol && evmApiUrl ? ['symbolInfo', evmApiUrl, symbol] : null,
-    () => fetchPublicGet<SymbolInfoResponse>(`${evmApiUrl}/v1/public/info/${symbol}`),
+    () => fetchEvmGet<SymbolInfoResponse>(evmApiUrl, `/v1/public/info/${symbol}`),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -172,7 +138,7 @@ export function useMarketSummary() {
   const { evmApiUrl } = useAppState();
   return useSWR<MarketSummaryResponse>(
     evmApiUrl ? ['marketSummary', evmApiUrl] : null,
-    () => postPublicInfo<MarketSummaryResponse>(evmApiUrl, 'marketSummary', {}),
+    () => fetchEvmQuery<MarketSummaryResponse>(evmApiUrl, 'marketSummary', {}),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -213,7 +179,7 @@ export function useFuturesMarket() {
   const { evmApiUrl } = useAppState();
   return useSWR<FuturesMarketResponse>(
     evmApiUrl ? ['futuresMarket', evmApiUrl] : null,
-    () => fetchPublicGet<FuturesMarketResponse>(`${evmApiUrl}/v1/public/futures_market`),
+    () => fetchEvmGet<FuturesMarketResponse>(evmApiUrl, '/v1/public/futures_market'),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -250,7 +216,7 @@ export function useFuturesSymbol(symbol: string) {
   const { evmApiUrl } = useAppState();
   return useSWR<FuturesSymbolResponse>(
     symbol && evmApiUrl ? ['futuresSymbol', evmApiUrl, symbol] : null,
-    () => fetchPublicGet<FuturesSymbolResponse>(`${evmApiUrl}/v1/public/futures/${symbol}`),
+    () => fetchEvmGet<FuturesSymbolResponse>(evmApiUrl, `/v1/public/futures/${symbol}`),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -283,7 +249,7 @@ export function usePriceChanges() {
   const { evmApiUrl } = useAppState();
   return useSWR<PriceChangesResponse>(
     evmApiUrl ? ['priceChanges', evmApiUrl] : null,
-    () => fetchPublicGet<PriceChangesResponse>(`${evmApiUrl}/v1/public/market_info/price_changes`),
+    () => fetchEvmGet<PriceChangesResponse>(evmApiUrl, '/v1/public/market_info/price_changes'),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -310,8 +276,9 @@ export function useTradersOpenInterests() {
   return useSWR<TradersOpenInterestsResponse>(
     evmApiUrl ? ['tradersOpenInterests', evmApiUrl] : null,
     () =>
-      fetchPublicGet<TradersOpenInterestsResponse>(
-        `${evmApiUrl}/v1/public/market_info/traders_open_interests`
+      fetchEvmGet<TradersOpenInterestsResponse>(
+        evmApiUrl,
+        '/v1/public/market_info/traders_open_interests'
       ),
     {
       revalidateOnFocus: false,
@@ -375,7 +342,7 @@ export function useTopAddresses(params: TopAddressesParams = {}) {
   return useSWR<TopAddressesResponse>(
     evmApiUrl ? ['topAddresses', evmApiUrl, params] : null,
     () =>
-      postPublicInfo<TopAddressesResponse>(evmApiUrl, 'topAddresses', {
+      fetchEvmQuery<TopAddressesResponse>(evmApiUrl, 'topAddresses', {
         symbol: params.symbol || undefined,
         sort_by: params.sort_by || 'notional',
         min_notional: params.min_notional || 0,
@@ -449,7 +416,7 @@ export function useWhaleContext(params: WhaleContextParams) {
   return useSWR<WhaleContextResponse>(
     params.address ? ['whaleContext', evmApiUrl, params] : null,
     () =>
-      postPublicInfo<WhaleContextResponse>(evmApiUrl, 'whaleContext', {
+      fetchEvmQuery<WhaleContextResponse>(evmApiUrl, 'whaleContext', {
         address: params.address,
         broker_id: params.broker_id || undefined,
         account_id: params.account_id || undefined,
@@ -529,7 +496,7 @@ export function useMarketDetail(symbol: string, candlesInterval: string = '1h') 
   return useSWR<MarketDetailResponse>(
     symbol && evmApiUrl ? ['marketDetail', evmApiUrl, symbol, candlesInterval] : null,
     () =>
-      postPublicInfo<MarketDetailResponse>(evmApiUrl, 'marketDetail', {
+      fetchEvmQuery<MarketDetailResponse>(evmApiUrl, 'marketDetail', {
         symbol,
         include: ['market_info', 'orderbook', 'recent_trades', 'funding_history', 'candles'],
         orderbook_levels: 50,
@@ -579,7 +546,7 @@ export function usePortfolio(params: PortfolioParams) {
   return useSWR<PortfolioResponse>(
     params.address ? ['portfolio', evmApiUrl, params] : null,
     () =>
-      postPublicInfo<PortfolioResponse>(evmApiUrl, 'portfolio', {
+      fetchEvmQuery<PortfolioResponse>(evmApiUrl, 'portfolio', {
         address: params.address,
         broker_id: params.broker_id || undefined,
         account_id: params.account_id || undefined,
@@ -646,7 +613,7 @@ export function useAccountState(params: AccountStateParams) {
   return useSWR<AccountStateResponse>(
     params.address ? ['accountState', evmApiUrl, params] : null,
     () =>
-      postPublicInfo<AccountStateResponse>(evmApiUrl, 'accountState', {
+      fetchEvmQuery<AccountStateResponse>(evmApiUrl, 'accountState', {
         address: params.address,
         broker_id: params.broker_id || undefined,
         account_id: params.account_id || undefined
@@ -689,7 +656,7 @@ export function useLiquidations(symbol: string, limit: number = 50) {
   return useSWR<LiquidationsResponse>(
     symbol && evmApiUrl ? ['liquidations', evmApiUrl, symbol, limit] : null,
     () =>
-      postPublicInfo<LiquidationsResponse>(evmApiUrl, 'liquidations', {
+      fetchEvmQuery<LiquidationsResponse>(evmApiUrl, 'liquidations', {
         symbol,
         limit
       }),
@@ -732,7 +699,7 @@ export function useFundingComparison(symbol?: string) {
   return useSWR<FundingComparisonResponse>(
     evmApiUrl ? ['fundingComparison', evmApiUrl, symbol ?? null] : null,
     () =>
-      postPublicInfo<FundingComparisonResponse>(evmApiUrl, 'fundingComparison', {
+      fetchEvmQuery<FundingComparisonResponse>(evmApiUrl, 'fundingComparison', {
         ...(symbol ? { symbol } : {})
       }),
     {
