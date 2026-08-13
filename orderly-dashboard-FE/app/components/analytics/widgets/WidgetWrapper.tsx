@@ -38,6 +38,7 @@ export const WidgetWrapper: FC<WidgetWrapperProps> = ({
 
   return (
     <div
+      data-widget-id={widgetId}
       className="rounded-2xl"
       style={{
         display: 'flex',

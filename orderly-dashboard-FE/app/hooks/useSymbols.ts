@@ -2,6 +2,7 @@ import { keccak256 } from '@ethersproject/keccak256';
 import useSWR from 'swr';
 
 import { useAppState } from '~/App';
+import { fetchEvmGet, fetchQueryGet } from '~/services/orderly';
 
 export type PerpSymbol = {
   symbol: string;
@@ -18,34 +19,17 @@ const encoder = new TextEncoder();
 
 export const useSymbols = () => {
   const { evmApiUrl } = useAppState();
-  const { data: symbols } = useSWR<PerpSymbol[]>(`${evmApiUrl}/v1/public/info`, (url: string) =>
-    fetch(url)
-      .then((r) => r.json())
-      .then((val) => {
-        if (!val.success) {
-          const error = new Error('');
-          error.message = val.message;
-          throw error;
-        }
-        return val.data.rows as PerpSymbol[];
-      })
+  const { data: symbols } = useSWR<PerpSymbol[]>(evmApiUrl ? ['symbols', evmApiUrl] : null, () =>
+    fetchEvmGet<{ rows: PerpSymbol[] }>(evmApiUrl, '/v1/public/info').then((v) => v.rows)
   );
   return symbols;
 };
 
 export const useAllSymbols = () => {
   const { queryServiceUrl } = useAppState();
-  const { data: allSymbols } = useSWR<AllSymbol[]>(`${queryServiceUrl}/symbols`, (url: string) =>
-    fetch(url)
-      .then((r) => r.json())
-      .then((val) => {
-        if (!val.success) {
-          const error = new Error('');
-          error.message = val.err_msg || 'Failed to fetch symbols';
-          throw error;
-        }
-        return val.data.rows as AllSymbol[];
-      })
+  const { data: allSymbols } = useSWR<AllSymbol[]>(
+    queryServiceUrl ? ['allSymbols', queryServiceUrl] : null,
+    () => fetchQueryGet<{ rows: AllSymbol[] }>(queryServiceUrl, '/symbols').then((v) => v.rows)
   );
   return allSymbols;
 };

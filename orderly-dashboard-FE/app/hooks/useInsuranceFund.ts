@@ -1,24 +1,7 @@
 import useSWR from 'swr';
 
 import { useAppState } from '~/App';
-
-type Envelope<T> = {
-  success: boolean;
-  data: T;
-  code?: string;
-  message?: string;
-  ts?: number;
-};
-
-async function fetchPublicGet<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  const json = (await res.json()) as Envelope<T>;
-  if (!json.success) {
-    throw new Error(json.code || json.message || `API error (${res.status})`);
-  }
-  return json.data;
-}
+import { fetchEvmGet } from '~/services/orderly';
 
 export type InsuranceFundPosition = {
   symbol: string;
@@ -53,7 +36,7 @@ export function useInsuranceFund() {
   const { evmApiUrl } = useAppState();
   return useSWR<InsuranceFundData>(
     evmApiUrl ? ['insuranceFund', evmApiUrl] : null,
-    () => fetchPublicGet<InsuranceFundData>(`${evmApiUrl}/v1/public/insurancefund`),
+    () => fetchEvmGet<InsuranceFundData>(evmApiUrl, '/v1/public/insurancefund'),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,

@@ -15,6 +15,7 @@ export const FundingComparisonPanel: FC<FundingComparisonPanelProps> = ({ symbol
   const title = `Funding Rate Comparison${isEmbed ? ` — ${getBaseToken(symbol)}-PERP` : ''}`;
   return (
     <div
+      data-widget-id="funding-comparison"
       className="rounded-2xl overflow-hidden"
       style={{ background: 'rgba(20,15,35,.9)', border: '1px solid rgba(156,117,255,0.15)' }}
     >

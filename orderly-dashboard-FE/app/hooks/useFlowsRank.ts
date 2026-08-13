@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import useSWR from 'swr';
 
 import { useAppState } from '~/App';
+import { fetchQueryGet } from '~/services/orderly';
 import { FlowsRankResponse } from '~/types/leaderboard';
 
 export type FlowsRankParams = {
@@ -15,31 +16,17 @@ export type FlowsDirection = 'deposit' | 'withdraw';
 function useFlowsRank(direction: FlowsDirection, params: FlowsRankParams) {
   const { queryServiceUrl } = useAppState();
 
-  const queryKey = useMemo(() => {
+  const qs = useMemo(() => {
     const searchParams = new URLSearchParams();
     searchParams.set('days', params.days.toString());
     searchParams.set('size', params.size.toString());
     searchParams.set('token', params.token);
-    return `${queryServiceUrl}/ranking/${direction}?${searchParams.toString()}`;
-  }, [queryServiceUrl, direction, params]);
+    return searchParams.toString();
+  }, [params]);
 
-  const { data, error, isLoading, mutate } = useSWR<{
-    success: boolean;
-    err_code: number;
-    err_msg: string | null;
-    data: FlowsRankResponse;
-  }>(
-    queryKey,
-    async (url: string) => {
-      const response = await fetch(url);
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.err_msg || 'Failed to fetch flows ranking');
-      }
-
-      return result;
-    },
+  const { data, error, isLoading, mutate } = useSWR<FlowsRankResponse>(
+    queryServiceUrl ? ['flowsRank', direction, queryServiceUrl, qs] : null,
+    () => fetchQueryGet<FlowsRankResponse>(queryServiceUrl, `/ranking/${direction}?${qs}`),
     {
       revalidateOnFocus: false,
       shouldRetryOnError: false,
@@ -48,7 +35,7 @@ function useFlowsRank(direction: FlowsDirection, params: FlowsRankParams) {
   );
 
   return {
-    data: data?.data,
+    data,
     error,
     isLoading,
     mutate

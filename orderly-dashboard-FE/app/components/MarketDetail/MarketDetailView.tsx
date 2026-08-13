@@ -41,7 +41,7 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-6 py-16">
+      <div className="flex flex-col items-center gap-6 py-16" data-page-status="error">
         <div className="text-gray-400 text-sm">
           {error.message || 'Failed to fetch market data'}
         </div>
@@ -58,14 +58,18 @@ export const MarketDetailView: FC<MarketDetailViewProps> = ({ symbol, baseToken 
 
   if (isLoading && !data) {
     return (
-      <div className="flex justify-center py-12">
+      <div className="flex justify-center py-12" data-page-status="loading">
         <Spinner size="2.5rem" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 animate-fade-in">
+    <div
+      className="space-y-4 sm:space-y-6 animate-fade-in"
+      data-page-status="ready"
+      data-page-summary={`${baseToken} · $${data?.market_info?.mark_price ? Number(data.market_info.mark_price).toLocaleString() : ''}`}
+    >
       {/* Back Button */}
       <div>
         <Link

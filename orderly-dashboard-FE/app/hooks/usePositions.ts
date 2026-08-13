@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import useSWR from 'swr';
 
 import { useAppState } from '~/App';
+import { fetchQueryGet } from '~/services/orderly';
 import { PositionsResponse } from '~/types/leaderboard';
 
 export type PositionsParams = {
@@ -16,7 +17,7 @@ export type PositionsParams = {
 export function usePositions(params: PositionsParams) {
   const { queryServiceUrl } = useAppState();
 
-  const queryKey = useMemo(() => {
+  const qs = useMemo(() => {
     const searchParams = new URLSearchParams();
 
     if (params.account_id) {
@@ -38,33 +39,19 @@ export function usePositions(params: PositionsParams) {
       searchParams.set('order_by', params.order_by);
     }
 
-    return `${queryServiceUrl}/ranking/positions?${searchParams.toString()}`;
-  }, [queryServiceUrl, params]);
+    return searchParams.toString();
+  }, [params]);
 
-  const { data, error, isLoading, mutate } = useSWR<{
-    success: boolean;
-    err_code: number;
-    err_msg: string | null;
-    data: PositionsResponse;
-  }>(
-    queryKey,
-    async (url: string) => {
-      const response = await fetch(url);
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.err_msg || 'Failed to fetch positions data');
-      }
-
-      return result;
-    },
+  const { data, error, isLoading, mutate } = useSWR<PositionsResponse>(
+    queryServiceUrl ? ['positions', queryServiceUrl, qs] : null,
+    () => fetchQueryGet<PositionsResponse>(queryServiceUrl, `/ranking/positions?${qs}`),
     {
       revalidateOnFocus: false
     }
   );
 
   return {
-    data: data?.data,
+    data,
     error,
     isLoading,
     mutate

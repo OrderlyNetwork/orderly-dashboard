@@ -37,6 +37,7 @@ export const RecentTrades: FC<RecentTradesProps> = ({
        Skipped in standalone mode (no grid context -> absolute would collapse). */
     <div className={standalone ? '' : 'lg:self-stretch lg:relative lg:min-h-0'}>
       <div
+        data-widget-id="market-recent-trades"
         className={`flex flex-col rounded-2xl overflow-hidden ${
           standalone ? '' : 'lg:absolute lg:inset-0'
         }`}

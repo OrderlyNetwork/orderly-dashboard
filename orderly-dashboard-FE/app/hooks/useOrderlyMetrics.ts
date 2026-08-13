@@ -1,13 +1,9 @@
 import useSWR from 'swr';
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.json() as Promise<T>;
-}
+import { fetchDataApi } from '~/services/orderly';
 
 function useFetch<T>(path: string) {
-  return useSWR<T>(`${import.meta.env.DATA_API_URL}${path}`, fetchJson<T>, {
+  return useSWR<T>(path, () => fetchDataApi<T>(path), {
     revalidateOnFocus: false,
     shouldRetryOnError: false
   });

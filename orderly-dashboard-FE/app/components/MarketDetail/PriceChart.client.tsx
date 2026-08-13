@@ -154,6 +154,7 @@ export const PriceChartClient: FC<PriceChartClientProps> = ({
 
   return (
     <div
+      data-widget-id="market-price-chart"
       className="rounded-2xl overflow-hidden"
       style={{ background: 'rgba(20,15,35,.9)', border: '1px solid rgba(156,117,255,0.15)' }}
     >

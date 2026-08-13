@@ -1,5 +1,7 @@
 import useSWR from 'swr';
 
+import { fetchJson } from '~/services/orderly';
+
 type CoinGeckoDerivative = {
   market: string;
   symbol: string;
@@ -116,12 +118,6 @@ const CEX_BLOCKLIST = new Set([
   'gemini'
 ]);
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.json() as Promise<T>;
-}
-
 function normalizeMarketName(market: string): string {
   return market
     .replace(/\s*\(Futures\)\s*/gi, '')
@@ -208,6 +204,16 @@ export function useMarketShare(): {
     cgData && dlData ? computeMarketShare(cgData, dlData) : undefined;
 
   return { data, isLoading, error };
+}
+
+// Plain (non-hook) version for WebMCP tools. Fetches CoinGecko derivatives and
+// DefiLlama open-interest concurrently and merges into Orderly's DEX market share.
+export async function fetchMarketShare(): Promise<MarketShareData> {
+  const [cgData, dlData] = await Promise.all([
+    fetchJson<CoinGeckoDerivative[]>(COINGECKO_URL),
+    fetchJson<DefiLlamaOIResponse>(DEFILLAMA_OI_URL)
+  ]);
+  return computeMarketShare(cgData, dlData);
 }
 
 function computeMarketShare(

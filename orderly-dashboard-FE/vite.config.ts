@@ -8,5 +8,8 @@ export default defineConfig({
   ssr: {
     noExternal: process.env.NODE_ENV === 'production' ? ['@mui/**/*'] : undefined
   },
-  envPrefix: ['VITE_', 'DATA_API_']
+  envPrefix: ['VITE_', 'DATA_API_'],
+  server: {
+    allowedHosts: true
+  }
 });

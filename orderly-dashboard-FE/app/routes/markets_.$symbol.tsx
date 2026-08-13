@@ -55,7 +55,7 @@ export const MarketDetailRoute: FC = () => {
 
   if (!symbols) {
     return (
-      <div className="flex justify-center py-12">
+      <div className="flex justify-center py-12" data-page-status="loading">
         <Spinner size="2.5rem" />
       </div>
     );
@@ -63,7 +63,10 @@ export const MarketDetailRoute: FC = () => {
 
   if (!resolved) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+      <div
+        className="flex flex-col items-center justify-center gap-4 p-8 text-center"
+        data-page-status="not-found"
+      >
         <div className="text-xl font-semibold text-gray-300">Market Not Found</div>
         <div className="text-gray-500 max-w-md">
           No market found for symbol{' '}

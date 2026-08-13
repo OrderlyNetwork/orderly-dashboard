@@ -65,6 +65,7 @@ export const PlatformPositionsPanel: FC<PlatformPositionsPanelProps> = ({ symbol
 
   return (
     <div
+      data-widget-id="market-platform-positions"
       className="rounded-2xl overflow-hidden flex flex-col"
       style={{
         background: 'rgba(20,15,35,.9)',
