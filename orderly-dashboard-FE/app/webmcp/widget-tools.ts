@@ -1,6 +1,6 @@
 // Maps each embeddable widgetId (WIDGET_META in routes/widget.$widgetId.tsx) to the
 // WebMCP tool(s) that expose that widget's data. Lets a chromeless embed register
-// just its own tool(s) instead of the full 35-tool set.
+// just its own tool(s) instead of the full 45-tool set.
 
 import { createWebMcpTools, type WebMcpCtx } from './tools';
 

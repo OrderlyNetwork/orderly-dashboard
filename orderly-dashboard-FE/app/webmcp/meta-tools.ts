@@ -14,7 +14,7 @@ export function createMetaTools(ctx: WebMcpCtx): ModelContextTool[] {
       'get_brokers',
       'Directory of all Orderly brokers (broker_id → human-readable broker_name), sorted by ' +
         'name. Use to label broker_id values returned by other tools.',
-      { type: 'object', properties: {}, additionalProperties: false },
+      { type: 'object', properties: {}, required: [], additionalProperties: false },
       () =>
         fetchEvmGet<{ rows: { broker_id: string; broker_name: string }[] }>(
           evmApiUrl,
@@ -26,7 +26,7 @@ export function createMetaTools(ctx: WebMcpCtx): ModelContextTool[] {
       'Every known perp symbol (including delisted) as a hash→name map: {symbol, symbol_hash}. ' +
         'Use to resolve keccak256 symbol hashes in event/position data to display names. Active ' +
         'symbols are also available via get_markets.',
-      { type: 'object', properties: {}, additionalProperties: false },
+      { type: 'object', properties: {}, required: [], additionalProperties: false },
       () =>
         fetchQueryGet<{ rows: { symbol: string; symbol_hash: string }[] }>(
           queryServiceUrl,
@@ -37,7 +37,7 @@ export function createMetaTools(ctx: WebMcpCtx): ModelContextTool[] {
       'get_all_tokens',
       'Every known settlement/collateral token as a hash→name map: {token, token_hash}. Use to ' +
         'resolve keccak256 token hashes in settlement/fee fields to display names.',
-      { type: 'object', properties: {}, additionalProperties: false },
+      { type: 'object', properties: {}, required: [], additionalProperties: false },
       () =>
         fetchQueryGet<{ rows: { token: string; token_hash: string }[] }>(
           queryServiceUrl,

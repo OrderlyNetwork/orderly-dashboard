@@ -30,11 +30,12 @@ describe('createMarketTools', () => {
     expect(tools.every((t) => t.annotations?.readOnlyHint === true)).toBe(true);
   });
 
-  it('get_markets fans out 3 GETs and combines them', async () => {
+  it('get_markets fans out 3 GETs and unwraps the row envelopes with no args', async () => {
+    const mk = (symbol: string, vol: number) => ({ symbol, '24h_volume': vol });
     vi.mocked(fetchEvmGet)
-      .mockResolvedValueOnce({ markets: 1 })
-      .mockResolvedValueOnce({ priceChanges: 2 })
-      .mockResolvedValueOnce({ openInterest: 3 });
+      .mockResolvedValueOnce({ rows: [mk('PERP_BTC_USDC', 100), mk('PERP_ETH_USDC', 50)] })
+      .mockResolvedValueOnce({ rows: [{ symbol: 'PERP_BTC_USDC', '24h': 1.2 }] })
+      .mockResolvedValueOnce({ rows: [{ symbol: 'PERP_BTC_USDC', long_oi: 7, short_oi: 3 }] });
     const res = await getTool('get_markets').execute({});
     expect(fetchEvmGet).toHaveBeenCalledTimes(3);
     expect(fetchEvmGet).toHaveBeenNthCalledWith(1, 'https://evm.test', '/v1/public/futures_market');
@@ -48,11 +49,78 @@ describe('createMarketTools', () => {
       'https://evm.test',
       '/v1/public/market_info/traders_open_interests'
     );
+    // No args → full unfiltered set, envelopes unwrapped to row arrays.
     expect(res).toEqual({
-      markets: { markets: 1 },
-      priceChanges: { priceChanges: 2 },
-      openInterest: { openInterest: 3 }
+      markets: [mk('PERP_BTC_USDC', 100), mk('PERP_ETH_USDC', 50)],
+      priceChanges: [{ symbol: 'PERP_BTC_USDC', '24h': 1.2 }],
+      openInterest: [{ symbol: 'PERP_BTC_USDC', long_oi: 7, short_oi: 3 }]
     });
+  });
+
+  it('get_markets filters, sorts, limits, and trims the side arrays', async () => {
+    vi.mocked(fetchEvmGet)
+      .mockResolvedValueOnce({
+        rows: [
+          { symbol: 'PERP_ETH_USDC', '24h_volume': 50 },
+          { symbol: 'PERP_BTC_USDC', '24h_volume': 100 },
+          { symbol: 'PERP_SOL_USDC', '24h_volume': 30 },
+          { symbol: 'PERP_BTC_USDT', '24h_volume': 10 }
+        ]
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          { symbol: 'PERP_BTC_USDC', '24h': 2.5 },
+          { symbol: 'PERP_ETH_USDC', '24h': -1.1 },
+          { symbol: 'PERP_SOL_USDC', '24h': 0.4 },
+          { symbol: 'PERP_BTC_USDT', '24h': 0.1 }
+        ]
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          { symbol: 'PERP_BTC_USDC', long_oi: 5, short_oi: 5 },
+          { symbol: 'PERP_ETH_USDC', long_oi: 1, short_oi: 1 },
+          { symbol: 'PERP_SOL_USDC', long_oi: 2, short_oi: 2 },
+          { symbol: 'PERP_BTC_USDT', long_oi: 0, short_oi: 0 }
+        ]
+      });
+    const res = (await getTool('get_markets').execute({
+      search: 'btc',
+      sort_by: '24h_volume',
+      limit: 5
+    })) as {
+      markets: { symbol: string }[];
+      priceChanges: { symbol: string }[];
+      openInterest: { symbol: string }[];
+    };
+    // Only symbols containing "btc", sorted by 24h_volume descending.
+    expect(res.markets.map((m) => m.symbol)).toEqual(['PERP_BTC_USDC', 'PERP_BTC_USDT']);
+    expect(res.markets.length).toBeLessThanOrEqual(5);
+    expect(res.markets.every((m) => m.symbol.toLowerCase().includes('btc'))).toBe(true);
+    // Side arrays trimmed to the same symbol set.
+    expect(res.priceChanges.map((r) => r.symbol)).toEqual(['PERP_BTC_USDC', 'PERP_BTC_USDT']);
+    expect(res.openInterest.map((r) => r.symbol)).toEqual(['PERP_BTC_USDC', 'PERP_BTC_USDT']);
+  });
+
+  it('get_markets asc sort and limit slicing', async () => {
+    vi.mocked(fetchEvmGet)
+      .mockResolvedValueOnce({
+        rows: [
+          { symbol: 'PERP_BTC_USDC', '24h_volume': 100 },
+          { symbol: 'PERP_ETH_USDC', '24h_volume': 50 },
+          { symbol: 'PERP_SOL_USDC', '24h_volume': 30 }
+        ]
+      })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] });
+    const res = (await getTool('get_markets').execute({
+      sort_by: '24h_volume',
+      desc: false,
+      limit: 2
+    })) as { markets: { symbol: string }[]; priceChanges: unknown[]; openInterest: unknown[] };
+    // Ascending by 24h_volume, then sliced to 2 → SOL(30), ETH(50).
+    expect(res.markets.map((m) => m.symbol)).toEqual(['PERP_SOL_USDC', 'PERP_ETH_USDC']);
+    expect(res.priceChanges).toEqual([]);
+    expect(res.openInterest).toEqual([]);
   });
 
   it('get_market_detail posts marketDetail with default 1h candles', async () => {
@@ -189,5 +257,47 @@ describe('createMarketTools', () => {
   it('get_insurance_fund GETs the insurance fund endpoint', async () => {
     await getTool('get_insurance_fund').execute({});
     expect(fetchEvmGet).toHaveBeenCalledWith('https://evm.test', '/v1/public/insurancefund');
+  });
+  it('constrains candles_interval to a known enum', () => {
+    const schema = getTool('get_market_detail').inputSchema as {
+      properties: { candles_interval?: { enum?: readonly string[] } };
+    };
+    expect(schema.properties.candles_interval?.enum).toEqual(['5m', '15m', '1h', '4h', '1d']);
+  });
+
+  it('get_symbol_info throws when the symbol does not exist', async () => {
+    vi.mocked(fetchEvmGet).mockResolvedValueOnce(undefined).mockResolvedValueOnce({ rows: [] });
+    await expect(getTool('get_symbol_info').execute({ symbol: 'PERP_NOPE_USDC' })).rejects.toThrow(
+      /Symbol not found/i
+    );
+  });
+
+  it('get_symbol_info resolves a broker-suffixed variant via the market list', async () => {
+    vi.mocked(fetchEvmGet)
+      .mockResolvedValueOnce(undefined) // info for PERP_AAPL_USDC → not found
+      .mockResolvedValueOnce({ rows: [{ symbol: 'PERP_AAPL_USDC_mythos' }] }) // market list
+      .mockResolvedValueOnce({ symbol: 'PERP_AAPL_USDC_mythos', quote_min: '5' }); // resolved info
+    await expect(getTool('get_symbol_info').execute({ symbol: 'AAPL' })).resolves.toMatchObject({
+      symbol: 'PERP_AAPL_USDC_mythos'
+    });
+  });
+
+  it('reports ambiguous broker-suffixed matches', async () => {
+    vi.mocked(fetchEvmGet)
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce({
+        rows: [{ symbol: 'PERP_BTC_USDC_a' }, { symbol: 'PERP_BTC_USDC_b' }]
+      });
+    await expect(getTool('get_symbol_info').execute({ symbol: 'BTC' })).rejects.toThrow(
+      /Multiple active symbols match/i
+    );
+  });
+
+  it('get_market_detail throws on an unknown symbol without hitting marketDetail', async () => {
+    vi.mocked(fetchEvmGet).mockResolvedValueOnce(undefined).mockResolvedValueOnce({ rows: [] });
+    await expect(
+      getTool('get_market_detail').execute({ symbol: 'PERP_NOPE_USDC' })
+    ).rejects.toThrow(/Symbol not found/i);
+    expect(fetchEvmQuery).not.toHaveBeenCalled();
   });
 });

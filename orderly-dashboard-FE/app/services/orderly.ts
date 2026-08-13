@@ -26,9 +26,23 @@ export async function fetchJson<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// DATA API GET (raw json, no envelope). `path` is appended to DATA_API_URL.
-export function fetchDataApi<T>(path: string): Promise<T> {
-  return fetchJson<T>(`${DATA_API_URL}${path}`);
+// The DATA API returns a bare payload ({ rows, data, … } or an array) on success,
+// but signals some errors with a 200 body of { success: false, code, message }.
+// Surface that envelope as a thrown error so a tool never hands an agent an
+// `undefined` derived from `.rows` of an error object.
+type DataApiErrorEnvelope = { success: false; code?: string | number; message?: string };
+
+function isDataApiErrorEnvelope(v: unknown): v is DataApiErrorEnvelope {
+  if (!v || typeof v !== 'object') return false;
+  return (v as Record<string, unknown>).success === false;
+}
+
+export async function fetchDataApi<T>(path: string): Promise<T> {
+  const json = await fetchJson<unknown>(`${DATA_API_URL}${path}`);
+  if (isDataApiErrorEnvelope(json)) {
+    throw new Error(`Data API error: ${json.message || json.code || 'request failed'}`);
+  }
+  return json as T;
 }
 
 // EVM REST GET — Orderly envelope `{ success, data, code?, message? }`.
@@ -53,6 +67,7 @@ export async function fetchEvmQuery<T>(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type, ...params })
   });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   const json = (await res.json()) as EvmEnvelope<T>;
   if (!json.success) {
     throw new Error(json.code || json.message || `Public Info API error (${res.status})`);
@@ -63,6 +78,7 @@ export async function fetchEvmQuery<T>(
 // Query Service GET — envelope `{ success, data, err_code?, err_msg? }`.
 export async function fetchQueryGet<T>(queryServiceUrl: string, path: string): Promise<T> {
   const res = await fetch(`${queryServiceUrl}${path}`);
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   const json = (await res.json()) as QueryEnvelope<T>;
   if (!json.success) {
     throw new Error(json.err_msg || 'Failed to fetch data');

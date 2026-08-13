@@ -2,6 +2,7 @@ import { Outlet, useLocation, useSearchParams } from '@remix-run/react';
 import { FC, createContext, useContext } from 'react';
 
 import { DashboardLayout } from '~/components/DashboardLayout';
+import { NavBridge } from '~/components/NavBridge';
 import { WebMcpRegistrar } from '~/components/WebMcpRegistrar';
 
 export type AppContextType = {
@@ -33,6 +34,7 @@ export const App: FC = () => {
   return (
     <>
       <WebMcpRegistrar />
+      <NavBridge />
       <DashboardLayout />
     </>
   );

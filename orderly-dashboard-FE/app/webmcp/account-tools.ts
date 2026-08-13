@@ -99,6 +99,7 @@ export function createAccountTools(ctx: WebMcpCtx): ModelContextTool[] {
           limit: { type: 'number', description: 'Page size (default 50, max 500).' },
           order_by: { type: 'string', enum: ['ASC', 'DESC'], description: 'Default DESC.' }
         },
+        required: [],
         additionalProperties: false
       },
       (args) => {
@@ -120,28 +121,31 @@ export function createAccountTools(ctx: WebMcpCtx): ModelContextTool[] {
       'resolve_address',
       'Resolve a wallet address or account ID into its Orderly broker/account pairs. Accepts ' +
         'an EVM address (0x + 40 hex), a Solana address (43-44 base58 chars), or an account ID ' +
-        '(0x + 64 hex). Returns all (broker_id, account_id) pairs for the identity. For address ' +
+        '(0x + 64 hex). Returns an array of {broker_id, account_id, …} pairs for the identity. For address ' +
         'queries (not account IDs) each account is enriched with 90-day perp_volume and ' +
         'realized_pnl, sorted by volume descending — matching the Search results page. First ' +
         'step of the Explorer/address flow.',
       {
         type: 'object',
         properties: {
-          query: {
+          address: {
             type: 'string',
             description: 'EVM address, Solana address, or Orderly account ID.'
           }
         },
-        required: ['query'],
+        required: ['address'],
         additionalProperties: false
       },
       (args) => {
-        const q = asString(args.query) ?? '';
+        const q = asString(args.address) ?? '';
         const isEvm = /^0x[0-9a-fA-F]{40}$/.test(q);
         const isSol = /^[0-9a-zA-Z]{43,44}$/.test(q);
         const isAccountId = /^0x[0-9a-fA-F]{64}$/.test(q);
         if (isAccountId) {
-          return fetchEvmGet(evmApiUrl, `/v1/public/account?account_id=${q}`);
+          // Same array shape as the address branches (B5): a single-element array.
+          return fetchEvmGet(evmApiUrl, `/v1/public/account?account_id=${q}`).then((acct) =>
+            acct ? [acct] : []
+          );
         }
         if (isEvm || isSol) {
           return fetchEvmGet<{ rows?: AccountRow[] }>(
@@ -161,7 +165,13 @@ export function createAccountTools(ctx: WebMcpCtx): ModelContextTool[] {
               });
               enriched.sort((a, b) => (b.perp_volume ?? 0) - (a.perp_volume ?? 0));
               return enriched;
-            } catch {
+            } catch (e) {
+              // Graceful degradation (B4): enrichment is best-effort, but don't hide
+              // the failure entirely — log it so it's debuggable.
+              console.warn(
+                '[webmcp] resolve_address: leaderboard enrichment failed; returning unenriched accounts',
+                e
+              );
               return accounts;
             }
           });
@@ -178,7 +188,8 @@ export function createAccountTools(ctx: WebMcpCtx): ModelContextTool[] {
       'Historical trading events for an account: trades, settlements, liquidations, ADLs, and ' +
         'margin transfers (versioned v1/v2/v3 already flattened to a uniform shape). Time range ' +
         'is capped at 31 days; omit both times for the most recent page. Drives the address ' +
-        'Events tab.',
+        'Events tab. Returns { events, nextCursor, pageSizeLimit, tradesCount }; pass the ' +
+        'nextCursor back as the cursor param to fetch the next page.',
       {
         type: 'object',
         properties: {
@@ -191,7 +202,10 @@ export function createAccountTools(ctx: WebMcpCtx): ModelContextTool[] {
           to_time: { type: 'number', description: 'Inclusive end, Unix seconds.' },
           cursor: {
             type: 'object',
-            description: 'Pagination cursor (trading_event_next_cursor) from a prior response.'
+            additionalProperties: true,
+            description:
+              'Opaque pagination cursor (the nextCursor value from a prior response). Do not ' +
+              'construct this object yourself — only pass back the cursor you received.'
           }
         },
         required: ['account_id'],

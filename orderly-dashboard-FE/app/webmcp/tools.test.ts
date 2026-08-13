@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { asString, clampInt, dateRangeQuery, normalizeSymbol, ro, safeCall } from './tools';
+import { asString, clampInt, dateRangeQuery, normalizeSymbol, ro } from './tools';
 
 describe('asString', () => {
   it('returns a non-empty string', () => {
@@ -71,27 +71,17 @@ describe('normalizeSymbol', () => {
   });
 });
 
-describe('safeCall', () => {
-  it('returns the resolved value on success', async () => {
-    await expect(safeCall(() => Promise.resolve(42))).resolves.toBe(42);
-  });
-  it('returns { error } on failure', async () => {
-    await expect(safeCall(() => Promise.reject(new Error('boom')))).resolves.toEqual({
-      error: 'boom'
-    });
-  });
-  it('stringifies non-Error throws', async () => {
-    await expect(safeCall(() => Promise.reject('nope'))).resolves.toEqual({ error: 'nope' });
-  });
-});
-
 describe('ro (read-only tool factory)', () => {
   const inputSchema = { type: 'object', properties: {}, additionalProperties: false };
 
-  it('derives a Title Case title from the snake_case name', () => {
+  it('applies the override-map title for known names', () => {
     const tool = ro('get_funding_rates', 'desc', inputSchema, () => Promise.resolve());
     expect(tool.name).toBe('get_funding_rates');
-    expect(tool.title).toBe('Get Funding Rates');
+    expect(tool.title).toBe('Funding Rates');
+  });
+  it('falls back to Title Case for unknown names', () => {
+    const tool = ro('something_unmapped', 'desc', inputSchema, () => Promise.resolve());
+    expect(tool.title).toBe('Something Unmapped');
   });
   it('honours an explicit title override', () => {
     const tool = ro('x', 'desc', inputSchema, () => Promise.resolve(), 'Custom Title');

@@ -107,13 +107,34 @@ export function siteOverview() {
         ]
       }
     ],
+    navigation: {
+      can_steer_view:
+        'Yes — beyond reading data, you can navigate the user to the page you are ' +
+        'discussing and drive widget UI, so agent and user share one view. These are ' +
+        'action tools (not read-only):',
+      tools: [
+        'open_market({symbol}) — navigate to /markets/:symbol (BTC, PERP_BTC_USDC, or broker variant)',
+        'open_address({address}) — navigate to an EVM / Solana / account_id detail page',
+        'focus_widget({widget_id}) — scroll a dashboard widget into view and highlight it',
+        'share_widget({widget_id}) — open the share/embed dialog for a widget',
+        'get_current_view() — read the current route, page, and rendered widget ids',
+        'get_widget_url({widget_id}) — get a widget embed/share URL as a string (no dialog)'
+      ],
+      note: 'Widgets only exist on the page that renders them; focus/share report found:false if absent.'
+    },
     conventions: [
       'Symbols accept a base tick (BTC) or the full form (PERP_BTC_USDC) — both work.',
       'Date params: get_leaderboard uses start_date/end_date as YYYY-MM-DD; ' +
         'get_events/get_portfolio use from_time/to_time as Unix seconds.',
-      'get_events time range is capped at 31 days per call — page via trading_event_next_cursor for longer ranges.',
+      'get_events time range is capped at 31 days per call — page via nextCursor for longer ranges.',
       'Pagination: get_leaderboard/get_positions use page/offset; get_top_traders/get_events use a cursor.',
-      'All tools are read-only. On failure a tool throws — you will see the error as a tool-call failure.'
+      'Most tools are read-only data fetches. Four action tools (open_market, open_address, ' +
+        'focus_widget, share_widget) navigate the SPA / drive widget UI — they change the ' +
+        "user's view but place no trades. On failure a tool throws — you will see the error " +
+        'as a tool-call failure.',
+      'Call get_current_view() to read the current route, page, and the widget ids currently ' +
+        'rendered on screen — call it before focus_widget / share_widget, since only widgets on ' +
+        'the current page can be targeted.'
     ],
     suggested_first_queries: [
       'get_market_summary() — current 24h platform snapshot',
@@ -131,7 +152,7 @@ export function createSiteTools(): ModelContextTool[] {
         'area, common multi-step flows, parameter conventions, and suggested first queries. ' +
         'Call this once to get oriented before using the other tools. This is a read-only ' +
         'analytics dashboard for the Orderly Network perpetual-futures DEX; it does not place trades.',
-      { type: 'object', properties: {}, additionalProperties: false },
+      { type: 'object', properties: {}, required: [], additionalProperties: false },
       () => Promise.resolve(siteOverview()),
       'Site Overview'
     )

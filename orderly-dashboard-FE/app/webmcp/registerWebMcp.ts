@@ -31,11 +31,12 @@ export async function registerWebMcpTools(ctx: WebMcpCtx, widgetId?: string): Pr
   for (const tool of tools) {
     try {
       await modelContext.registerTool(tool, { signal: controller.signal });
-    } catch {
-      // Registration may reject once the controller is aborted (e.g. on re-entry),
-      // or when a cross-origin embed lacks the "tools" permissions policy — stop
-      // registering the remaining tools in the aborted case.
+    } catch (err) {
+      // Aborted (HMR/re-entry) or blocked by the "tools" permissions policy on a
+      // cross-origin embed: stop registering the remaining tools when aborted.
       if (controller.signal.aborted) break;
+      // A genuinely broken/rejected tool definition must not vanish silently.
+      console.warn(`[webmcp] tool "${tool.name}" was rejected by modelContext:`, err);
     }
   }
 

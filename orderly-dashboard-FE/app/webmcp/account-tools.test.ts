@@ -164,23 +164,21 @@ describe('createAccountTools', () => {
     const EVM = '0x' + 'b'.repeat(40);
 
     it('rejects an unrecognized identifier', async () => {
-      await expect(getTool('resolve_address').execute({ query: 'garbage' })).rejects.toThrow(
+      await expect(getTool('resolve_address').execute({ address: 'garbage' })).rejects.toThrow(
         /Unrecognized identifier/
       );
       expect(fetchEvmGet).not.toHaveBeenCalled();
     });
 
-    it('resolves an account id via /v1/public/account (single object, no enrichment)', async () => {
+    it('resolves an account id via /v1/public/account as a single-element array', async () => {
       vi.mocked(fetchEvmGet).mockResolvedValueOnce({
         account_id: ACCT_ID,
         address: EVM,
         broker_id: 'b1'
       });
-      await expect(getTool('resolve_address').execute({ query: ACCT_ID })).resolves.toEqual({
-        account_id: ACCT_ID,
-        address: EVM,
-        broker_id: 'b1'
-      });
+      await expect(getTool('resolve_address').execute({ address: ACCT_ID })).resolves.toEqual([
+        { account_id: ACCT_ID, address: EVM, broker_id: 'b1' }
+      ]);
       expect(fetchEvmGet).toHaveBeenCalledWith(
         'https://evm.test',
         `/v1/public/account?account_id=${ACCT_ID}`
@@ -202,7 +200,7 @@ describe('createAccountTools', () => {
             { account_id: 'a2', perp_volume: 200, realized_pnl: -3 }
           ]
         });
-      const res = await getTool('resolve_address').execute({ query: EVM });
+      const res = await getTool('resolve_address').execute({ address: EVM });
       expect(fetchEvmGet).toHaveBeenNthCalledWith(
         1,
         'https://evm.test',
@@ -224,7 +222,7 @@ describe('createAccountTools', () => {
       vi.mocked(fetchEvmGet).mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({
         rows: []
       });
-      await getTool('resolve_address').execute({ query: SOL });
+      await getTool('resolve_address').execute({ address: SOL });
       expect(fetchEvmGet).toHaveBeenNthCalledWith(
         1,
         'https://evm.test',
@@ -232,13 +230,15 @@ describe('createAccountTools', () => {
       );
     });
 
-    it('falls back to raw accounts when the leaderboard call fails', async () => {
+    it('falls back to raw accounts (and warns) when the leaderboard call fails', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       vi.mocked(fetchEvmGet)
         .mockResolvedValueOnce({ rows: [{ account_id: 'a1', broker_id: 'b1' }] })
         .mockRejectedValueOnce(new Error('lb down'));
-      await expect(getTool('resolve_address').execute({ query: EVM })).resolves.toEqual([
+      await expect(getTool('resolve_address').execute({ address: EVM })).resolves.toEqual([
         { account_id: 'a1', broker_id: 'b1' }
       ]);
+      expect(warn).toHaveBeenCalledTimes(1);
     });
   });
 });

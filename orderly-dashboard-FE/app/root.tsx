@@ -30,6 +30,7 @@ export const links: LinksFunction = () => [
   { rel: 'stylesheet', href: mantineDatesStyles },
   { rel: 'stylesheet', href: globalCss },
   { rel: 'icon', href: favicon, type: 'image/svg+xml' },
+  { rel: 'mcp-manifest', href: '/webmcp.json', type: 'application/json' },
   {
     rel: 'preload',
     href: '/fonts/AtypBLText-Regular.otf',
@@ -60,7 +61,8 @@ export const meta: MetaFunction = () => {
     {
       name: 'viewport',
       content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
-    }
+    },
+    { name: 'orderly-webmcp', content: 'WebMCP-enabled; tool manifest at /webmcp.json' }
   ];
 };
 

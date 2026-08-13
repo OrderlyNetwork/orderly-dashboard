@@ -2,7 +2,7 @@ import { Link } from '@remix-run/react';
 import { type FC, type ReactNode } from 'react';
 
 import { useIsEmbed } from '~/hooks/useIsEmbed';
-import { base64UrlSafeEncode, DASHBOARD_ORIGIN } from '~/util';
+import { encodeAddress, DASHBOARD_ORIGIN } from '~/util';
 
 export type AddressLinkProps = {
   address: string;
@@ -10,11 +10,6 @@ export type AddressLinkProps = {
   className?: string;
   children: ReactNode;
 };
-
-const SOL_REGEX = /^[0-9a-zA-Z]{43,44}$/;
-
-const encodeAddress = (address: string) =>
-  address.match(SOL_REGEX) ? base64UrlSafeEncode(address) : address;
 
 const buildPath = (address: string, brokerId?: string | null) => {
   const encoded = encodeAddress(address);

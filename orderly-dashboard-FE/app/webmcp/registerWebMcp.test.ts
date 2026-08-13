@@ -103,7 +103,8 @@ describe('registerWebMcpTools', () => {
     expect(signal.aborted).toBe(true);
   });
 
-  it('continues registering after a non-aborting rejection', async () => {
+  it('continues registering (and warns) after a non-aborting rejection', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const registerTool = vi.fn().mockRejectedValue(new Error('NotAllowedError'));
     setModelContext({ registerTool });
     vi.doMock('./tools', () => ({
@@ -114,5 +115,6 @@ describe('registerWebMcpTools', () => {
     const { registerWebMcpTools } = await import('./registerWebMcp');
     await registerWebMcpTools({ evmApiUrl: 'u', queryServiceUrl: 'q' });
     expect(registerTool).toHaveBeenCalledTimes(3);
+    expect(warn).toHaveBeenCalledTimes(3);
   });
 });

@@ -23,6 +23,7 @@ describe('createSiteTools', () => {
     expect(tool.inputSchema).toEqual({
       type: 'object',
       properties: {},
+      required: [],
       additionalProperties: false
     });
   });
