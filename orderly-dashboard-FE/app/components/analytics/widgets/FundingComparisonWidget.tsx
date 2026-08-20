@@ -196,7 +196,7 @@ const MultiSymbolView: FC<{ rows: FundingComparisonRow[] }> = ({ rows }) => {
         className="overflow-auto w-full"
         style={{ maxHeight: SCROLL_HEIGHT, scrollbarWidth: 'thin' }}
       >
-        <table className="w-full border-collapse text-[13px]">
+        <table className="w-full border-collapse text-[13px]" style={{ overflow: 'clip' }}>
           <thead>
             <tr>
               <th style={TH_STICKY}>Symbol</th>
@@ -220,7 +220,7 @@ const MultiSymbolView: FC<{ rows: FundingComparisonRow[] }> = ({ rows }) => {
                   key={r.symbol}
                   onMouseEnter={() => setHovered(i)}
                   onMouseLeave={() => setHovered(null)}
-                  style={{ cursor: 'pointer', position: 'relative' }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <td style={tdSticky(i)}>
                     <span style={{ color: '#fff' }} className={isHovered ? 'underline' : undefined}>
@@ -236,12 +236,25 @@ const MultiSymbolView: FC<{ rows: FundingComparisonRow[] }> = ({ rows }) => {
                       v = e ? rateOf(e, windowSel) : undefined;
                     }
                     return (
-                      <td key={name} style={cellStyle(name, v, isHovered)}>
+                      <td
+                        key={name}
+                        style={{
+                          ...cellStyle(name, v, isHovered),
+                          ...(exIdx === 0 ? { position: 'relative' } : {})
+                        }}
+                      >
                         {exIdx === 0 && (
                           <a
                             href={`/markets/${getShortSlug(r.symbol)}`}
                             aria-label={`${getBaseToken(r.symbol)} market`}
-                            style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              bottom: 0,
+                              left: -9999,
+                              right: -9999,
+                              zIndex: 1
+                            }}
                           />
                         )}
                         {fmtRate(v)}

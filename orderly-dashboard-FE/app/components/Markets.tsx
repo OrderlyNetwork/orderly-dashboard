@@ -433,7 +433,7 @@ export const Markets: FC = () => {
               <Spinner size="2rem" />
             </div>
           )}
-          <Table.Root className="w-full">
+          <Table.Root className="w-full" style={{ overflow: 'clip' }}>
             <Table.Header>
               {table.getHeaderGroups().map((headerGroup) => (
                 <Table.Row key={headerGroup.id} className="border-b border-border-primary">
@@ -474,19 +474,29 @@ export const Markets: FC = () => {
               {table.getRowModel().rows.map((row, index) => (
                 <Table.Row
                   key={row.id}
-                  style={{ position: 'relative' }}
                   className={`border-b border-border-primary hover:bg-[rgba(156,117,255,0.12)] transition-colors duration-150 cursor-pointer ${
                     index % 2 === 0 ? 'bg-bg-secondary' : 'bg-bg-primary'
                   }`}
                 >
                   {row.getVisibleCells().map((cell, cellIndex) => (
-                    <Table.Cell key={cell.id} className="align-middle py-2.5 px-3">
+                    <Table.Cell
+                      key={cell.id}
+                      className="align-middle py-2.5 px-3"
+                      style={cellIndex === 0 ? { position: 'relative' } : undefined}
+                    >
                       {cellIndex === 0 ? (
                         <>
                           <a
                             href={`/markets/${getShortSlug(row.original.symbol)}`}
                             aria-label={`${row.original.baseToken} market`}
-                            style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              bottom: 0,
+                              left: -9999,
+                              right: -9999,
+                              zIndex: 1
+                            }}
                           />
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </>

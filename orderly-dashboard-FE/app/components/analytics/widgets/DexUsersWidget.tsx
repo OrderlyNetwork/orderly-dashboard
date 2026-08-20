@@ -86,7 +86,7 @@ export const DexUsersWidget: FC<{
             <Empty msg={raw.length === 0 ? 'No data' : 'No results'} />
           </div>
         ) : (
-          <table className="w-full border-collapse text-base">
+          <table className="w-full border-collapse text-base" style={{ overflow: 'clip' }}>
             <thead>
               <tr>
                 {COLUMNS.map(({ label, key }, idx) => (
@@ -122,7 +122,7 @@ export const DexUsersWidget: FC<{
                 return (
                   <tr
                     key={b.broker_id ?? i}
-                    style={{ position: 'relative', cursor: url ? 'pointer' : 'default' }}
+                    style={{ cursor: url ? 'pointer' : 'default' }}
                     onMouseEnter={() => setHovered(i)}
                     onMouseLeave={() => setHovered(null)}
                   >
@@ -142,7 +142,8 @@ export const DexUsersWidget: FC<{
                         ...TD,
                         background: cellBg,
                         transition: 'background-color 150ms',
-                        color: '#fff'
+                        color: '#fff',
+                        position: 'relative'
                       }}
                     >
                       {url && (
@@ -151,7 +152,14 @@ export const DexUsersWidget: FC<{
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`${label} board`}
-                          style={{ position: 'absolute', inset: 0, zIndex: 3 }}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            bottom: 0,
+                            left: -9999,
+                            right: -9999,
+                            zIndex: 1
+                          }}
                         />
                       )}
                       {fmtNum(b.dau)}
