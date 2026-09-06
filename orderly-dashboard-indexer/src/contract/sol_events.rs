@@ -1,5 +1,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
+#[allow(dead_code)]
 #[derive(Debug, BorshSerialize, BorshDeserialize)]
 pub struct AccountWithdrawSol {
     pub account_id: [u8; 32],

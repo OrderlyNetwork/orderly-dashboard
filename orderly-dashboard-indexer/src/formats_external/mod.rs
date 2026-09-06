@@ -11,6 +11,7 @@ pub enum IndexerQueryResponse<T> {
     Failure(FailureResponse),
 }
 
+#[allow(dead_code)]
 #[derive(Serialize, Deserialize, ToSchema)]
 #[serde(untagged)]
 pub enum IndexerQueryExternResponse<T> {
