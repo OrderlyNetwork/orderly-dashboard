@@ -448,6 +448,130 @@ pub mod user_ledger {
                                         ::std::borrow::ToOwned::to_owned("bytes32[]"),
                                     ),
                                 },
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("tokens"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Array(
+                                        ::std::boxed::Box::new(
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                        ),
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("bytes32[]"),
+                                    ),
+                                },
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("symbols"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Array(
+                                        ::std::boxed::Box::new(
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                        ),
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("bytes32[]"),
+                                    ),
+                                },
+                            ],
+                            outputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("accountSnapshots"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Array(
+                                        ::std::boxed::Box::new(
+                                            ::ethers::core::abi::ethabi::ParamType::Tuple(
+                                                ::std::vec![
+                                                    ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                                    ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                                    ::ethers::core::abi::ethabi::ParamType::Address,
+                                                    ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                                    ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                                    ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                                    ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                                    ::ethers::core::abi::ethabi::ParamType::Array(
+                                                        ::std::boxed::Box::new(
+                                                            ::ethers::core::abi::ethabi::ParamType::Tuple(
+                                                                ::std::vec![
+                                                                    ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    ::ethers::core::abi::ethabi::ParamType::Array(
+                                                        ::std::boxed::Box::new(
+                                                            ::ethers::core::abi::ethabi::ParamType::Tuple(
+                                                                ::std::vec![
+                                                                    ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    ::ethers::core::abi::ethabi::ParamType::Array(
+                                                        ::std::boxed::Box::new(
+                                                            ::ethers::core::abi::ethabi::ParamType::Tuple(
+                                                                ::std::vec![
+                                                                    ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                                                    ::ethers::core::abi::ethabi::ParamType::Array(
+                                                                        ::std::boxed::Box::new(
+                                                                            ::ethers::core::abi::ethabi::ParamType::Tuple(
+                                                                                ::std::vec![
+                                                                                    ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                                                                    ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                                                                ],
+                                                                            ),
+                                                                        ),
+                                                                    ),
+                                                                ],
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                                    ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                                ],
+                                            ),
+                                        ),
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned(
+                                            "struct AccountTypes.AccountSnapshotV3[]",
+                                        ),
+                                    ),
+                                },
+                            ],
+                            constant: ::core::option::Option::None,
+                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                        },
+                        ::ethers::core::abi::ethabi::Function {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "batchGetUserLedgerV3",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("accountIds"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Array(
+                                        ::std::boxed::Box::new(
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                        ),
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("bytes32[]"),
+                                    ),
+                                },
                             ],
                             outputs: ::std::vec![
                                 ::ethers::core::abi::ethabi::Param {
@@ -1219,6 +1343,49 @@ pub mod user_ledger {
                                     internal_type: ::core::option::Option::Some(
                                         ::std::borrow::ToOwned::to_owned(
                                             "struct PerpTypes.FuturesTradeUploadV3",
+                                        ),
+                                    ),
+                                },
+                            ],
+                            outputs: ::std::vec![],
+                            constant: ::core::option::Option::None,
+                            state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("executeProcessValidatedFuturesV4"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Function {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "executeProcessValidatedFuturesV4",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("trade"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Tuple(
+                                        ::std::vec![
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Bool,
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Bool,
+                                        ],
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned(
+                                            "struct PerpTypes.FuturesTradeUploadV4",
                                         ),
                                     ),
                                 },
@@ -5363,6 +5530,110 @@ pub mod user_ledger {
                     ],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("ProcessValidatedFuturesV4"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::Event {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "ProcessValidatedFuturesV4",
+                            ),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("accountId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: true,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("symbolHash"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: true,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("feeAssetHash"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("tradeQty"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("notional"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("executedPrice"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        128usize,
+                                    ),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("fee"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned(
+                                        "sumUnitaryFundings",
+                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("tradeId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("matchId"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("side"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Bool,
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("marginMode"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned(
+                                        "isoMarginAssetHash",
+                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                        32usize,
+                                    ),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned("isoMargin"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                    indexed: false,
+                                },
+                                ::ethers::core::abi::ethabi::EventParam {
+                                    name: ::std::borrow::ToOwned::to_owned(
+                                        "isInsuranceAccount",
+                                    ),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Bool,
+                                    indexed: false,
+                                },
+                            ],
+                            anonymous: false,
+                        },
+                    ],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("RoleAdminChanged"),
                     ::std::vec![
                         ::ethers::core::abi::ethabi::Event {
@@ -6193,6 +6464,34 @@ pub mod user_ledger {
                     ],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("InvalidChainId"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::AbiError {
+                            name: ::std::borrow::ToOwned::to_owned("InvalidChainId"),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("given"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        256usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("uint256"),
+                                    ),
+                                },
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("expected"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        256usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("uint256"),
+                                    ),
+                                },
+                            ],
+                        },
+                    ],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("InvalidFeeCollectorType"),
                     ::std::vec![
                         ::ethers::core::abi::ethabi::AbiError {
@@ -6226,6 +6525,34 @@ pub mod user_ledger {
                         ::ethers::core::abi::ethabi::AbiError {
                             name: ::std::borrow::ToOwned::to_owned("InvalidPrimeWallet"),
                             inputs: ::std::vec![],
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("InvalidSequenceId"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::AbiError {
+                            name: ::std::borrow::ToOwned::to_owned("InvalidSequenceId"),
+                            inputs: ::std::vec![
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("given"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        256usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("uint256"),
+                                    ),
+                                },
+                                ::ethers::core::abi::ethabi::Param {
+                                    name: ::std::borrow::ToOwned::to_owned("expected"),
+                                    kind: ::ethers::core::abi::ethabi::ParamType::Uint(
+                                        256usize,
+                                    ),
+                                    internal_type: ::core::option::Option::Some(
+                                        ::std::borrow::ToOwned::to_owned("uint256"),
+                                    ),
+                                },
+                            ],
                         },
                     ],
                 ),
@@ -6364,6 +6691,19 @@ pub mod user_ledger {
                         ::ethers::core::abi::ethabi::AbiError {
                             name: ::std::borrow::ToOwned::to_owned(
                                 "OperatorManagerAddressZero",
+                            ),
+                            inputs: ::std::vec![],
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned(
+                        "PermissionlessListingSignerNotSet",
+                    ),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::AbiError {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "PermissionlessListingSignerNotSet",
                             ),
                             inputs: ::std::vec![],
                         },
@@ -6607,6 +6947,15 @@ pub mod user_ledger {
                                     ),
                                 },
                             ],
+                        },
+                    ],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("VaultManagerNotSet"),
+                    ::std::vec![
+                        ::ethers::core::abi::ethabi::AbiError {
+                            name: ::std::borrow::ToOwned::to_owned("VaultManagerNotSet"),
+                            inputs: ::std::vec![],
                         },
                     ],
                 ),
@@ -6867,6 +7216,18 @@ pub mod user_ledger {
                 .method_hash([95, 34, 87, 153], (account_ids, tokens, symbols))
                 .expect("method not found (this should never happen)")
         }
+        ///Calls the contract's `batchGetUserLedgerV3` (0xcf6f02ea) function
+        pub fn batch_get_user_ledger_v_3_with_tokens(
+            &self,
+            account_ids: ::std::vec::Vec<[u8; 32]>,
+            tokens: ::std::vec::Vec<[u8; 32]>,
+            symbols: ::std::vec::Vec<[u8; 32]>,
+        ) -> ::ethers::contract::builders::ContractCall<M, ::std::vec::Vec<AccountSnapshotV3>>
+        {
+            self.0
+                .method_hash([207, 111, 2, 234], (account_ids, tokens, symbols))
+                .expect("method not found (this should never happen)")
+        }
         ///Calls the contract's `batchGetUserLedgerV3` (0xff768d67) function
         pub fn batch_get_user_ledger_v3(
             &self,
@@ -7040,6 +7401,15 @@ pub mod user_ledger {
         ) -> ::ethers::contract::builders::ContractCall<M, ()> {
             self.0
                 .method_hash([187, 114, 94, 178], (trade,))
+                .expect("method not found (this should never happen)")
+        }
+        ///Calls the contract's `executeProcessValidatedFuturesV4` (0x1e7ca2df) function
+        pub fn execute_process_validated_futures_v4(
+            &self,
+            trade: FuturesTradeUploadV4,
+        ) -> ::ethers::contract::builders::ContractCall<M, ()> {
+            self.0
+                .method_hash([30, 124, 162, 223], (trade,))
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `executeRebalanceBurn` (0xb76c1210) function
@@ -7892,6 +8262,16 @@ pub mod user_ledger {
         > {
             self.0.event()
         }
+        ///Gets the contract's `ProcessValidatedFuturesV4` event
+        pub fn process_validated_futures_v4_filter(
+            &self,
+        ) -> ::ethers::contract::builders::Event<
+            ::std::sync::Arc<M>,
+            M,
+            ProcessValidatedFuturesV4Filter,
+        > {
+            self.0.event()
+        }
         ///Gets the contract's `RoleAdminChanged` event
         pub fn role_admin_changed_filter(
             &self,
@@ -8288,6 +8668,22 @@ pub mod user_ledger {
     pub struct InvalidBizType {
         pub biz_type: u8,
     }
+    ///Custom Error type `InvalidChainId` with signature `InvalidChainId(uint256,uint256)` and selector `0x9fba672f`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthError,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[etherror(name = "InvalidChainId", abi = "InvalidChainId(uint256,uint256)")]
+    pub struct InvalidChainId {
+        pub given: ::ethers::core::types::U256,
+        pub expected: ::ethers::core::types::U256,
+    }
     ///Custom Error type `InvalidFeeCollectorType` with signature `InvalidFeeCollectorType()` and selector `0xb6bd80ad`
     #[derive(
         Clone,
@@ -8329,6 +8725,22 @@ pub mod user_ledger {
     )]
     #[etherror(name = "InvalidPrimeWallet", abi = "InvalidPrimeWallet()")]
     pub struct InvalidPrimeWallet;
+    ///Custom Error type `InvalidSequenceId` with signature `InvalidSequenceId(uint256,uint256)` and selector `0x781ce861`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthError,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[etherror(name = "InvalidSequenceId", abi = "InvalidSequenceId(uint256,uint256)")]
+    pub struct InvalidSequenceId {
+        pub given: ::ethers::core::types::U256,
+        pub expected: ::ethers::core::types::U256,
+    }
     ///Custom Error type `InvalidVault` with signature `InvalidVault()` and selector `0xd03a6320`
     #[derive(
         Clone,
@@ -8507,6 +8919,22 @@ pub mod user_ledger {
         abi = "OperatorManagerAddressZero()"
     )]
     pub struct OperatorManagerAddressZero;
+    ///Custom Error type `PermissionlessListingSignerNotSet` with signature `PermissionlessListingSignerNotSet()` and selector `0x5fc2bd7d`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthError,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[etherror(
+        name = "PermissionlessListingSignerNotSet",
+        abi = "PermissionlessListingSignerNotSet()"
+    )]
+    pub struct PermissionlessListingSignerNotSet;
     ///Custom Error type `RebalanceAlreadySucc` with signature `RebalanceAlreadySucc()` and selector `0x93a12797`
     #[derive(
         Clone,
@@ -8733,6 +9161,19 @@ pub mod user_ledger {
         pub account_id: [u8; 32],
         pub symbol_hash: [u8; 32],
     }
+    ///Custom Error type `VaultManagerNotSet` with signature `VaultManagerNotSet()` and selector `0x047b368d`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthError,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[etherror(name = "VaultManagerNotSet", abi = "VaultManagerNotSet()")]
+    pub struct VaultManagerNotSet;
     ///Custom Error type `WithdrawBalanceNotEnough` with signature `WithdrawBalanceNotEnough(int128,uint128)` and selector `0xd8c06800`
     #[derive(
         Clone,
@@ -8864,9 +9305,11 @@ pub mod user_ledger {
         InsuranceTransferAmountInvalid(InsuranceTransferAmountInvalid),
         InsuranceTransferToSelf(InsuranceTransferToSelf),
         InvalidBizType(InvalidBizType),
+        InvalidChainId(InvalidChainId),
         InvalidFeeCollectorType(InvalidFeeCollectorType),
         InvalidMarginMode(InvalidMarginMode),
         InvalidPrimeWallet(InvalidPrimeWallet),
+        InvalidSequenceId(InvalidSequenceId),
         InvalidVault(InvalidVault),
         IsoAdlMarginToCrossAmountInvalid(IsoAdlMarginToCrossAmountInvalid),
         LedgerAddressZero(LedgerAddressZero),
@@ -8879,6 +9322,7 @@ pub mod user_ledger {
         OnlyOperatorManagerCanCall(OnlyOperatorManagerCanCall),
         OnlySymbolManagerOrOwner(OnlySymbolManagerOrOwner),
         OperatorManagerAddressZero(OperatorManagerAddressZero),
+        PermissionlessListingSignerNotSet(PermissionlessListingSignerNotSet),
         RebalanceAlreadySucc(RebalanceAlreadySucc),
         RebalanceChainIdInvalid(RebalanceChainIdInvalid),
         RebalanceIdNotMatch(RebalanceIdNotMatch),
@@ -8894,6 +9338,7 @@ pub mod user_ledger {
         TotalSettleAmountNotMatch(TotalSettleAmountNotMatch),
         UnsupportChainType(UnsupportChainType),
         UserPerpPositionQtyZero(UserPerpPositionQtyZero),
+        VaultManagerNotSet(VaultManagerNotSet),
         WithdrawBalanceNotEnough(WithdrawBalanceNotEnough),
         WithdrawFeeTooLarge(WithdrawFeeTooLarge),
         WithdrawToAddressZero(WithdrawToAddressZero),
@@ -8996,6 +9441,9 @@ pub mod user_ledger {
             if let Ok(decoded) = <InvalidBizType as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::InvalidBizType(decoded));
             }
+            if let Ok(decoded) = <InvalidChainId as ::ethers::core::abi::AbiDecode>::decode(data) {
+                return Ok(Self::InvalidChainId(decoded));
+            }
             if let Ok(decoded) =
                 <InvalidFeeCollectorType as ::ethers::core::abi::AbiDecode>::decode(data)
             {
@@ -9009,6 +9457,10 @@ pub mod user_ledger {
                 <InvalidPrimeWallet as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::InvalidPrimeWallet(decoded));
+            }
+            if let Ok(decoded) = <InvalidSequenceId as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::InvalidSequenceId(decoded));
             }
             if let Ok(decoded) = <InvalidVault as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::InvalidVault(decoded));
@@ -9063,6 +9515,11 @@ pub mod user_ledger {
                 <OperatorManagerAddressZero as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::OperatorManagerAddressZero(decoded));
+            }
+            if let Ok(decoded) =
+                <PermissionlessListingSignerNotSet as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::PermissionlessListingSignerNotSet(decoded));
             }
             if let Ok(decoded) =
                 <RebalanceAlreadySucc as ::ethers::core::abi::AbiDecode>::decode(data)
@@ -9131,6 +9588,11 @@ pub mod user_ledger {
                 <UserPerpPositionQtyZero as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::UserPerpPositionQtyZero(decoded));
+            }
+            if let Ok(decoded) =
+                <VaultManagerNotSet as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::VaultManagerNotSet(decoded));
             }
             if let Ok(decoded) =
                 <WithdrawBalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(data)
@@ -9210,6 +9672,7 @@ pub mod user_ledger {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::InvalidBizType(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::InvalidChainId(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::InvalidFeeCollectorType(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -9217,6 +9680,7 @@ pub mod user_ledger {
                 Self::InvalidPrimeWallet(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
+                Self::InvalidSequenceId(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::InvalidVault(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::IsoAdlMarginToCrossAmountInvalid(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
@@ -9243,6 +9707,9 @@ pub mod user_ledger {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::OperatorManagerAddressZero(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::PermissionlessListingSignerNotSet(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::RebalanceAlreadySucc(element) => {
@@ -9276,6 +9743,9 @@ pub mod user_ledger {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::UserPerpPositionQtyZero(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::VaultManagerNotSet(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::WithdrawBalanceNotEnough(element) => {
@@ -9378,6 +9848,10 @@ pub mod user_ledger {
                     true
                 }
                 _ if selector
+                    == <InvalidChainId as ::ethers::contract::EthError>::selector() => {
+                    true
+                }
+                _ if selector
                     == <InvalidFeeCollectorType as ::ethers::contract::EthError>::selector() => {
                     true
                 }
@@ -9387,6 +9861,10 @@ pub mod user_ledger {
                 }
                 _ if selector
                     == <InvalidPrimeWallet as ::ethers::contract::EthError>::selector() => {
+                    true
+                }
+                _ if selector
+                    == <InvalidSequenceId as ::ethers::contract::EthError>::selector() => {
                     true
                 }
                 _ if selector
@@ -9433,6 +9911,10 @@ pub mod user_ledger {
                 }
                 _ if selector
                     == <OperatorManagerAddressZero as ::ethers::contract::EthError>::selector() => {
+                    true
+                }
+                _ if selector
+                    == <PermissionlessListingSignerNotSet as ::ethers::contract::EthError>::selector() => {
                     true
                 }
                 _ if selector
@@ -9496,6 +9978,10 @@ pub mod user_ledger {
                     true
                 }
                 _ if selector
+                    == <VaultManagerNotSet as ::ethers::contract::EthError>::selector() => {
+                    true
+                }
+                _ if selector
                     == <WithdrawBalanceNotEnough as ::ethers::contract::EthError>::selector() => {
                     true
                 }
@@ -9553,9 +10039,11 @@ pub mod user_ledger {
                 }
                 Self::InsuranceTransferToSelf(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidBizType(element) => ::core::fmt::Display::fmt(element, f),
+                Self::InvalidChainId(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidFeeCollectorType(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidMarginMode(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidPrimeWallet(element) => ::core::fmt::Display::fmt(element, f),
+                Self::InvalidSequenceId(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidVault(element) => ::core::fmt::Display::fmt(element, f),
                 Self::IsoAdlMarginToCrossAmountInvalid(element) => {
                     ::core::fmt::Display::fmt(element, f)
@@ -9576,6 +10064,9 @@ pub mod user_ledger {
                 Self::OnlyOperatorManagerCanCall(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OnlySymbolManagerOrOwner(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OperatorManagerAddressZero(element) => ::core::fmt::Display::fmt(element, f),
+                Self::PermissionlessListingSignerNotSet(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
                 Self::RebalanceAlreadySucc(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceChainIdInvalid(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceIdNotMatch(element) => ::core::fmt::Display::fmt(element, f),
@@ -9591,6 +10082,7 @@ pub mod user_ledger {
                 Self::TotalSettleAmountNotMatch(element) => ::core::fmt::Display::fmt(element, f),
                 Self::UnsupportChainType(element) => ::core::fmt::Display::fmt(element, f),
                 Self::UserPerpPositionQtyZero(element) => ::core::fmt::Display::fmt(element, f),
+                Self::VaultManagerNotSet(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawBalanceNotEnough(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawFeeTooLarge(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawToAddressZero(element) => ::core::fmt::Display::fmt(element, f),
@@ -9704,6 +10196,11 @@ pub mod user_ledger {
             Self::InvalidBizType(value)
         }
     }
+    impl ::core::convert::From<InvalidChainId> for user_ledgerErrors {
+        fn from(value: InvalidChainId) -> Self {
+            Self::InvalidChainId(value)
+        }
+    }
     impl ::core::convert::From<InvalidFeeCollectorType> for user_ledgerErrors {
         fn from(value: InvalidFeeCollectorType) -> Self {
             Self::InvalidFeeCollectorType(value)
@@ -9717,6 +10214,11 @@ pub mod user_ledger {
     impl ::core::convert::From<InvalidPrimeWallet> for user_ledgerErrors {
         fn from(value: InvalidPrimeWallet) -> Self {
             Self::InvalidPrimeWallet(value)
+        }
+    }
+    impl ::core::convert::From<InvalidSequenceId> for user_ledgerErrors {
+        fn from(value: InvalidSequenceId) -> Self {
+            Self::InvalidSequenceId(value)
         }
     }
     impl ::core::convert::From<InvalidVault> for user_ledgerErrors {
@@ -9777,6 +10279,11 @@ pub mod user_ledger {
     impl ::core::convert::From<OperatorManagerAddressZero> for user_ledgerErrors {
         fn from(value: OperatorManagerAddressZero) -> Self {
             Self::OperatorManagerAddressZero(value)
+        }
+    }
+    impl ::core::convert::From<PermissionlessListingSignerNotSet> for user_ledgerErrors {
+        fn from(value: PermissionlessListingSignerNotSet) -> Self {
+            Self::PermissionlessListingSignerNotSet(value)
         }
     }
     impl ::core::convert::From<RebalanceAlreadySucc> for user_ledgerErrors {
@@ -9852,6 +10359,11 @@ pub mod user_ledger {
     impl ::core::convert::From<UserPerpPositionQtyZero> for user_ledgerErrors {
         fn from(value: UserPerpPositionQtyZero) -> Self {
             Self::UserPerpPositionQtyZero(value)
+        }
+    }
+    impl ::core::convert::From<VaultManagerNotSet> for user_ledgerErrors {
+        fn from(value: VaultManagerNotSet) -> Self {
+            Self::VaultManagerNotSet(value)
         }
     }
     impl ::core::convert::From<WithdrawBalanceNotEnough> for user_ledgerErrors {
@@ -11064,6 +11576,39 @@ pub mod user_ledger {
         Hash,
     )]
     #[ethevent(
+        name = "ProcessValidatedFuturesV4",
+        abi = "ProcessValidatedFuturesV4(bytes32,bytes32,bytes32,int128,int128,uint128,int128,int128,uint64,uint64,bool,uint8,bytes32,int128,bool)"
+    )]
+    pub struct ProcessValidatedFuturesV4Filter {
+        #[ethevent(indexed)]
+        pub account_id: [u8; 32],
+        #[ethevent(indexed)]
+        pub symbol_hash: [u8; 32],
+        pub fee_asset_hash: [u8; 32],
+        pub trade_qty: i128,
+        pub notional: i128,
+        pub executed_price: u128,
+        pub fee: i128,
+        pub sum_unitary_fundings: i128,
+        pub trade_id: u64,
+        pub match_id: u64,
+        pub side: bool,
+        pub margin_mode: u8,
+        pub iso_margin_asset_hash: [u8; 32],
+        pub iso_margin: i128,
+        pub is_insurance_account: bool,
+    }
+    #[derive(
+        Clone,
+        ::ethers::contract::EthEvent,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethevent(
         name = "RoleAdminChanged",
         abi = "RoleAdminChanged(bytes32,bytes32,bytes32)"
     )]
@@ -11339,6 +11884,7 @@ pub mod user_ledger {
         ProcessValidatedFutures1Filter(ProcessValidatedFutures1Filter),
         ProcessValidatedFutures2Filter(ProcessValidatedFutures2Filter),
         ProcessValidatedFuturesV3Filter(ProcessValidatedFuturesV3Filter),
+        ProcessValidatedFuturesV4Filter(ProcessValidatedFuturesV4Filter),
         RoleAdminChangedFilter(RoleAdminChangedFilter),
         RoleGrantedFilter(RoleGrantedFilter),
         RoleRevokedFilter(RoleRevokedFilter),
@@ -11499,6 +12045,9 @@ pub mod user_ledger {
             if let Ok(decoded) = ProcessValidatedFuturesV3Filter::decode_log(log) {
                 return Ok(user_ledgerEvents::ProcessValidatedFuturesV3Filter(decoded));
             }
+            if let Ok(decoded) = ProcessValidatedFuturesV4Filter::decode_log(log) {
+                return Ok(user_ledgerEvents::ProcessValidatedFuturesV4Filter(decoded));
+            }
             if let Ok(decoded) = RoleAdminChangedFilter::decode_log(log) {
                 return Ok(user_ledgerEvents::RoleAdminChangedFilter(decoded));
             }
@@ -11616,6 +12165,9 @@ pub mod user_ledger {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::ProcessValidatedFuturesV3Filter(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
+                Self::ProcessValidatedFuturesV4Filter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::RoleAdminChangedFilter(element) => ::core::fmt::Display::fmt(element, f),
@@ -11874,6 +12426,11 @@ pub mod user_ledger {
             Self::ProcessValidatedFuturesV3Filter(value)
         }
     }
+    impl ::core::convert::From<ProcessValidatedFuturesV4Filter> for user_ledgerEvents {
+        fn from(value: ProcessValidatedFuturesV4Filter) -> Self {
+            Self::ProcessValidatedFuturesV4Filter(value)
+        }
+    }
     impl ::core::convert::From<RoleAdminChangedFilter> for user_ledgerEvents {
         fn from(value: RoleAdminChangedFilter) -> Self {
             Self::RoleAdminChangedFilter(value)
@@ -12073,6 +12630,26 @@ pub mod user_ledger {
         abi = "batchGetUserLedger(bytes32[],bytes32[],bytes32[])"
     )]
     pub struct BatchGetUserLedgerWithTokensCall {
+        pub account_ids: ::std::vec::Vec<[u8; 32]>,
+        pub tokens: ::std::vec::Vec<[u8; 32]>,
+        pub symbols: ::std::vec::Vec<[u8; 32]>,
+    }
+    ///Container type for all input parameters for the `batchGetUserLedgerV3` function with signature `batchGetUserLedgerV3(bytes32[],bytes32[],bytes32[])` and selector `0xcf6f02ea`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(
+        name = "batchGetUserLedgerV3",
+        abi = "batchGetUserLedgerV3(bytes32[],bytes32[],bytes32[])"
+    )]
+    pub struct BatchGetUserLedgerV3WithTokensCall {
         pub account_ids: ::std::vec::Vec<[u8; 32]>,
         pub tokens: ::std::vec::Vec<[u8; 32]>,
         pub symbols: ::std::vec::Vec<[u8; 32]>,
@@ -12378,6 +12955,15 @@ pub mod user_ledger {
     )]
     pub struct ExecuteProcessValidatedFuturesV3Call {
         pub trade: FuturesTradeUploadV3,
+    }
+    ///Container type for all input parameters for the `executeProcessValidatedFuturesV4` function with signature `executeProcessValidatedFuturesV4((bytes32,bytes32,bytes32,int128,int128,uint128,int128,int128,uint64,uint64,uint64,bool,uint8,bytes32,int128,bool))` and selector `0x1e7ca2df`
+    #[derive(Clone, ::ethers::contract::EthCall, ::ethers::contract::EthDisplay)]
+    #[ethcall(
+        name = "executeProcessValidatedFuturesV4",
+        abi = "executeProcessValidatedFuturesV4((bytes32,bytes32,bytes32,int128,int128,uint128,int128,int128,uint64,uint64,uint64,bool,uint8,bytes32,int128,bool))"
+    )]
+    pub struct ExecuteProcessValidatedFuturesV4Call {
+        pub trade: FuturesTradeUploadV4,
     }
     ///Container type for all input parameters for the `executeRebalanceBurn` function with signature `executeRebalanceBurn((bytes32,bytes32,uint8,uint64,uint128,bytes32,uint256,uint256))` and selector `0xb76c1210`
     #[derive(
@@ -13182,6 +13768,7 @@ pub mod user_ledger {
         BatchGetUserBalance(BatchGetUserBalanceCall),
         BatchGetUserLedger(BatchGetUserLedgerCall),
         BatchGetUserLedgerWithTokens(BatchGetUserLedgerWithTokensCall),
+        BatchGetUserLedgerV3WithTokens(BatchGetUserLedgerV3WithTokensCall),
         BatchGetUserLedgerV3(BatchGetUserLedgerV3Call),
         ContractSigner(ContractSignerCall),
         CrossChainManagerAddress(CrossChainManagerAddressCall),
@@ -13200,6 +13787,7 @@ pub mod user_ledger {
         ExecuteProcessValidatedFutures(ExecuteProcessValidatedFuturesCall),
         ExecuteProcessValidatedFuturesBatch(ExecuteProcessValidatedFuturesBatchCall),
         ExecuteProcessValidatedFuturesV3(ExecuteProcessValidatedFuturesV3Call),
+        ExecuteProcessValidatedFuturesV4(ExecuteProcessValidatedFuturesV4Call),
         ExecuteRebalanceBurn(ExecuteRebalanceBurnCall),
         ExecuteRebalanceMint(ExecuteRebalanceMintCall),
         ExecuteSettlement(ExecuteSettlementCall),
@@ -13302,6 +13890,11 @@ pub mod user_ledger {
                 return Ok(Self::BatchGetUserLedgerWithTokens(decoded));
             }
             if let Ok(decoded) =
+                <BatchGetUserLedgerV3WithTokensCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::BatchGetUserLedgerV3WithTokens(decoded));
+            }
+            if let Ok(decoded) =
                 <BatchGetUserLedgerV3Call as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::BatchGetUserLedgerV3(decoded));
@@ -13390,6 +13983,13 @@ pub mod user_ledger {
                 )
             {
                 return Ok(Self::ExecuteProcessValidatedFuturesV3(decoded));
+            }
+            if let Ok(decoded) =
+                <ExecuteProcessValidatedFuturesV4Call as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                )
+            {
+                return Ok(Self::ExecuteProcessValidatedFuturesV4(decoded));
             }
             if let Ok(decoded) =
                 <ExecuteRebalanceBurnCall as ::ethers::core::abi::AbiDecode>::decode(data)
@@ -13645,6 +14245,9 @@ pub mod user_ledger {
                 Self::BatchGetUserLedgerWithTokens(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
+                Self::BatchGetUserLedgerV3WithTokens(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
                 Self::BatchGetUserLedgerV3(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -13689,6 +14292,9 @@ pub mod user_ledger {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::ExecuteProcessValidatedFuturesV3(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::ExecuteProcessValidatedFuturesV4(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::ExecuteRebalanceBurn(element) => {
@@ -13802,6 +14408,9 @@ pub mod user_ledger {
                 Self::BatchGetUserLedgerWithTokens(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
+                Self::BatchGetUserLedgerV3WithTokens(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
                 Self::BatchGetUserLedgerV3(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ContractSigner(element) => ::core::fmt::Display::fmt(element, f),
                 Self::CrossChainManagerAddress(element) => ::core::fmt::Display::fmt(element, f),
@@ -13826,6 +14435,9 @@ pub mod user_ledger {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::ExecuteProcessValidatedFuturesV3(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
+                Self::ExecuteProcessValidatedFuturesV4(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
                 Self::ExecuteRebalanceBurn(element) => ::core::fmt::Display::fmt(element, f),
@@ -13926,6 +14538,11 @@ pub mod user_ledger {
             Self::BatchGetUserLedgerWithTokens(value)
         }
     }
+    impl ::core::convert::From<BatchGetUserLedgerV3WithTokensCall> for user_ledgerCalls {
+        fn from(value: BatchGetUserLedgerV3WithTokensCall) -> Self {
+            Self::BatchGetUserLedgerV3WithTokens(value)
+        }
+    }
     impl ::core::convert::From<BatchGetUserLedgerV3Call> for user_ledgerCalls {
         fn from(value: BatchGetUserLedgerV3Call) -> Self {
             Self::BatchGetUserLedgerV3(value)
@@ -14014,6 +14631,11 @@ pub mod user_ledger {
     impl ::core::convert::From<ExecuteProcessValidatedFuturesV3Call> for user_ledgerCalls {
         fn from(value: ExecuteProcessValidatedFuturesV3Call) -> Self {
             Self::ExecuteProcessValidatedFuturesV3(value)
+        }
+    }
+    impl ::core::convert::From<ExecuteProcessValidatedFuturesV4Call> for user_ledgerCalls {
+        fn from(value: ExecuteProcessValidatedFuturesV4Call) -> Self {
+            Self::ExecuteProcessValidatedFuturesV4(value)
         }
     }
     impl ::core::convert::From<ExecuteRebalanceBurnCall> for user_ledgerCalls {
@@ -14327,6 +14949,20 @@ pub mod user_ledger {
     )]
     pub struct BatchGetUserLedgerWithTokensReturn {
         pub account_snapshots: ::std::vec::Vec<AccountSnapshot>,
+    }
+    ///Container type for all return fields from the `batchGetUserLedgerV3` function with signature `batchGetUserLedgerV3(bytes32[],bytes32[],bytes32[])` and selector `0xcf6f02ea`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct BatchGetUserLedgerV3WithTokensReturn {
+        pub account_snapshots: ::std::vec::Vec<AccountSnapshotV3>,
     }
     ///Container type for all return fields from the `batchGetUserLedgerV3` function with signature `batchGetUserLedgerV3(bytes32[])` and selector `0xff768d67`
     #[derive(
@@ -15333,6 +15969,35 @@ pub mod user_ledger {
         pub margin_mode: u8,
         pub iso_margin_asset_hash: [u8; 32],
         pub margin_from_cross: i128,
+    }
+    ///`FuturesTradeUploadV4(bytes32,bytes32,bytes32,int128,int128,uint128,int128,int128,uint64,uint64,uint64,bool,uint8,bytes32,int128,bool)`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct FuturesTradeUploadV4 {
+        pub account_id: [u8; 32],
+        pub symbol_hash: [u8; 32],
+        pub fee_asset_hash: [u8; 32],
+        pub trade_qty: i128,
+        pub notional: i128,
+        pub executed_price: u128,
+        pub fee: i128,
+        pub sum_unitary_fundings: i128,
+        pub trade_id: u64,
+        pub match_id: u64,
+        pub timestamp: u64,
+        pub side: bool,
+        pub margin_mode: u8,
+        pub iso_margin_asset_hash: [u8; 32],
+        pub margin_from_cross: i128,
+        pub is_insurance_account: bool,
     }
     ///`RebalanceBurnCCFinishData(bool,uint64,uint128,bytes32,uint256,uint256)`
     #[derive(

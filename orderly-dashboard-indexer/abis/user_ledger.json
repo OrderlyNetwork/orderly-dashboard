@@ -606,6 +606,225 @@
         "name": "accountIds",
         "type": "bytes32[]",
         "internalType": "bytes32[]"
+      },
+      {
+        "name": "tokens",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "symbols",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "accountSnapshots",
+        "type": "tuple[]",
+        "internalType": "struct AccountTypes.AccountSnapshotV3[]",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "brokerHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "userAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "lastWithdrawNonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "lastPerpTradeId",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "lastEngineEventId",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "lastDepositEventId",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "tokenBalances",
+            "type": "tuple[]",
+            "internalType": "struct AccountTypes.AccountTokenBalances[]",
+            "components": [
+              {
+                "name": "tokenHash",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "balance",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "frozenBalance",
+                "type": "uint128",
+                "internalType": "uint128"
+              }
+            ]
+          },
+          {
+            "name": "perpPositions",
+            "type": "tuple[]",
+            "internalType": "struct AccountTypes.AccountPerpPositions[]",
+            "components": [
+              {
+                "name": "symbolHash",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "positionQty",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "costPosition",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "lastSumUnitaryFundings",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "lastExecutedPrice",
+                "type": "uint128",
+                "internalType": "uint128"
+              },
+              {
+                "name": "lastSettledPrice",
+                "type": "uint128",
+                "internalType": "uint128"
+              },
+              {
+                "name": "averageEntryPrice",
+                "type": "uint128",
+                "internalType": "uint128"
+              },
+              {
+                "name": "openingCost",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "lastAdlPrice",
+                "type": "uint128",
+                "internalType": "uint128"
+              }
+            ]
+          },
+          {
+            "name": "isoPerpPositions",
+            "type": "tuple[]",
+            "internalType": "struct AccountTypes.AccountIsoPerpPositions[]",
+            "components": [
+              {
+                "name": "symbolHash",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "positionQty",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "costPosition",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "lastSumUnitaryFundings",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "lastExecutedPrice",
+                "type": "uint128",
+                "internalType": "uint128"
+              },
+              {
+                "name": "lastSettledPrice",
+                "type": "uint128",
+                "internalType": "uint128"
+              },
+              {
+                "name": "averageEntryPrice",
+                "type": "uint128",
+                "internalType": "uint128"
+              },
+              {
+                "name": "openingCost",
+                "type": "int128",
+                "internalType": "int128"
+              },
+              {
+                "name": "lastAdlPrice",
+                "type": "uint128",
+                "internalType": "uint128"
+              },
+              {
+                "name": "margins",
+                "type": "tuple[]",
+                "internalType": "struct AccountTypes.AccountMargins[]",
+                "components": [
+                  {
+                    "name": "marginAssetHash",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "margin",
+                    "type": "int128",
+                    "internalType": "int128"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "lastDepositSrcChainId",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "lastDepositSrcChainNonce",
+            "type": "uint64",
+            "internalType": "uint64"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "batchGetUserLedgerV3",
+    "inputs": [
+      {
+        "name": "accountIds",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
       }
     ],
     "outputs": [
@@ -1831,6 +2050,101 @@
             "name": "marginFromCross",
             "type": "int128",
             "internalType": "int128"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "executeProcessValidatedFuturesV4",
+    "inputs": [
+      {
+        "name": "trade",
+        "type": "tuple",
+        "internalType": "struct PerpTypes.FuturesTradeUploadV4",
+        "components": [
+          {
+            "name": "accountId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "symbolHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "feeAssetHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "tradeQty",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "notional",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "executedPrice",
+            "type": "uint128",
+            "internalType": "uint128"
+          },
+          {
+            "name": "fee",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "sumUnitaryFundings",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "tradeId",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "matchId",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "timestamp",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "side",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "marginMode",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "isoMarginAssetHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "marginFromCross",
+            "type": "int128",
+            "internalType": "int128"
+          },
+          {
+            "name": "isInsuranceAccount",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -5568,6 +5882,103 @@
   },
   {
     "type": "event",
+    "name": "ProcessValidatedFuturesV4",
+    "inputs": [
+      {
+        "name": "accountId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "symbolHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "feeAssetHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "tradeQty",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "notional",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "executedPrice",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      },
+      {
+        "name": "fee",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "sumUnitaryFundings",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "tradeId",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "matchId",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "side",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "marginMode",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "isoMarginAssetHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "isoMargin",
+        "type": "int128",
+        "indexed": false,
+        "internalType": "int128"
+      },
+      {
+        "name": "isInsuranceAccount",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "RoleAdminChanged",
     "inputs": [
       {
@@ -6160,6 +6571,22 @@
   },
   {
     "type": "error",
+    "name": "InvalidChainId",
+    "inputs": [
+      {
+        "name": "given",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "InvalidFeeCollectorType",
     "inputs": []
   },
@@ -6178,6 +6605,22 @@
     "type": "error",
     "name": "InvalidPrimeWallet",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSequenceId",
+    "inputs": [
+      {
+        "name": "given",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",
@@ -6249,6 +6692,11 @@
   {
     "type": "error",
     "name": "OperatorManagerAddressZero",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PermissionlessListingSignerNotSet",
     "inputs": []
   },
   {
@@ -6381,6 +6829,11 @@
         "internalType": "bytes32"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "VaultManagerNotSet",
+    "inputs": []
   },
   {
     "type": "error",

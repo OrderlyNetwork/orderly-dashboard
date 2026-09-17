@@ -284,6 +284,60 @@ pub mod operator_manager {
                     },],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("futuresTradeUploadV4"),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("futuresTradeUploadV4",),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("data"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                ::ethers::core::abi::ethabi::ParamType::Array(
+                                    ::std::boxed::Box::new(
+                                        ::ethers::core::abi::ethabi::ParamType::Tuple(::std::vec![
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                                32usize
+                                            ),
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                                32usize
+                                            ),
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                                32usize
+                                            ),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Bool,
+                                            ::ethers::core::abi::ethabi::ParamType::Uint(8usize),
+                                            ::ethers::core::abi::ethabi::ParamType::FixedBytes(
+                                                32usize
+                                            ),
+                                            ::ethers::core::abi::ethabi::ParamType::Int(128usize),
+                                            ::ethers::core::abi::ethabi::ParamType::Bool,
+                                        ],),
+                                    ),
+                                ),
+                            ],),
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned(
+                                    "struct PerpTypes.FuturesTradeUploadDataV4",
+                                ),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("futuresUploadBatchId"),
                     ::std::vec![::ethers::core::abi::ethabi::Function {
                         name: ::std::borrow::ToOwned::to_owned("futuresUploadBatchId",),
@@ -451,6 +505,40 @@ pub mod operator_manager {
                     },],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("permissionlessListingSequenceId"),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("permissionlessListingSequenceId",),
+                        inputs: ::std::vec![],
+                        outputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::string::String::new(),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("uint64"),
+                            ),
+                        },],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("permissionlessListingSignerAddress"),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned(
+                            "permissionlessListingSignerAddress",
+                        ),
+                        inputs: ::std::vec![],
+                        outputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::string::String::new(),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
+                            ),
+                        },],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
+                    },],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("perpPriceUpload"),
                     ::std::vec![::ethers::core::abi::ethabi::Function {
                         name: ::std::borrow::ToOwned::to_owned("perpPriceUpload"),
@@ -547,6 +635,52 @@ pub mod operator_manager {
                     ::std::vec![::ethers::core::abi::ethabi::Function {
                         name: ::std::borrow::ToOwned::to_owned("renounceOwnership"),
                         inputs: ::std::vec![],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("setAllowedSymbol"),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("setAllowedSymbol"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("_symbolHash"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("bytes32"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("_allowed"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Bool,
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("bool"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("_sequenceId"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint64"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("_chainId"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint256"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("_cefiSignature"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Bytes,
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("bytes"),
+                                ),
+                            },
+                        ],
                         outputs: ::std::vec![],
                         constant: ::core::option::Option::None,
                         state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
@@ -729,6 +863,42 @@ pub mod operator_manager {
                     },],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("setPermissionlessListingSignerAddress"),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned(
+                            "setPermissionlessListingSignerAddress",
+                        ),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned(
+                                "_permissionlessListingSignerAddress",
+                            ),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("setVaultManager"),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("setVaultManager"),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::borrow::ToOwned::to_owned("_vaultManager"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("address"),
+                            ),
+                        },],
+                        outputs: ::std::vec![],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("sumUnitaryFundingsUpload"),
                     ::std::vec![::ethers::core::abi::ethabi::Function {
                         name: ::std::borrow::ToOwned::to_owned("sumUnitaryFundingsUpload",),
@@ -776,6 +946,22 @@ pub mod operator_manager {
                         outputs: ::std::vec![],
                         constant: ::core::option::Option::None,
                         state_mutability: ::ethers::core::abi::ethabi::StateMutability::NonPayable,
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("vaultManager"),
+                    ::std::vec![::ethers::core::abi::ethabi::Function {
+                        name: ::std::borrow::ToOwned::to_owned("vaultManager"),
+                        inputs: ::std::vec![],
+                        outputs: ::std::vec![::ethers::core::abi::ethabi::Param {
+                            name: ::std::string::String::new(),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                            internal_type: ::core::option::Option::Some(
+                                ::std::borrow::ToOwned::to_owned("contract IVaultManager"),
+                            ),
+                        },],
+                        constant: ::core::option::Option::None,
+                        state_mutability: ::ethers::core::abi::ethabi::StateMutability::View,
                     },],
                 ),
             ]),
@@ -977,6 +1163,18 @@ pub mod operator_manager {
                     },],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("FuturesTradeUploadV4"),
+                    ::std::vec![::ethers::core::abi::ethabi::Event {
+                        name: ::std::borrow::ToOwned::to_owned("FuturesTradeUploadV4",),
+                        inputs: ::std::vec![::ethers::core::abi::ethabi::EventParam {
+                            name: ::std::borrow::ToOwned::to_owned("batchId"),
+                            kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                            indexed: true,
+                        },],
+                        anonymous: false,
+                    },],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("Initialized"),
                     ::std::vec![::ethers::core::abi::ethabi::Event {
                         name: ::std::borrow::ToOwned::to_owned("Initialized"),
@@ -1028,6 +1226,70 @@ pub mod operator_manager {
                             kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
                             indexed: true,
                         },],
+                        anonymous: false,
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("SetAllowedSymbolByOperator"),
+                    ::std::vec![::ethers::core::abi::ethabi::Event {
+                        name: ::std::borrow::ToOwned::to_owned("SetAllowedSymbolByOperator",),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("symbolHash"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::FixedBytes(32usize,),
+                                indexed: true,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("allowed"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Bool,
+                                indexed: false,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("sequenceId"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(64usize),
+                                indexed: true,
+                            },
+                        ],
+                        anonymous: false,
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("SetPermissionlessListingSignerAddress"),
+                    ::std::vec![::ethers::core::abi::ethabi::Event {
+                        name: ::std::borrow::ToOwned::to_owned(
+                            "SetPermissionlessListingSignerAddress",
+                        ),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("oldAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("newAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                        ],
+                        anonymous: false,
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("SetVaultManager"),
+                    ::std::vec![::ethers::core::abi::ethabi::Event {
+                        name: ::std::borrow::ToOwned::to_owned("SetVaultManager"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("oldAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                            ::ethers::core::abi::ethabi::EventParam {
+                                name: ::std::borrow::ToOwned::to_owned("newAddress"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Address,
+                                indexed: false,
+                            },
+                        ],
                         anonymous: false,
                     },],
                 ),
@@ -1300,6 +1562,28 @@ pub mod operator_manager {
                     },],
                 ),
                 (
+                    ::std::borrow::ToOwned::to_owned("InvalidChainId"),
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("InvalidChainId"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("given"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint256"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("expected"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint256"),
+                                ),
+                            },
+                        ],
+                    },],
+                ),
+                (
                     ::std::borrow::ToOwned::to_owned("InvalidFeeCollectorType"),
                     ::std::vec![::ethers::core::abi::ethabi::AbiError {
                         name: ::std::borrow::ToOwned::to_owned("InvalidFeeCollectorType",),
@@ -1324,6 +1608,28 @@ pub mod operator_manager {
                     ::std::vec![::ethers::core::abi::ethabi::AbiError {
                         name: ::std::borrow::ToOwned::to_owned("InvalidPrimeWallet"),
                         inputs: ::std::vec![],
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("InvalidSequenceId"),
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("InvalidSequenceId"),
+                        inputs: ::std::vec![
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("given"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint256"),
+                                ),
+                            },
+                            ::ethers::core::abi::ethabi::Param {
+                                name: ::std::borrow::ToOwned::to_owned("expected"),
+                                kind: ::ethers::core::abi::ethabi::ParamType::Uint(256usize,),
+                                internal_type: ::core::option::Option::Some(
+                                    ::std::borrow::ToOwned::to_owned("uint256"),
+                                ),
+                            },
+                        ],
                     },],
                 ),
                 (
@@ -1419,6 +1725,13 @@ pub mod operator_manager {
                     ::std::borrow::ToOwned::to_owned("OperatorManagerAddressZero"),
                     ::std::vec![::ethers::core::abi::ethabi::AbiError {
                         name: ::std::borrow::ToOwned::to_owned("OperatorManagerAddressZero",),
+                        inputs: ::std::vec![],
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("PermissionlessListingSignerNotSet"),
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("PermissionlessListingSignerNotSet",),
                         inputs: ::std::vec![],
                     },],
                 ),
@@ -1597,6 +1910,13 @@ pub mod operator_manager {
                                 ),
                             },
                         ],
+                    },],
+                ),
+                (
+                    ::std::borrow::ToOwned::to_owned("VaultManagerNotSet"),
+                    ::std::vec![::ethers::core::abi::ethabi::AbiError {
+                        name: ::std::borrow::ToOwned::to_owned("VaultManagerNotSet"),
+                        inputs: ::std::vec![],
                     },],
                 ),
                 (
@@ -1826,6 +2146,15 @@ pub mod operator_manager {
                 .method_hash([109, 32, 26, 223], (data,))
                 .expect("method not found (this should never happen)")
         }
+        ///Calls the contract's `futuresTradeUploadV4` (0x67f211af) function
+        pub fn futures_trade_upload_v4(
+            &self,
+            data: FuturesTradeUploadDataV4,
+        ) -> ::ethers::contract::builders::ContractCall<M, ()> {
+            self.0
+                .method_hash([103, 242, 17, 175], (data,))
+                .expect("method not found (this should never happen)")
+        }
         ///Calls the contract's `futuresUploadBatchId` (0x89ac77c5) function
         pub fn futures_upload_batch_id(
             &self,
@@ -1916,6 +2245,22 @@ pub mod operator_manager {
                 .method_hash([141, 165, 203, 91], ())
                 .expect("method not found (this should never happen)")
         }
+        ///Calls the contract's `permissionlessListingSequenceId` (0x33b344d8) function
+        pub fn permissionless_listing_sequence_id(
+            &self,
+        ) -> ::ethers::contract::builders::ContractCall<M, u64> {
+            self.0
+                .method_hash([51, 179, 68, 216], ())
+                .expect("method not found (this should never happen)")
+        }
+        ///Calls the contract's `permissionlessListingSignerAddress` (0x2e4f2800) function
+        pub fn permissionless_listing_signer_address(
+            &self,
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
+            self.0
+                .method_hash([46, 79, 40, 0], ())
+                .expect("method not found (this should never happen)")
+        }
         ///Calls the contract's `perpPriceUpload` (0x24ce6299) function
         pub fn perp_price_upload(
             &self,
@@ -1947,6 +2292,22 @@ pub mod operator_manager {
         pub fn renounce_ownership(&self) -> ::ethers::contract::builders::ContractCall<M, ()> {
             self.0
                 .method_hash([113, 80, 24, 166], ())
+                .expect("method not found (this should never happen)")
+        }
+        ///Calls the contract's `setAllowedSymbol` (0xac508ea9) function
+        pub fn set_allowed_symbol(
+            &self,
+            symbol_hash: [u8; 32],
+            allowed: bool,
+            sequence_id: u64,
+            chain_id: ::ethers::core::types::U256,
+            cefi_signature: ::ethers::core::types::Bytes,
+        ) -> ::ethers::contract::builders::ContractCall<M, ()> {
+            self.0
+                .method_hash(
+                    [172, 80, 142, 169],
+                    (symbol_hash, allowed, sequence_id, chain_id, cefi_signature),
+                )
                 .expect("method not found (this should never happen)")
         }
         ///Calls the contract's `setEngineEventUploadAddress` (0x3e172194) function
@@ -2048,6 +2409,24 @@ pub mod operator_manager {
                 .method_hash([137, 32, 33, 220], operator_manager_zip_address)
                 .expect("method not found (this should never happen)")
         }
+        ///Calls the contract's `setPermissionlessListingSignerAddress` (0x2cbbe215) function
+        pub fn set_permissionless_listing_signer_address(
+            &self,
+            permissionless_listing_signer_address: ::ethers::core::types::Address,
+        ) -> ::ethers::contract::builders::ContractCall<M, ()> {
+            self.0
+                .method_hash([44, 187, 226, 21], permissionless_listing_signer_address)
+                .expect("method not found (this should never happen)")
+        }
+        ///Calls the contract's `setVaultManager` (0xb543503e) function
+        pub fn set_vault_manager(
+            &self,
+            vault_manager: ::ethers::core::types::Address,
+        ) -> ::ethers::contract::builders::ContractCall<M, ()> {
+            self.0
+                .method_hash([181, 67, 80, 62], vault_manager)
+                .expect("method not found (this should never happen)")
+        }
         ///Calls the contract's `sumUnitaryFundingsUpload` (0x757a69fd) function
         pub fn sum_unitary_fundings_upload(
             &self,
@@ -2064,6 +2443,14 @@ pub mod operator_manager {
         ) -> ::ethers::contract::builders::ContractCall<M, ()> {
             self.0
                 .method_hash([242, 253, 227, 139], new_owner)
+                .expect("method not found (this should never happen)")
+        }
+        ///Calls the contract's `vaultManager` (0x8a4adf24) function
+        pub fn vault_manager(
+            &self,
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
+            self.0
+                .method_hash([138, 74, 223, 36], ())
                 .expect("method not found (this should never happen)")
         }
         ///Gets the contract's `ChangeEngineUpload` event
@@ -2143,6 +2530,13 @@ pub mod operator_manager {
         {
             self.0.event()
         }
+        ///Gets the contract's `FuturesTradeUploadV4` event
+        pub fn futures_trade_upload_v4_filter(
+            &self,
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, FuturesTradeUploadV4Filter>
+        {
+            self.0.event()
+        }
         ///Gets the contract's `Initialized` event
         pub fn initialized_filter(
             &self,
@@ -2168,6 +2562,33 @@ pub mod operator_manager {
         pub fn rebalance_mint_upload_filter(
             &self,
         ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, RebalanceMintUploadFilter>
+        {
+            self.0.event()
+        }
+        ///Gets the contract's `SetAllowedSymbolByOperator` event
+        pub fn set_allowed_symbol_by_operator_filter(
+            &self,
+        ) -> ::ethers::contract::builders::Event<
+            ::std::sync::Arc<M>,
+            M,
+            SetAllowedSymbolByOperatorFilter,
+        > {
+            self.0.event()
+        }
+        ///Gets the contract's `SetPermissionlessListingSignerAddress` event
+        pub fn set_permissionless_listing_signer_address_filter(
+            &self,
+        ) -> ::ethers::contract::builders::Event<
+            ::std::sync::Arc<M>,
+            M,
+            SetPermissionlessListingSignerAddressFilter,
+        > {
+            self.0.event()
+        }
+        ///Gets the contract's `SetVaultManager` event
+        pub fn set_vault_manager_filter(
+            &self,
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, SetVaultManagerFilter>
         {
             self.0.event()
         }
@@ -2455,6 +2876,22 @@ pub mod operator_manager {
     pub struct InvalidBizType {
         pub biz_type: u8,
     }
+    ///Custom Error type `InvalidChainId` with signature `InvalidChainId(uint256,uint256)` and selector `0x9fba672f`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthError,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[etherror(name = "InvalidChainId", abi = "InvalidChainId(uint256,uint256)")]
+    pub struct InvalidChainId {
+        pub given: ::ethers::core::types::U256,
+        pub expected: ::ethers::core::types::U256,
+    }
     ///Custom Error type `InvalidFeeCollectorType` with signature `InvalidFeeCollectorType()` and selector `0xb6bd80ad`
     #[derive(
         Clone,
@@ -2496,6 +2933,22 @@ pub mod operator_manager {
     )]
     #[etherror(name = "InvalidPrimeWallet", abi = "InvalidPrimeWallet()")]
     pub struct InvalidPrimeWallet;
+    ///Custom Error type `InvalidSequenceId` with signature `InvalidSequenceId(uint256,uint256)` and selector `0x781ce861`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthError,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[etherror(name = "InvalidSequenceId", abi = "InvalidSequenceId(uint256,uint256)")]
+    pub struct InvalidSequenceId {
+        pub given: ::ethers::core::types::U256,
+        pub expected: ::ethers::core::types::U256,
+    }
     ///Custom Error type `InvalidVault` with signature `InvalidVault()` and selector `0xd03a6320`
     #[derive(
         Clone,
@@ -2674,6 +3127,22 @@ pub mod operator_manager {
         abi = "OperatorManagerAddressZero()"
     )]
     pub struct OperatorManagerAddressZero;
+    ///Custom Error type `PermissionlessListingSignerNotSet` with signature `PermissionlessListingSignerNotSet()` and selector `0x5fc2bd7d`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthError,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[etherror(
+        name = "PermissionlessListingSignerNotSet",
+        abi = "PermissionlessListingSignerNotSet()"
+    )]
+    pub struct PermissionlessListingSignerNotSet;
     ///Custom Error type `RebalanceAlreadySucc` with signature `RebalanceAlreadySucc()` and selector `0x93a12797`
     #[derive(
         Clone,
@@ -2900,6 +3369,19 @@ pub mod operator_manager {
         pub account_id: [u8; 32],
         pub symbol_hash: [u8; 32],
     }
+    ///Custom Error type `VaultManagerNotSet` with signature `VaultManagerNotSet()` and selector `0x047b368d`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthError,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[etherror(name = "VaultManagerNotSet", abi = "VaultManagerNotSet()")]
+    pub struct VaultManagerNotSet;
     ///Custom Error type `WithdrawBalanceNotEnough` with signature `WithdrawBalanceNotEnough(int128,uint128)` and selector `0xd8c06800`
     #[derive(
         Clone,
@@ -3029,9 +3511,11 @@ pub mod operator_manager {
         InsuranceTransferAmountInvalid(InsuranceTransferAmountInvalid),
         InsuranceTransferToSelf(InsuranceTransferToSelf),
         InvalidBizType(InvalidBizType),
+        InvalidChainId(InvalidChainId),
         InvalidFeeCollectorType(InvalidFeeCollectorType),
         InvalidMarginMode(InvalidMarginMode),
         InvalidPrimeWallet(InvalidPrimeWallet),
+        InvalidSequenceId(InvalidSequenceId),
         InvalidVault(InvalidVault),
         IsoAdlMarginToCrossAmountInvalid(IsoAdlMarginToCrossAmountInvalid),
         LedgerAddressZero(LedgerAddressZero),
@@ -3044,6 +3528,7 @@ pub mod operator_manager {
         OnlyOperatorManagerCanCall(OnlyOperatorManagerCanCall),
         OnlySymbolManagerOrOwner(OnlySymbolManagerOrOwner),
         OperatorManagerAddressZero(OperatorManagerAddressZero),
+        PermissionlessListingSignerNotSet(PermissionlessListingSignerNotSet),
         RebalanceAlreadySucc(RebalanceAlreadySucc),
         RebalanceChainIdInvalid(RebalanceChainIdInvalid),
         RebalanceIdNotMatch(RebalanceIdNotMatch),
@@ -3059,6 +3544,7 @@ pub mod operator_manager {
         TotalSettleAmountNotMatch(TotalSettleAmountNotMatch),
         UnsupportChainType(UnsupportChainType),
         UserPerpPositionQtyZero(UserPerpPositionQtyZero),
+        VaultManagerNotSet(VaultManagerNotSet),
         WithdrawBalanceNotEnough(WithdrawBalanceNotEnough),
         WithdrawFeeTooLarge(WithdrawFeeTooLarge),
         WithdrawToAddressZero(WithdrawToAddressZero),
@@ -3151,6 +3637,9 @@ pub mod operator_manager {
             if let Ok(decoded) = <InvalidBizType as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::InvalidBizType(decoded));
             }
+            if let Ok(decoded) = <InvalidChainId as ::ethers::core::abi::AbiDecode>::decode(data) {
+                return Ok(Self::InvalidChainId(decoded));
+            }
             if let Ok(decoded) =
                 <InvalidFeeCollectorType as ::ethers::core::abi::AbiDecode>::decode(data)
             {
@@ -3164,6 +3653,10 @@ pub mod operator_manager {
                 <InvalidPrimeWallet as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::InvalidPrimeWallet(decoded));
+            }
+            if let Ok(decoded) = <InvalidSequenceId as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::InvalidSequenceId(decoded));
             }
             if let Ok(decoded) = <InvalidVault as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::InvalidVault(decoded));
@@ -3218,6 +3711,11 @@ pub mod operator_manager {
                 <OperatorManagerAddressZero as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::OperatorManagerAddressZero(decoded));
+            }
+            if let Ok(decoded) =
+                <PermissionlessListingSignerNotSet as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::PermissionlessListingSignerNotSet(decoded));
             }
             if let Ok(decoded) =
                 <RebalanceAlreadySucc as ::ethers::core::abi::AbiDecode>::decode(data)
@@ -3286,6 +3784,11 @@ pub mod operator_manager {
                 <UserPerpPositionQtyZero as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::UserPerpPositionQtyZero(decoded));
+            }
+            if let Ok(decoded) =
+                <VaultManagerNotSet as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::VaultManagerNotSet(decoded));
             }
             if let Ok(decoded) =
                 <WithdrawBalanceNotEnough as ::ethers::core::abi::AbiDecode>::decode(data)
@@ -3359,6 +3862,7 @@ pub mod operator_manager {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::InvalidBizType(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::InvalidChainId(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::InvalidFeeCollectorType(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -3366,6 +3870,7 @@ pub mod operator_manager {
                 Self::InvalidPrimeWallet(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
+                Self::InvalidSequenceId(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::InvalidVault(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::IsoAdlMarginToCrossAmountInvalid(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
@@ -3392,6 +3897,9 @@ pub mod operator_manager {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::OperatorManagerAddressZero(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::PermissionlessListingSignerNotSet(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::RebalanceAlreadySucc(element) => {
@@ -3425,6 +3933,9 @@ pub mod operator_manager {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::UserPerpPositionQtyZero(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::VaultManagerNotSet(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::WithdrawBalanceNotEnough(element) => {
@@ -3519,6 +4030,10 @@ pub mod operator_manager {
                     true
                 }
                 _ if selector
+                    == <InvalidChainId as ::ethers::contract::EthError>::selector() => {
+                    true
+                }
+                _ if selector
                     == <InvalidFeeCollectorType as ::ethers::contract::EthError>::selector() => {
                     true
                 }
@@ -3528,6 +4043,10 @@ pub mod operator_manager {
                 }
                 _ if selector
                     == <InvalidPrimeWallet as ::ethers::contract::EthError>::selector() => {
+                    true
+                }
+                _ if selector
+                    == <InvalidSequenceId as ::ethers::contract::EthError>::selector() => {
                     true
                 }
                 _ if selector
@@ -3574,6 +4093,10 @@ pub mod operator_manager {
                 }
                 _ if selector
                     == <OperatorManagerAddressZero as ::ethers::contract::EthError>::selector() => {
+                    true
+                }
+                _ if selector
+                    == <PermissionlessListingSignerNotSet as ::ethers::contract::EthError>::selector() => {
                     true
                 }
                 _ if selector
@@ -3637,6 +4160,10 @@ pub mod operator_manager {
                     true
                 }
                 _ if selector
+                    == <VaultManagerNotSet as ::ethers::contract::EthError>::selector() => {
+                    true
+                }
+                _ if selector
                     == <WithdrawBalanceNotEnough as ::ethers::contract::EthError>::selector() => {
                     true
                 }
@@ -3688,9 +4215,11 @@ pub mod operator_manager {
                 }
                 Self::InsuranceTransferToSelf(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidBizType(element) => ::core::fmt::Display::fmt(element, f),
+                Self::InvalidChainId(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidFeeCollectorType(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidMarginMode(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidPrimeWallet(element) => ::core::fmt::Display::fmt(element, f),
+                Self::InvalidSequenceId(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InvalidVault(element) => ::core::fmt::Display::fmt(element, f),
                 Self::IsoAdlMarginToCrossAmountInvalid(element) => {
                     ::core::fmt::Display::fmt(element, f)
@@ -3711,6 +4240,9 @@ pub mod operator_manager {
                 Self::OnlyOperatorManagerCanCall(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OnlySymbolManagerOrOwner(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OperatorManagerAddressZero(element) => ::core::fmt::Display::fmt(element, f),
+                Self::PermissionlessListingSignerNotSet(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
                 Self::RebalanceAlreadySucc(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceChainIdInvalid(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceIdNotMatch(element) => ::core::fmt::Display::fmt(element, f),
@@ -3726,6 +4258,7 @@ pub mod operator_manager {
                 Self::TotalSettleAmountNotMatch(element) => ::core::fmt::Display::fmt(element, f),
                 Self::UnsupportChainType(element) => ::core::fmt::Display::fmt(element, f),
                 Self::UserPerpPositionQtyZero(element) => ::core::fmt::Display::fmt(element, f),
+                Self::VaultManagerNotSet(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawBalanceNotEnough(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawFeeTooLarge(element) => ::core::fmt::Display::fmt(element, f),
                 Self::WithdrawToAddressZero(element) => ::core::fmt::Display::fmt(element, f),
@@ -3829,6 +4362,11 @@ pub mod operator_manager {
             Self::InvalidBizType(value)
         }
     }
+    impl ::core::convert::From<InvalidChainId> for operator_managerErrors {
+        fn from(value: InvalidChainId) -> Self {
+            Self::InvalidChainId(value)
+        }
+    }
     impl ::core::convert::From<InvalidFeeCollectorType> for operator_managerErrors {
         fn from(value: InvalidFeeCollectorType) -> Self {
             Self::InvalidFeeCollectorType(value)
@@ -3842,6 +4380,11 @@ pub mod operator_manager {
     impl ::core::convert::From<InvalidPrimeWallet> for operator_managerErrors {
         fn from(value: InvalidPrimeWallet) -> Self {
             Self::InvalidPrimeWallet(value)
+        }
+    }
+    impl ::core::convert::From<InvalidSequenceId> for operator_managerErrors {
+        fn from(value: InvalidSequenceId) -> Self {
+            Self::InvalidSequenceId(value)
         }
     }
     impl ::core::convert::From<InvalidVault> for operator_managerErrors {
@@ -3902,6 +4445,11 @@ pub mod operator_manager {
     impl ::core::convert::From<OperatorManagerAddressZero> for operator_managerErrors {
         fn from(value: OperatorManagerAddressZero) -> Self {
             Self::OperatorManagerAddressZero(value)
+        }
+    }
+    impl ::core::convert::From<PermissionlessListingSignerNotSet> for operator_managerErrors {
+        fn from(value: PermissionlessListingSignerNotSet) -> Self {
+            Self::PermissionlessListingSignerNotSet(value)
         }
     }
     impl ::core::convert::From<RebalanceAlreadySucc> for operator_managerErrors {
@@ -3977,6 +4525,11 @@ pub mod operator_manager {
     impl ::core::convert::From<UserPerpPositionQtyZero> for operator_managerErrors {
         fn from(value: UserPerpPositionQtyZero) -> Self {
             Self::UserPerpPositionQtyZero(value)
+        }
+    }
+    impl ::core::convert::From<VaultManagerNotSet> for operator_managerErrors {
+        fn from(value: VaultManagerNotSet) -> Self {
+            Self::VaultManagerNotSet(value)
         }
     }
     impl ::core::convert::From<WithdrawBalanceNotEnough> for operator_managerErrors {
@@ -4210,6 +4763,21 @@ pub mod operator_manager {
         Eq,
         Hash,
     )]
+    #[ethevent(name = "FuturesTradeUploadV4", abi = "FuturesTradeUploadV4(uint64)")]
+    pub struct FuturesTradeUploadV4Filter {
+        #[ethevent(indexed)]
+        pub batch_id: u64,
+    }
+    #[derive(
+        Clone,
+        ::ethers::contract::EthEvent,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
     #[ethevent(name = "Initialized", abi = "Initialized(uint8)")]
     pub struct InitializedFilter {
         pub version: u8,
@@ -4264,6 +4832,60 @@ pub mod operator_manager {
         #[ethevent(indexed)]
         pub rebalance_id: u64,
     }
+    #[derive(
+        Clone,
+        ::ethers::contract::EthEvent,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethevent(
+        name = "SetAllowedSymbolByOperator",
+        abi = "SetAllowedSymbolByOperator(bytes32,bool,uint64)"
+    )]
+    pub struct SetAllowedSymbolByOperatorFilter {
+        #[ethevent(indexed)]
+        pub symbol_hash: [u8; 32],
+        pub allowed: bool,
+        #[ethevent(indexed)]
+        pub sequence_id: u64,
+    }
+    #[derive(
+        Clone,
+        ::ethers::contract::EthEvent,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethevent(
+        name = "SetPermissionlessListingSignerAddress",
+        abi = "SetPermissionlessListingSignerAddress(address,address)"
+    )]
+    pub struct SetPermissionlessListingSignerAddressFilter {
+        pub old_address: ::ethers::core::types::Address,
+        pub new_address: ::ethers::core::types::Address,
+    }
+    #[derive(
+        Clone,
+        ::ethers::contract::EthEvent,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethevent(name = "SetVaultManager", abi = "SetVaultManager(address,address)")]
+    pub struct SetVaultManagerFilter {
+        pub old_address: ::ethers::core::types::Address,
+        pub new_address: ::ethers::core::types::Address,
+    }
     ///Container type for all of the contract's events
     #[derive(Clone, ::ethers::contract::EthAbiType, Debug, PartialEq, Eq, Hash)]
     pub enum operator_managerEvents {
@@ -4278,10 +4900,14 @@ pub mod operator_manager {
         FuturesTradeUpload1Filter(FuturesTradeUpload1Filter),
         FuturesTradeUpload2Filter(FuturesTradeUpload2Filter),
         FuturesTradeUploadV3Filter(FuturesTradeUploadV3Filter),
+        FuturesTradeUploadV4Filter(FuturesTradeUploadV4Filter),
         InitializedFilter(InitializedFilter),
         OwnershipTransferredFilter(OwnershipTransferredFilter),
         RebalanceBurnUploadFilter(RebalanceBurnUploadFilter),
         RebalanceMintUploadFilter(RebalanceMintUploadFilter),
+        SetAllowedSymbolByOperatorFilter(SetAllowedSymbolByOperatorFilter),
+        SetPermissionlessListingSignerAddressFilter(SetPermissionlessListingSignerAddressFilter),
+        SetVaultManagerFilter(SetVaultManagerFilter),
     }
     impl ::ethers::contract::EthLogDecode for operator_managerEvents {
         fn decode_log(
@@ -4320,6 +4946,9 @@ pub mod operator_manager {
             if let Ok(decoded) = FuturesTradeUploadV3Filter::decode_log(log) {
                 return Ok(operator_managerEvents::FuturesTradeUploadV3Filter(decoded));
             }
+            if let Ok(decoded) = FuturesTradeUploadV4Filter::decode_log(log) {
+                return Ok(operator_managerEvents::FuturesTradeUploadV4Filter(decoded));
+            }
             if let Ok(decoded) = InitializedFilter::decode_log(log) {
                 return Ok(operator_managerEvents::InitializedFilter(decoded));
             }
@@ -4331,6 +4960,19 @@ pub mod operator_manager {
             }
             if let Ok(decoded) = RebalanceMintUploadFilter::decode_log(log) {
                 return Ok(operator_managerEvents::RebalanceMintUploadFilter(decoded));
+            }
+            if let Ok(decoded) = SetAllowedSymbolByOperatorFilter::decode_log(log) {
+                return Ok(operator_managerEvents::SetAllowedSymbolByOperatorFilter(
+                    decoded,
+                ));
+            }
+            if let Ok(decoded) = SetPermissionlessListingSignerAddressFilter::decode_log(log) {
+                return Ok(
+                    operator_managerEvents::SetPermissionlessListingSignerAddressFilter(decoded),
+                );
+            }
+            if let Ok(decoded) = SetVaultManagerFilter::decode_log(log) {
+                return Ok(operator_managerEvents::SetVaultManagerFilter(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData)
         }
@@ -4349,10 +4991,18 @@ pub mod operator_manager {
                 Self::FuturesTradeUpload1Filter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::FuturesTradeUpload2Filter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::FuturesTradeUploadV3Filter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::FuturesTradeUploadV4Filter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InitializedFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OwnershipTransferredFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceBurnUploadFilter(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceMintUploadFilter(element) => ::core::fmt::Display::fmt(element, f),
+                Self::SetAllowedSymbolByOperatorFilter(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
+                Self::SetPermissionlessListingSignerAddressFilter(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
+                Self::SetVaultManagerFilter(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -4411,6 +5061,11 @@ pub mod operator_manager {
             Self::FuturesTradeUploadV3Filter(value)
         }
     }
+    impl ::core::convert::From<FuturesTradeUploadV4Filter> for operator_managerEvents {
+        fn from(value: FuturesTradeUploadV4Filter) -> Self {
+            Self::FuturesTradeUploadV4Filter(value)
+        }
+    }
     impl ::core::convert::From<InitializedFilter> for operator_managerEvents {
         fn from(value: InitializedFilter) -> Self {
             Self::InitializedFilter(value)
@@ -4429,6 +5084,21 @@ pub mod operator_manager {
     impl ::core::convert::From<RebalanceMintUploadFilter> for operator_managerEvents {
         fn from(value: RebalanceMintUploadFilter) -> Self {
             Self::RebalanceMintUploadFilter(value)
+        }
+    }
+    impl ::core::convert::From<SetAllowedSymbolByOperatorFilter> for operator_managerEvents {
+        fn from(value: SetAllowedSymbolByOperatorFilter) -> Self {
+            Self::SetAllowedSymbolByOperatorFilter(value)
+        }
+    }
+    impl ::core::convert::From<SetPermissionlessListingSignerAddressFilter> for operator_managerEvents {
+        fn from(value: SetPermissionlessListingSignerAddressFilter) -> Self {
+            Self::SetPermissionlessListingSignerAddressFilter(value)
+        }
+    }
+    impl ::core::convert::From<SetVaultManagerFilter> for operator_managerEvents {
+        fn from(value: SetVaultManagerFilter) -> Self {
+            Self::SetVaultManagerFilter(value)
         }
     }
     ///Container type for all input parameters for the `bizTypeToSelectors` function with signature `bizTypeToSelectors(uint8)` and selector `0xb9847b92`
@@ -4592,6 +5262,15 @@ pub mod operator_manager {
     pub struct FuturesTradeUploadV3Call {
         pub data: FuturesTradeUploadDataV3,
     }
+    ///Container type for all input parameters for the `futuresTradeUploadV4` function with signature `futuresTradeUploadV4((bytes32,bytes32,uint8,uint64,uint8,(bytes32,bytes32,bytes32,int128,int128,uint128,int128,int128,uint64,uint64,uint64,bool,uint8,bytes32,int128,bool)[]))` and selector `0x67f211af`
+    #[derive(Clone, ::ethers::contract::EthCall, ::ethers::contract::EthDisplay)]
+    #[ethcall(
+        name = "futuresTradeUploadV4",
+        abi = "futuresTradeUploadV4((bytes32,bytes32,uint8,uint64,uint8,(bytes32,bytes32,bytes32,int128,int128,uint128,int128,int128,uint64,uint64,uint64,bool,uint8,bytes32,int128,bool)[]))"
+    )]
+    pub struct FuturesTradeUploadV4Call {
+        pub data: FuturesTradeUploadDataV4,
+    }
     ///Container type for all input parameters for the `futuresUploadBatchId` function with signature `futuresUploadBatchId()` and selector `0x89ac77c5`
     #[derive(
         Clone,
@@ -4738,6 +5417,38 @@ pub mod operator_manager {
     )]
     #[ethcall(name = "owner", abi = "owner()")]
     pub struct OwnerCall;
+    ///Container type for all input parameters for the `permissionlessListingSequenceId` function with signature `permissionlessListingSequenceId()` and selector `0x33b344d8`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(
+        name = "permissionlessListingSequenceId",
+        abi = "permissionlessListingSequenceId()"
+    )]
+    pub struct PermissionlessListingSequenceIdCall;
+    ///Container type for all input parameters for the `permissionlessListingSignerAddress` function with signature `permissionlessListingSignerAddress()` and selector `0x2e4f2800`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(
+        name = "permissionlessListingSignerAddress",
+        abi = "permissionlessListingSignerAddress()"
+    )]
+    pub struct PermissionlessListingSignerAddressCall;
     ///Container type for all input parameters for the `perpPriceUpload` function with signature `perpPriceUpload((bytes32,bytes32,uint8,uint64,(bytes32,uint128,uint128,uint128,uint64)[]))` and selector `0x24ce6299`
     #[derive(
         Clone,
@@ -4805,6 +5516,28 @@ pub mod operator_manager {
     )]
     #[ethcall(name = "renounceOwnership", abi = "renounceOwnership()")]
     pub struct RenounceOwnershipCall;
+    ///Container type for all input parameters for the `setAllowedSymbol` function with signature `setAllowedSymbol(bytes32,bool,uint64,uint256,bytes)` and selector `0xac508ea9`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(
+        name = "setAllowedSymbol",
+        abi = "setAllowedSymbol(bytes32,bool,uint64,uint256,bytes)"
+    )]
+    pub struct SetAllowedSymbolCall {
+        pub symbol_hash: [u8; 32],
+        pub allowed: bool,
+        pub sequence_id: u64,
+        pub chain_id: ::ethers::core::types::U256,
+        pub cefi_signature: ::ethers::core::types::Bytes,
+    }
     ///Container type for all input parameters for the `setEngineEventUploadAddress` function with signature `setEngineEventUploadAddress(address)` and selector `0x3e172194`
     #[derive(
         Clone,
@@ -4994,6 +5727,39 @@ pub mod operator_manager {
     pub struct SetOperatorManagerZipAddressCall {
         pub operator_manager_zip_address: ::ethers::core::types::Address,
     }
+    ///Container type for all input parameters for the `setPermissionlessListingSignerAddress` function with signature `setPermissionlessListingSignerAddress(address)` and selector `0x2cbbe215`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(
+        name = "setPermissionlessListingSignerAddress",
+        abi = "setPermissionlessListingSignerAddress(address)"
+    )]
+    pub struct SetPermissionlessListingSignerAddressCall {
+        pub permissionless_listing_signer_address: ::ethers::core::types::Address,
+    }
+    ///Container type for all input parameters for the `setVaultManager` function with signature `setVaultManager(address)` and selector `0xb543503e`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(name = "setVaultManager", abi = "setVaultManager(address)")]
+    pub struct SetVaultManagerCall {
+        pub vault_manager: ::ethers::core::types::Address,
+    }
     ///Container type for all input parameters for the `sumUnitaryFundingsUpload` function with signature `sumUnitaryFundingsUpload((bytes32,bytes32,uint8,uint64,(bytes32,int128,uint64)[]))` and selector `0x757a69fd`
     #[derive(
         Clone,
@@ -5027,6 +5793,19 @@ pub mod operator_manager {
     pub struct TransferOwnershipCall {
         pub new_owner: ::ethers::core::types::Address,
     }
+    ///Container type for all input parameters for the `vaultManager` function with signature `vaultManager()` and selector `0x8a4adf24`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthCall,
+        ::ethers::contract::EthDisplay,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    #[ethcall(name = "vaultManager", abi = "vaultManager()")]
+    pub struct VaultManagerCall;
     ///Container type for all of the contract's call
     #[derive(Clone, ::ethers::contract::EthAbiType)]
     pub enum operator_managerCalls {
@@ -5041,6 +5820,7 @@ pub mod operator_manager {
         EventUploadBatchId(EventUploadBatchIdCall),
         FuturesTradeUpload(FuturesTradeUploadCall),
         FuturesTradeUploadV3(FuturesTradeUploadV3Call),
+        FuturesTradeUploadV4(FuturesTradeUploadV4Call),
         FuturesUploadBatchId(FuturesUploadBatchIdCall),
         GetOperatorManagerImpl(GetOperatorManagerImplCall),
         InitBizTypeToSelector(InitBizTypeToSelectorCall),
@@ -5052,10 +5832,13 @@ pub mod operator_manager {
         OperatorManagerZipAddress(OperatorManagerZipAddressCall),
         OperatorPing(OperatorPingCall),
         Owner(OwnerCall),
+        PermissionlessListingSequenceId(PermissionlessListingSequenceIdCall),
+        PermissionlessListingSignerAddress(PermissionlessListingSignerAddressCall),
         PerpPriceUpload(PerpPriceUploadCall),
         RebalanceBurnUpload(RebalanceBurnUploadCall),
         RebalanceMintUpload(RebalanceMintUploadCall),
         RenounceOwnership(RenounceOwnershipCall),
+        SetAllowedSymbol(SetAllowedSymbolCall),
         SetEngineEventUploadAddress(SetEngineEventUploadAddressCall),
         SetEngineMarketUploadAddress(SetEngineMarketUploadAddressCall),
         SetEnginePerpTradeUploadAddress(SetEnginePerpTradeUploadAddressCall),
@@ -5067,8 +5850,11 @@ pub mod operator_manager {
         SetOperatorManagerImplA(SetOperatorManagerImplACall),
         SetOperatorManagerImplB(SetOperatorManagerImplBCall),
         SetOperatorManagerZipAddress(SetOperatorManagerZipAddressCall),
+        SetPermissionlessListingSignerAddress(SetPermissionlessListingSignerAddressCall),
+        SetVaultManager(SetVaultManagerCall),
         SumUnitaryFundingsUpload(SumUnitaryFundingsUploadCall),
         TransferOwnership(TransferOwnershipCall),
+        VaultManager(VaultManagerCall),
     }
     impl ::ethers::core::abi::AbiDecode for operator_managerCalls {
         fn decode(
@@ -5129,6 +5915,11 @@ pub mod operator_manager {
                 return Ok(Self::FuturesTradeUploadV3(decoded));
             }
             if let Ok(decoded) =
+                <FuturesTradeUploadV4Call as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::FuturesTradeUploadV4(decoded));
+            }
+            if let Ok(decoded) =
                 <FuturesUploadBatchIdCall as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::FuturesUploadBatchId(decoded));
@@ -5176,6 +5967,20 @@ pub mod operator_manager {
                 return Ok(Self::Owner(decoded));
             }
             if let Ok(decoded) =
+                <PermissionlessListingSequenceIdCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                )
+            {
+                return Ok(Self::PermissionlessListingSequenceId(decoded));
+            }
+            if let Ok(decoded) =
+                <PermissionlessListingSignerAddressCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                )
+            {
+                return Ok(Self::PermissionlessListingSignerAddress(decoded));
+            }
+            if let Ok(decoded) =
                 <PerpPriceUploadCall as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::PerpPriceUpload(decoded));
@@ -5194,6 +5999,11 @@ pub mod operator_manager {
                 <RenounceOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::RenounceOwnership(decoded));
+            }
+            if let Ok(decoded) =
+                <SetAllowedSymbolCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::SetAllowedSymbol(decoded));
             }
             if let Ok(decoded) =
                 <SetEngineEventUploadAddressCall as ::ethers::core::abi::AbiDecode>::decode(data)
@@ -5252,6 +6062,16 @@ pub mod operator_manager {
             {
                 return Ok(Self::SetOperatorManagerZipAddress(decoded));
             }
+            if let Ok(decoded) = <SetPermissionlessListingSignerAddressCall as ::ethers::core::abi::AbiDecode>::decode(
+                data,
+            ) {
+                return Ok(Self::SetPermissionlessListingSignerAddress(decoded));
+            }
+            if let Ok(decoded) =
+                <SetVaultManagerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::SetVaultManager(decoded));
+            }
             if let Ok(decoded) =
                 <SumUnitaryFundingsUploadCall as ::ethers::core::abi::AbiDecode>::decode(data)
             {
@@ -5261,6 +6081,10 @@ pub mod operator_manager {
                 <TransferOwnershipCall as ::ethers::core::abi::AbiDecode>::decode(data)
             {
                 return Ok(Self::TransferOwnership(decoded));
+            }
+            if let Ok(decoded) = <VaultManagerCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
+                return Ok(Self::VaultManager(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
         }
@@ -5297,6 +6121,9 @@ pub mod operator_manager {
                 Self::FuturesTradeUploadV3(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
+                Self::FuturesTradeUploadV4(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
                 Self::FuturesUploadBatchId(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -5318,6 +6145,12 @@ pub mod operator_manager {
                 }
                 Self::OperatorPing(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::Owner(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::PermissionlessListingSequenceId(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::PermissionlessListingSignerAddress(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
                 Self::PerpPriceUpload(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::RebalanceBurnUpload(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
@@ -5326,6 +6159,7 @@ pub mod operator_manager {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::RenounceOwnership(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SetAllowedSymbol(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::SetEngineEventUploadAddress(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -5353,10 +6187,15 @@ pub mod operator_manager {
                 Self::SetOperatorManagerZipAddress(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
+                Self::SetPermissionlessListingSignerAddress(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::SetVaultManager(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::SumUnitaryFundingsUpload(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::TransferOwnership(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::VaultManager(element) => ::ethers::core::abi::AbiEncode::encode(element),
             }
         }
     }
@@ -5380,6 +6219,7 @@ pub mod operator_manager {
                 Self::EventUploadBatchId(element) => ::core::fmt::Display::fmt(element, f),
                 Self::FuturesTradeUpload(element) => ::core::fmt::Display::fmt(element, f),
                 Self::FuturesTradeUploadV3(element) => ::core::fmt::Display::fmt(element, f),
+                Self::FuturesTradeUploadV4(element) => ::core::fmt::Display::fmt(element, f),
                 Self::FuturesUploadBatchId(element) => ::core::fmt::Display::fmt(element, f),
                 Self::GetOperatorManagerImpl(element) => ::core::fmt::Display::fmt(element, f),
                 Self::InitBizTypeToSelector(element) => ::core::fmt::Display::fmt(element, f),
@@ -5391,10 +6231,17 @@ pub mod operator_manager {
                 Self::OperatorManagerZipAddress(element) => ::core::fmt::Display::fmt(element, f),
                 Self::OperatorPing(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Owner(element) => ::core::fmt::Display::fmt(element, f),
+                Self::PermissionlessListingSequenceId(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
+                Self::PermissionlessListingSignerAddress(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
                 Self::PerpPriceUpload(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceBurnUpload(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RebalanceMintUpload(element) => ::core::fmt::Display::fmt(element, f),
                 Self::RenounceOwnership(element) => ::core::fmt::Display::fmt(element, f),
+                Self::SetAllowedSymbol(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetEngineEventUploadAddress(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetEngineMarketUploadAddress(element) => {
                     ::core::fmt::Display::fmt(element, f)
@@ -5416,8 +6263,13 @@ pub mod operator_manager {
                 Self::SetOperatorManagerZipAddress(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
+                Self::SetPermissionlessListingSignerAddress(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
+                Self::SetVaultManager(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SumUnitaryFundingsUpload(element) => ::core::fmt::Display::fmt(element, f),
                 Self::TransferOwnership(element) => ::core::fmt::Display::fmt(element, f),
+                Self::VaultManager(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -5476,6 +6328,11 @@ pub mod operator_manager {
             Self::FuturesTradeUploadV3(value)
         }
     }
+    impl ::core::convert::From<FuturesTradeUploadV4Call> for operator_managerCalls {
+        fn from(value: FuturesTradeUploadV4Call) -> Self {
+            Self::FuturesTradeUploadV4(value)
+        }
+    }
     impl ::core::convert::From<FuturesUploadBatchIdCall> for operator_managerCalls {
         fn from(value: FuturesUploadBatchIdCall) -> Self {
             Self::FuturesUploadBatchId(value)
@@ -5531,6 +6388,16 @@ pub mod operator_manager {
             Self::Owner(value)
         }
     }
+    impl ::core::convert::From<PermissionlessListingSequenceIdCall> for operator_managerCalls {
+        fn from(value: PermissionlessListingSequenceIdCall) -> Self {
+            Self::PermissionlessListingSequenceId(value)
+        }
+    }
+    impl ::core::convert::From<PermissionlessListingSignerAddressCall> for operator_managerCalls {
+        fn from(value: PermissionlessListingSignerAddressCall) -> Self {
+            Self::PermissionlessListingSignerAddress(value)
+        }
+    }
     impl ::core::convert::From<PerpPriceUploadCall> for operator_managerCalls {
         fn from(value: PerpPriceUploadCall) -> Self {
             Self::PerpPriceUpload(value)
@@ -5549,6 +6416,11 @@ pub mod operator_manager {
     impl ::core::convert::From<RenounceOwnershipCall> for operator_managerCalls {
         fn from(value: RenounceOwnershipCall) -> Self {
             Self::RenounceOwnership(value)
+        }
+    }
+    impl ::core::convert::From<SetAllowedSymbolCall> for operator_managerCalls {
+        fn from(value: SetAllowedSymbolCall) -> Self {
+            Self::SetAllowedSymbol(value)
         }
     }
     impl ::core::convert::From<SetEngineEventUploadAddressCall> for operator_managerCalls {
@@ -5606,6 +6478,16 @@ pub mod operator_manager {
             Self::SetOperatorManagerZipAddress(value)
         }
     }
+    impl ::core::convert::From<SetPermissionlessListingSignerAddressCall> for operator_managerCalls {
+        fn from(value: SetPermissionlessListingSignerAddressCall) -> Self {
+            Self::SetPermissionlessListingSignerAddress(value)
+        }
+    }
+    impl ::core::convert::From<SetVaultManagerCall> for operator_managerCalls {
+        fn from(value: SetVaultManagerCall) -> Self {
+            Self::SetVaultManager(value)
+        }
+    }
     impl ::core::convert::From<SumUnitaryFundingsUploadCall> for operator_managerCalls {
         fn from(value: SumUnitaryFundingsUploadCall) -> Self {
             Self::SumUnitaryFundingsUpload(value)
@@ -5614,6 +6496,11 @@ pub mod operator_manager {
     impl ::core::convert::From<TransferOwnershipCall> for operator_managerCalls {
         fn from(value: TransferOwnershipCall) -> Self {
             Self::TransferOwnership(value)
+        }
+    }
+    impl ::core::convert::From<VaultManagerCall> for operator_managerCalls {
+        fn from(value: VaultManagerCall) -> Self {
+            Self::VaultManager(value)
         }
     }
     ///Container type for all return fields from the `bizTypeToSelectors` function with signature `bizTypeToSelectors(uint8)` and selector `0xb9847b92`
@@ -5811,6 +6698,42 @@ pub mod operator_manager {
         Hash,
     )]
     pub struct OwnerReturn(pub ::ethers::core::types::Address);
+    ///Container type for all return fields from the `permissionlessListingSequenceId` function with signature `permissionlessListingSequenceId()` and selector `0x33b344d8`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct PermissionlessListingSequenceIdReturn(pub u64);
+    ///Container type for all return fields from the `permissionlessListingSignerAddress` function with signature `permissionlessListingSignerAddress()` and selector `0x2e4f2800`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct PermissionlessListingSignerAddressReturn(pub ::ethers::core::types::Address);
+    ///Container type for all return fields from the `vaultManager` function with signature `vaultManager()` and selector `0x8a4adf24`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct VaultManagerReturn(pub ::ethers::core::types::Address);
     ///`EventUpload((uint8,uint64,bytes)[],bytes32,bytes32,uint8,uint8,uint64)`
     #[derive(
         Clone,
@@ -5979,6 +6902,25 @@ pub mod operator_manager {
         pub count: u8,
         pub trades: ::std::vec::Vec<FuturesTradeUploadV3>,
     }
+    ///`FuturesTradeUploadDataV4(bytes32,bytes32,uint8,uint64,uint8,(bytes32,bytes32,bytes32,int128,int128,uint128,int128,int128,uint64,uint64,uint64,bool,uint8,bytes32,int128,bool)[])`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct FuturesTradeUploadDataV4 {
+        pub r: [u8; 32],
+        pub s: [u8; 32],
+        pub v: u8,
+        pub batch_id: u64,
+        pub count: u8,
+        pub trades: ::std::vec::Vec<FuturesTradeUploadV4>,
+    }
     ///`FuturesTradeUploadV3(bytes32,bytes32,bytes32,int128,int128,uint128,int128,int128,uint64,uint64,uint64,bool,uint8,bytes32,int128)`
     #[derive(
         Clone,
@@ -6006,6 +6948,35 @@ pub mod operator_manager {
         pub margin_mode: u8,
         pub iso_margin_asset_hash: [u8; 32],
         pub margin_from_cross: i128,
+    }
+    ///`FuturesTradeUploadV4(bytes32,bytes32,bytes32,int128,int128,uint128,int128,int128,uint64,uint64,uint64,bool,uint8,bytes32,int128,bool)`
+    #[derive(
+        Clone,
+        ::ethers::contract::EthAbiType,
+        ::ethers::contract::EthAbiCodec,
+        Default,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+    )]
+    pub struct FuturesTradeUploadV4 {
+        pub account_id: [u8; 32],
+        pub symbol_hash: [u8; 32],
+        pub fee_asset_hash: [u8; 32],
+        pub trade_qty: i128,
+        pub notional: i128,
+        pub executed_price: u128,
+        pub fee: i128,
+        pub sum_unitary_fundings: i128,
+        pub trade_id: u64,
+        pub match_id: u64,
+        pub timestamp: u64,
+        pub side: bool,
+        pub margin_mode: u8,
+        pub iso_margin_asset_hash: [u8; 32],
+        pub margin_from_cross: i128,
+        pub is_insurance_account: bool,
     }
     ///`RebalanceBurnUploadData(bytes32,bytes32,uint8,uint64,uint128,bytes32,uint256,uint256)`
     #[derive(
