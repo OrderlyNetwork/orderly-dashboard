@@ -567,6 +567,7 @@ pub struct Trade {
     pub margin_mode: Option<MarginMode>,
     pub margin_from_cross: Option<String>,
     pub iso_margin_asset_hash: Option<String>,
+    pub is_insurance_account: Option<bool>,
 }
 
 impl From<DbExecutedTrades> for Trade {
@@ -591,6 +592,7 @@ impl From<DbExecutedTrades> for Trade {
             margin_mode: None,
             margin_from_cross: None,
             iso_margin_asset_hash: None,
+            is_insurance_account: None,
         }
     }
 }
@@ -623,6 +625,7 @@ impl From<DbPartitionedExecutedTrades> for Trade {
             ),
             margin_from_cross: Some(value.margin_from_cross.unwrap_or_default().to_string()),
             iso_margin_asset_hash: value.iso_margin_asset_hash,
+            is_insurance_account: value.is_insurance_account,
         }
     }
 }
@@ -989,6 +992,7 @@ mod tests {
                         margin_mode: None,
                         margin_from_cross: None,
                         iso_margin_asset_hash: None,
+                        is_insurance_account: None,
                     },
                     Trade {
                         account_id:
@@ -1012,6 +1016,7 @@ mod tests {
                         margin_mode: None,
                         margin_from_cross: None,
                         iso_margin_asset_hash: None,
+                        is_insurance_account: None,
                     },
                 ],
             },

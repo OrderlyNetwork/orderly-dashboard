@@ -131,12 +131,17 @@ pub async fn analyzer_perp_trade(
 
             // should no check and update log idx for charge funding fee
             user_perp_snap.charge_funding_fee(suf.div(get_unitary_prec()), pulled_block_height);
-            let (open_cost_diff, pnl_diff) = RealizedPnl::calc_realized_pnl(
-                fixed_qty.clone(),
-                quoted_diff.clone(),
-                user_perp_snap.holding.clone(),
-                user_perp_snap.opening_cost.clone(),
-            );
+            let need_cal_avg = perp_trade.is_insurance_account != Some(true);
+            let (open_cost_diff, pnl_diff) = if need_cal_avg {
+                RealizedPnl::calc_realized_pnl(
+                    fixed_qty.clone(),
+                    quoted_diff.clone(),
+                    user_perp_snap.holding.clone(),
+                    user_perp_snap.opening_cost.clone(),
+                )
+            } else {
+                (BigDecimal::from(0), BigDecimal::from(0))
+            };
             let (opening, new_user) = user_perp_snap.new_trade(
                 fixed_fee.clone(),
                 fixed_notional.clone(),
@@ -280,6 +285,7 @@ mod tests {
                 margin_mode: None,
                 margin_from_cross: None,
                 iso_margin_asset_hash: None,
+                is_insurance_account: None,
             },
             Trade {
                 account_id: BOB.to_string(),
@@ -297,6 +303,7 @@ mod tests {
                 margin_mode: None,
                 margin_from_cross: None,
                 iso_margin_asset_hash: None,
+                is_insurance_account: None,
             },
         ];
         let block_number = 1000000;
@@ -339,6 +346,7 @@ mod tests {
             margin_mode: None,
             margin_from_cross: None,
             iso_margin_asset_hash: None,
+            is_insurance_account: None,
         };
         let block_number = 1000000;
         analyzer_perp_trade(

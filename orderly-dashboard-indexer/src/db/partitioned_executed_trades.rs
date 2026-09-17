@@ -42,6 +42,7 @@ pub struct DbPartitionedExecutedTrades {
     pub iso_margin_asset_hash: Option<String>,
     pub margin_from_cross: Option<BigDecimal>,
     pub address: Option<String>,
+    pub is_insurance_account: Option<bool>,
 }
 
 #[derive(Insertable, Queryable, Debug, Clone)]
@@ -86,6 +87,7 @@ impl From<DbExecutedTrades> for DbPartitionedExecutedTrades {
             iso_margin_asset_hash: None,
             margin_from_cross: None,
             address: None,
+            is_insurance_account: None,
         }
     }
 }
@@ -661,6 +663,7 @@ fn mock_trade_for_index(
         iso_margin_asset_hash: None,
         margin_from_cross: None,
         address: Some(address),
+        is_insurance_account: None,
     }
 }
 
@@ -884,6 +887,7 @@ mod tests {
                             iso_margin_asset_hash: None,
                             margin_from_cross: None,
                             address: None,
+                            is_insurance_account: None,
                         });
                     }
                     create_partitioned_executed_trades(trades).await.unwrap();

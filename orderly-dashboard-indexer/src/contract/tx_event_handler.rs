@@ -761,6 +761,44 @@ pub(crate) async fn handle_log(
                         }])
                         .await?;
                     }
+                    operator_managerEvents::FuturesTradeUploadV4Filter(futures_upload) => {
+                        let fee_st = receipt
+                            .map(|r| r.cal_gas_used_and_wei_used())
+                            .unwrap_or_default();
+                        create_serial_batches(vec![DbSerialBatches {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            transaction_id: format_hash(log.transaction_hash.unwrap_or_default()),
+                            block_time: (block_t.unwrap_or_default()).into(),
+                            batch_id: futures_upload.batch_id as i64,
+                            event_type: SerialBatchType::PerpTrade.value(),
+                            effective_gas_price: if let Some(receipt) = receipt {
+                                receipt.effective_gas_price.map(|amount| {
+                                    convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                                })
+                            } else {
+                                None
+                            },
+                            gas_used: if let Some(receipt) = receipt {
+                                receipt.gas_used.map(|amount| {
+                                    convert_amount(amount.as_u128() as i128).unwrap_or_default()
+                                })
+                            } else {
+                                None
+                            },
+                            l1_fee: Some(convert_amount(fee_st.l1_fee as i128).unwrap_or_default()),
+                            l1_fee_scalar: Some(fee_st.l1_fee_scalar),
+                            l1_gas_price: Some(
+                                convert_amount(fee_st.l1_gas_price as i128).unwrap_or_default(),
+                            ),
+                            l1_gas_used: Some(
+                                convert_amount(fee_st.l1_gas_used as i128).unwrap_or_default(),
+                            ),
+                        }])
+                        .await?;
+                    }
                     _ => {}
                 }
             }
@@ -1270,6 +1308,7 @@ pub(crate) async fn handle_log(
                             iso_margin_asset_hash: None,
                             margin_from_cross: None,
                             address: Some(account_info.address),
+                            is_insurance_account: None,
                         };
                         executed_partitioned_trades_cache.push(db_trade);
                     }
@@ -1310,6 +1349,7 @@ pub(crate) async fn handle_log(
                             iso_margin_asset_hash: None,
                             margin_from_cross: None,
                             address: Some(account_info.address),
+                            is_insurance_account: None,
                         };
                         executed_partitioned_trades_cache.push(db_trade.into());
                         // create_executed_trades(vec![db_trade]).await?;
@@ -1355,6 +1395,53 @@ pub(crate) async fn handle_log(
                                 convert_amount(trade.iso_margin).unwrap_or_default(),
                             ),
                             address: Some(account_info.address),
+                            is_insurance_account: None,
+                        };
+                        // executed_trades_cache.push(db_trade.clone());
+                        executed_partitioned_trades_cache.push(db_trade);
+                    }
+                    user_ledgerEvents::ProcessValidatedFuturesV4Filter(trade) => {
+                        let account_id = to_hex_format(&trade.account_id);
+                        let account_info = get_account_info(cefi_cli.clone(), &account_id).await?;
+                        let db_trade = DbPartitionedExecutedTrades {
+                            block_number: log.block_number.unwrap_or_default().as_u64() as i64,
+                            transaction_index: log.transaction_index.unwrap_or_default().as_u64()
+                                as i32,
+                            log_index: log.log_index.unwrap_or_default().as_u64() as i32,
+                            typ: TradeType::PerpTrade.value(),
+                            account_id: account_id.clone(),
+                            symbol_hash: to_hex_format(&trade.symbol_hash),
+                            fee_asset_hash: to_hex_format(&trade.fee_asset_hash),
+                            trade_qty: convert_amount(trade.trade_qty).unwrap_or_default(),
+                            notional: convert_amount(trade.notional).unwrap_or_default(),
+                            executed_price: convert_amount(trade.executed_price as i128)
+                                .unwrap_or_default(),
+                            fee: convert_amount(trade.fee as i128).unwrap_or_default(),
+                            sum_unitary_fundings: convert_amount(trade.sum_unitary_fundings)
+                                .unwrap_or_default(),
+                            trade_id: BigDecimal::from_u64(trade.trade_id).unwrap_or_default(),
+                            match_id: BigDecimal::from_u64(trade.match_id).unwrap_or_default(),
+                            timestamp: BigDecimal::from_u64(block_t.unwrap_or_default())
+                                .unwrap_or_default(),
+                            side: trade.side,
+                            block_time: NaiveDateTime::from_timestamp_opt(
+                                block_t.unwrap_or_default() as i64,
+                                0,
+                            )
+                            .unwrap_or_default(),
+                            broker_hash: Some(account_info.broker_hash),
+                            transaction_id: Some(format_hash(
+                                log.transaction_hash.unwrap_or_default(),
+                            )),
+                            margin_mode: Some(trade.margin_mode as i16),
+                            iso_margin_asset_hash: Some(to_hex_format(
+                                &trade.iso_margin_asset_hash,
+                            )),
+                            margin_from_cross: Some(
+                                convert_amount(trade.iso_margin).unwrap_or_default(),
+                            ),
+                            address: Some(account_info.address),
+                            is_insurance_account: Some(trade.is_insurance_account),
                         };
                         // executed_trades_cache.push(db_trade.clone());
                         executed_partitioned_trades_cache.push(db_trade);

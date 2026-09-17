@@ -3,7 +3,7 @@ use crate::{
         market_manager::{FundingDataFilter, MarketDataFilter},
         operator_manager::{
             EventUpload1Filter, EventUpload2Filter, FuturesTradeUpload1Filter,
-            FuturesTradeUpload2Filter, FuturesTradeUploadV3Filter,
+            FuturesTradeUpload2Filter, FuturesTradeUploadV3Filter, FuturesTradeUploadV4Filter,
         },
         user_ledger::{
             AccountDeposit1Filter, AccountDeposit2Filter, AccountDepositSolFilter,
@@ -15,8 +15,9 @@ use crate::{
             LiquidationResultV3Filter, LiquidationTransferFilter, LiquidationTransferV2Filter,
             LiquidationTransferV3Filter, MarginTransferV3Filter, ProcessValidatedFutures1Filter,
             ProcessValidatedFutures2Filter, ProcessValidatedFuturesV3Filter,
-            SettlementExecutionFilter, SettlementExecutionV3Filter, SettlementResultFilter,
-            SettlementResultV3Filter, SwapResultUploadedFilter,
+            ProcessValidatedFuturesV4Filter, SettlementExecutionFilter,
+            SettlementExecutionV3Filter, SettlementResultFilter, SettlementResultV3Filter,
+            SwapResultUploadedFilter,
         },
         vault_manager::{
             RebalanceBurnFilter, RebalanceBurnResultFilter, RebalanceMintFilter,
@@ -184,6 +185,7 @@ pub async fn get_block_logs(block_num: u64) -> Result<Vec<Log>> {
         FuturesTradeUpload1Filter::signature(),
         FuturesTradeUpload2Filter::signature(),
         FuturesTradeUploadV3Filter::signature(),
+        FuturesTradeUploadV4Filter::signature(),
         MarketDataFilter::signature(),
         FundingDataFilter::signature(),
         FeeDistributionFilter::signature(),
@@ -203,6 +205,7 @@ pub async fn get_block_logs(block_num: u64) -> Result<Vec<Log>> {
         RebalanceMintResultFilter::signature(),
         SwapResultUploadedFilter::signature(),
         ProcessValidatedFuturesV3Filter::signature(),
+        ProcessValidatedFuturesV4Filter::signature(),
         SettlementExecutionV3Filter::signature(),
         SettlementResultV3Filter::signature(),
         AdlResultV3Filter::signature(),
