@@ -44,7 +44,7 @@ export function siteOverview() {
         url: '/markets',
         purpose: 'Live market list and per-symbol detail pages.',
         tools: [
-          'get_markets — all active perp markets: prices, 24h change, open interest, funding',
+          'get_markets — all active perp markets: USD 24h volume, prices, 24h change, open interest, funding',
           'get_symbol_info — one symbol config: max leverage, tick/lot size, precision',
           'get_market_detail — per-symbol bundle (candles, orderbook, trades, funding). Pass `include` to select sections; default returns all',
           'get_top_traders — top addresses by notional/volume/PnL for a symbol',
@@ -124,6 +124,11 @@ export function siteOverview() {
     },
     conventions: [
       'Symbols accept a base tick (BTC) or the full form (PERP_BTC_USDC) — both work.',
+      'Market units: get_markets rows report volume_24h_usd / volume_24h_base and ' +
+        'open_interest_usd / open_interest_base (USD notional vs base-token quantity), ' +
+        'and priceChanges rows report change_*_pct (percent changes per window, e.g. ' +
+        'change_24h_pct). The raw upstream names (24h_amount, 24h_volume, open_interest, ' +
+        'the lookback price keys) are not returned by get_markets.',
       'Date params: get_leaderboard uses start_date/end_date as YYYY-MM-DD; ' +
         'get_events/get_portfolio use from_time/to_time as Unix seconds.',
       'get_events time range is capped at 31 days per call — page via nextCursor for longer ranges.',

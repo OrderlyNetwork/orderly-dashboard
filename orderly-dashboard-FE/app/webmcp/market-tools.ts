@@ -76,11 +76,19 @@ export function createMarketTools(ctx: WebMcpCtx): ModelContextTool[] {
       'get_markets',
       'Snapshot of all active perpetual markets: the futures market list, 24h price ' +
         'changes, and per-symbol open interest. Drives the Markets page. Returns an ' +
-        'object { markets, priceChanges, openInterest }. Optional search (a ' +
-        'case-insensitive substring on the symbol), sort_by (24h_volume | 24h_change | ' +
-        'open_interest | symbol), limit (max 200), and desc (default true) filter and ' +
-        'rank the markets and trim the priceChanges / openInterest arrays to the same ' +
-        'symbol set. Defaults to 50 markets in API order; pass limit: 200 for the full set.',
+        'object { markets, priceChanges, openInterest }. Each market row reports 24h ' +
+        'volume as volume_24h_usd (USD notional) and volume_24h_base (base-token ' +
+        'quantity), and open interest as open_interest_usd (notional, oi * mark_price) ' +
+        'and open_interest_base (base-token quantity); the raw upstream names ' +
+        '24h_amount / 24h_volume / open_interest are not returned. priceChanges rows ' +
+        'report percent changes per window (change_5m_pct … change_30d_pct) computed ' +
+        'from last_price, not the raw lookback prices; openInterest rows report ' +
+        'long_oi_base / short_oi_base plus long_oi_usd / short_oi_usd. Optional search ' +
+        '(a case-insensitive substring on the symbol), sort_by (volume_24h_usd | ' +
+        'volume_24h_base | change_24h_pct | open_interest_usd | open_interest_base | ' +
+        'symbol), limit (max 200), and desc (default true) filter and rank the markets ' +
+        'and trim the priceChanges / openInterest arrays to the same symbol set. ' +
+        'Defaults to the top 50 markets by USD volume; pass limit: 200 for the full set.',
       {
         type: 'object',
         properties: {
@@ -90,8 +98,19 @@ export function createMarketTools(ctx: WebMcpCtx): ModelContextTool[] {
           },
           sort_by: {
             type: 'string',
-            enum: ['24h_volume', '24h_change', 'open_interest', 'symbol'],
-            description: 'Rank markets by this metric (default: API order).'
+            enum: [
+              'volume_24h_usd',
+              'volume_24h_base',
+              'change_24h_pct',
+              'open_interest_usd',
+              'open_interest_base',
+              'symbol'
+            ],
+            description:
+              'Rank markets by this metric (default: volume_24h_usd). volume_24h_usd is ' +
+              'USD notional; volume_24h_base is base-token quantity; change_24h_pct is the ' +
+              'percent price change over 24h; open_interest_usd is OI notional, ' +
+              'open_interest_base is OI in base-token quantity.'
           },
           limit: {
             type: 'number',
@@ -123,42 +142,116 @@ export function createMarketTools(ctx: WebMcpCtx): ModelContextTool[] {
         const priceChanges = asArr(priceChangesRaw);
         const openInterest = asArr(openInterestRaw);
 
+        // Coerce a numeric-string API field; null when missing/not finite.
+        const numOrNull = (v: unknown): number | null => {
+          if (v === null || v === undefined || v === '') return null;
+          const n = Number(v);
+          return Number.isFinite(n) ? n : null;
+        };
+        // Percent change from last_price to the price `window` ago (null when unavailable).
+        // The upstream lookback keys ('5m', '1h', '24h', …) hold prices, not changes.
+        const pctChange = (r: Row | undefined, window: string): number | null => {
+          const last = numOrNull(r?.last_price);
+          const prev = numOrNull(r?.[window]);
+          if (last === null || prev === null || prev === 0) return null;
+          return ((last - prev) / prev) * 100;
+        };
+        // Open interest notional: base-token quantity * mark price (same as the UI column).
+        const oiUsd = (m: Row): number | null => {
+          const base = numOrNull(m.open_interest);
+          const mark = numOrNull(m.mark_price);
+          return base !== null && mark !== null ? base * mark : null;
+        };
+        const markBySym = new Map<string, number | null>(
+          markets.map((m) => [m.symbol, numOrNull(m.mark_price)])
+        );
+
         const search = asString(args.search)?.toLowerCase();
-        const sortBy = asString(args.sort_by);
+        const sortBy = asString(args.sort_by) ?? 'volume_24h_usd';
         const limit = clampInt(args.limit, 1, 200, 50);
         const desc = args.desc !== false;
 
         const changeBySym = new Map<string, Row>(
           priceChanges.map((r): [string, Row] => [r.symbol, r])
         );
-        const oiBySym = new Map<string, Row>(openInterest.map((r): [string, Row] => [r.symbol, r]));
 
         if (search) {
           markets = markets.filter((m) => m.symbol.toLowerCase().includes(search));
         }
 
-        if (sortBy) {
-          if (sortBy === 'symbol') {
-            markets.sort((a, b) => a.symbol.localeCompare(b.symbol) * (desc ? -1 : 1));
-          } else {
-            const key = (m: Row): number => {
-              if (sortBy === '24h_volume') return Number(m['24h_volume']) || 0;
-              if (sortBy === '24h_change') return Number(changeBySym.get(m.symbol)?.['24h']) || 0;
-              // 'open_interest' — total of long + short OI.
-              const oi = oiBySym.get(m.symbol);
-              return (Number(oi?.long_oi) || 0) + (Number(oi?.short_oi) || 0);
-            };
-            markets.sort((a, b) => (key(b) - key(a)) * (desc ? 1 : -1));
-          }
+        // Upstream semantics: '24h_volume' / 'open_interest' are base-token quantities,
+        // '24h_amount' is USD notional, and the price_changes lookback keys hold prices.
+        // Rank on converted, unit-explicit metrics; an unknown sort_by leaves the list
+        // in API order rather than silently ranking by an unintended field.
+        const metric: Record<string, (m: Row) => number> = {
+          volume_24h_usd: (m) => numOrNull(m['24h_amount']) ?? 0,
+          volume_24h_base: (m) => numOrNull(m['24h_volume']) ?? 0,
+          change_24h_pct: (m) => pctChange(changeBySym.get(m.symbol), '24h') ?? 0,
+          open_interest_usd: (m) => oiUsd(m) ?? 0,
+          open_interest_base: (m) => numOrNull(m.open_interest) ?? 0
+        };
+        if (sortBy === 'symbol') {
+          markets.sort((a, b) => a.symbol.localeCompare(b.symbol) * (desc ? -1 : 1));
+        } else if (Object.prototype.hasOwnProperty.call(metric, sortBy)) {
+          const key = metric[sortBy];
+          markets.sort((a, b) => (key(b) - key(a)) * (desc ? 1 : -1));
         }
 
         if (limit > 0) markets = markets.slice(0, limit);
 
         const keep = new Set(markets.map((m) => m.symbol));
+
+        // Emit unit-explicit field names; the raw upstream keys are dropped so agents
+        // cannot mistake base-token quantities for USD, or lookback prices for changes.
+        const normalizedMarkets = markets.map((m) => {
+          const { '24h_volume': base, '24h_amount': usd, open_interest: oi, ...rest } = m;
+          return {
+            ...rest,
+            volume_24h_base: numOrNull(base),
+            volume_24h_usd: numOrNull(usd),
+            open_interest_base: numOrNull(oi),
+            open_interest_usd: oiUsd(m)
+          };
+        });
+        const CHANGE_WINDOWS: [string, string][] = [
+          ['5m', 'change_5m_pct'],
+          ['30m', 'change_30m_pct'],
+          ['1h', 'change_1h_pct'],
+          ['4h', 'change_4h_pct'],
+          ['24h', 'change_24h_pct'],
+          ['3d', 'change_3d_pct'],
+          ['7d', 'change_7d_pct'],
+          ['30d', 'change_30d_pct']
+        ];
+        const normalizedChanges = priceChanges
+          .filter((r) => keep.has(r.symbol))
+          .map((r) => {
+            const row: Record<string, unknown> = {
+              symbol: r.symbol,
+              last_price: numOrNull(r.last_price)
+            };
+            for (const [window, field] of CHANGE_WINDOWS) row[field] = pctChange(r, window);
+            return row;
+          });
+        const normalizedOi = openInterest
+          .filter((r) => keep.has(r.symbol))
+          .map((r) => {
+            const mark = markBySym.get(r.symbol) ?? null;
+            const long = numOrNull(r.long_oi);
+            const short = numOrNull(r.short_oi);
+            return {
+              symbol: r.symbol,
+              long_oi_base: long,
+              short_oi_base: short,
+              long_oi_usd: long !== null && mark !== null ? long * mark : null,
+              short_oi_usd: short !== null && mark !== null ? short * mark : null
+            };
+          });
+
         return {
-          markets,
-          priceChanges: priceChanges.filter((r) => keep.has(r.symbol)),
-          openInterest: openInterest.filter((r) => keep.has(r.symbol))
+          markets: normalizedMarkets,
+          priceChanges: normalizedChanges,
+          openInterest: normalizedOi
         };
       }
     ),

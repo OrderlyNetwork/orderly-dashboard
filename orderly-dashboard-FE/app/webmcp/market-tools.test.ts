@@ -30,12 +30,33 @@ describe('createMarketTools', () => {
     expect(tools.every((t) => t.annotations?.readOnlyHint === true)).toBe(true);
   });
 
-  it('get_markets fans out 3 GETs and unwraps the row envelopes with no args', async () => {
-    const mk = (symbol: string, vol: number) => ({ symbol, '24h_volume': vol });
+  it('get_markets fans out 3 GETs, normalises units, and defaults to USD-volume order', async () => {
+    const mk = (symbol: string, base: number, usd: number, oi: number, mark: number) => ({
+      symbol,
+      '24h_volume': base,
+      '24h_amount': usd,
+      open_interest: oi,
+      mark_price: mark
+    });
     vi.mocked(fetchEvmGet)
-      .mockResolvedValueOnce({ rows: [mk('PERP_BTC_USDC', 100), mk('PERP_ETH_USDC', 50)] })
-      .mockResolvedValueOnce({ rows: [{ symbol: 'PERP_BTC_USDC', '24h': 1.2 }] })
-      .mockResolvedValueOnce({ rows: [{ symbol: 'PERP_BTC_USDC', long_oi: 7, short_oi: 3 }] });
+      .mockResolvedValueOnce({
+        rows: [
+          mk('PERP_BTC_USDC', 47, 3_675_098, 31.13, 81_093),
+          mk('PERP_ETH_USDC', 3_158, 7_977_912, 11_891, 2_633)
+        ]
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          { symbol: 'PERP_BTC_USDC', last_price: 81_109.9, '24h': 77_542.6 },
+          { symbol: 'PERP_ETH_USDC', last_price: 2_631.44, '24h': 2_489.72 }
+        ]
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          { symbol: 'PERP_BTC_USDC', long_oi: 7, short_oi: 3 },
+          { symbol: 'PERP_ETH_USDC', long_oi: 2, short_oi: 1 }
+        ]
+      });
     const res = await getTool('get_markets').execute({});
     expect(fetchEvmGet).toHaveBeenCalledTimes(3);
     expect(fetchEvmGet).toHaveBeenNthCalledWith(1, 'https://evm.test', '/v1/public/futures_market');
@@ -49,22 +70,81 @@ describe('createMarketTools', () => {
       'https://evm.test',
       '/v1/public/market_info/traders_open_interests'
     );
-    // No args → full unfiltered set, envelopes unwrapped to row arrays.
+    // No args → full set, envelopes unwrapped, unit-explicit volume/OI fields, lookback
+    // prices turned into percent changes, and ranked by USD volume (ETH outranks BTC
+    // despite a much smaller base-token quantity).
     expect(res).toEqual({
-      markets: [mk('PERP_BTC_USDC', 100), mk('PERP_ETH_USDC', 50)],
-      priceChanges: [{ symbol: 'PERP_BTC_USDC', '24h': 1.2 }],
-      openInterest: [{ symbol: 'PERP_BTC_USDC', long_oi: 7, short_oi: 3 }]
+      markets: [
+        {
+          symbol: 'PERP_ETH_USDC',
+          mark_price: 2_633,
+          volume_24h_base: 3_158,
+          volume_24h_usd: 7_977_912,
+          open_interest_base: 11_891,
+          open_interest_usd: 11_891 * 2_633
+        },
+        {
+          symbol: 'PERP_BTC_USDC',
+          mark_price: 81_093,
+          volume_24h_base: 47,
+          volume_24h_usd: 3_675_098,
+          open_interest_base: 31.13,
+          open_interest_usd: 31.13 * 81_093
+        }
+      ],
+      priceChanges: [
+        {
+          symbol: 'PERP_BTC_USDC',
+          last_price: 81_109.9,
+          change_5m_pct: null,
+          change_30m_pct: null,
+          change_1h_pct: null,
+          change_4h_pct: null,
+          change_24h_pct: ((81_109.9 - 77_542.6) / 77_542.6) * 100,
+          change_3d_pct: null,
+          change_7d_pct: null,
+          change_30d_pct: null
+        },
+        {
+          symbol: 'PERP_ETH_USDC',
+          last_price: 2_631.44,
+          change_5m_pct: null,
+          change_30m_pct: null,
+          change_1h_pct: null,
+          change_4h_pct: null,
+          change_24h_pct: ((2_631.44 - 2_489.72) / 2_489.72) * 100,
+          change_3d_pct: null,
+          change_7d_pct: null,
+          change_30d_pct: null
+        }
+      ],
+      openInterest: [
+        {
+          symbol: 'PERP_BTC_USDC',
+          long_oi_base: 7,
+          short_oi_base: 3,
+          long_oi_usd: 7 * 81_093,
+          short_oi_usd: 3 * 81_093
+        },
+        {
+          symbol: 'PERP_ETH_USDC',
+          long_oi_base: 2,
+          short_oi_base: 1,
+          long_oi_usd: 2 * 2_633,
+          short_oi_usd: 1 * 2_633
+        }
+      ]
     });
   });
 
-  it('get_markets filters, sorts, limits, and trims the side arrays', async () => {
+  it('get_markets filters, sorts by USD volume, limits, and trims the side arrays', async () => {
     vi.mocked(fetchEvmGet)
       .mockResolvedValueOnce({
         rows: [
-          { symbol: 'PERP_ETH_USDC', '24h_volume': 50 },
-          { symbol: 'PERP_BTC_USDC', '24h_volume': 100 },
-          { symbol: 'PERP_SOL_USDC', '24h_volume': 30 },
-          { symbol: 'PERP_BTC_USDT', '24h_volume': 10 }
+          { symbol: 'PERP_ETH_USDC', '24h_volume': 50, '24h_amount': 5_000 },
+          { symbol: 'PERP_BTC_USDC', '24h_volume': 100, '24h_amount': 9_000 },
+          { symbol: 'PERP_SOL_USDC', '24h_volume': 30, '24h_amount': 300 },
+          { symbol: 'PERP_BTC_USDT', '24h_volume': 10, '24h_amount': 100 }
         ]
       })
       .mockResolvedValueOnce({
@@ -85,17 +165,21 @@ describe('createMarketTools', () => {
       });
     const res = (await getTool('get_markets').execute({
       search: 'btc',
-      sort_by: '24h_volume',
+      sort_by: 'volume_24h_usd',
       limit: 5
     })) as {
-      markets: { symbol: string }[];
+      markets: (Record<string, unknown> & { symbol: string })[];
       priceChanges: { symbol: string }[];
       openInterest: { symbol: string }[];
     };
-    // Only symbols containing "btc", sorted by 24h_volume descending.
+    // Only symbols containing "btc", ranked by USD volume descending.
     expect(res.markets.map((m) => m.symbol)).toEqual(['PERP_BTC_USDC', 'PERP_BTC_USDT']);
     expect(res.markets.length).toBeLessThanOrEqual(5);
     expect(res.markets.every((m) => m.symbol.toLowerCase().includes('btc'))).toBe(true);
+    // Unit-normalised row: USD notional + base-token quantity, raw keys removed.
+    expect(res.markets[0]).toMatchObject({ volume_24h_usd: 9_000, volume_24h_base: 100 });
+    expect(res.markets[0]).not.toHaveProperty('24h_volume');
+    expect(res.markets[0]).not.toHaveProperty('24h_amount');
     // Side arrays trimmed to the same symbol set.
     expect(res.priceChanges.map((r) => r.symbol)).toEqual(['PERP_BTC_USDC', 'PERP_BTC_USDT']);
     expect(res.openInterest.map((r) => r.symbol)).toEqual(['PERP_BTC_USDC', 'PERP_BTC_USDT']);
@@ -105,22 +189,186 @@ describe('createMarketTools', () => {
     vi.mocked(fetchEvmGet)
       .mockResolvedValueOnce({
         rows: [
-          { symbol: 'PERP_BTC_USDC', '24h_volume': 100 },
-          { symbol: 'PERP_ETH_USDC', '24h_volume': 50 },
-          { symbol: 'PERP_SOL_USDC', '24h_volume': 30 }
+          { symbol: 'PERP_BTC_USDC', '24h_volume': 100, '24h_amount': 9_000 },
+          { symbol: 'PERP_ETH_USDC', '24h_volume': 50, '24h_amount': 5_000 },
+          { symbol: 'PERP_SOL_USDC', '24h_volume': 30, '24h_amount': 300 }
         ]
       })
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] });
     const res = (await getTool('get_markets').execute({
-      sort_by: '24h_volume',
+      sort_by: 'volume_24h_base',
       desc: false,
       limit: 2
     })) as { markets: { symbol: string }[]; priceChanges: unknown[]; openInterest: unknown[] };
-    // Ascending by 24h_volume, then sliced to 2 → SOL(30), ETH(50).
+    // Ascending by base-token quantity, then sliced to 2 → SOL(30), ETH(50).
     expect(res.markets.map((m) => m.symbol)).toEqual(['PERP_SOL_USDC', 'PERP_ETH_USDC']);
     expect(res.priceChanges).toEqual([]);
     expect(res.openInterest).toEqual([]);
+  });
+
+  it('get_markets ranks by percent change, not the raw lookback price', async () => {
+    // SYN is cheap and up 30%; BTC is expensive and up 4.65%. Ranking on the raw
+    // '24h' lookback price would put BTC first; the percent metric must not.
+    const rows = [
+      {
+        symbol: 'PERP_BTC_USDC',
+        '24h_volume': 47,
+        '24h_amount': 3_675_098,
+        open_interest: 31.13,
+        mark_price: 81_093
+      },
+      {
+        symbol: 'PERP_SYN_USDC',
+        '24h_volume': 1_000,
+        '24h_amount': 500_000,
+        open_interest: 1_000_000,
+        mark_price: 0.183
+      }
+    ];
+    const changes = [
+      { symbol: 'PERP_BTC_USDC', last_price: 81_109.9, '24h': 77_542.6 },
+      { symbol: 'PERP_SYN_USDC', last_price: 0.183, '24h': 0.1408 }
+    ];
+    const run = async (sortBy: string) => {
+      vi.mocked(fetchEvmGet)
+        .mockResolvedValueOnce({ rows })
+        .mockResolvedValueOnce({ rows: changes })
+        .mockResolvedValueOnce({ rows: [] });
+      return (await getTool('get_markets').execute({ sort_by: sortBy })) as {
+        markets: { symbol: string }[];
+        priceChanges: { symbol: string; change_24h_pct: number | null }[];
+      };
+    };
+    const res = await run('change_24h_pct');
+    expect(res.markets.map((m) => m.symbol)).toEqual(['PERP_SYN_USDC', 'PERP_BTC_USDC']);
+    // Percent changes are computed from last_price vs the lookback price and surfaced
+    // on the priceChanges rows (markets carry volume/OI only).
+    const syn = res.priceChanges.find((r) => r.symbol === 'PERP_SYN_USDC')!;
+    const btc = res.priceChanges.find((r) => r.symbol === 'PERP_BTC_USDC')!;
+    expect(syn.change_24h_pct).toBeCloseTo(((0.183 - 0.1408) / 0.1408) * 100, 6);
+    expect(btc.change_24h_pct).toBeCloseTo(((81_109.9 - 77_542.6) / 77_542.6) * 100, 6);
+  });
+
+  it('get_markets ranks open interest by notional or base quantity', async () => {
+    const rows = [
+      // ETH: small base OI, huge USD OI. PUMP: huge base OI, tiny USD OI.
+      {
+        symbol: 'PERP_ETH_USDC',
+        '24h_volume': 3_158,
+        '24h_amount': 7_977_912,
+        open_interest: 11_891,
+        mark_price: 2_633
+      },
+      {
+        symbol: 'PERP_PUMP_USDC',
+        '24h_volume': 9_587_400,
+        '24h_amount': 39_433,
+        open_interest: 9_587_400,
+        mark_price: 0.0041
+      }
+    ];
+    const run = async (sortBy: string) => {
+      vi.mocked(fetchEvmGet)
+        .mockResolvedValueOnce({ rows })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
+      return (await getTool('get_markets').execute({ sort_by: sortBy })) as {
+        markets: { symbol: string }[];
+      };
+    };
+    expect((await run('open_interest_usd')).markets.map((m) => m.symbol)).toEqual([
+      'PERP_ETH_USDC',
+      'PERP_PUMP_USDC'
+    ]);
+    expect((await run('open_interest_base')).markets.map((m) => m.symbol)).toEqual([
+      'PERP_PUMP_USDC',
+      'PERP_ETH_USDC'
+    ]);
+  });
+
+  it('get_markets ranks by base volume only when asked; USD is the default metric', async () => {
+    const rows = [
+      // BTC trades less base-token quantity than PENGU but far more USD notional.
+      { symbol: 'PERP_BTC_USDC', '24h_volume': 47, '24h_amount': 3_675_098 },
+      { symbol: 'PERP_PENGU_USDC', '24h_volume': 130_389_350, '24h_amount': 981_436 }
+    ];
+    const run = async (sortBy?: string) => {
+      vi.mocked(fetchEvmGet)
+        .mockResolvedValueOnce({ rows })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
+      return (await getTool('get_markets').execute(sortBy ? { sort_by: sortBy } : {})) as {
+        markets: { symbol: string }[];
+      };
+    };
+    expect((await run()).markets.map((m) => m.symbol)).toEqual([
+      'PERP_BTC_USDC',
+      'PERP_PENGU_USDC'
+    ]);
+    expect((await run('volume_24h_usd')).markets.map((m) => m.symbol)).toEqual([
+      'PERP_BTC_USDC',
+      'PERP_PENGU_USDC'
+    ]);
+    expect((await run('volume_24h_base')).markets.map((m) => m.symbol)).toEqual([
+      'PERP_PENGU_USDC',
+      'PERP_BTC_USDC'
+    ]);
+  });
+
+  it('get_markets exposes unit-explicit sort keys and null-safe normalised fields', async () => {
+    const schema = getTool('get_markets').inputSchema as {
+      properties: { sort_by?: { enum?: readonly string[] } };
+    };
+    expect(schema.properties.sort_by?.enum).toEqual([
+      'volume_24h_usd',
+      'volume_24h_base',
+      'change_24h_pct',
+      'open_interest_usd',
+      'open_interest_base',
+      'symbol'
+    ]);
+
+    vi.mocked(fetchEvmGet)
+      .mockResolvedValueOnce({
+        rows: [{ symbol: 'PERP_BTC_USDC', '24h_volume': null, open_interest: 31.13 }]
+      })
+      .mockResolvedValueOnce({
+        rows: [{ symbol: 'PERP_BTC_USDC', last_price: 81_109.9, '24h': null }]
+      })
+      .mockResolvedValueOnce({
+        rows: [{ symbol: 'PERP_BTC_USDC', long_oi: null, short_oi: 3 }]
+      });
+    const res = (await getTool('get_markets').execute({})) as {
+      markets: {
+        volume_24h_base: number | null;
+        volume_24h_usd: number | null;
+        open_interest_base: number | null;
+        open_interest_usd: number | null;
+      }[];
+      priceChanges: { change_24h_pct: number | null }[];
+      openInterest: {
+        long_oi_base: number | null;
+        long_oi_usd: number | null;
+        short_oi_base: number | null;
+        short_oi_usd: number | null;
+      }[];
+    };
+    expect(res.markets[0]).toEqual({
+      symbol: 'PERP_BTC_USDC',
+      volume_24h_base: null,
+      volume_24h_usd: null,
+      open_interest_base: 31.13,
+      open_interest_usd: null
+    });
+    expect(res.priceChanges[0].change_24h_pct).toBeNull();
+    expect(res.openInterest[0]).toEqual({
+      symbol: 'PERP_BTC_USDC',
+      long_oi_base: null,
+      short_oi_base: 3,
+      long_oi_usd: null,
+      short_oi_usd: null
+    });
   });
 
   it('get_market_detail posts marketDetail with default 1h candles', async () => {
